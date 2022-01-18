@@ -28,7 +28,7 @@ Lista cu diverse resurse Unibuc CTI 2020-2024
   ## Anul 2 :
 
 ### Semestrul 1 :
- - [sda](An2/Sem1/sda):  (Curs Guillaume Jean Dominique Ducoffe, laborator Guillaume Jean Dominique Ducoffe)
+ - [sda](An2/Sem1/sda):  (Curs Guillaume Jean Dominique Ducoffe, lab Guillaume Jean Dominique Ducoffe)
  - [poo](An2/Sem1/poo): (Curs Anca Madalina Dobrovat, lab Marius Miculta Campeanu)
  - [bd](An2/Sem1/bd): (Curs Silviu Laurentiu Vasile, lab Veronica Suzana Chirut)
  - [ccna1](An2/Sem1/ccna1): (Curs Mihaita Dragan, lab Mihaita Dragan)
