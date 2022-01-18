@@ -1,0 +1,6 @@
+[submodule "An 2/Sem 1/oop/project/sound-synth"]
+	path = An 2/Sem 1/oop/project/sound-synth
+	url = https://github.com/lmihaig/sound-synth.git
+[submodule "An 2/Sem 1/bd/proiect/interfata/CTFlime"]
+	path = An 2/Sem 1/bd/proiect/interfata/CTFlime
+	url = https://github.com/lmihaig/CTFlime.git
