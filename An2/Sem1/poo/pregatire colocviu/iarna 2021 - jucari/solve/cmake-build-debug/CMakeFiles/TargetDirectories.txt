@@ -1,0 +1,3 @@
+C:/Users/Mihai/Desktop/oop exercise/iarna 2021 - jucari/solve/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Mihai/Desktop/oop exercise/iarna 2021 - jucari/solve/cmake-build-debug/CMakeFiles/solve.dir
+C:/Users/Mihai/Desktop/oop exercise/iarna 2021 - jucari/solve/cmake-build-debug/CMakeFiles/rebuild_cache.dir

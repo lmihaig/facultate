@@ -1,0 +1,4 @@
+"C:\Program Files\JetBrains\CLion 2021.3.2\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2021.3.2/bin/ninja/win/ninja.exe" -G Ninja "C:\Users\Mihai\Desktop\oop exercise\vara 2016 - restaurant\solve"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/Mihai/Desktop/oop exercise/vara 2016 - restaurant/solve/cmake-build-debug

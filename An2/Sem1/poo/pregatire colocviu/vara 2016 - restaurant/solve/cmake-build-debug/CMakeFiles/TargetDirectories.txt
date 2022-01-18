@@ -1,0 +1,3 @@
+C:/Users/Mihai/Desktop/oop exercise/vara 2016 - restaurant/solve/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Mihai/Desktop/oop exercise/vara 2016 - restaurant/solve/cmake-build-debug/CMakeFiles/solve.dir
+C:/Users/Mihai/Desktop/oop exercise/vara 2016 - restaurant/solve/cmake-build-debug/CMakeFiles/rebuild_cache.dir

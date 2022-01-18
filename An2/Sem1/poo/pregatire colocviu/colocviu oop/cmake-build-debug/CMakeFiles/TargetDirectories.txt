@@ -1,0 +1,3 @@
+C:/Users/Mihai/Desktop/oop exercise/colocviu oop/cmake-build-debug/CMakeFiles/colocviu_oop.dir
+C:/Users/Mihai/Desktop/oop exercise/colocviu oop/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Mihai/Desktop/oop exercise/colocviu oop/cmake-build-debug/CMakeFiles/rebuild_cache.dir
