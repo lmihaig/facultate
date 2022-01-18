@@ -7,32 +7,32 @@ Lista cu diverse resurse Unibuc CTI 2020-2024
  ## Anul 1 :
 
 ### Semestrul 1 :
- - [analiza](An1/Sem1/analiza):
- - [algebra](An1/Sem1/algebra):
- - [pc](An1/Sem1/pc):
- - [fizica](An1/Sem1/fizica):
- - [pl](An1/Sem1/pl):
- - [gcea](An1/Sem1/gcea):
- - [engleza](An1/Sem1/engleza):
+ - [analiza](An1/Sem1/analiza): (Curs Mihail Alexandru Iancu, seminar Liliana Mitre)
+ - [algebra](An1/Sem1/algebra): (Curs Stacniu Miron, seminar Adrian Dan Halanay)
+ - [pc](An1/Sem1/pc): (Curs Andrei Mihai Patrascu, seminar Marius Miculta Campeanu)
+ - [fizica](An1/Sem1/fizica): (Curs Catalin Tatuta, Cheche Tiberius, lab Eduard Gatin, Sorina Iftimie)
+ - [pl](An1/Sem1/pl): (Curs Cornel Nicolae, seminar Cornel Nicolae)
+ - [gcea](An1/Sem1/gcea): (Curs Tomi Paula Pompilia, seminar Remus Breazu)
+ - [engleza](An1/Sem1/engleza): (Protopopescu Daria)
 
 ### Semestrul 2 :
- - [ms](An1/Sem2/ms):
- - [cn](An1/Sem2/cn):
- - [tp](An1/Sem2/tp):
- - [autocad](An1/Sem2/autocad):
- - [uso](An1/Sem2/uso):
- - [bazele electrotehnicii](An1/Sem2/be):
- - [engleza](An1/Sem2/engleza):
+ - [ms](An1/Sem2/ms): (Curs Mihail Alexandru Iancu, seminar Liliana Mitre)
+ - [cn](An1/Sem2/cn): (Curs Sfetcu Razvan Cornel, seminar Andreea-Paula Voinea-Marinescu, lab Alexandru Ghita)
+ - [tp](An1/Sem2/tp): (Curs Radu Boriga, lab Marius Miculta Campeanu)
+ - [autocad](An1/Sem2/autocad): (Curs Mihaita Dragan, lab Mihaita Dragan)
+ - [uso](An1/Sem2/uso): (Curs Paul Irofti, lab Adriana Stancu)
+ - [bazele electrotehnicii](An1/Sem2/be): (Curs Cezar Tazloanu, laborator Cezar Tazloanu, Sorina Iftimie)
+ - [engleza](An1/Sem2/engleza): (Protopopescu Daria)
 
 
   ## Anul 2 :
 
 ### Semestrul 1 :
- - [sda](An2/Sem1/sda):
- - [poo](An2/Sem1/poo):
- - [bd](An2/Sem1/bd):
- - [ccna1](An2/Sem1/ccna1):
- - [eea](An2/Sem1/eea):
- - [ts](An2/Sem1/ts):
- - [engleza](An2/Sem1/engleza):
+ - [sda](An2/Sem1/sda):  (Curs Guillaume Jean Dominique Ducoffe, laborator Guillaume Jean Dominique Ducoffe)
+ - [poo](An2/Sem1/poo): (Curs Anca Madalina Dobrovat, lab Marius Miculta Campeanu)
+ - [bd](An2/Sem1/bd): (Curs Silviu Laurentiu Vasile, lab Veronica Suzana Chirut)
+ - [ccna1](An2/Sem1/ccna1): (Curs Mihaita Dragan, lab Mihaita Dragan)
+ - [eea](An2/Sem1/eea): (Curs Mihai Dinca, lab Bogdan Bita, Adrian Apostu)
+ - [ts](An2/Sem1/ts): (Curs Mihai Dinca, lab Alecsandru Vladimir Chirosca, Sandel Simion)
+ - [engleza](An2/Sem1/engleza): (Protopopescu Daria)
 
