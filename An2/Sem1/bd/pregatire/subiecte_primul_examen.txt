@@ -1,0 +1,9 @@
+Ce este o tranzactie? Propuneti/listati o succesiune de cel putin 10 comenzi sql (minim 5 distincte, doar clauza de la inceputul comenzii) care presupunem ca vor fi executate impreuna in cadrul unui script. Cate tranzactii au loc?
+
+Care sunt diferentele dintre o subcerere in clauza select si o subcerere in clauza from? Enuntati si rezolvati o singura cerere pe schema data in care sa folositi ambele tipuri de subcereri.
+
+Care sunt asemanarile dintre operatorii Left Join si Minus. Enuntati si rezolvati, pe schema de examen, cate o cerere pentru fiecare operator.
+
+Enuntati care sunt diferentele (minim 3) dintre clauzele WHERE si HAVING. Enuntati si rezolvati o cerere pe schema de examen care sa se poata rezolva cu clauza HAVING, dar nu si cu clauza WHERE!
+
+Definiti o vizualizare compusa, pe schema de examen, care sa permita inserarea de noi informatii, dar prin intermediul careia sa nu fie posibila modificarea informatiilor.

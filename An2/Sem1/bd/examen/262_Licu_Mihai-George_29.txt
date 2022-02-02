@@ -1,0 +1,142 @@
+-- I) 1.
+
+DROP TABLE tari CASCADE CONSTRAINTS;
+CREATE TABLE tari
+    (   
+        tara_tag VARCHAR(2),
+        CONSTRAINT pk_tari PRIMARY KEY (tara_tag),
+        tara_nume VARCHAR(25) UNIQUE NOT NULL,
+        regiune_tag VARCHAR(4) NOT NULL
+    );
+
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('DE', 'Demany', 'EUW');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('DK', 'Denmark', 'EUW');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('UK', 'United Kingdom', 'EUW');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('RO', 'Romania', 'EUNE');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('PO', 'Poland', 'EUNE');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('US', 'United States of America', 'NA');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('MX', 'Mexico', 'LAN');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('BR', 'Brazil', 'LAS');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('AU', 'Australia', 'OCE');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('IN', 'Indonesia', 'SEA');
+INSERT INTO tari(tara_tag, tara_nume, regiune_tag) VALUES('TW', 'Taiwan', 'SEA');
+
+
+DROP TABLE echipe CASCADE CONSTRAINTS;
+CREATE TABLE echipe
+    (   
+        echipa_nume VARCHAR(30),
+        CONSTRAINT pk_echipe PRIMARY KEY (echipa_nume),
+        echipa_email VARCHAR(40) UNIQUE,
+        echipa_scor INT NOT NULL,
+        tara_tag VARCHAR(2),
+        CONSTRAINT fk_echipe_tara FOREIGN KEY (tara_tag) REFERENCES tari(tara_tag) ON DELETE SET NULL
+    );
+    
+
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('dont_thread_on_me',  'dont_thread_on_me@gmail.com', 'RO', 5000);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('WreckTheLine',  NULL, 'RO', 2354);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('tempname',  'tempmail@gmail.com', 'RO', 1256);    
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('perfectblue',  'perfectblue@gmail.com', 'US', 100);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('ALLES',  'allesctfteam@gmail.com', NULL, 0);    
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('Balsn',  NULL, 'TW', 1235);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('hxp',  NULL, NULL, 566);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('Katzebin', 'Katzebin@yahoo.com', NULL, 7384);      
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('DiceGang', 'DiceGang@hotmail.co.uk', NULL, 1235);  
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('PlaidParliamentofPwning', 'PlaidParliamentofPwning@yahoo.com', 'DK', 3335);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('pasten', 'pasten@gmail.com', 'DK', 420);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('pwnibuc', 'pwnibuc@yahoo.com', 'RO', 2101);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('SuperGuesser', 'SuperGuesser@gmail.com', 'DE', 2000);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('MoreSmokedLeetChicken', 'MoreSmokedLeetChicken@gmail.com', 'IN', 1000);
+INSERT INTO echipe(echipa_nume, echipa_email, tara_tag, echipa_scor) VALUES ('TeaDeliverers', 'TeaDeliverers@yahoo.com', NULL, 531);
+
+
+DROP TABLE utilizatori CASCADE CONSTRAINTS;
+CREATE TABLE utilizatori
+    (
+        user_nume VARCHAR(25),
+        CONSTRAINT pk_utilizatori PRIMARY KEY(user_nume),
+        user_email VARCHAR(40) UNIQUE NOT NULL,
+        echipa_nume VARCHAR(30),
+        CONSTRAINT fk_utilizatori_echipa FOREIGN KEY (echipa_nume) REFERENCES echipe(echipa_nume) ON DELETE SET NULL
+    );
+    
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('leaK.u', 'licu.mihai21@gmail.com', 'dont_thread_on_me');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('binarysheep', 'cristiansimache@gmail.com', 'dont_thread_on_me'); 
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('Volrin', 'maresm@gmail.com', 'dont_thread_on_me');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('liveoverflow', 'liveoverflow@gmail.com', 'ALLES');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('connon', 'connon@gmail.com', 'Katzebin');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('sonigh', 'sonigh@yahoo.com', 'hxp');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('entowned', 'entowned@hotmail.co.uk', 'PlaidParliamentofPwning');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('owlinegue', 'owlinegue@yahoo.com', NULL);
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('elylaim', 'elylaim@yahoo.com', NULL);
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('mitlist', 'mitlist@gmail.com', 'MoreSmokedLeetChicken');        
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('kening', 'kening@hotmail.co.uk', 'perfectblue');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('nsiveding', 'nsiveding@gmail.com', 'pasten');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('harrominen', 'harrominen@gmail.com', NULL);
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('tivesuc', 'tivesuc@hotmail.co.uk', 'DiceGang');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('udoaffe', 'udoaffe@hotmail.co.uk', NULL);
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('ssingstr', 'ssingstr@yahoo.com', 'perfectblue');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('whzen', 'whzen@hotmail.co.uk', 'ALLES');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('ondlant', 'ondlant@yahoo.com', 'Balsn');
+INSERT INTO utilizatori(user_nume, user_email, echipa_nume) VALUES('gatewaboo', 'gatewaboo@yahoo.com', 'Katzebin');
+
+
+-- II) 2.
+-- O valoare default definita pentru o coloana reprezinta valoarea implicita care este acordata unei coloane la inserarea unei intrari in acel tabel daca cumva nu este definita precum intr-o inserare explicita. 
+-- Valoarea de baza pentru default este NULL. 
+-- Voi adauga o valore default pentru coloana echipa_scor din tabelul echipe, setand aceasta la 0
+ALTER TABLE echipe
+    MODIFY echipa_scor DEFAULT 0;
+    
+    
+-- II) 3.
+-- In urma rularii comenzilor in tabelul test vor ramane 34 de linii. 
+--N/2
+--+1
+--+1
+--+0
+--NU CONTEAZA
+--ROLLBACK
+--+0
+--x2
+--NU CONTEAZA
+--ROLLBACK
+--
+--29/2=15
+--15+2=17
+--17*2=34
+-- Se executa o tranzactie noua la intalnirea fiecarei comenzi LDD (ex create drop alter rename) deci in total in aceasta portiune de script se executa 5 tranzactii.
+
+-- II) 4.
+-- Voi scrie o cerere care afiseaza toate echipele cu scor pozitiv si lungime a numelui mai mare de 3
+SELECT echipa_nume FROM echipe WHERE echipa_scor>0 UNION SELECT echipa_nume FROM echipe WHERE LENGTH(echipa_nume)>3;
+
+-- III) 5.
+ALTER TABLE tari
+    ADD tara_initiala CHAR(2);
+UPDATE tari SET tara_initiala = tara_tag;
+    
+-- III) 6.
+SELECT COUNT(utilizatori.user_nume), echipe.echipa_scor
+FROM echipe, utilizatori
+WHERE utilizatori.echipa_nume = echipe.echipa_nume AND echipa_scor = (SELECT MAX(echipa_scor) FROM echipe)
+GROUP_BY echipa_scor;
+
+SELECT count(user_nume), echipa_scor
+FROM utilizatori, echipe, (SELECT MAX( echipa_scor) FROM echipe) as best_score
+WHERE utilizatori.echipa_nume = echipe.echipa_nume AND echipa_scor = best_score.echipa_scor
+GROUP_BY echipa_scor;
+
+SELECT count(user_nume), echipa_scor
+FROM utilizatori, echipe
+WHERE utilizatori.echipa_nume = echipe.echipa_nume 
+GROUP_BY echipa_scor
+WITH echipa_scor = (SELECT MAX( echipa_scor) FROM echipe)
+-- III) 7. 
+-- Permtie inserari in tabelul echipe, nu in utilizatori.
+CREATE OR REPLACE FORCE VIEW vizualizare AS
+SELECT echipa_nume, echipa_email, echipa_scor, tara_tag, user_nume
+FROM echipe e JOIN utilizatori u using(echipa_nume);
+
+INSERT INTO vizualizare(echipa_nume, echipa_email, echipa_scor, tara_tag) VALUES('test', 'test@gmail.com',0, NULL);

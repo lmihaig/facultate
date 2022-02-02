@@ -1,0 +1,9 @@
+1. (1.5p) Enuntati si rezolvati o cerere pe schema de examen care foloseste in rezolvare operatorul EXISTS.
+
+2. (2p) Afisati informatii despre profesorii care sunt pe pozitia a 2-a, respectiv a 4-a, din punct de vedere al numarului de studenti care participa la cursurile tinute de acestia.
+
+3. (1.5p) Implementati modificarile necesare astfel incat sa adaugati o constrangere de tip on delete cascade pe un tabel asociativ din schema atasata contului. Testati.
+
+4. (2p) Care sunt diferentele dintre o cerere sincronizata si o cerere nesincronizata? Enuntati si rezolvati o singura cerere pe schema data in care sa folositi ambele tipuri de subcereri.
+
+5. (2p )Definiti o vizualizare compusa(pe schema din contul de examen), in care sa folositi cel putin o functie grup, care sa permita inserarea de informatii. Testati.
