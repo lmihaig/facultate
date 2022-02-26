@@ -36,3 +36,11 @@ Lista cu diverse resurse Unibuc CTI 2020-2024
  - [ts](An2/Sem1/ts): (Curs Mihai Dinca, lab Alecsandru Vladimir Chirosca, Sandel Simion)
  - [engleza](An2/Sem1/engleza): (Protopopescu Daria)
 
+### Semestrul 2 :
+ - [eap](An2/Sem2/eap):  (Curs Dascalescu Cristina, lab Farcas Andreea)
+ - [ps](An2/Sem2/eap): (Curs Patriche Monica, sem Patrhice Monica, lab Cojocea Simona)
+ - [ccna2](An2/Sem2/ccna2): (Curs Silviu Laurentiu Vasile, lab Mihaita Dragan)
+ - [calculatoarenum](An2/Sem2/calculatoarenum): (Curs Nemnes Alexandru, lab Bogdan Bita, Chirosca Alexandru)
+ - [ed](An2/Sem2/ed): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
+ - [mandezcariera](An2/Sem2/mandezcariera): (Curs Josan Iuliana, sem Josan Iuliana)
+ - [engleza](An2/Sem2/engleza): (Protopopescu Daria)
