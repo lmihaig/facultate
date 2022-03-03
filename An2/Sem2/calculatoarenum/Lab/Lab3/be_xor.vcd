@@ -1,0 +1,36 @@
+$date
+	Thu Mar 03 09:07:39 2022
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module myxor_tb $end
+$var wire 1 ! q $end
+$var reg 1 " a $end
+$var reg 1 # b $end
+$scope module n1 $end
+$var wire 1 " a $end
+$var wire 1 # b $end
+$var wire 1 ! q $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0#
+0"
+0!
+$end
+#5
+1!
+1"
+#10
+0!
+1#
+#15
+1!
+0"
+#35
