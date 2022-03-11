@@ -1,0 +1,41 @@
+$date
+	Thu Mar 10 09:28:58 2022
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module stHA_tb $end
+$var wire 1 ! s $end
+$var wire 1 " co $end
+$var reg 1 # a $end
+$var reg 1 $ b $end
+$scope module n1 $end
+$var wire 1 # a $end
+$var wire 1 $ b $end
+$var reg 1 " co $end
+$var reg 1 ! s $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0$
+0#
+0"
+0!
+$end
+#5
+1!
+1#
+#10
+1"
+0!
+1$
+#15
+0"
+1!
+0#
+#35

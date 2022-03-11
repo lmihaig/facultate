@@ -1,0 +1,55 @@
+$date
+	Thu Mar 10 09:52:38 2022
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module arith_tb $end
+$var wire 1 ! d $end
+$var wire 1 " bo $end
+$var reg 1 # a $end
+$var reg 1 $ b $end
+$var reg 1 % bi $end
+$scope module n1 $end
+$var wire 1 # a $end
+$var wire 1 $ b $end
+$var wire 1 % bi $end
+$var reg 1 " bo $end
+$var reg 1 ! d $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0%
+0$
+0#
+0"
+0!
+$end
+#5
+1"
+1!
+1%
+#10
+0!
+1$
+#15
+1!
+0%
+#20
+0"
+0!
+1#
+#25
+1"
+1!
+1%
+#30
+0"
+0!
+0$
+#50

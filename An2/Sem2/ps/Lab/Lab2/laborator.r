@@ -200,3 +200,15 @@ tosscoin(1)
 # aleator din multimea cu numere intregi -34000:45000. Stabiliti care dintre cei
 # doi vectori are mai multe elemente, luate in valoare absoluta, mai mari decat
 # valoarea absoluta a elementului corespondent din celalalt vector
+
+x <- sample(-34000:45000, 1000)
+y <- sample(-34000:45000, 1000)
+
+n <- sum(abs(x) > abs(y))
+m <- sum(abs(x) < abs(y))
+
+if (n > m) {
+    cat("Vectorul x are mai multe elemente mai mari (in modul): ", n)
+} else {
+    cat("Vectorul y are mai multe elemente mai mari (in modul): ", m)
+}
