@@ -33,6 +33,7 @@ class(vector_integer)
 class(vector_integer)
 
 
+
 class(vector_logic <- c(TRUE, FALSE))
 vector_mixt <- c(1, 2, "a", "b", T)
 class(vector_mixt)
@@ -184,7 +185,7 @@ probTT31 <- (sum((omega3[, 1] == "T") & (omega3[, 2] == "T")) + sum((omega3[, 2]
 
 # Probabiliatea ca din 3 aruncari sa apara capul cel putin o data
 # Q: Comentati urmatoarele alternative de cod: pe care o preferati si de ce?
-
+# TEMA >
 omega3 <- tosscoin(3)
 sum(omega3 == "H") / nrow(omega3)
 # SAU
@@ -308,3 +309,5 @@ probabilitate <- favorabile / totale
 # a)Aparitia secventei TTHTT
 # b)Aparitia secventei HTTTH
 # c)Numarul de aparitii "H" sa fie mai mare ca numarul de aparitii "T"
+
+datasets::mtcars
