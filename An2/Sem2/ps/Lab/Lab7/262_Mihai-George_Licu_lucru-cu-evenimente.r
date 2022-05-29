@@ -157,10 +157,12 @@ total_hands <- (factorial(52) / (factorial(5) * factorial(52 - 5)))
 
 # 21. ??
 
-# 22. ?
+# 22.
+(13 * (factorial(4) / (factorial(3) * factorial(4 - 3))) * 12 * (factorial(4) / (factorial(2) * factorial(4 - 2)))) / total_hands
 
 # 23. toate cartile inima
 # a)
 1 / (factorial(52) / (factorial(13) * factorial(52 - 13)))
 
-# b) ?
+# b)
+13^4 / (factorial(52) / (factorial(4) * factorial(52 - 4)))

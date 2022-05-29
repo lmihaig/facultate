@@ -14,7 +14,8 @@ import java.util.Scanner;
 public class CitireAngajati {
     public static void main(String[] args) throws FileNotFoundException {
 
-        Scanner in = new Scanner(new File("Angajati_cu_dubluri.txt"));
+        Scanner in = new Scanner(
+                new File("C:\\Docs\\Facultate\\facultate\\An2\\Sem2\\eap\\Lab\\Lab6\\Angajati_cu_dubluri.txt"));
         int n = in.nextInt();
         in.nextLine();
         Employee[] employees = new Employee[n];
@@ -74,7 +75,9 @@ public class CitireAngajati {
          * angajat intr-o noua structura de date
          */
         // TODO
-        in = new Scanner(new File("Angajati_cu_dubluri.txt"));
+        // done
+        in = new Scanner(
+                new File("C:\\Docs\\Facultate\\facultate\\An2\\Sem2\\eap\\Lab\\Lab6\\Angajati_cu_dubluri.txt"));
         n = in.nextInt();
         in.nextLine();
         ArrayList<Person> uniquePerson = new ArrayList<Person>();

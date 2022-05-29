@@ -4,3 +4,9 @@
 [submodule "An 2/Sem 1/bd/proiect/interfata/CTFlime"]
 	path = An 2/Sem 1/bd/proiect/interfata/CTFlime
 	url = https://github.com/lmihaig/CTFlime.git
+[submodule "An2/Sem2/eap/proiect/SpaceshipDealership"]
+	path = An2/Sem2/eap/proiect/SpaceshipDealership
+	url = https://github.com/lmihaig/SpaceshipDealership
+[submodule "An2/Sem2/ps/proiect/R-package-continuous-random-variables"]
+	path = An2/Sem2/ps/proiect/R-package-continuous-random-variables
+	url = https://github.com/lmihaig/R-package-continuous-random-variables

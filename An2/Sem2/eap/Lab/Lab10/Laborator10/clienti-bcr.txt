@@ -1,0 +1,11 @@
+Name	Type	Address	Email	Account number	Balance	Status	Term	Card number	Withdrawal Limit
+Maria Papadopol	Debit	"Bucuresti, Strada Viorelelor, Nr. 1 "	mpapadopol@gmail.com	23231	300	OPEN		345434	1000
+Maria Papadopol	Savings	"Bucuresti, Strada Viorelelor, Nr. 1 "	mpapadopol@gmail.com	123123	200	SUSPENDED	3
+Ion Marinescu	Savings	"Bucuresti, Strada Viorelelor, Nr. 2"	imarinescu@gmail.com	987623	123	OPEN	6
+Vlad Ion	Savings	"Bucuresti, Strada Viorelelor, Nr. 3"	vion@gmail.com	346453	321	SUSPENDED	6
+Cecilia Toma	Savings	"Bucuresti, Strada Viorelelor, Nr. 4"	ctoma@gmail.com	56432454	4765	OPEN	6
+Paul Olaru	Debit	"Bucuresti, Strada Viorelelor, Nr. 5"	polaru@gmail.com	65443446	0	CLOSED		8776534558	1000
+Paul Olaru	Savings	"Bucuresti, Strada Viorelelor, Nr. 5"	polaru@gmail.com	324354	45	OPEN	3
+Ioana Astanei	Savings	"Bucuresti, Strada Viorelelor, Nr. 6"	iastanei@gmail.com	34564627	234	OPEN	12
+Mihnea Ionescu	Debit	"Bucuresti, Strada Viorelelor, Nr. 7"	mionescu@gmail.com	9877687	0	CLOSED		986656534	1500
+Mihnea Ionescu	Savings	"Bucuresti, Strada Viorelelor, Nr. 7"	mionescu@gmail.com	5678776465	343	OPEN	12
