@@ -1,0 +1,125 @@
+$date
+	Wed May 25 01:20:43 2022
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module arith_tb $end
+$var wire 1 ! c3 $end
+$var wire 1 " c2 $end
+$var wire 1 # c1 $end
+$var wire 1 $ c0 $end
+$var reg 1 % a0 $end
+$var reg 1 & a1 $end
+$var reg 1 ' b0 $end
+$var reg 1 ( b1 $end
+$scope module n1 $end
+$var wire 1 % a0 $end
+$var wire 1 & a1 $end
+$var wire 1 ' b0 $end
+$var wire 1 ( b1 $end
+$var reg 1 $ c0 $end
+$var reg 1 # c1 $end
+$var reg 1 " c2 $end
+$var reg 1 ! c3 $end
+$var reg 1 ) w1 $end
+$var reg 1 * w2 $end
+$var reg 1 + w3 $end
+$var reg 1 , w4 $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0,
+0+
+0*
+0)
+0(
+0'
+0&
+0%
+0$
+0#
+0"
+0!
+$end
+#5
+1%
+#10
+1&
+0%
+#15
+1%
+#20
+1'
+0&
+0%
+#25
+1$
+1%
+#30
+1#
+1*
+0$
+1&
+0%
+#35
+1$
+1%
+#40
+0#
+0*
+0$
+1(
+0'
+0&
+0%
+#45
+1#
+1)
+1%
+#50
+1"
+1,
+0#
+0)
+1&
+0%
+#55
+1#
+1)
+1%
+#60
+0"
+0,
+0#
+0)
+1'
+0&
+0%
+#65
+1#
+1)
+1$
+1%
+#70
+1"
+1,
+1*
+0)
+0$
+1&
+0%
+#75
+1!
+0"
+1+
+0#
+1)
+1$
+1%
+#95

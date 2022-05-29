@@ -1,0 +1,64 @@
+enable
+clock set 13:00:21 15 MAY 2022
+
+config t
+no cdp run
+no ip domain-lookup
+ip domain-name cti.ro
+hostname NUME
+banner motd $Mentenanta vineri 12$
+banner login $acces interzis persoanelor neutorizate$
+
+service password-encryption
+security password min-length 10
+login block-for 60 attempts 3 within 30
+
+enable secret ciscosecpa55
+enable password ciscoenapa55
+
+line console 0
+password ciscoconpa55
+login
+logging sync
+exec-timeout 20 20
+exit
+
+line vty 0 15
+password ciscovtypa55
+login
+logging sync
+exec-timeout 20 20
+transport input ssh
+login local
+exit
+
+username Admin01 privilege 15 secret Admin01pa55
+crypto key generate rsa
+
+
+int s0/0/1
+ip add IPADR MASK
+no sh
+
+int g0/0.20
+encapsulation dot1q 20
+ip add DEFAULTGATEWAY MASK
+exit
+
+int g0/0.24
+encapsulation dot1q 24
+encapsulation dot1q 24 native
+ip add DEFAU MASK
+
+int range g0/0
+ip add
+no sh
+
+								[ROUTARE STATICA]
+ip route IPADR MASK s0/0/1
+
+
+logging host IPSERVER 
+service timestamps log datetime msec
+service timestamps debug datetime msec
+exit

@@ -1,0 +1,93 @@
+enable
+clock set 13:00:21 15 MAY 2022
+
+config t
+no cdp run
+no ip domain-lookup
+ip domain-name cti.ro
+hostname NUME
+banner motd $Mentenanta vineri 12$
+
+service password-enc
+enable secret ciscosecpa55
+enable password ciscoenapa55
+
+line console 0
+password ciscoconpa55
+login
+logging sync
+exec-timeout 20 20
+exit
+
+line vty 0 15
+password ciscovtypa55
+login
+logging sync
+exec-timeout 20 20
+transport input ssh
+login local
+exit
+
+username Admin01 privilege 15 secret Admin01pa55
+crypto key generate rsa
+
+
+vlan 54
+name NUME
+exit
+
+vlan 55 
+name MAN
+exit
+
+vlan 56
+name NULL
+exit
+
+spanning-tree mode rapid-pvst
+
+								[VLAN NORMAL]
+int range f0/1-4
+switchport mode access
+switchport access vlan 54
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+switchport port-security aging time 1
+spanning-tree bpduguard enable
+spanning-tree portfast
+
+								[MAN]
+int range f0/20-23
+switchport mode trunk
+switchport trunk native  vlan 55
+switchport trunk allowed vlan 54								[fara null]
+exit
+
+								[NULL]
+int range f0/5-19,g0/1-2
+switchport mode access
+switchport access vlan 56
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+switchport port-security aging time 1
+spanning-tree bpduguard enable
+spanning-tree portfast
+shutdown											[diferenta] 
+exit
+
+
+interface vlan 55					[MAN]
+description $legatura cu MAN$
+ip add 138.148.157.5 255.255.255.248
+no sh
+
+
+ip default-gateway 138.148.157.1
+logging host IPSERVER 
+service timestamps log datetime msec
+service timestamps debug datetime msec
+exit
+
+copy run start

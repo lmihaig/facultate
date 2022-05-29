@@ -1,0 +1,37 @@
+RUTARI :
+
+router RIP :
+
+router rip
+version 2
+network vlan10 (ip network)
+network vlan20 (ip network)
+network vlan30 (ip network)
+network vlanlegatura (ip network)
+network vlanwi-fi (ip network)
+(toate in router-vlan)
+
+router EIGRP :
+
+no router rip
+router eigrp 1
+network vlan10 (ip network) (wildcard)
+network vlan20 (ip network) (wildcard)
+network vlan30 (ip network) (wildcard)
+network vlanlegatura (ip network) (wildcard)
+network vlanwi-fi (ip network) (wildcard)
+(toate in router-vlan)
+
+no auto-summary
+passive-interface giga 0/0
+passive-interface giga 0/1 etc... (toate interfetele inafara de serial 0/0/0(sau 0/0/1) aka pe care nu le folosesti)
+
+router OSPF:
+
+router ospf
+network vlan10 (ip network) (wildcard) area 0
+network vlan20 (ip network) (wildcard) area 0
+network vlan30 (ip network) (wildcard) area 0
+network vlanlegatura (ip network) (wildcard) area 0
+network vlanwi-fi (ip network) (wildcard) area 0 
+(toate in router-vlan)
