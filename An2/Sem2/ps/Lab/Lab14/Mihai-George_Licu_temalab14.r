@@ -59,7 +59,7 @@ tlc <- function(func, name) {
     abline(v = mean(x1000), col = "magenta")
     lines(t, dnorm(t, mean(x1000), sd(x1000)), col = "magenta")
 
-    title(main = name, line = -1,outer = TRUE)
+    title(main = name, line = -1, outer = TRUE)
 }
 
 tlc(arunca_un, "Uniforma")
