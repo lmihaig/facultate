@@ -1,0 +1,297 @@
+Teme pentru laboratorul de Limbaje de programare procedurala,
+anul II colegiu, semestrul II, 2000 - 2001.
+
+Setul I (data limita de predare: 31 martie 2001):
+
+I.1. Definiti clasa "persoana", avand:
+    - membri privati pentru nume (string), anul nasterii (intreg), sex
+       (caracter);
+    - sase metode publice pentru setarea/furnizarea informatiilor din cei
+       trei membri privati.
+   Definiti clasa "baza_de_date" avand
+    - ca membri privati un vector de pointeri la "persoana" si un intreg
+       reprezentand numarul persoanelor;
+    - ca metode publice un constructor care initializeaza vectorul cu NULL
+       pe fiecare componenta, un destructor care dezaloca toate "persoanele"
+       pointate de componentele vectorului, o metoda pentru adaugat o
+       "persoana", trei metode pentru eliminat persoanele avand un anumit
+       nume, respectiv an al nasterii, respectiv sex (cele trei metode vor
+       avea acelasi nume, prin supraincarcare), doua metode pentru afisat
+       persoanele continute in baza de date in ordinea alfabetica a numelor,
+       respectiv crescatoare a varstelor.
+   Cele doua clase de mai sus pot avea si alti membri/metode, dar se va
+  respecta principiul incapsularii datelor (orice setare/furnizare a
+  informatiilor continute in membrii privati se va face doar prin intermediul
+  unor metode). Pentru cele doua clase se va scrie cate un fisier header si un
+  fisier de implementare.
+   Scrieti un program care sa gestioneze o baza de date folosind clasele de
+  mai sus. El va afisa un meniu (in mod text), care va oferi functii de
+  adaugat o persoana, eliminat persoanele dupa nume, varsta, sex, afisat
+  persoanele in ordine alfabetica sau dupa varsta. Programul va fi construit
+  ca un "project" continand si fisierele de implementare ale celor doua clase.
+
+I.2 Clasa pentru numar complex, avand:
+    - membrii privati pentru partea reala si partea imaginara (double);
+    - constructori pentru initializare si copiere;
+    - metode publice pentru setat/furnizat partea reala si partea imaginara;
+    - metoda publica pentru citire;
+    - metoda publica de afisare (sub forma "a", "i*a", "-i*a", "a+i*b",
+       "a-i*b", dupa caz);
+    - operatori friend: + (adunare), +(numarul insusi), - (scadere),
+       - (opus), * (inmultire), / (impartire), +=, -=, *=, /= (cu efectul
+       cunoscut), ^ (ridicare la putere naturala), == (test de egalitate),
+       != (test de neegalitate); operatorii binari +, -, *, /, ==, != se
+       scriu in cate trei variante, pentru a putea lucra cu operanzi
+       complex-complex, double-complex, complex-double; operatorii +=, -=,
+       *=, /= se scriu in doua variante, pentru a putea lucra cu operanzi
+       complex-complex, complex-double.
+    - functii friend: "abs" (furnizeaza modulul), "sqrt" (furnizeaza radicalul
+       de ordinul doi).
+   Program de rezolvare a ecuatiei de ordinul doi cu coeficienti complecsi.
+   Pentru clasa "complex" se va scrie un fisier header si un fisier de
+  implementare. Programul se va scrie ca un project.
+
+I.3 Clasa "rational", avand:
+    - membrii privati pentru numarator si numitor (int);
+    - metoda privata pentru simplificare;
+    - constructori pentru initializare si copiere;
+    - metode publice pentru setat/furnizat numaratorul si numitorul;
+    - metoda publica pentru citire;
+    - metoda publica de afisare (sub forma "a", "a/b", "-a/b", dupa caz);
+    - metoda-operator publica de cast, de la rational la double;
+    - operatori friend: + (adunare), +(numarul insusi), - (scadere),
+       - (opus), * (inmultire), / (impartire), +=, -=, *=, /= (cu efectul
+       cunoscut), ^ (ridicare la putere naturala), == (test de egalitate),
+       != (test de neegalitate), <, <=, >, >= (comparatii); operatorii binari
+       +, -, *, /, ==, !=, <, <=, >, >= se scriu in cate trei variante, pentru
+       a putea lucra cu operanzi rational-rational, rational-intreg,
+       intreg-rational; operatorii +=, -=, *=, /= se scriu in cate doua
+       variante, pentru a putea lucra cu operanzi rational-rational,
+       rational-intreg; 
+    - functie friend "abs" (furnizeaza modulul).
+   Numerele rationale vor fi memorate sub forma lor canonica (adica 
+  numaratorul si numitorul sa fie prime intre ele iar numitorul sa fie > 0).
+  De aceea, implementarea operatiilor aritmetice se va face astfel incat la
+  sfarsit sa se faca automat si o simplificare;
+   Program de rezolvare a unui sistem de doua ecuatii liniare cu doua
+  necunoscute si coeficienti rationali.
+   Pentru clasa "rational" se va scrie un fisier header si un fisier de
+  implementare. Programul se va scrie ca un project.
+
+I.4 Clasa "string", avand:
+    - membrii privati pentru sirul de caractere si lungimea sa;
+    - constructori pentru initializare si copiere (sa poata lucra cu alte
+       obiecte "string", cu constante de forma "abc", cu siruri pointate de
+       un "char*", si cu valori de tip "char", privite ca stringuri de un
+       element);
+    - metode publice pentru setat/furnizat sirul de caractere;
+    - metode publice pentru citire si afisare;
+    - metode-operator publice de atribuire =; se scrie in doua variante,
+       pentru a putea lucra cu operanzi string-string, string-caracter;
+    - metoda-operator publica [] (furnizeaza al n-lea caracter din sir);
+    - operatori friend: + (concatenare), == (testarea egalitatii), !=
+       (testarea neegalitatii), <, <=, >, >= (comparare lexicografica);
+       operatorii se scriu in trei variante, pentru a putea lucra cu operanzi
+       string-string, string-caracter, caracter-string;
+    - functie friend "length" care furnizeaza lungimea sirului;
+    Pentru clasa "string" se va scrie un fisier header si un fisier de
+   implementare.
+    Implementati functiile  si procedurile "pos", "copy", "insert", "delete"
+   de lucru cu stringuri din Turbo Pascal, astfel incat sa lucreze cu
+   obiecte "string". Pentru ansamblul acestor functii se va scrie un fisier
+   header si un fisier de implementare.
+    Program care citeste doua stringuri s1 si s2 si afisaza stringul obtinut
+   prin eliminarea tuturor aparitiilor lui s2 in s1 ca subcuvant (exemplu:
+   s1="abcbabab", s2="ab" ===> "cb").
+
+I.5 Clasa "vector" (vector de double), avand:
+    - membri privati pentru vectorul propriuzis si numarul de elemente;
+    - constructor pentru initializarea cu un numar dat pe toate componentele
+       (primeste ca parametru numarul respectiv si numarul componentelor);
+    - constructori pentru initializare si copiere;
+    - metode publice pentru citire si afisare;
+    - metoda-operator public de atribuire =;
+    - metoda publica pentru reactualizarea numarului de componente si
+      initializarea componentelor cu un numar dat (primeste ca parametru
+      numarul respectiv si numarul componentelor);
+    - metoda-operator publica [] (furnizeaza o referinta la al n-lea element
+       din vector); implementarea se va face astfel incat daca v este obiect
+       "vector", i este un intreg si x un real, sa fie posibile constructii
+       ca: "cin>>v[i]", "cout<<v[i]", "v[i]=x", "x=v[i]", cu efectul obisnuit;
+    - operatori friend: + (in doua variante: suma si vectorul insusi (unar)),
+       - (in doua variante: diferenta si opusul (unar)), * (in doua variante:
+       produsul scalar si inmultirea cu un scalar), +=, -= (cu efectul
+       cunoscut), == (testarea egalitatii), != (testarea neegalitatii), <, <=,
+       >, >= (comparare pe componente), !(daca vectorul are 0 pe toate
+       componentele, furnizeaza intregul 0, altfel furnizeaza intregul 1);
+       operatorii ==, !=, <, <=, >, >= se vor scrie in trei variante, pentru
+       a putea lucra cu operanzi vector-vector, real-vector, vector-real (in
+       ultimele doua cazuri se va compara vectorul dat cu un vector de aceeasi
+       dimensiune care are pe fiecare componenta numarul respectiv);
+    - functie friend "length" care furnizeaza numarul de elemente.
+    Actiunile vor fi implementate astfel ca atunci cand nu este posibila
+   operatia (de exemplu adunarea unor vectori de dimensiune diferita) sa se
+   afiseze un mesaj de eroare.
+    Program care citeste mai multi vectori si calculeaza suma lor si maximul
+   lor.
+    Pentru clasa "vector" se va scrie un fisier header si un fisier de
+   implementare. Programul se va scrie ca un project.
+
+I.6 Clasa "matrice" (matrice de double), avand:
+    - membri privati pentru matricea propriuzisa, numarul de linii si numarul
+       de coloane;
+    - constructor pentru initializarea cu un numar dat pe toate componentele
+       (primeste ca parametru numarul respectiv si numarul de linii si de
+       coloane);
+    - constructori pentru initializare si copiere;
+    - metode publice pentru citire si afisare;
+    - metoda-operator public de atribuire =;
+    - metoda publica pentru reactualizarea numarului de linii si coloane si
+       initializarea componentelor cu un numar dat (primeste ca parametru
+       numarul respectiv, numarul liniilor si al coloanelor);
+    - metoda-operator publica []; daca matricea are o linie sau o coloana,
+       furnizeaza o referinta la al n-lea element; in caz contrar furnizeaza
+       o matrice linie reprezentand a n-a linie din matricea initiala;
+       implementarea se va face astfel incat daca a este o matrice, i si j
+       doi intregi iar x un real, sa fie posibile constructii ca:
+       "cin>>a[i][j]", "cout<<a[i][j]", "a[i][j]=x", "x=a[i][j]";
+    - operatori friend: + (in doua variante: suma si matricea insasi (unar)),
+       - (in doua variante: diferenta si opusa (unar)), * (in doua variante:
+       produsul matricilor si inmultirea cu un scalar), +=, -=, *= (cu efectul
+       cunoscut; *= se va scrie in doua variante, avand in vedere inmultirea
+       si inmoultirea cu un scalar), == (testarea egalitatii), != (testarea
+       neegalitatii) <, <=, >, >= (comparare pe componente), !(daca matricea
+       are 0 pe toate componentele, furnizeaza intregul 0, altfel furnizeaza
+       intregul 1), ~(inversa); operatorii ==, !=, <, <=, >, >= se vor scrie
+       in trei variante, pentru a putea lucra cu operanzi matrice-matrice,
+       real-matrice, matrice-real (in ultimele doua cazuri se va compara
+       matricea data cu un vector de aceeasi dimensiune care are pe fiecare
+       componenta numarul respectiv);
+    - functii friend "nrlinii", "nrcoloane", "nrelemente" care furnizeaza
+       numarul liniilor, coloanelor, respectiv elementelor matricii;
+    Program pentru rezolvarea unei ecuatii matriciale de forma "A*X+B=0"
+   (A,B,X,0 sunt matrici).
+    Pentru clasa "matrice" se va scrie un fisier header si un fisier de
+   implementare. Programul se va scrie ca un project.
+
+I.7 Clasa "polinom" (polinom cu coeficienti double), avand:
+    - membri privati pentru vectorul de coeficienti si numarul de elemente
+       (sau gradul);
+    - constructori pentru initializare si copiere (sa poata lucra si cu
+       numere reale (privite ca polinoame de grad 0));
+    - metode publice pentru citire si afisare;
+    - metoda-operator public de atribuire =; se scrie in doua variante,
+       pentru a putea lucra cu operanzi polinom-polinom, polinom-real (un
+       real fiind privit ca un polinom de grad 0);
+    - metoda-operator publica [] (furnizeaza o referinta la coeficientul de
+       grad n din polinom); implementarea se va face astfel incat daca p este
+       obiect "polinom", i este un intreg si x un real, sa fie posibile
+       constructii ca: "cin>>p[i]", "cout<<p[i]", "p[i]=x", "x=p[i]", cu
+       efectul obisnuit;
+    - operatori friend: + (in doua variante: suma si polinomul insusi (unar)),
+       - (in doua variante: diferenta si opusul (unar)), * (inmultirea),
+       / (catul), % (restul), ^ (ridicarea la putere naturala), +=, -=, *=, /=
+       (cu efectul cunoscut), == (testarea egalitatii), != (testarea
+       neegalitatii), !(daca polinomul este nul furnizeaza intregul 0, altfel
+       furnizeaza intregul 1); operatorii binari +, -, *, /, +=, -=, *=, /=,
+       ==, != se vor scrie in trei variante, pentru a putea lucra cu operanzi
+       polinom-polinom, real-polinom, polinom-real (realul fiind privit ca
+       polinom de grad 0);
+    - metoda-operator publica () pentru calcului valorii polinomului intr-un
+       punct;
+    - functie friend "grad" care furnizeaza gradul.
+    Program pentru determinarea celui mai mare divizor comun a doua polinoame
+   (algoritumul lui Euclid).
+    Pentru clasa "polinom" se va scrie un fisier header si un fisier de
+   implementare. Acesta va contine si definitia polinomului "X". Programul
+   se va scrie ca un project.
+
+I.8 Clasa "obiect", avand:
+    - ca membri privati: un "void*" (adresa unei zone de memorie, alocata
+       dinamic, continand informatia aferenta obiectului),  si un "int"
+       (dimensiunea zonei);
+    - un constructor de initializare (primeste ca parametru dimensiunea
+       zonei si o aloca, initializand-o cu toti bitii 0) si unul de
+       copiere;
+    - un destructor, care dezaloca zona alocata dinamic;
+    - o metoda de citire si una de afisare (implementarea este la latitudinea
+       programatorului);
+    - operatori friend: ==, !=, <, <=, >, >= (implementarea lor este la
+       latitudinea programatorului).
+    Pentru clasa "obiect" se va scrie un fisier header si un fisier de
+   implementare.
+    Structura "element", avand ca membri un "obiect*" si un "element*"
+   (ea va fi folosita mai jos la implementarea unei liste de "obiecte"
+   alocata inlantuit).
+    Clasa "stiva" (stiva de "obiecte", alocata inlantuit), avand:
+    - ca membru privat, un "element*" (varful stivei);
+    - un constructor care initializeaza varful stivei cu NULL;
+    - un destructor care dezaloca toate elementele stivei;
+    - metode publice pentru: testarea daca stiva e vida, push, pop.
+    Pentru clasa "stiva" se va scrie un fisier header si un fisier de
+   implementare. Fisierul de implementare va contine si structura "element".
+    Un fisier header si unul de implementare, referitor la un ansamblu de
+   functii uzuale de lucru cu stive: citirea stivei, afisarea stivei,
+   golirea stivei, copierea unei stive in alta stiva, inversarea ordinii
+   elementelor intr-o stiva; aceste functii vor accesa stivele doar prin
+   intermediul metodelor publice.
+    Un program care citeste o stiva, apoi o inverseaza, apoi iar o inverseaza,
+   apoi o copiaza in alta stiva, apoi o goleste, iar dupa fiecare operatie
+   afisaza stivele obtinute. Programul se va scrie ca un project.
+
+I.9 La fel ca la I.8, dar cu cozi (clasa "coada" va contine doi membri
+   privati de tip "element*", pentru varful si baza cozii).
+
+I.10 Clasa "individ", avand:
+    - membrii privati: 
+       i,j (intregi) = pozitia intr-o tabela 20X70
+       tip (char) = numele speciei ('+' sau '0');
+       varsta (intreg) = varsta (de la 0 la o valoare maxima fixa aleasa de
+			 programator);
+       energie (double) = energia;
+       viu (unsigned char) = este 1 daca e viu si 0 daca e mort;
+    - constructor care primeste ca parametrii pozitia si tipul si
+       initializeaza corespunzator membrii respectivi; varsta se
+       initializeaza cu 0, energia cu o valoare fixa aleasa de programator,
+       viu cu 1;
+    - metode private:
+       hraneste = creste energia proprie cu o valoare care este cu atat mai
+                   mare cu cat aportul energetic al pozitiilor libere 
+		   invecinate este mai mare iar varsta este mai aproape de
+		   jumatatea varstei maxime (formula este la latitudinea
+		   programatorului);
+		  aportul energetic al unei pozitii libere in tabel este egal
+		   cu 1 + numarul de pozitii libere invecinate cu ea;
+       inmulteste = aloca un numar de fii (indivizi de acelasi tip) in pozitii
+                  libere invecinate (fii indivizi sunt initializati de
+		  constructorul lor); numarul de fii alocati depinde crescator
+		  de energia proprie si de diferenta intre varsta proprie si
+		  jumatatea varstei maxime; pentru fiecare fiu generat,
+		  energia proprie scade cu o constanta; formulele sunt la
+		  latitudinea programatorului;
+       ataca = pentru fiecare individ x invecinat si de alt tip, daca energia
+                proprie este mai mare decat energia lui x, din energia proprie
+		se scade energia lui x iar x este omorat (i se aplica metoda
+		"moare");
+       imbatraneste = creste varsta cu 1; scade energie cu o valoare constanta
+		aleasa de programator; daca a atins o varsta maxima aleasa de
+		programator sau daca energia sa a devenit <=0, individul
+		curent este omorat (i se aplica metoda "moare");
+       moare = viu devine 0;
+    - metode publice:
+       actualizare = aplica succesiv metodele: hraneste, inmulteste, ataca,
+		imbatraneste;
+       esteviu = returneaza 1 daca viu==1 si 0 altfel;
+       gettip = returneaza tipul.
+   Program care genereaza aleator o tabela 20X70 de indivizi, majoritatea 
+  pozitiilor fiind insa goale, apoi intr-un ciclu, la fiecare iteratie,
+  parcurge indivizii (intr-o anumita ordine), pe cei vii ii actualizeaza, pe
+  cei morti ii elimina din tabela, apoi afisaza tabla. Ciclarea dureaza pana
+  se apasa o tasta sau pana nu mai ramane nici un individ pe tabla.
+   Propunere: tabla sa fie ea insasi un obiect avand metode pentru 
+  initializare aleatoare, afisare, actualizare, test daca mai exista indivizi,
+  alocarea unui nou element pe o pozitie data, eliminarea unui element de pe o
+  pozitie data, etc.
+
+							DRAGULICI DANIEL
+                                                        2001

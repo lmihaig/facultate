@@ -1,0 +1,186 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;; documentatie intreruperi: ;;;;;;;;;;;;;;;;;;;;;;;;
+INT 21,A - Buffered Keyboard Input
+AH = 0A
+DS:DX = pointer to input buffer of the format:
+¦ max ¦ count ¦ BUFFER (N bytes)
+  |     |       +------ input buffer
+  |     ¦ +------------ number of characters returned (byte)
+  +-------------- maximum number of characters to read (byte)
+returns nothing
+- since strings can be pre-loaded, it is recommended that the
+default string be terminated with a CR
+- N bytes of data are read from STDIN into buffer+2
+- max buffer size is 255, minimum buffer size is 1 byte
+- chars up to and including a CR are placed into the buffer
+beginning at byte 2; Byte 1 returns the number of chars
+placed into the buffer (extended codes take 2 characters)
+- DOS editing keys are active during this call
+- ~INT 23~ is called if Ctrl-Break or Ctrl-C detected
+=====
+nota: CR este plasat in buffer, dar "count" da nr. car. citite fara CR
+;;;;;;;;;;;;;;;;;;;;
+INT 21,9 - Print String
+AH = 09
+DS:DX = pointer to string ending in "$"
+returns nothing
+- outputs character string to STDOUT up to "$"
+- backspace is treated as non-destructive
+- if ~Ctrl-Break~ is detected, ~INT 23~ is executed
+;;;;;;;;;;;;;;;;;;;;
+INT 16,0 - Wait for Keypress and Read Character
+AH = 00
+on return:
+AH = keyboard scan code
+AL = ASCII character or zero if special function key
+- halts program until key with a scancode is pressed
+- see ~SCAN CODES~
+;;;;;;;;;;;;;;;;;;;;
+INT 21,6 - Direct Console I/O
+AH = 06
+DL = (0-FE) character to output
+= FF if console input request
+on return:
+AL = input character if console input request (DL=FF)
+ZF = 0 if console request character available (in AL)
+= 1 if no character is ready, and function request
+was console input
+- reads from or writes to the console device depending on
+the value of DL
+- cannot output character FF (DL=FF indicates read function)
+- for console read, no echo is produced
+- returns 0 for extended keystroke, then function must be
+called again to return scan code
+- ignores Ctrl-Break and Ctrl-PrtSc
+;;;;;;;;;;;;;;;;;;;;
+INT 21,3C - Create File Using Handle
+AH = 3C
+CX = file attribute (see ~FILE ATTRIBUTES~)
+DS:DX = pointer to ASCIIZ path name
+on return:
+CF = 0 if successful
+= 1 if error
+AX = files handle if successful
+= error code if failure (see ~DOS ERROR CODES~)
+- if file already exists, it is truncated to zero bytes on opening
+===== Nota:
+- Gavin:
+input:
+CX = file attribute
+    bit 0 = 1 read-only file
+    bit 1 = 1 hidden file
+    bit 2 = 1 system file
+    bit 3 = 1 volume (ignored)
+    bit 4 = 1 reserved (0) - directory
+    bit 5 = 1 archive bit
+    bits 6-15 reserved (0) 
+output: if CF = 1:
+AX = error code:
+    03h path not found
+    04h no available handle
+    05h access denied
+- Gavin: If a file of the same name exists then it will be lost
+- Fisierul creat este automat decshis pt. scriere (deci efectul este ca la
+ "fopen(...,"w")") - de aia returneaza handlerul;
+;;;;;;;;;;;;;;;;;;;;
+INT 21,3D - Open File Using Handle
+AH = 3D
+AL = open access mode
+00 read only
+01 write only
+02 read/write
+DS:DX = pointer to an ASCIIZ file name
+on return:
+AX = file handle if CF not set
+= error code if CF set (see ~DOS ERROR CODES~)
+% Access modes in AL:
+¦7¦6¦5¦4¦3¦2¦1¦0¦ AL
+¦ ¦ ¦ ¦ ¦ +-------- read/write/update access mode
+¦ ¦ ¦ ¦ +--------- reserved, always 0
+¦ +-------------- sharing mode (see below) (DOS 3.1+)
++--------------- 1 = private, 0 = inheritable (DOS 3.1+)
+% Sharing mode bits (DOS 3.1+): Access mode bits:
+% 654 210
+000 compatibility mode (exclusive) 000 read access
+001 deny others read/write access 001 write access
+010 deny others write access 010 read/write access
+011 deny others read access
+100 full access permitted to all
+- will open normal, hidden and system files
+- file pointer is placed at beginning of file
+===== Nota:
+- Gavin:
+input:
+AL = bits 0-2 Access mode
+      000 = read only
+      001 = write only
+      010 = read/write 
+bits 4-6 Sharing mode (DOS 3+)
+      000 = compatibility mode
+      001 = deny all
+      010 = deny write
+      011 = deny read
+      100 = deny none 
+output: 
+if CF = 1: 
+AX = error code
+      01h missing file sharing software
+      02h file not found
+      03h path not found or file does not exist
+      04h no handle available
+      05h access denied
+      0Ch access mode not permitted 
+;;;;;;;;;;;;;;;;;;;;
+INT 21,3E - Close File Using Handle
+AH = 3E
+BX = file handle to close
+on return:
+AX = error code if CF set (see ~DOS ERROR CODES~)
+- if file is opened for update, file time and date stamp
+as well as file size are updated in the directory
+- handle is freed
+===== Nota:
+- Gavin:
+output: 
+ AX = destroyed
+ if CF = 1 then AX = error code - 06h file not opened or unauthorised handle
+- Gavin: a zero handle will close the standard input
+;;;;;;;;;;;;;;;;;;;;
+INT 21,3F - Read From File or Device Using Handle
+AH = 3F
+BX = file handle
+CX = number of bytes to read
+DS:DX = pointer to read buffer
+on return:
+AX = number of bytes read is CF not set
+= error code if CF set (see ~DOS ERROR CODES~)
+- read specified number of bytes from file into buffer DS:DX
+- when AX is not equal to CX then a partial read occurred due
+to end of file
+- if AX is zero, no data was read, and EOF occurred before read
+===== Nota:
+- Gavin:
+output: if CF=1:
+AX = error code:
+      05h access denied
+      06h illegal handle or file not opened 
+- Gavin:
+If CF = 0 and AX = 0 then the file pointer was already at the end of the file
+ and no more can be read. If CF = 0 and AX is smaller than CX then only part
+ was read because the end of the file was reached or an error occurred.
+This function can also be used to get input from the keyboard. Use a handle
+ of 0, and it stops reading after the first carriage return, or once a 
+ specified number of characters have been read.
+;;;;;;;;;;;;;;;;;;;;
+INT 21,40 - Write To File or Device Using Handle
+AH = 40h
+BX = file handle
+CX = number of bytes to write, a zero value truncates/extends
+the file to the current file position
+DS:DX = pointer to write buffer
+on return:
+AX = number of bytes written if CF not set
+= error code if CF set (see ~DOS ERROR CODES~)
+- if AX is not equal to CX on return, a partial write occurred
+- this function can be used to truncate a file to the current
+file position by writing zero bytes
+;;;;;;;;;;;;;;;;;;;;

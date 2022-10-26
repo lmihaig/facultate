@@ -1,0 +1,2346 @@
+
+                    Probleme de programare in limbajul C
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Probleme generale (aritmetica, vectori, matrici):
+   -------------------------------------------------
+
+1.1 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura un numar natural si
+   scrie pe ecran toti divizorii sai primi.
+  Pentru a testa daca un numar este prim se va folosi o functie:
+     int prim(int n);
+   (returneaza: 1 daca n e prim, 0 daca nu e prim).
+
+1.2 (puncte: 2.5)
+  Scrieti un program care citeste de la tastatura un numar natural si
+   scrie pe ecran descompunerea sa in factori primi
+  (de exemplu:
+   daca citeste 60, va afisa: 60 = 2^2 * 3 * 5
+   daca citeste  8, va afisa:  8 = 2^3
+   daca citeste  5, va afisa:  5 = 5
+   daca citeste  1, va afisa:  1 = 1
+   daca citeste  0, va afisa:  0 = 0)
+
+1.3 (puncte: 1)
+  Scrieti un program care citeste de la tastatura 2 numere naturale si
+   verifica daca sunt prietene (i.e. fiecare este suma divizorilor
+   celuilalt, printre divizorii unui numar considerand si pe 1, dar
+   excluzand numarul insusi).
+  Exemple de numere prietene: k si k (cu k perfect), 220 si 284,
+   17296 si 18416.
+  Suma divizorilor se va calcula cu o functie:
+     int sumadiv(int n);
+   (returneaza suma divizorilor lui n).
+
+1.4 (puncte: 1)
+  Scrieti un program care citeste de la tastatura un numar natural si
+   calculeaza suma cifrelor sale, folosind o functie:
+     int sumacif(int n);
+   (returneaza suma cifrelor lui n).
+
+1.5 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura un numar natural si
+   calculeaza suma cifrelor sale de pe pozitii pare (pozitiile se vor
+   numara incepand de la cifra unitatilor).
+  Pentru a se putea lucra si cu numere mai mari, se va folosi pentru
+   numere intregi tipul "long int" (ale carui valori in Turbo C++ sunt de
+   la -2147483648 la 2147483647).
+  Exemple: pentru n = 12345, suma este 6 (= 4 + 2);
+	   pentru n = 123456, suma este 9 (= 5 + 3 + 1).
+  Suma cifrelor de pe pozitii pare se va calcula cu o functie:
+     int sumacifpp(int n);
+   (returneaza suma cifrelor de pe pozitii pare ale lui n daca exista, sau
+    -1 daca nu exista).
+
+1.6 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura un numar natural si
+   calculeaza suma cifrelor sale pare.
+  Suma cifrelor pare se va calcula cu o functie:
+     int sumacifp(int n);
+   (returneaza suma cifrelor pare ale lui n daca exista, sau -1 daca nu
+    exista).
+
+1.7 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura un numar natural si
+   verifica daca este palindrom (i.e. daca citit si normal si invers
+   este la fel).
+  Se poate folosi tipul "unsigned long int" (ale carui valori in Turbo C++
+   sunt de la 0 la 4294967295), pentru a se putea lucra si cu numere mai
+   mari.
+  Exemple: 1 este palindrom;
+           12 nu este palindrom;
+           11 este palindrom;
+           123 nu este palindrom;
+           212 este palindrom;
+           42324 este palindrom;
+	   42354 nu este palindrom;
+  Se poate folosi o functie:
+     unsigned long int rev(unsigned long int n);
+   care returneaza reversul unui numar natural dat ca parametru.
+
+1.8 (puncte: 1)
+  Scrieti un program care citeste de la tastatura un numar natural n si
+   afisaza pe ecran toate tripletele de numere pitagoreice mai mici sau
+   egale cu n (adica triplete de numere naturale i j k astfel incat
+   i*i + j*j = k*k si i,j,k<=n), fara repetitii modulo ordinea (de ex.,
+   daca s-a afisat 3 4 5, nu se va afisa si 4 3 5). Numarul de calcule
+   efectuate trebuie sa fie cat mai mic.
+
+1.9 (puncte: 1.5)
+  Scrieti un program pentru calculul cmmdc al doua numere naturale citite
+   de la tastatura, folosind algoritmul lui Euclid prin impartiri.
+  Aceeasi cerinta, dar folosind algoritmul lui Euclid prin diferente.
+  Pentru a calcula cmmdc se vor folosi functii:
+     int cmmdcimp(int a, int b);
+     int cmmdcdif(int a, int b);
+   (returneaza cmmdc lui a si b sau -1 daca a=b=0).
+
+1.10 (puncte: 1.5)
+  Scrieti un program pentru rezolvarea ecuatiei de grad <=2 cu coeficienti
+   reali.
+
+1.11 (puncte: 1)
+  Scrieti un program care citeste de la tastatura un numar natural n si
+   sa afiseze al n-lea termen al sirului lui Fibonacci, calculat cu o
+   functie:
+     unsigned long int fib(int n);
+
+1.12 (puncte: 1.5)
+  De la tastatura se citesc doua numere naturale a si b (b>=2) si se
+   scrie pe ecran reprezentarea lui a in baza b. Cifrele in baza b vor fi
+   numerele 0, ... , b-1, scrise in baza 10 si puse intre paranteze daca
+   b>=11.
+  De exemplu:
+   daca b=7 si a=25, se va afisa: 34
+   daca b=12 si a=25, se va afisa: (2)(1)
+   daca b=12 si a=135, se va afisa: (11)(3)
+
+1.13 (puncte: 0.5)
+  Scrieti un program care citeste de la tastatura 2 vectori de numere si
+   calculeaza produsul lor scalar.
+
+1.14 (puncte: 2)
+  Scrieti un program care citeste de la tastatura un vector de numere
+   naturale si, printr-o singura parcurgere a sa, determina:
+   numarul componentelor pare, suma elementelor pozitive, maximul
+   componentelor negative.
+
+1.15 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura un vector de numere si
+   afisaza permutarile sale circulare.
+  De exemplu, pentru vectorul 1 2 3 4 5, permutarile circulare sunt:
+    1 2 3 4 5
+    2 3 4 5 1
+    3 4 5 1 2
+    4 5 1 2 3
+    5 1 2 3 4
+  (un vector cu n componente are n permutari circulare).
+
+1.16 (puncte: 2)
+  Scrieti un program care citeste de la tastatura un vector de numere si
+   construieste un vector cu toate valorile distincte care apar in el (nu
+   neaparat in ordine), pe care il afisaza.
+  De exemplu, daca vectorul este: 1 2 4 2 3 2 4 3 3 5 3, vectorul valorilor
+   distincte este: 1, 2, 4, 3, 5.
+
+1.17 (puncte: 4)
+  Scrieti un program care citeste de la tastatura 2 numere naturale
+   nenule n si k, si calculeaza "combinari de n luate cate k", folosind
+   triunghiul lui Pascal.
+  Se va folosi un singur vector.
+
+1.18 (puncte: 2)
+  Scrieti un program care citeste de la tastatura un vector de numere si
+   il sorteaza (il ordoneaza).
+
+1.19 (puncte: 2)
+  Scrieti un program care citeste de la tastatura 2 vectori de numere
+   ordonati si formeaza din elementele lor un alt vector ordonat, prin
+   interclasare.
+  De exemplu, daca vectorii sunt: 1 4 4 6 si 2 3 4 5 6 8 9, se va obtine:
+     1 2 3 4 4 4 5 6 6 8 9.
+
+1.20 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura un polinom P si un numar
+   a si calculeaza valoarea P(a).
+  Polinomul se introduce in calculator prin sirul coeficientilor sai.
+
+1.21 (puncte: 1)
+  Scrieti un program care citeste de la tastatura 2 matrici patratice de
+   numere si calculeaza suma si produsul lor.
+
+1.22 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura o matrice patratica de
+   numere si calculeaza norma sa infinit si norma sa 1
+   (pentru o matrice de numere a[1..m,1..n],
+	norma infinit este:  max (|a[i,1]|+...+|a[i,n]|)
+                           i=1..m
+    iar norma 1 este: max (|a[1,j]|+...+|a[m,j]|)
+                    j=1..n
+   )
+
+1.23 (puncte: 1.5)
+  Scrieti un program care citeste de la tastatura o matrice de numere
+    si calculeaza suma elementelor de pe "conturul" ei.
+   De exemplu, daca matricea este:
+
+      / 1  2  3  4 \
+      | 5  6  7  8 |
+      \ 9 10 11 12 /
+
+   programul va afisa:
+
+      65
+
+1.24 (puncte: 2)
+  Scrieti un program care citeste de la tastatura o matrice de numere
+    si inlocuieste cel mai mare element de pe fiecare coloana cu suma
+    elementelor de pe coloana respectiva. Daca pe o coloana valoarea maxima
+    se atinge in mai multe locuri, se va inlocui doar una din aparitii.
+   Exemplu: daca matricea este:
+
+      / 1  2  4  3 \
+      | 5  2  3  3 |
+      \ 3 10  4  3 /
+
+    si facem conventia ca pe fiecare coloana inlocuim doar prima aparitie
+    a maximului, vom obtine:
+
+      / 1  2 11  9 \
+      | 9  2  3  3 |
+      \ 3 14  4  3 /
+
+1.25 (puncte: 2.5)
+  Scrieti un program care citeste de la tastatura o matrice de numere si
+   ordoneaza liniile acesteia astfel incat pe ultima coloana elementele
+   sa apara in ordine crescatoare. Matricea rezultata se va afisa.
+  Operatiile se vor face in aceeasi structura array (nu se vor considera
+   in program mai multe matrici).
+
+Observatie importanta:
+~~~~~~~~~~~~~~~~~~~~~
+   In problemele de mai sus se vor trata toate cazurile "speciale".
+   De exemplu, daca se cere suma elementelor pare dintr-un vector dat de
+    numere naturale iar vectorul respectiv nu contine numere pare, se
+    va tipari un mesaj, de tipul 'n-ar sens suma componentelor pare', si
+    nu se va scrie pur si simplu ca suma este 0.
+
+2. Tipuri de date:
+   ---------------
+
+2.1 (puncte: 2.5)
+  Scrieti o functie:
+
+     void replong(long n);
+
+   care afisaza octetii din reprezentarea interna a lui n de la stanga
+   la dreapta in ordinea descresterii semnificatiei, fiecare octet
+   reprezentandu-se ca doua cifre hexa; de exemplu pentru n=197121
+   (= 1 + 2*256 + 3*256*256) se va obtine:
+		  00 03 02 01
+  si o functie:
+
+     long vallong(unsigned char c3, unsigned char c2,
+		  unsigned char c1, unsigned char c0);
+
+   care returneaza long-ul ai carui octeti din reprezentarea interna sunt
+   in ordinea descresterii semnificatiei: c3, c2, c1, c0; de exemplu
+   vallong(0x00,0x03,0x02,0x01) va returna 197121.
+  Pentru descompunerea/compunerea long-ului din octeti se vor folosi doar
+   operatii pe biti.
+  Program ilustrativ.
+
+2.2 (puncte: 1)
+  Scrieti un program care afisaza valorile maxime si minime ale diverselor
+   tipuri, date de constantele simbolice din limits.h si float.h.
+
+2.3 (puncte: 2)
+  Scrieti o functie:
+
+     int citint(int n1, int n2);
+
+   care citeste intregi de la stdin pana intalneste unul >= n1 si <= n2;
+   daca la intrare apare un caracter ilegal, il consuma (citeste un
+   caracter) apoi incearca iar citirea intregului.
+  Program ilustrativ.
+
+2.4 (puncte: 1)
+  Scrieti un program care deseneaza un tabel cu codurile ASCII zecimal,
+   octal, hexa ale caracterelor cu coduri cuprinse intre 32 si 255. Tabelul
+   va arata astfel:
+
+    -------------------------------------------------
+    | Caracter | Cod zecimal | Cod octal | Cod hexa |
+    |----------|-------------|-----------|----------|
+	...          ...          ...         ...
+    |----------|-------------|-----------|----------|
+    |     A    |      65     |    101    |    41    |
+    |----------|-------------|-----------|----------|
+	...          ...          ...         ...
+    |          |             |           |          |
+    -------------------------------------------------
+
+2.5 (puncte: a se vedea in text)
+  Scrieti functii care primesc ca parametri doi intregi si returneaza suma
+   (0.5 puncte), diferenta (4 puncte), inmultirea (6 puncte), catul intreg
+   (10 puncte), respectiv restul impartirii lor intregi (10 puncte).
+  Se vor folosi doar operatii pe biti.
+  Program ilustrativ.
+
+2.6 (puncte: 3)
+  Scrieti un program care citeste un intreg short si determina toti intregii
+   obtinuti din el prin permutarea circulara a bitilor. Acestia se vor afisa
+   cu reprezentarile lor externe zecimale si interne binare. Se vor afisa
+   permutarile circulare obtinute in ambele sensuri.
+  Pentru a efectua un pas de permutare circulara se vor folosi functiile:
+
+     short int rotbitstg(short int n);
+     short int rotbitdr(short int n);
+
+   care returneaza valoarea lui n obtinuta prin rotirea bitilor la stanga,
+   respectiv la dreapta, cu o pozitie; pentru rotirea bitilor ele vor
+   folosi doar operatii pe biti.
+  Pentru afisarea reprezentarii interne se va folosi o functie:
+
+     void repshort(short int n);
+
+   care afisaza bitii (1 sau 0) din reprezentarea interna a lui n, grupati
+   in octeti; semnificatia octetilor si a bitilor descreste spre dreapta.
+  Program ilustrativ. De exemplu pentru numarul 11 se va afisa:
+
+     Rotire la stanga:
+         11:  00000000 00001011
+         22:  00000000 00010110
+         44:  00000000 00101100
+         88:  00000000 01011000
+        176:  00000000 10110000
+        352:  00000001 01100000
+        704:  00000010 11000000
+       1408:  00000101 10000000
+       2816:  00001011 00000000
+       5632:  00010110 00000000
+      11264:  00101100 00000000
+      22528:  01011000 00000000
+     -20480:  10110000 00000000
+      24577:  01100000 00000001
+     -16382:  11000000 00000010
+     -32763:  10000000 00000101
+
+     Rotire la dreapta:
+         11:  00000000 00001011
+     -32763:  10000000 00000101
+     -16382:  11000000 00000010
+      24577:  01100000 00000001
+     -20480:  10110000 00000000
+      22528:  01011000 00000000
+      11264:  00101100 00000000
+       5632:  00010110 00000000
+       2816:  00001011 00000000
+       1408:  00000101 10000000
+        704:  00000010 11000000
+        352:  00000001 01100000
+        176:  00000000 10110000
+         88:  00000000 01011000
+         44:  00000000 00101100
+         22:  00000000 00010110
+
+2.7 (puncte: 3)
+  Scrieti un program care citeste un intreg short si calculeaza intregul
+   short obtinut din el prin inversarea ordinii bitilor; programul va afisa
+   atat valorile cat si reprezentarile pe biti ale celor doi intregi.
+  Se va folosi o functie:
+
+     short int revint(short int n);
+
+   care returneaza intregul short obtinut din n prin inversarea ordinii
+   bitilor; aceasta se va face doar cu operatii pe biti.
+  Reprezentarile pe biti se vor afisa de la stanga la dreapta in ordinea
+   descrescatoare a semnificatie bitilor, folosind o functie.
+  De exemplu pentru intregul -32757 programul va afisa:
+
+     -32757:  10000000 00001011
+     -12287:  11010000 00000001
+
+2.8 (puncte: 3)
+  Scrieti un program care citeste un intreg long si determina toti intregii
+   obtinuti din el prin permutarea circulara a octetilor. Acestia se vor
+   afisa cu reprezentarile lor externe zecimale si interne pe octeti. Se vor
+   afisa permutarile circulare obtinute in ambele sensuri.
+  Pentru a efectua un pas de permutare circulara se vor folosi functiile:
+
+     long int rotoctstg(long int n);
+     long int rotoctdr(long int n);
+
+   care returneaza valoarea lui n obtinuta prin rotirea octetilor la stanga,
+   respectiv la dreapta, cu o pozitie; pentru rotirea octetilor ele vor
+   folosi doar operatii pe biti.
+  Pentru afisarea reprezentarii interne pe octeti se va folosi o functie:
+
+     void replong(long int n);
+
+   care afisaza octetii din reprezentarea interna a lui n sub forma de
+   perechi de cifre hexa; semnificatia octetilor descreste spre dreapta.
+  Program ilustrativ. De exemplu pentru numarul 197121 se va afisa:
+
+     Rotire la stanga:
+           197121:  00 03 02 01
+         50462976:  03 02 01 00
+         33619971:  02 01 00 03
+         16777986:  01 00 03 02
+
+     Rotire la dreapta:
+           197121:  00 03 02 01
+         16777986:  01 00 03 02
+         33619971:  02 01 00 03
+         50462976:  03 02 01 00
+
+2.9 (puncte: 3)
+  Scrieti un program care citeste un intreg long si calculeaza intregul
+   long obtinut din el prin inversarea ordinii octetilor; programul va afisa
+   atat valorile cat si reprezentarile interne pe octeti ale celor doi
+   intregi.
+  Se va folosi o functie:
+
+     long int revoctint(long int n);
+
+   care returneaza intregul long obtinut din n prin inversarea ordinii
+   octetilor; aceasta se va face doar cu operatii pe biti.
+  Reprezentarile pe octeti se vor afisa de la stanga la dreapta in ordinea
+   descrescatoare a semnificatie octetilor (fiecare octet se va reprezenta
+   ca o pereche de cifre hexa), folosind o functie.
+  De exemplu pentru intregul 197121 programul va afisa:
+
+          197121:  00 03 02 01
+        16909056:  01 02 03 00
+
+2.10 (puncte: 1)
+  Scrieti o functie:
+
+     int bitparsum(short int n);
+
+   care returneaza suma bitilor din reprezentarea interna aflati pe pozitii
+   pare (numarand de la bitul cel mai nesemnificativ); bitii se vor
+   determina folosind doar operatii pe biti.
+  Program ilustrativ. Acesta va afisa valoarea numarului, reprezentarea sa
+   interna pe biti (folosind o functie, care afisaza bitii de la stanga la
+   dreapta in ordinea descresterii semnificatiei) si suma calculata.
+  De exemplu pentru intregul -32757 programul va afisa:
+
+     Valoare: -32757
+     Reprezentare:  10000000 00001011
+     Suma bitilor de pe pozitii pare:  3
+
+2.11 (puncte: 2)
+  Scrieti o functie:
+
+     char swap2b(char n);
+
+   care returneaza intregul obtinut din n prin permutarea perechilor de biti
+   succesivi din reprezentarea sa interna; aceasta se va face doar cu
+   operatii pe biti.
+  Program ilustrativ. Acesta va afisa atat valorile cat si reprezentarile
+   interne pe biti ale intregilor initial si final; bitii din reprezentarea
+   interna se vor afisa folosind o functie, de la stanga la dreapta in
+   ordinea descresterii semnificatiei.
+  De exemplu pentru intregul 118 se va afisa:
+
+       118:  01110110
+       -71:  10111001
+
+2.12 (puncte: 1)
+  Scrieti o functie:
+
+     long int swap2o(long int n);
+
+   care returneaza intregul obtinut din n prin interschimbarea primilor doi
+   octeti din reprezentarea interna cu ultimii doi; aceasta se va face doar
+   cu operatii pe biti.
+  Program ilustrativ. Acesta va afisa atat valorile cat si reprezentarile
+   interne pe octeti ale intregilor initial si final; octetii din
+   reprezentarea interna se vor afisa folosind o functie, de la stanga la
+   dreapta in ordinea descresterii semnificatiei, ca perechi de cifre hexa.
+  De exemplu pentru intregul 197121 se va afisa:
+
+          197121:  00 03 02 01
+        33619971:  02 01 00 03
+
+2.13 (puncte: 3)
+  Scrieti o functie:
+
+     int bitctl(int op, int bit, short int x);
+
+   care efectueaza urmatoarele operatii:
+   - daca op=1: returneaza intregul obtinut din "x" prin setarea cu 1 a
+      bitulul "bit";
+   - daca op=0: returneaza intregul obtinut din "x" prin setarea cu 0 a
+      bitulul "bit";
+   - daca op=-1: returneaza valoarea bitul "bit" din intregul "x" (1 sau 0,
+      dar priviti ca intregi);
+   functia va folosi doar operatii pe biti.
+  Program ilustrativ. Acesta va afisa atat valorile cat si reprezentarile
+   interne pe biti ale intregilor initial si final; bitii din reprezentarea
+   interna se vor afisa folosind o functie, de la stanga la dreapta in
+   ordinea descresterii semnificatiei.
+
+2.14 (puncte: 3)
+  Scrieti o functie:
+
+     int octctl(int op, int octet, unsigned int val, short int x);
+
+   care efectueaza urmatoarele operatii:
+   - daca op=0: returneaza valoarea octetului "octet" din intregul "x"
+     (privit ca intreg);
+   - daca op=1: returneaza intregul obtinut din "x" prin setarea
+     octetului "octet" la valoarea "val";
+   functia va folosi doar operatii pe biti.
+  Program ilustrativ. Acesta va afisa atat valorile cat si reprezentarile
+   interne pe biti ale intregilor initial si final; bitii din reprezentarea
+   interna se vor afisa folosind o functie, de la stanga la dreapta in
+   ordinea descresterii semnificatiei.
+
+2.15 (puncte: 3)
+  Scrieti o functie:
+
+      int set4(unsigned char *c, int i, int val)
+
+  care efectueaza urmatoarele operatii:
+  - daca "val" < 0, returneaza valoarea stocata in 4-uplul de biti cu
+    numarul i (i=0,1) din octetul pointat de "c";
+  - daca 0 <= "val" <= 15, seteaza 4-uplul i cu valoarea val si returneaza
+    vechea valoare stocata acolo (privita ca intreg);
+  valorile "i" != 1,2 si valorile "val" mai mari ca 15 sunt invalide; in caz
+  de esec, functia returneaza -1; se vor folosi doar operatii pe biti.
+ Program ilustrativ care va afisa atat octetul initial cat si cel
+  transformat, atat in reprezentare zecimala cat si in reprezentare pe biti
+  (obtinuta cu o functie care afisaza bitii de la stanga la dreapta in
+  ordinea descresterii semnificatiei).
+
+2.16 (puncte: 3)
+ Scrieti o functie:
+
+      unsigned char swap4(unsigned char *c)
+
+  si care interschimba 4-uplul de biti semnificativ cu cel nesemnificativ
+  in octetul pointat de c; returneaza octetul vechi; se vor folosi doar
+  operatii pe biti.
+ Program ilustrativ care va afisa atat octetul initial cat si cel
+  transformat, atat in reprezentare zecimala cat si in reprezentare pe biti
+  (obtinuta cu o functie care afisaza bitii de la stanga la dreapta in
+  ordinea descresterii semnificatiei).
+
+2.17 (puncte: 2)
+  Scrieti un program pentru rezolvarea ecuatiei de gradul 2 printr-o
+   singura instructiune expresie. Se va trata si cazul radacinilor complexe.
+
+3. Pointeri:
+   ---------
+
+3.1 (puncte: 2)
+  Scrieti o functie:
+
+     int oct(void *p, int i, int val);
+
+   astfel incat:
+   - daca "val" este de la 0 la 255, atunci seteaza octetul cu numarul "i"
+     (pozitiv sau negativ) de la adresa "p" la valoarea "val" si returneaza
+     noua valoare a acestui octet (adica "val");
+   - daca "val" este <0, atunci returneaza valoarea octetului cu numarul "i"
+     de la adresa "p", fara sa-l modifice;
+   - daca "val" este >255, returneaza -1.
+  Aplicatie: program care citeste separat octetii din reprezentarea interna
+   a unui long int, ii pune cu functia de mai sus in locatia respectiva,
+   apoi afisaza intregul obtinut; apoi citeste un long int, afla cu functia
+   de mai sus octetii din reprezentarea sa interna si-i afisaza pe ecran (ca
+   perechi de cifre hexa).
+
+
+3.2 (puncte: 4)
+ Scrieti o functie:
+
+    void rep(void *p, int bit, unsigned n);
+
+  care afisaza pe ecran, de la stanga la dreapta in ordinea descresterii
+  semnificatiei, "n" biti incepand de la bitul aflat la distanta "bit" de
+  "p"; bitii se parcurg a.i. dupa bitul 7 al octetului i urmeaza bitul
+  0 al octetului i+1; atentie ca "bit" poate fi < 0 sau > 7; in momentul
+  cand se trece de la un octet la urmatorul, intre bitii afisati va aparea
+  un blank; accesul la biti se va face doar cu operatii pe biti.
+ Program ilustrativ. De exemplu daca desenam a.i. semnificatia descreste
+  spre dreapta:
+  long int a=1000001;  (intern: 00000000 00001111 01000010 01000001)
+					   -------------------
+  rep(&a,5,17); ===> afisaza: 001111 01000010 010
+
+3.3 (puncte: 4)
+ Scrieti o functie:
+
+     void bitcopy(void *d, int id, void *s, int is, unsigned n);
+
+  care copiaza "n" biti de la adresa "s", bitul "is", la adresa "d",
+  bitul "id". Octetii se parcurg de la adresele indicate in ordinea
+  crescatoare a adresei iar bitii se parcurg de la bitii indicati in
+  ordinea crescatoare a semnificatiei; dupa bitul 7 al octetului i
+  urmeaza bitul 0 al octetului i+1. Accesarea/modificarea bitilor se va
+  face doar cu operatii pe biti. Atentie ca "is", "id" pot fi < 0 sau > 7.
+ De exemplu:
+     short int a=-1;      (deci a are in locatie: 11111111 11111111)
+							 -------
+     short int b=16707;   (deci n are in locatie: 01000001 01000011)
+						       -------
+     bitcopy(&a,3,&b,5,6); ===> a are in locatie: 11111110 01010111
+     (in a, de la bitul 3 la bitul 8, s-a pus 001010, configuratie care
+      era in b, de la bitul 5 la bitul 10).
+ Program ilustrativ, care citeste un real float si-i copiaza caracteristica,
+  folosind functia de mai sus, intr-un intreg unsigned initializat in
+  prealabil cu 0; se va afisa realul si intregul, atat ca valoare cat si ca
+  reprezentare pe biti (obtinuta cu o functie care afisaza bitii de la
+  stanga la dreapta in ordinea descresterii semnificatiei).
+
+3.4 (puncte: 4)
+ Scrieti o functie:
+
+     int bitctl(int op, void *p, int bit);
+
+  care efectueaza urmatoarele operatii:
+  - daca op=1: seteaza bitul aflat la distanta "bit" (numar intreg oarecare)
+    de "p" la valoarea 1, apoi returneaza bitul vechi (1 sau 0, privit ca
+    intreg); bitii se parcurg a.i. dupa bitul 7 al octetului i urmeaza bitul
+    0 al octetului i+1.
+  - daca op=0: seteaza bitul aflat la distanta "bit" de "p" la valoarea 0,
+    apoi returneaza bitul vechi;
+  - daca op=-1: returneaza bitul aflat la distanta "bit" de "p", fara sa-l
+    modifice.
+  Accesarea/modificarea bitilor se va face doar cu operatii pe biti.
+ Program ilustrativ, care pentru niste numere efectueaza diverse modificari,
+  afisand numerele inainte si dupa modificare, atat ca valoare cat si ca
+  reprezentare pe biti (obtinuta cu o functie care afisaza bitii de la
+  stanga la dreapta in ordinea descresterii semnificatiei).
+ Exemplu:
+  int n=16707; (deci n are in locatie: 01000001 01000011)
+  bitctl(&n,2,14); ===> returneaza: 1
+    (deci returneaza valoarea bitului 2+12=14 de la adresa lui n).
+
+3.5 (puncte: 2 + punctajul indicat in text)
+ Implementati tipul intreg pe un numar specificat (printr-o constanta
+  simbolica) de biti, in felul urmator:
+
+     #define DIM 10
+
+     typedef struct{unsigned char n[DIM];} intreg;
+
+ Valorile acestui tip se reprezinta intern prin complement fata de 2 pe cei
+  8*DIM biti ai locatiei, la fel ca la tipul int; astfel, intervalul
+  valorilor tipului va fi: -2^(8*n-1), ..., 2^(8*n-1)-1  (unde "^" inseamna
+  "la puterea").
+ Scrieti functii care implementeaza diverse operatii aritmetice cu acesti
+  intregi (operanzii sunt primiti ca parametri, rezultatul este valoarea
+  returnata); functiile vor folosi doar operatii pe biti.
+ Se vor implementa (nu e obligatoriu toate): adunarea (5 pct), scaderea
+  (5 pct), inmultirea (6 pct), aflarea catului intreg (10 pct), aflarea
+  restului (10 pct), luarea opusului (2 pct), testarea < (4 pct), testarea
+  <= (4 pct), testarea > (4 pct), testarea >= (4 pct), testarea == (1 pct),
+  testarea != (1 pct), atribuirea (1 pct), citirea cu format de la consola
+  (6 pct), scrierea cu format la consola (6 pct), conversia spre int
+  obisnuit (1 pct), conversia de la un int obisnuit (3 pct).
+ Program ilustrativ.
+
+4. Pointeri si vectori:
+   --------------------
+
+4.1 (puncte: 2)
+ Scrieti o functie:
+
+     void memctl(int op, void *p, unsigned char *v, unsigned dim);
+
+  care efectueaza urmatoarele operatii:
+  - daca op=1: seteaza "dim" octeti incepand de la adresa "p" cu valorile
+    din vectorul "v";
+  - daca op=0: copiaza in componentele vectorului "v" "dim" octeti incepand
+    de la adresa "p".
+ Aplicatie: program care citeste un real float, apoi afla cu functia de mai
+  sus octetii din reprezentarea sa interna si-i afisaza (ca perechi de cifre
+  hexa, de la stanga la dreapta in ordinea descresterii semnificatiei), apoi
+  citeste sizeof(float) valori de octeti, ii pune cu functia de mai sus in
+  locatia unui real float, apoi afisaza realul obtinut.
+
+4.2 (puncte: 2)
+ Scrieti functii pentru citirea unui vector de intregi, scrierea unui vector
+  de intregi, sortarea unui vector de intregi, cautarea unei valori intr-un
+  vector de intregi (returneaza 0: negasit, != 0: gasit), calcularea
+  diferentei intre maximul componentelor si minimul componentelor unui
+  vector de intregi (returneaza diferenta respectiva).
+ Functiile se vor scrie atat in varianta in care primesc ca parametri
+  adresa de inceput a vectorului (de tip int *) si numarul de componente
+  (de tip int), cat si in varianta in care primesc ca parametri toate
+  elementele vectorului incapsulate intr-o singura structura (de tip
+  struct vector{int n,v[10];};).
+ Program ilustrativ.
+
+4.3 (puncte: 2)
+ Scrieti o functie:
+
+     int vals(int *s, int ds, int *d, int *dd);
+
+  care pune valorile distincte ce apar in vectorul "s" de dimensiune "ds"
+  in vectorul "d", iar in "*dd" numarul acestor valori; returneaza "*dd".
+ Program ilustrativ.
+
+Sfat: Incercati sa rescrieti problemele cu vectori din sectiunea 1 a.i.
+~~~~   sa repartizati cat mai mult operatiile unor functii, iar comunicarea
+       intre acestea si restul programului sa se faca doar prin intermediul
+       parametrilor si a valorii returnate.
+
+5. Pointeri si matrici:
+   --------------------
+
+5.1 (puncte: 2)
+ Scrieti functii pentru citirea unei matrici dreptunghiulare de numere
+  intregi, afisarea unei asemenea matrici si suma a 2 asemenea matrici;
+  primele doua functii returneaza void, a treia returneaza un intreg care
+  este 0: esec (de exemplu matricile nu au aceleasi dimensiuni), != 0:
+  succes. Functiile vor primi matricile asupra carora opereaza ca parametri.
+  Se va implementa atat varianta in care functiile primesc ca parametri
+  adresa de inceput a matricii, numarul de linii si numarul de coloane, cat
+  si varianta in care primesc ca parametru o structura ce incapsuleaza toate
+  aceste trei elemente.
+ Program ilustrativ.
+
+5.2 (puncte: 3.5)
+ Scrieti o functie care sorteaza liniile unei matrici dreptunghiulare de
+  intregi a.i. ele sa apara in ordinea lexicografica a sirului componentelor
+  lor. Ea va folosi o functie care va compara lexicografic doi vectori de
+  intregi (primeste ca parametri adresele de inceput ale vectorilor si
+  dimensiunile acestora (nu neaparat egale) si returneaza <0, ==0 sau >0
+  dupa cum primul vector este <, ==, respectiv > lexicografic ca al doilea)
+  si o functie care interschimba doi vectori de intregi de aceeasi
+  dimensiune (primeste ca parametri adresele de inceput ale vectorilor si
+  dimensiunea comuna).
+ Program ilustrativ.
+
+5.3 (puncte: 3)
+ Scrieti o functie care primeste ca parametri doua matrici dreptunghiulare
+  de intregi (anume adresa de inceput si dimensiunile fiecareia) si verifica
+  daca prima apare ca bloc in a doua (ca submatrice cu linii si coloane
+  adiacente); returneaza 0: nu este, != 0; este.
+
+Sfat: Incercati sa rescrieti problemele cu matrici din sectiunea 1 a.i.
+~~~~   sa repartizati cat mai mult operatiile unor functii, iar comunicarea
+       intre acestea si restul programului sa se faca doar prin intermediul
+       parametrilor si a valorii returnate.
+
+6. Pointeri si functii:
+   --------------------
+
+6.1 (puncte: 2)
+ Scrieti o functie:
+
+     void rep(unsigned char v);
+
+  care afisaza bitii continuti in "v" si in inca "n-1" octeti aflati in
+  memorie in continuare (unde "n" este o variabila intreaga globala);
+  grupele de biti corespunzatoare octetilor se separa prin blankuri, iar
+  afisarea se face de la stanga spre dreapta in ordinea descrescatoare a
+  semnificatiei octetilor si bitilor dintr-un octet.
+ Scrieti un program care apeleaza functia sub forma:
+
+     long l=1000000;
+     n=sizeof(l);
+     (*(void (*)(long))&rep)(l);
+
+  pentru a afisa octetii din reprezentarea interna a unui long.
+ Atentie ca este posibil ca programul sa nu functioneze corect pe anumite
+  compilatoare.
+
+6.2 (puncte: 6)
+ Scrieti o functie care sa primeasca ca parametri:
+  - o functie reala cu valori reale: double f(double x);
+  - capetele unui interval real inchis: double a, double b;
+  - o scare de reprezentare pe orizontala si verticala: dx, dy
+     (reprezinta lungimea unui segment de pe abscisa, respectiv ordonata,
+      care pe ecran s-ar reprezenta printr-un singur caracter);
+  - o matrice de caractere: m si dimensiunile acesteia: l,c;
+  si deseneaza graficul functiei f:[a,b]->R la scara data de dx, dy, in mod
+  text, in matrica m; se vor desena si axele abscisa si ordonata, sub forma
+  unor linii orizontale, respectiv verticale, a.i. originea sa fie
+  aproximativ la mijlocul matricii; punctele de pe grafic se vor desena cu
+  caractere * (daca acest punct se nimereste pe o axa, se va desena punctul,
+  nu axa); cresterea coordonatelor orizontala si verticala in sistemul de
+  axe matematic sa fie in concordanta cu cresterea coloanei, respectiv
+  scaderea liniei, in matrice.
+ Matricea construita se va afisa apoi pe stdout cu o alta functie.
+ De exemplu pentru f(x) = x*x + 2*x - 3, a = -4, b = 4, dx = 0.5, dy = 2,
+  l = 10, c = 20, sa obtinem in matricea m:
+
+				    |    *
+				    |
+			    *       |   *
+			     *      |  *
+			  ----*-----|-*-------
+			       *    |*
+				*****
+				    |
+				    |
+				    |
+
+6.3 (puncte: 2)
+ Scrieti o functie care sa primeasca ca parametri:
+  - o functie reala cu valori reale: double f(double x);
+  - capetele unui interval real inchis: double a, double b;
+  - o abatere maxima: double eps
+  se presupune ca f:[a,b]->R  este continua, f(a)*f(b) < 0, iar in
+  intervalul [a,b] ecuatia f(x) = 0 are o solutie unica (pentru asta este
+  suficient sa avem in plus f strict monotona); se presupune de asemenea ca
+  eps > 0; functia trebuie sa returneze valoarea aproximativa a solutiei
+  ecuatiei f(x) = 0 din intervalul [a,b], cu o eroare < eps; in acest scop
+  va folosi metoda injumatatirii intervalului: se ia jumatatea c a
+  intervalului [a,b], daca f(c) = 0 se returneaza c, altfel avem f(c) > 0
+  sau f(c) < 0 si se inlocuieste [a,b] cu acela dintre intervalele [a,c] sau
+  [c,b] unde f ia valori de semne contrare in capete (el va contine cu
+  siguranta solutia cautata); se continua pana cand se intalneste solutia c
+  sau lungimea intervalului curent este < eps, caz in care se returneaza
+  unul din capetele sale, deoarece el aproximeaza solutia cu eroare < eps.
+ Program ilustrativ.
+
+6.4 (puncte: 3)
+ Scrieti o functie care sa primeasca ca parametri:
+  - o functie reala cu valori reale: double f(double x);
+  - capetele unui interval real inchis: double a, double b;
+  - un numar de diviziuni: int n
+ se presupune ca f este integrabila pe intervalul [a,b] iar n >= 1; functia
+ trebuie sa returneze valoarea aproximativa a integralei lui f pe intervalul
+ [a,b], calculata cu metoda trapezului secant sumata cu n subintervale:
+    I = h * [f(a)/2 + f(b)/2 + f(a+h) + f(a+2*h) + ... + f(a+(n-1)*h)],
+    unde h=(b-a)/n.
+ Aplicatie: program care pentru niste functii si intervale date in codul sau
+ calculeaza integrala cu n = 1, 2, 3, ... pana cand rezultatele succesive
+ obtinute difera prin valori prea mici ca sa poata fi reprezentate in
+ calculator iar sirul rezultatelor pare ca stationeaza - atunci se va afisa
+ rezultatul obtinut.
+
+6.5 (puncte: 12)
+ Scrieti o functie care sa primeasca ca parametri elementele folosite la
+  rezolvarea unei probleme prin backtracking: vectorul generat si
+  dimensiunea sa, functiile pentru initializarea unei componente, atribuirea
+  valorii urmatoare, testarea conditiilor de continuare, prelucrarea
+  solutiei, si aplica metoda backtracking cu aceste elemente; nu se vor
+  folosi date globale.
+ Aplicatie: cel putin doua programe pentru rezolvarea unor probleme prin
+  backtracking folosind aceasta functie (exemple: generarea permutarilor
+  unei multimi si asezarea a n dame pe o tabla de sah n x n a.i. sa nu se
+  atace).
+ O formalizare a metodei backtracking care poate fi solosita se gaseste in
+  cartea "Tehnici de programare, manual pentru clasa a X-a", autor Tudor
+  Sorin, ed. L&S INFOMAT, 1996.
+
+6.6 (puncte: 3) Scrieti o functie generica de sortare, avand ca parametri:
+    - adresa vectorului de sortat, de tip void *
+    - dimensiunea unei componente, de tip unsigned;
+    - numarul componentelor, de tip unsigned;
+    - adresa functiei care compara doua elemente, componente ale vectorului;
+       o asemenea functie trebuie sa primeasca ca parametri adresele
+       elementelor de comparat si sa returneze 0 daca primul element este >
+       al doilea si ceva !=0 daca primul element este <= al doilea.
+ Programe ilustrative in care se sorteaza un vector de intregi si un vector
+ de persoane modelate ca structuri cu membri pentru nume (string) si varsta
+ (intreg); persoanele se sorteaza alfabetic dupa nume.
+
+7. Stringuri:
+   ----------
+
+7.1 (puncte: 0.5)
+ Simulati functia strncpy, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.2 (puncte: 0.5)
+ Simulati functia strncat, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.3 (puncte: 1)
+ Simulati functiile strncmp si memcmp, folosind doar operatii de vectori si
+ pointeri. Program ilustrativ.
+
+7.4 (puncte: 0.5)
+ Simulati functia strrchr, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.5 (puncte: 1)
+ Simulati functiile strspn si strcspn, folosind doar operatii de vectori si
+ pointeri. Program ilustrativ.
+
+7.6 (puncte: 1)
+ Simulati functia strpbrk si una duala, care cauta primul caracter ce nu
+  este in al doilea string, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.7 (puncte: 2)
+ Simulati functia strstr, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.8 (puncte: 2.5)
+ Simulati functia memmove (deci sa functioneze corect daca zona sursa si cea
+  destinatie se intersecteaza), folosind doar operatii de vectori si
+  pointeri. Program ilustrativ.
+
+7.9 (puncte: 1)
+ Simulati functia stricmp (din TC++ - compara lexicografic stringurile
+  nefacand distinctie intre literele mari si mici), folosind doar operatii
+  de vectori si pointeri. Program ilustrativ.
+
+7.10 (puncte: 0.5)
+ Simulati functia memchr, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.11 (puncte: 0.5)
+ Simulati functia strset (din TC++ - inlocuieste toate caracterele unui
+  string cu un caracter dat), folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.12 (puncte: 2)
+ Simulati functia atoi, folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.13 (puncte: 2)
+ Simulati functia itoa (din TC++ - converteste intreg in string), folosind
+  doar operatii de vectori si pointeri. Program ilustrativ.
+
+7.14 (puncte: 0.5)
+ Scrieti o functie:
+
+     char *strconcat(const char *s1, const char *s2, char *d);
+
+  care pune in zona pointata de "d" concatenarea unor copii ale stringurilor
+  "s1" si "s2", apoi returneaza "d"; daca unul dintre "s1" sau "s2" e NULL,
+  efectul consta doar in copierea celuilalt string in zona pointata de "d",
+  apoi se returneaza "d"; daca "s1" si "s2" sunt NULL sau daca "d" e NULL,
+  nu face nimic si returneaza NULL. Se vor folosi doar operatii de vectori
+  si pointeri.
+ Program ilustrativ.
+
+7.15 (puncte: 2)
+ Scrieti functiile:
+
+     char *sscanfi(const char *s, int *n);
+     char *sprintfi(char *s, int n, size_t dim);
+
+   a.i. prima citeste in "*n" un intreg a carui reprezentare externa
+   zecimala este data in stringul "s" (asemeni lui sscanf cu %d), iar a doua
+   scrie intregul "n" in format extern zecimal in stringul "s" (asemeni lui
+   sprintf cu %d) a.i. sa nu depaseasca "dim" caractere incepand de la
+   pozitia curenta; prima va returna adresa primului caracter din "s" de
+   dupa intregul citit sau NULL daca nu s-a putut citi; a doua va returna
+   adresa primului caracter din "s" de dupa intregul scris sau NULL daca nu
+   a incaput complet in cele "dim" pozitii; se vor folosi doar operatii de
+   vectori si pointeri.
+ Program ilustrativ.
+
+7.16 (puncte: 1)
+ Simulati functia strrev (din TC++ - schimba ordinea caracterelor dintr-un
+  string), folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.17 (puncte: 1)
+ Simulati functiile strupr si strlwr (din TC++ - converteste toate literele
+  mici in mari, respectiv mari in mici, intr-un string, lasand restul
+  caracterelor neschimbate), folosind doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.18 (puncte: 1.5)
+ Scrieti o functie:
+
+     char *strsort(char *s);
+
+  care sorteaza caracterele din stringul "s"; returneaza "s"; se vor folosi
+  doar operatii de vectori si pointeri.
+ Program ilustrativ.
+
+7.18 (puncte: 2)
+ Scrieti o functie:
+
+     char *getnword(char *d, const char *s, int n);
+
+  care copiaza in zona pointata de "d" un string continand cuvantul al n-lea
+  (numarand de la 0) din stringul "s" (cuvant insemnand sir maximal de
+  caractere nealbe consecutive) sau stringul vid daca acest cuvant nu exista
+  (de exemplu n < 0 sau nu sunt suficiente cuvinte in "s"); returneaza
+  pozitia caracterului urmator acestui cuvant in "s", sau NULL daca cuvantul
+  nu exista; daca "d" este NULL ia "s" nu este NULL, nu copiaza nimic ci
+  doar returneaza valoarea respectiva; daca "s" este NULL nu copiaza nimic
+  si returneaza NULL.
+ Program ilustrativ.
+
+7.19 (puncte: 4)
+ Scrieti o functie:
+
+     int ssetbit(void *p, int bit, const char *s);
+
+  care seteaza bitii din memorie incepand de la bitul aflat la distanta
+  "bit" (numar intreg oarecare) de "p" conform componentelor stringului "s"
+  care trebuie sa fie cifre 0, 1 sau blank (daca o componenta este blank, se
+  sare peste ea si se ia in consideratie pentru bitul curent componenta
+  urmatoare); bitii se parcurg a.i. dupa bitul 7 al octetului i urmeaza
+  bitul 0 al octetului i+1; stringul "s" se presupune ca contine biti in
+  ordinea descrescatoare a semnificatiei si de aceea se va parcurge invers;
+  in caz de eroare (o componenta a stringului nu e 0, 1 sau blank) se iese
+  din functie; se returneaza numarul bitilor setati cu 0 sau 1; accesarea/
+  modificarea bitilor se va face doar cu operatii pe biti.
+ Program ilustrativ: cu ajutorul acestei functii setati bitul de semn,
+  caracteristica si mantisa din reprezentarea interna a unui float, apoi
+  afisati float-ul obtinut, atat ca valoare cat si ca reprezentare pe biti
+  (obtinuta cu o functie care afisaza bitii de la stanga la dreapta in
+  ordinea descresterii semnificatiei).
+ Exemplu: daca executam:
+  float f;
+  ssetbit(&f, 31, "0");
+  ssetbit(&f, 23, "0111111 0");
+  ssetbit(&f,  0, "00000000000000000000000");
+ atunci:
+  reprezentarea interna a lui f este (pe desen semnificatia descreste spre
+    dreapta):  00111111 00000000 00000000 00000000
+  valoarea lui f este: 0.5
+
+7.20 (puncte: 4)
+ Scrieti o functie:
+
+     int sgetbit(const void *p, int bit, char *s, size_t n);
+
+  care depune in zona de memorie pointata de "s" un string de caractere
+  0, 1 sau blank, reprezentand "n" biti aflati in memorie incepand cu bitul
+  bitul aflat la distanta "bit" (numar intreg oarecare) de "p"; bitii se
+  parcurg a.i. dupa bitul 7 al octetului i urmeaza bitul 0 al octetului i+1;
+  in momentul cand in memorie se trece de la un octet la altul, in string se
+  insereaza cate un blank; in final stringul se inverseaza, pentru a contine
+  bitii in ordinea descrescatoare a semnificatiei; functia returneaza
+  lungimea stringului creat; accesarea/modificarea bitilor se va face doar
+  cu operatii pe biti.
+ Program ilustrativ: in cadrul unui ciclu, se citesc diverse numere float,
+  si se afisaza valoarea si reprezentarea lor pe biti (obtinuta cu o functie
+  care afisaza bitii de la stanga la dreapta in ordinea descresterii
+  semnificatiei), apoi li se afisaza separat reprezentarea pe biti a
+  semnului, caracteristicii si mantisei, aflate cu functia de mai sus.
+ Exemplu: daca executam:
+  float f; char s[10],c[10],m[10];
+  f=0.5;
+  sgetbit(&f, 31, s, 1); sgetbit(&f, 23, c, 8); sgetbit(&f,  0, m, 23);
+ atunci:
+  reprezentarea interna a lui f este (pe desen semnificatia descreste spre
+    dreapta):  00111111 00000000 00000000 00000000
+  iar cele trei stringuri contin respectiv: s: "0"
+					    c: "0111111 0"
+					    m: "0000000 00000000 00000000"
+
+8. Alocare dinamica a memoriei:
+   ----------------------------
+
+8.1 (puncte: 2)
+ Scrieti o functie:
+
+     int getwords(const char *s, char **p, size_t dim)
+
+  care determina cuvintele din stringul "s" (cuvant = sir maximal de
+  caractere nealbe consecutive), le copiaza pe fiecare in cate o zona
+  alocata dinamic de lungime adecvata (zonele se aloca progresiv cu realloc
+  pe masura ce avem nevoie de mai mult spatiu) si pune adresele acestor zone
+  in componentele vectorului "p" (vector de char *); in componenta urmatoare
+  ultimei componente completate astfel se pune NULL; in total nu se vor
+  completa mai mult de "dim" componente, cu tot cu cea cu NULL (deci la
+  atingerea lui "dim" se iese); returneaza numarul componentelor completate
+  (daca apare si cea cu NULL, aceasta nu se numara).
+ Program ilustrativ: intr-un ciclu se citestc diverse stringuri, se
+  determina cu functia de mai sus cuvintele componente, iar acestea se
+  afisaza.
+
+8.2 (puncte: 2.5)
+ Scrieti o functie:
+
+     char ** setp(const char *s, int *n);
+
+  care determina cuvintele din stringul "s" (cuvant = sir maximal de
+  caractere nealbe consecutive), le copiaza pe fiecare in cate o zona
+  alocata dinamic de lungime adecvata (zonele se aloca progresiv cu realloc
+  pe masura ce avem nevoie de mai mult spatiu), aloca un vector de char *
+  de lungime adecvata si initializeaza componentele lui cu adresele acestor
+  zone; in ultima componenta se va pune NULL; vectorul de char * se va aloca
+  progresiv cu realloc pe masura ce se va constata ca mai sunt necesare
+  componente; functia va pune in "*n" numarul de componente ale vectorului
+  de char * (fara a numara cea cu NULL) si va returna adresa acestui vector.
+ Program ilustrativ: intr-un ciclu se citestc diverse stringuri, se
+  determina cu functia de mai sus cuvintele componente, iar acestea se
+  afisaza.
+
+8.3 (puncte: a se vedea in text)
+ Realizati urmatoarele:
+ - (1.5 puncte) Scrieti o functie:
+
+     char *getstring();
+
+   care citeste de la tastatura un string ce poate contine si blank-uri
+   (sfarsitul este indicat de ENTER, care nu se adauga la string), aloca o
+   zona de memorie de lungime adecvata si copiaza stringul in ea; zona se
+   aloca progresiv cu realloc pe masura ce avem nevoie de mai mult spatiu;
+   returneaza adresa zonei alocate sau NULL in caz ca nu a putut aloca
+   suficient spatiu;
+ - (0.5 puncte) Simulati functia strdup (aceasta duplica un string dat ca
+   parametru intr-unul alocat dinamic, a carui adresa o returneaza),
+   folosind doar functii de alocare si operatii de vectori si pointeri;
+ - (0.5 puncte) Scrieti o functie:
+
+     char *dcat(char *s1, char *s2);
+
+   care primeste ca parametri adresele a doua stringuri alocate dinamic,
+   concateneaza copiile lor intr-un string nou alocat dinamic, dezaloca
+   "s1" si "s2", apoi returneaza adresa stringului nou (sau NULL daca
+   alocarea nu a fost posibila);
+ - (0.5 puncte) Scrieti o functie:
+
+     void dputs(char *s);
+
+   care afisaza pe ecran un string alocat dinamic a carui adresa a fost
+   data ca parametru, apoi dezaloca acest string;
+ Aplicatie: program care citeste trei stringuri si afisaza concatenarea
+  lor, fara a folosi stringuri declarate ca atare (vectori) ci doar pointeri
+  la char.
+
+8.4 (puncte: a se vedea in text)
+ Realizati urmatoarele:
+ - (2 puncte) Scrieti o functie:
+
+     #define nmax 10
+     int (*getmat(int *m, int *n))[nmax];
+
+   care citeste de la tastatura o matrice de intregi alocata dinamic cu un
+   numar oarecare de linii si nmax coloane; matricea se aloca progresiv cu
+   realloc pe masura ce avem nevoie de mai mult spatiu; functia va pune in
+   *m si *n numarul de linii si de coloane folosite efectiv si va returna
+   adresa matricii sau NULL daca nu a putut aloca suficient spatiu (in acest
+   caz *m si *n raman nemodificate);
+ - (1 punct) Scrieti o functie:
+
+     int (*matdup(int (*x)[nmax], int m, int n))[nmax];
+
+   care duplica o matrice data ca parametru intr-una alocata dinamic, a
+   carei adresa o returneaza; m si n sunt parametri de intrare, reprezentand
+   numarul de linii si de coloane folosite efectiv in x; matricea alocata va
+   avea m linii si nmax coloane, iar pe pozitiile 0,0 --- m-1,n-1 se vor
+   copia componentele lui x;
+ - (1.5 puncte) Scrieti o functie:
+
+     int (*matmul(int (*x1)[nmax], int (*x2)[nmax],
+		  int m, int n, int p))[nmax];
+
+   care primeste ca parametri adresele a doua matrici alocate dinamic si
+   dimensiunile lor folosite efectiv (prima foloseste m x n, a doua n x p),
+   calculeaza produsul lor intr-o matrice noua alocata dinamic (cu m linii
+   si nmax coloane, din care foloseste efectiv m x p), dezaloca x1 si x2,
+   apoi returneaza adresa matricii noi (sau NULL daca alocarea nu a
+   fost posibila);
+ - (1 punct) Scrieti o functie:
+
+     void putmat(int (*x)[nmax], int m, int n){
+
+   care afisaza pe ecran o matrice alocata dinamic a carei adresa a fost
+   data ca parametru, apoi dezaloca aceasta matrice; m si n sunt parametri
+   de intrare, reprezentand numarul de linii si de coloane folosite efectiv
+   in x;
+ Aplicatie: program care citeste doua matrici si afisaza produsul lor, fara
+  a folosi matrici declarate ca atare in program (static sau automatic) ci
+  doar pointeri.
+ Observatie: Stilul acesta de lucru, de a crea copii dinamice, a face
+  operatiile dorite cu ele si apoi a le dezaloca, este util atunci cand vrem
+  sa simulam pasarea catre functii a componentelor masivelor prin valoare.
+  O alta metoda des folosita este sa includem masivele ca membri in
+  structuri si sa transmitem ca parametri prin valoare structurile.
+
+8.5 (puncte: 0.5)
+ Scrieti o functie:
+
+     char *dapp(char *d, const char *s);
+
+  care concateneaza o copie a stringului "s" in prelungirea stringului "d",
+  presupus alocat dinamic; in acest scop "d" se prelungeste cu realloc;
+  daca "d" este NULL, se copiaza "s" intr-un string nou, alocat dinamic;
+  daca "s" este NULL, nu se modifica nimic; functia returneaza adresa
+  stringului destinatie rezultat, sau NULL daca (re)alocarea nu a fost
+  posibila.
+ Program ilustrativ.
+
+8.6 (puncte: 2)
+ Consideram tipul definit astfel:
+
+     typedef struct{char c;int n;} occur;
+
+ Scrieti o functie:
+
+     occur *funct_occur(char *name, int *n);
+
+  unde "name" este numele unui fisier si care returneaza adresa unui vector
+  de structuri "occur" alocat dinamic, ce numara aparitiile fiecarui
+  caracter din fisier; fiecare caracter din fisier apare in exact o
+  structura, membrul "c" fiind caracterul respectiv iar membrul "n" fiind
+  numarul aparitiilor sale in fisier; al doilea parametru al functiei este
+  adresa unei variabile intregi, in care functia va pune numarul de
+  componente ale vectorului alocat; in caz de eroare, functia pune in "*n"
+  valoarea -1 si returneaza NULL.
+ Program ilustrativ.
+ (problema data de A. Baranga la examenul de Sisteme de Operare, 20-ian-02)
+
+9. Liste alocate inlantuit:
+   ------------------------
+
+In cusrul acestei sectiuni vom nota prescurtat:
+  S  = lista simplu inlantuita
+  SC = lista simplu inlantuita circulara
+  D  = lista dublu inlantuita
+  DC = lista dublu inlantuita circulara
+
+In general vom presupune ca tipurile de lista S, SC, D, DC sunt implementate
+ respectiv astfel:
+
+     struct nod{int inf; struct nod *leg;};
+     typedef struct nod *lista;                      /* S  */
+     typedef struct nod *listac;                     /* SC */
+     struct nodd{int inf; struct nod *pred,*succ;};
+     typedef struct nodd *listad;                    /* D */
+     typedef struct nodd *listadc;                   /* DC */
+
+Eventualele abateri de la regula de mai sus vor fi semnalate la momentul
+ respectiv.
+Daca nu se va specifica altfel, orice modificare asupra informatiilor
+ dintr-o lista se va face doar prin inserarea/eliminarea nodurilor sau
+ schimbarea legaturilor, fara a modifica informatia din nodurile existente.
+
+9.1 (puncte: a se vedea in text)
+ Scrieti functii pentru:
+ - (0.5 puncte) initializarea unei liste cu lista vida:
+
+     void inits(lista *l);
+     void initsc(listac *l);
+     void initd(listad *l);
+     void initdc(listadc *l);
+
+   se presupune ca listele date ca parametru nu au fost folosite inca, deci
+   nu avem elemente de dezalocat; initializarea de mai sus este ca un
+   constructor, care se aplica cate o singura data pentru fiecare lista din
+   program, atunci cand incepe domeniul ei de existenta (inainte de a face
+   operatii cu ea);
+ - (2 puncte) dezalocarea unei liste:
+
+     void golestes(lista *l);
+     void golestesc(listac *l);
+     void golested(listad *l);
+     void golestedc(listadc *l);
+
+   se presupune ca listele date ca parametru au fost deja initializate si
+   eventual folosite, deci pot avea elemente ce trebuie dezalocate; acestea
+   se elimina din lista si se dezaloca succesiv, pana cand lista devine
+   vida; golirea de mai sus este necesara inainte de incarca lista cu alte
+   elemente (de exemplu citirea in ea a unei liste de la tastatura sau
+   copierea in ea a altei liste); mai poate fi folosita ca un desctructor,
+   care se aplica la iesirea din domeniul de existenta al listei, pentru a
+   elibera memoria ocupata;
+ - (0.5 puncte) testarea daca o lista e vida:
+
+     int vidas(lista *l);
+     int vidasc(listac *l);
+     int vidad(listad *l);
+     int vidadc(listadc *l);
+
+   returneaza: 1 daca lista este vida, 0 daca nu este vida;
+ - (4 puncte) citirea unei liste de la tastatura:
+
+     int citestes(lista *l);
+     int citestesc(listac *l);
+     int citested(listad *l);
+     int citestedc(listadc *l);
+
+   elementele listei se introduc separate prin spatii albe, nu neaparat pe
+   aceeasi linie, sfarsitul listei fiind semnalat prin introducerea unei
+   linii goale; returneaza: 1 = succes, 0 = esec (de exemplu nu s-a putut
+   aloca memorie);
+ - (2 puncte) afisarea unei liste pe ecran:
+
+     void scries(lista *l);
+     void scriesc(listac *l);
+     void scried(listad *l);
+     void scriedc(listadc *l);
+
+   in urma afisarii lista ramane nemodificata;
+ - (3 puncte) copierea unei liste in alta lista:
+
+     int copiazas(lista *d, lista *s);
+     int copiazasc(listac *d, listac *s);
+     int copiazad(listad *d, listad *s);
+     int copiazadc(listadc *d, listadc *s);
+
+   "*d" este lista destinatie, "*s" este lista sursa; lista sursa ramane
+   nemodificata; returneaza: 1 = succes, 0 = esec (de exemplu nu s-a putut
+   aloca memorie);
+ - (2 puncte) concatenarea unei copii a unei liste la sfarsitul altei liste:
+
+     int concateneazas(lista *d, lista *s);
+     int concateneazad(listad *d, listad *s);
+
+   se concateneaza o copie a listei "*s" la sfarsitul listei "*d"; lista
+   "*s" ramane nemodificata; returneaza: 1 = succes, 0 = esec (de exemplu
+   nu s-a putut aloca memorie).
+ Program ilustrativ.
+
+9.2 (puncte: 1 + punctajul indicat in comentariile din text)
+ Scrieti functii pentru copierea unei liste in alta lista, cu conversie
+   intre tipuri de lista diferite:
+
+     int s2d(listad *d, lista *s);       /* 1.5 puncte */
+     int d2s(lista *d, listad *s);       /* 0.5 puncte */
+     int sc2dc(listadc *d, listac *s);   /* 2 puncte */
+     int dc2sc(listac *d, listadc *s);   /* 1 punct */
+     int s2sc(listac *d, lista *s);      /* 1 punct */
+     int sc2s(lista *d, listac *s);      /* 1 punct */
+
+   "*d" este lista destinatie, "*s" este lista sursa; lista sursa ramane
+   nemodificata; returneaza: 1 = succes, 0 = esec (de exemplu nu s-a putut
+   aloca memorie); in cazul "sc2s" lista rezultata va incepe de la elementul
+   curent al listei sursa.
+ Program ilustrativ care citeste o lista, ii aplica toate conversiile
+  implementate, ajungand in final la o lista de aceelasi tip ca cel initial;
+  programul va afisa lista initiala si listele obtinute dupa fiecare
+  conversie.
+
+9.3 (puncte: cele indicate in comentariile din text)
+ Scrieti functii pentru inversarea legaturilor dintr-o lista:
+
+     void inverseaza(lista *l);       /* 2 puncte */
+     void inverseazac(listac *l);     /* 2.5 puncte */
+     void inverseazad(listad *l);     /* 2.5 puncte */
+     void inverseazadc(listadc *l);   /* 3 puncte */
+
+   se va opera asupra listei date ca parametru, folosind cel mult un numar
+   constant de noduri auxiliare; in cazul S capul listei "*l" se va muta la
+   extremitatea opusa.
+ Program ilustrativ care citeste cate o lista de fiecare tip, inverseaza
+   legaturile din ea, apoi afisaza lista rezultata.
+
+9.4 (puncte: 0.5)
+ Scrieti functiile urmatoare, ce returneaza lungimea unei liste:
+
+     int lungimes(lista *l);
+     int lungimec(listac *l);
+     int lungimed(listad *l);
+     int lungimedc(listadc *l);
+
+ Program ilustrativ care citeste diverse liste si afisaza lungimea lor.
+
+9.5 (puncte: 1 + punctajul indicat in text)
+ Scrieti functiile urmatoare, care impreuna cu cele care calculeaza lungimea
+  permit utilizarea listelor dupa modelul vectorilor:
+ - (0.5 puncte) functii ce returneaza valoarea elementului aflat pe o
+   pozitie data:
+
+     int valoare(lista *l, int i, int *val);
+     int valoared(listad *l, int i, int *val);
+
+   "*l" este lista, "i" este pozitia (de la 0 la lungimea listei - 1), in
+   "*val" se va pune valoarea respectiva, iar functia returneaza 1 = succes,
+   0 = esec (de exemplu "i" este o pozitie in afara listei);
+ - (2 puncte) functii ce insereaza o valoare pe o pozitie data:
+
+     int insereaza(lista *l, int i, int val);
+     int insereazad(listad *l, int i, int val);
+
+   "*l" este lista, "i" este pozitia (de la 0 la lungimea listei - 1), "val"
+   este valoarea de inserat, iar functia returneaza 1 = succes, 0 = esec (de
+   exemplu "i" este o pozitie in afara listei sau nu s-a putut aloca
+   memorie);
+ - (2 puncte) functii ce elimina o valoare de pe o pozitie data:
+
+     int elimina(lista *l, int i, int *val);
+     int eliminad(listad *l, int i, int *val);
+
+   "*l" este lista, "i" este pozitia (de la 0 la lungimea listei - 1);
+   daca "*val" nu este NULL, in "*val" se va recupera valoarea eliminata;
+   iar functia returneaza 1 = succes, 0 = esec (de exemplu "i" este o
+   pozitie in afara listei).
+ Aplicatie: program care citeste o S si o D, le sorteaza, apoi afisaza
+  listele obtinute.
+ Observatie: daca nu se specifica altfel, la celelalte probleme din aceasta
+  sectiune functiile cerute se vor scrie direct, plecand de la modul de
+  implementare a listelor, si nu se vor construi deasupra functiilor
+  descrise aici.
+
+9.6 (puncte: cate 2 pentru fiecare functie)
+ Scrieti functiile urmatoare, pentru sortarea unei liste:
+
+     void sorteaza(lista *l);
+     void sorteazac(listac *l);
+     void sorteazad(listad *l);
+     void sorteazadc(listadc *l);
+
+   se va opera asupra listei date ca parametru, fara a folosi noduri
+   auxiliare; in cazul listelor circulare se sorteaza incepand de la
+   elementul curent; reamintim cerinta de a lucra direct pe structura
+   listelor fara functii intermediare si de a nu modifica informatia din
+   nodurile existente ci doar legaturile.
+ Program ilustrativ care citeste cate o lista de fiecare tip, o sorteaza,
+  apoi afisaza lista rezultata.
+
+9.7 (puncte: cate 0.5 pentru fiecare functie)
+ Scrieti functiile urmatoare, care determina valorile maxima si minima
+  dintr-o lista:
+
+     int maxmin(lista *l, int *min, int *max);
+     int maxminc(listac *l, int *min, int *max);
+     int maxmind(listad *l, int *min, int *max);
+     int maxmindc(listadc *l, int *min, int *max);
+
+  "*l" este lista; daca "*min" nu este NULL, in "*min" se va pune valoarea
+  minima; daca "*max" nu este NULL, in "*max" se va pune valoarea maxima;
+  functia returneaza 1 = succes, 0 = esec (de exemplu "*min" si "*max" nu
+  sunt NULL iar lista e vida); se va lucra direct pe structura listelor,
+  fara functii intermediare;
+ Program ilustrativ care citeste cate o lista de fiecare tip, determina
+  valorile minima si maxima din ele, apoi le afisaza.
+
+9.7 (puncte: cate 0.5 pentru fiecare functie)
+ Scrieti functiile urmatoare, care determina numarul aparitiilor unei valori
+  intr-o lista:
+
+     int numaraparitii(lista *l, int val);
+     int numaraparitiic(listac *l, int val);
+     int numaraparitiid(listad *l, int val);
+     int numaraparitiidc(listadc *l, int val);
+
+  "*l" este lista; "val" este valoarea cautata; functiile returneaza numarul
+  aparitiilor; se va lucra direct pe structura listelor, fara functii
+  intermediare.
+ Program ilustrativ care citeste cate o lista de fiecare tip, apoi un intreg
+  si determina de cate ori apare intregul respectiv in fiecare lista.
+
+9.8 (puncte: cate 3 pentru fiecare pereche functie / program)
+ Scrieti functiile urmatoare, care parcurg o lista data ca parametru si
+  aplica fiecarui element o functie data de asemenea ca parametru:
+
+     int aplica(lista *l, int (*f)(int *));
+     int aplicac(listac *l, int (*f)(int *));
+     int aplicad(listad *l, int (*f)(int *));
+     int aplicadc(listadc *l, int (*f)(int *));
+
+  "*l" este lista; "*f" este functia care se aplica fiecarui nod (ea
+  primeste ca parametru adresa campului "inf" al nodului respectiv);
+  functia de aplicare returneaza 1 daca fiecare apel al lui "*f" a returnat
+  ceva diferit de 0 si 0 altfel; se va lucra direct pe structura listelor,
+  fara functii intermediare.
+ Program ilustrativ care citeste doua liste, apoi parcurge pe prima si
+  numara de cate ori apare valoarea elementului curent in a doua;
+  parcurgerea se va realiza cu functia de aplicare de mai sus, iar
+  functia transmisa ca parametru va numara de cate ori apare elementul
+  curent in a doua lista (data globala) si va afisa elementul si numarul
+  sau de aparitii; se va scrie cate o varianta a programului pentru fiecare
+  tip de lista S, SC, D, DC.
+
+9.9 (puncte: cate 1 pentru fiecare functie)
+ Scrieti functiile urmatoare:
+
+     int inlocuieste(lista *l, int vechi, int *nou);
+     int inlocuiestec(listac *l, int vechi, int *nou);
+     int inlocuiested(listad *l, int vechi, int *nou);
+     int inlocuiestedc(listadc *l, int vechi, int *nou);
+
+  a.i. daca "*nou" nu este NULL inlocuiesc in lista "*l" toate aparitiile
+  valorii "vechi" cu valoarea "*nou"; daca "*nou" este NULL, se elimina
+  toate aparitiile valorii "vechi"; functia returneaza numarul inlocuirilor,
+  respectiv eliminarilor efectuate sau -1 in caz de eroare (de exemplu nu
+  s-a putut aloca memorie); se va lucra direct pe structura listelor, fara
+  functii intermediare, si se vor elimina/insera noduri cu totul, fara a
+  modifica informatia din nodurile existente.
+ Program ilustrativ, care citeste niste liste, le modifica cu functiile de
+  mai sus, apoi afisaza listele rezultate.
+
+9.10 (puncte: cele indicate in comentariile din text)
+ Scrieti functiile urmatoare:
+
+     int cauta(lista *l, int op, int val);     /* 1.5 puncte */
+     int cautad(listad *l, int op, int val);   /* 0.5 puncte */
+
+  care daca "op" > 0 returneaza pozitia celei de-a "op"-a aparitii a valorii
+  "val" in lista numarand de la inceput, iar daca "op" < 0 returneaza
+  pozitia celei de-a "op"-a aparitii a valorii "val" in lista numarand de la
+  sfarsit; valorile valide ale lui "op" sunt 1, 2, ..., -1, -2, ..., iar
+  pozitiile in lista sunt numere de la 0 la lungimea listei - 1; in caz de
+  eroare (de exemplu nu se gasesc cel putin "op" aparitii ale valorii "val"
+  in lista sau "op" este egal cu 0) se va returna -1; se va lucra direct pe
+  structura listelor, fara functii intermediare.
+ Program ilustrativ care citeste o lista si un intreg, apoi pentru un "i" de
+  la 1 la lungimea listei se va afisa pozitia a "i"-a a intregului in lista,
+  numarand atat de la inceput cat si de la sfarsit.
+
+9.11 (puncte: cele indicate in comentariile din text)
+ Scrieti functiile urmatoare:
+
+     int id(lista *l, int nr, int vechi, int nou);        /* 1.5 puncte */
+     int idc(listac *l, int nr, int vechi, int nou);      /* 2 puncte */
+     int idd(listad *l, int nr, int vechi, int nou);      /* 1.5 puncte */
+     int iddc(listadc *l, int nr, int vechi, int nou);    /* 2 puncte */
+
+  care insereaza valoarea "nou" inaintea valorii "vechi" daca "op" > 0 si
+  dupa valoarea "vechi" daca "op" < 0, in lista "*l"; se vor face cel mult
+  modul de "op" inserari (daca "vechi" nu apare de suficiente ori in lista,
+  vor fi mai putine inserari); in cazul listelor circulare se va cauta
+  "vechi" incepand de la pozitia curenta si nu se va face mai mult de un tur
+  complet al listei; functia va returna numarul inserarilor facute sau -1 in
+  caz de eroare (de exemplu nu s-a putut aloca memorie); se va lucra direct
+  pe structura listelor, fara functii intermediare.
+ Program ilustrativ (va trata fiecare tip de lista si vor afisa listele
+  rezultate).
+
+9.12 (puncte: cate 1.5 pentru fiecare functie)
+ Scrieti functiile urmatoare:
+
+     int lnumaraparitii(lista *l, lista *s);
+     int lnumaraparitiic(listac *l, lista *s);
+     int lnumaraparitiid(listad *l, lista *s);
+     int lnumaraparitiidc(listadc *l, lista *s);
+
+  care returneaza numarul aparitiilor listei "*s" ca sublista in "*l" (i.e.
+  valorile din "*s" apar incepand de la o anumita pozitie si in "*l",
+  adiacent, in aceeasi ordine); atentie ca in toate cazurile "*s" este S;
+  "*l" si "*s" nu se vor modifica; se va lucra direct pe structura listelor,
+  fara functii intermediare.
+ Program ilustrativ, care citeste cate o lista S, SC, D, DC si o inca o
+  lista S si afisaza numaraul aparitiilor ultimeia ca sublista in celelalte.
+
+9.13 (puncte: cate 3 pentru fiecare functie)
+ Scrieti functiile urmatoare:
+
+     int linlocuieste(lista *l, lista *v, lista *n);
+     int linlocuiestec(listac *l, lista *v, lista *n);
+     int linlocuiested(listad *l, lista *v, lista *n);
+     int linlocuiestedc(listadc *l, lista *v, lista *n);
+
+  a.i. daca "*n" nu este NULL inlocuiesc in lista "*l" toate aparitiile
+  listei "*v" ca sublista cu o copie a listei "*n"; daca "*n" este NULL, se
+  elimina din "*l" toate aparitiile listei "*v" ca sublista; functia
+  returneaza numarul inlocuirilor, respectiv eliminarilor efectuate, sau -1
+  in caz de eroare (de exemplu nu s-a putut aloca memorie); sublista
+  inseamna ca valorile din "*v" apar incepand de la o anumita pozitie si in
+  "*l", adiacent, in aceeasi ordine; desi in toate cazurile "*v" si "*n"
+  sunt S, in urma inlocuirii lista "*l" rezultata trebuie sa fie de acelasi
+  tip (S, SC, D, DC) ca inainte; "*v" si "*n" nu se vor modifica; se va
+  lucra direct pe structura listelor, fara functii intermediare si se vor
+  elimina/insera noduri cu totul, fara a modifica informatia din nodurile
+  existente; nodurile portiunilor eliminate din "*l" se vor dezaloca.
+ Program ilustrativ, care citeste niste liste, le modifica cu functiile de
+  mai sus, apoi afisaza listele rezultate.
+
+9.14 (puncte: cele indicate in comentariile din text)
+ Scrieti functiile urmatoare:
+
+     int lcauta(lista *l, int op, lista *s);     /* 4 puncte */
+     int lcautad(listad *l, int op, lista *s);   /* 1.5 puncte */
+
+  care daca "op" > 0 returneaza pozitia celei de-a "op"-a aparitii a listei
+  "*s" ca sublista in "*l" numarand de la inceput, iar daca "op" < 0
+  returneaza pozitia celei de-a "op"-a aparitii a listei "*s" ca sublista
+  in "*l" numarand de la sfarsit; sublista inseamna ca valorile din "*s"
+  apar incepand de la o anumita pozitie si in "*l", adiacent, in aceeasi
+  ordine; valorile valide ale lui "op" sunt 1, 2, ..., -1, -2, ..., iar
+  pozitiile in lista sunt numere de la 0 la lungimea listei - 1; in caz de
+  eroare (de exemplu nu se gasesc cel putin "op" aparitii sau "op" este egal
+  cu 0) se va returna -1; atentie ca in toate cazurile "*s" este S; "*l" si
+  "*s" nu se vor modifica; se va lucra direct pe structura listelor, fara
+  functii intermediare.
+ Program ilustrativ care citeste cate o lista S si D, apoi o lista S si
+  pentru un "i" de la 1 la lungimea primelor liste se va afisa pozitia a
+  "i"-a a ultimei liste in ele ca sublista, numarand atat de la inceput cat
+  si de la sfarsit.
+
+9.15 (puncte: cele indicate in comentariile din text)
+ Scrieti functiile urmatoare:
+
+     int lid(lista *l, int nr, int vechi, lista *n);        /* 2.5 puncte */
+     int lidc(listac *l, int nr, int vechi, lista *n);      /* 3 puncte */
+     int lidd(listad *l, int nr, int vechi, lista *n);      /* 2.5 puncte */
+     int liddc(listadc *l, int nr, int vechi, lista *n);    /* 3 puncte */
+
+  care insereaza cate o copie a listei "*n" inaintea valorii "vechi" daca
+  "op" > 0 si dupa valoarea "vechi" daca "op" < 0, in lista "*l"; se vor
+  face cel mult modul de "op" inserari (daca "vechi" nu apare de suficiente
+  ori in lista, vor fi mai putine inserari); in cazul listelor circulare se
+  va cauta "vechi" incepand de la pozitia curenta si nu se va face mai mult
+  de un tur complet al listei; functia va returna numarul inserarilor
+  facute sau -1 in caz de eroare (de exemplu nu s-a putut aloca memorie);
+  "*n" nu se modifica; atentie ca in toate cazurile "*n" este S, iar
+  in urma inlocuirii lista "*l" rezultata trebuie sa fie de acelasi tip (S,
+  SC, D, DC) ca inainte; se va lucra direct pe structura listelor, fara
+  functii intermediare.
+ Program ilustrativ (va trata fiecare tip de lista si vor afisa listele
+  rezultate).
+
+9.16 (puncte: 1 + punctajul indicat in text)
+ Scrieti functiile urmatoare:
+ - (2 puncte) functii ce returneaza o sublista de lungime data care incepe
+   de la o pozitie data:
+
+     int sublista(lista *l, int i, int lungime, lista *s);
+     int sublistad(listad *l, int i, int lungime, lista *s);
+
+   "*l" este lista, "i" este pozitia (de la 0 la lungimea listei - 1),
+   "lungime" este lungimea sublistei, in "*s" se va pune o copie a sublistei
+   lui "*l" de lungime cel mult "lungime" care incepe de la pozitia "i";
+   daca "*l" nu contine suficiente elemente, se va copia o sublista mai
+   scurta; sublista inseamna lista de elemente care apar adiacent in "*l";
+   in caz de succes functia returneaza lungimea sublistei copiate, iar in
+   caz de esec (de exemplu "i" este o pozitie in afara listei, "*s" e NULL
+   sau "*l" sau nu s-a putut aloca memorie) returneaza -1 si elibereaza
+   elementele deja alocate pentru "*s"; "*l" nu se modifica; atentie in
+   toate cazurile "*s" este S; se va lucra direct pe structura listelor,
+   fara functii intermediare;
+ - (3 puncte) functii ce insereaza o lista in alta lista ca sublista,
+   incepand de la o pozitie data:
+
+     int linsereaza(lista *l, int i, lista *s);
+     int linsereazad(listad *l, int i, lista *s);
+
+   "*l" este lista, "i" este pozitia (de la 0 la lungimea listei - 1), iar
+   functia va insera o copie a lui "*s" in "*l" de la pozitia "i"; copia
+   inserata este implementata S sau D ca "*l", desi in toate cazurile "*s"
+   este S; functia returneaza 1 = succes, 0 = esec (de exemplu "i" este o
+   pozitie in afara listei sau nu s-a putut aloca memorie) - in acest caz
+   se elibereaza elementele deja alocate pentru copia inserata, iar "*l" nu
+   se modifica; "*s" nu se  modifica; se va lucra direct pe structura
+   listelor, fara functii intermediare;
+ - (3 puncte) functii ce elimina sublista ce incepe de la o pozitie data si
+   are o lungime data:
+
+     int lelimina(lista *l, int i, int lungime, lista *s);
+     int leliminad(listad *l, int i, int lungime, lista *s);
+
+   "*l" este lista, "i" este pozitia (de la 0 la lungimea listei - 1),
+   "lungime" este lungimea sublistei; daca "*s" nu este NULL, in "*s" se va
+   recupera sublista eliminata; daca de la pozitia indicata pana la
+   sfarsitul lui "*l" nu sunt suficiente elemente, se va elimina/recupera o
+   sublista mai scurta; in caz de succes functia returneaza lungimea
+   sublistei eliminate/recuperate, iar in caz de esec (de exemplu "i" este o
+   pozitie in afara listei "*l" sau nu s-a putut aloca memorie) returneaza
+   -1 iar "*l" nu se modifica; atentie in toate cazurile "*s" este S; se va
+   lucra direct pe structura listelor, fara functii intermediare.
+ Program ilustrativ, care sa acopere atat cazul S cat si cazul D.
+
+9.17 (puncte: 2.5)
+ Se citesc de la tastatura doua S de intregi deja sortate, se interclaseaza,
+  apoi se afisaza lista rezultata. Cu exceptia eventual a citirii si
+  scrierii listelor, tot codul se pune in "main". Nu se vor aloca noduri
+  suplimentare si nu se va modifica informatia din noduri ci doar legaturi
+  (lista rezultata va fi formata din nodurile reasamblate ale celor doua
+  liste).
+
+9.18 (puncte: 4)
+ Problema lui Josephus: se citeste de la tastatura o SC de intregi si doua
+  numere naturale n si k, apoi incepand cu al n-lea element din lista
+  (numarand de la pozitia primului introdus) se elimina elementele din k in
+  k pozitii - astfel sunt eliminate pana la urma toate elementele din lista;
+  programul va afisa elementele in ordinea eliminarii lor. Cu exceptia
+  eventual a citirii listei, tot codul se pune in "main".
+
+9.19 (puncte: cele indicate in comentariile din text)
+ Implementati tipul lista de liste S astfel:
+
+     struct nodl{lista l; struct nodl *leg;};
+
+   (lista se asimileaza implicit cu un pointer la nodl).
+ Scrieti urmatoarele functii:
+
+     struct nodl * citestel();   /* 3 puncte */
+
+   care citeste de la tastatura o lista de lista si returneaza adresa
+   primului sau nod; in caz de eroare (de exemplu nu s-a mai putut aloca
+   memorie) se dezaloca elementele deja alocate si se returneaza NULL;
+   se va asigura posibilitatea citirii de liste vide;
+
+     void scriel(struct nodl *n);   /* 1.5 puncte */
+
+   care afisaza pe ecran lista de liste ce incepe cu nodul "*n", apoi o
+   dezaloca; fiecare lista componente se va afisa pe cate o linie;
+
+     struct nodl * concateneazal(struct nodl *n1, struct nodl *n2);
+							   /* 3 puncte */
+
+   care concateneaza listele ce incep cu nodurile "*n1", "*n2" intr-o lista
+   noua, dezaloca cele doua liste, si returneaza adresa primului nod al
+   listei rezultate; in caz de eroare (de exemplu nu s-a mai putut aloca
+   memorie) se dezaloca elementele deja alocate si se returneaza NULL.
+ Aplicatie: program care citeste doua liste de liste si afisaza concatenarea
+  lor.
+
+9.20 (puncte: 4)
+ Implementati tipul lista simplu inlantuita in implementare inlantuita ca
+  pana acum:
+
+     struct nod{int inf; struct nod *leg;};
+     typedef struct nod *listai;
+
+  si in implementare secventiala:
+
+     typedef struct{int *v, n;} listas;
+
+  (daca "s" este o lista alocata secvential, atunci "s.n" este numarul
+  componentelor sale iar "s.v" este adresa vectorului ce contine aceste
+  componente (amplasate adiacent in el) - vectorul este alocat dinamic si
+  realocat la fiecare inserare/eliminare a unui element).
+ Scrieti urmatoarele functii:
+
+     void inits(listas *l);
+     void initi(listai *l);
+
+   care initializeaza o lista cu lista vida, inaintea primei folosiri
+   (constructor);
+
+     int citestes(listas *l);
+     int citestei(listai *l);
+
+   care citesc o lista de la tastatura si returneaza 1 = succes, 0 = esec
+   (de exemplu nu s-a putut aloca memorie) - caz in care se dezaloca
+   componentele alocate deja; "*l" se presupune initializata, iar daca
+   continea deja elemente, ele se dezaloca mai intai;
+
+     void scries(listas *l);
+     void scriei(listai *l);
+
+   care afisaza lista "*l" pe ecran, fara sa o modifice;
+
+     int s2i(listai *d, listas* s);
+     int i2s(listas *d, listai* s);
+
+   care copiaza lista "*s" in lista "*d" cu conversie intre tipuri de liste
+   diferite; returneaza 1 = succes, 0 = esec (de exemplu nu s-a putut aloca
+   memorie) - caz in care se dezaloca componentele alocate deja.
+ Program ilustrativ.
+
+9.21 (puncte: 12)
+   Definiti tipul stiva de pointeri la void alocata simplu inlantuit astfel:
+
+     struct nod{void *inf; struct nod *leg;};
+     typedef struct nod *stack;
+
+   (o stiva este de fapt pointer la nodul din varful sau, varful fiind
+   extremitatea unde se fac operatiile de inserare/eliminare).
+   Scrieti urmatoarele functii:
+
+     void init(stack *s);
+
+    care initializeaza stiva cu stiva vida; este un constructor care se
+    aplica cate o singura data pentru fiecare stiva din program, inaintea
+    primei folosiri;
+
+      int empty(stack *s);
+
+    returneaza 1 daca stiva e vida si 0 altfel;
+
+      int push(stack *s, void *x);
+
+    insereaza un nod nou in varful stivei "*s", continand adresa "x";
+    returneaza 1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie),
+    caz in care "*s" ramane nemodificata;
+
+      void * pop(stack *s, int *err);
+
+    elimina nodul din varful stivei si returneaza adresa continuta in campul
+    "inf" al acestuia; daca "*err" nu e NULL, functia va pune in el 0 in caz
+    de succes si 1 in caz de esec (de exemplu stiva era vida) - in acest caz
+    "*s" ramane nemodificata.
+   Folosind functiile de mai sus, scrieti functiile urmatoare:
+
+      void sdelete(stack *s);
+
+    elimina si dezaloca (pop) toate elementele din stiva "*s", aceasta
+    ramanand in final vida; ea este utila pentru a goli o stiva inainte de
+    a o folosi in alt scop (citirea sau copierea in ea a altei stive) sau
+    ca desctructor care se aplica la iesirea din domeniul de existenta al
+    stivei, pentru a elibera memoria ocupata;
+
+      int sread(stack *s, void* (*ir)());
+
+    citeste stiva "*s" de la tastatura; "ir" este adresa unei functii care
+    citeste o informatie intr-o zona pe care o aloca dinamic si returneaza
+    adresa sa; in caz ca s-a semnalat sfarsitul intrarii, "*ir" nu va aloca
+    nimic si va returna NULL; fiecare element este citit de la tastatura cu
+    "*ir" iar adresa zonei in care este stocat este inserata in stiva
+    (push); elementele se citesc pana "*ir" returneaza NULL;
+
+      void swrite(stack *s, void (*iw)(void *));
+
+    afisaza stiva "*s" pe ecran; de fapt se vor afisa informatiile ale caror
+    adrese se gasesc in stiva, folosind pentru fiecare functia "*iw" (ea
+    primeste ca parametru adresa zonei ce contine informatia ce trebuie
+    afisata); stiva "*s" ramane in final nealterata;
+
+      int scopy(stack *d, stack *s);
+
+    copiaza stiva "*s" in stiva "*d"; "*s" ramane in final nemodificata;
+    returneaza: 1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie);
+
+      int sreverse(stack *s);
+
+    inverseaza ordinea elementelor in stiva "*s"; returneaza: 1 = succes,
+    0 = esec (de exemplu nu s-a putut aloca memorie).
+   Functiile "sdelete", "sread", "swrite", "scopy", "sreverse" trebuie
+    scrise folosind doar functiile "init", "empty", "push" si "pop" (ca
+    primitive) fara a intra direct in structura stivei (astfel incat daca
+    vrem sa schimbam modul de implementare al stivei sa modificam doar acele
+    patru functii).
+   Aplicatie: program care citeste o stiva de intregi (stiva stocheaza de
+    fapt adresele zonelor alocate dinamic in care sunt memorati intregii),
+    apoi o inverseaza, apoi iar o inverseaza, apoi o copiaza in alta stiva,
+    apoi o goleste, iar dupa fiecare operatie afisaza stivele obtinute
+    (de fapt intregii ale caror adrese sunt in stive); functia "*ir"
+    folosita va returna NULL daca s-a introdus o linie goala.
+
+9.22 (puncte: 16)
+   Definiti tipul coada de pointeri la void alocata simplu inlantuit astfel:
+
+     struct nod{void *inf; struct nod *leg;};
+     typedef struct{struct nod *v,*b;} queue;
+
+   (o coada este o pereche de pointeri, la nodurile din varful sau ("v"),
+    respectiv de la baza sa ("b"), varful fiind extremitatea unde se fac
+    eliminarile, iar baza extremitatea unde se fac inserarile; evident, in
+    lantul nodurilor alocate legaturile vor fi dinspre varf spre baza).
+   Scrieti urmatoarele functii:
+
+     void init(queue *q);
+
+    care initializeaza coada cu coada vida; este un constructor care se
+    aplica cate o singura data pentru fiecare coada din program, inaintea
+    primei folosiri;
+
+      int empty(queue *q);
+
+    returneaza 1 daca coada e vida si 0 altfel;
+
+      int push(queue *q, void *x);
+
+    insereaza un nod nou la baza cozii "*q", continand adresa "x";
+    returneaza 1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie),
+    caz in care "*q" ramane nemodificata;
+
+      void * pop(queue *q, int *err);
+
+    elimina nodul din varful cozii si returneaza adresa continuta in campul
+    "inf" al acestuia; daca "*err" nu e NULL, functia va pune in el 0 in caz
+    de succes si 1 in caz de esec (de exemplu coada era vida) - in acest caz
+    "*q" ramane nemodificata.
+   Folosind functiile de mai sus, scrieti functiile urmatoare:
+
+      void qdelete(queue *q);
+
+    elimina si dezaloca (pop) toate elementele din coada "*q", aceasta
+    ramanand in final vida; ea este utila pentru a goli o coada inainte de
+    a o folosi in alt scop (citirea sau copierea in ea a altei cozi) sau
+    ca desctructor care se aplica la iesirea din domeniul de existenta al
+    cozii, pentru a elibera memoria ocupata;
+
+      int qread(queue *q, void* (*ir)());
+
+    citeste coada "*q" de la tastatura; "ir" este adresa unei functii care
+    citeste o informatie intr-o zona pe care o aloca dinamic si returneaza
+    adresa sa; in caz ca s-a semnalat sfarsitul intrarii, "*ir" nu va aloca
+    nimic si va returna NULL; fiecare element este citit de la tastatura cu
+    "*ir" iar adresa zonei in care este stocat este inserata in coada
+    (push); elementele se citesc pana "*ir" returneaza NULL;
+
+      void qwrite(queue *q, void (*iw)(void *));
+
+    afisaza coada "*q" pe ecran; de fapt se vor afisa informatiile ale caror
+    adrese se gasesc in coada, folosind pentru fiecare functia "*iw" (ea
+    primeste ca parametru adresa zonei ce contine informatia ce trebuie
+    afisata); coada "*q" ramane in final nealterata;
+
+      int qcopy(queue *d, queue *s);
+
+    copiaza coada "*s" in coada "*d"; "*s" ramane in final nemodificata;
+    returneaza: 1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie);
+
+      int qreverse(queue *q);
+
+    inverseaza ordinea elementelor in coada "*q"; returneaza: 1 = succes,
+    0 = esec (de exemplu nu s-a putut aloca memorie).
+   Functiile "qdelete", "qread", "qwrite", "qcopy", "qreverse" trebuie
+    scrise folosind doar functiile "init", "empty", "push" si "pop" (ca
+    primitive) fara a intra direct in structura cozii (astfel incat daca
+    vrem sa schimbam modul de implementare al cozii sa modificam doar acele
+    patru functii).
+   Aplicatie: program care citeste o coada de intregi (coada stocheaza de
+    fapt adresele zonelor alocate dinamic in care sunt memorati intregii),
+    apoi o inverseaza, apoi iar o inverseaza, apoi o copiaza in alta coada,
+    apoi o goleste, iar dupa fiecare operatie afisaza cozile obtinute
+    (de fapt intregii ale caror adrese sunt in cozi); functia "*ir"
+    folosita va returna NULL daca s-a introdus o linie goala.
+
+10. Arbori alocati inlantuit:
+    -------------------------
+
+In cusrul acestei sectiuni vom nota prescurtat:
+  AB = arbore binar
+  A  = arbore oarecare
+
+In general vom presupune ca tipurile de arbori AB si A sunt implementate
+ respectiv astfel:
+
+     struct nodab{int inf; struct nodab *st,*dr;};
+     typedef struct nodab *arboreb;                  /* AB  */
+
+ (un AB este un pointer la nodul radacina si NULL in cazul arborelui vid;
+  un nod contine informatia aferenta "inf" si pointeri la radacinile
+  subarborilor stang "st" si drept "dr")
+
+     struct noda{int inf,n; struct noda **f;};
+     typedef struct noda *arbore;                    /* A  */
+
+ (un A este un pointer la nodul radacina si NULL in cazul arborelui vid;
+  un nod contine informatia aferenta "inf", numarul subarborilor fiu "n"
+  (>= 0) si adresa de inceput a vectorului pointerilor catre radacinile
+  subarborilor fiu "f" - el este (re)alocat dinamic, pe masura ce numarul
+  fiilor se modifica)
+
+Eventualele abateri de la regula de mai sus vor fi semnalate la momentul
+ respectiv.
+Daca nu se va specifica altfel, orice modificare asupra informatiilor
+ dintr-un arbore se va face doar prin inserarea/eliminarea nodurilor sau
+ schimbarea legaturilor, fara a modifica informatia din nodurile existente.
+
+10.1 (puncte: a se vedea in text)
+ Scrieti functii pentru:
+ - (0.5 puncte) initializarea unui arbore cu arborele vid:
+
+     void initab(arboreb *a);
+     void inita(arbore *a);
+
+   se presupune ca arborii dati ca parametru nu au fost folositi inca, deci
+   nu avem noduri de dezalocat; initializarea de mai sus este ca un
+   constructor, care se aplica cate o singura data pentru fiecare arbore din
+   program, atunci cand incepe domeniul lui de existenta (inainte de a face
+   operatii cu el);
+ - (2 puncte) dezalocarea unui arbore:
+
+     void golesteab(arboreb *a);
+     void golestea(arbore *a);
+
+   se presupune ca arborii dati ca parametru au fost deja initializati si
+   eventual folositi, deci pot avea noduri ce trebuie dezalocate; acestea
+   se elimina din arbore si se dezaloca succesiv, pana cand arborele devine
+   vid; se pot scrie functii recursive, care dezaloca nodurile de la frunze
+   spre radacina; golirea de mai sus este necesara inainte de incarca
+   arborele cu alte elemente (de exemplu citirea in el a unui arbore de la
+   tastatura sau copierea in el a altui arbore); mai poate fi folosita ca un
+   desctructor, care se aplica la iesirea din domeniul de existenta al
+   arborelui, pentru a elibera memoria ocupata;
+ - (0.5 puncte) testarea daca un arbore e vid:
+
+     int vidab(arboreb *a);
+     int vida(arbore *a);
+
+   returneaza: 1 daca arborele este vid, 0 daca nu este vid;
+ - (8 puncte) citirea unui arbore de la tastatura, folosind expresii cu
+   paranteze complete:
+
+     int citesteab(arboreb *a);
+     int citestea(arbore *a);
+
+   un arbore se poate reprezenta extern prin expresii cu paranteze complete
+   dupa o sintaxa de tipul urmator:
+
+     <AB> ::= . | <intreg>(<AB>,<AB>)
+
+   respectiv:
+   
+     <A>  ::= . | <A nevid>
+     <A nevid> ::= <intreg> | <intreg>(<lista A nevizi>)
+     <lista A nevizi> ::= <A nevid>{,<A nevid>}
+
+   (unde "." desemneaza arborele vid, iar <intreg> un numar intreg -
+    informatia unui nod);
+   de exemplu:
+   arborele binar:  * 10   se reprezinta: 10(20(.,.),30(40(.,.),.))
+		   / \
+		  /   \
+	      20 *     * 30
+		      /
+		     /
+		 40 *
+   arborele oarecare:  * 1   se reprezinta: 1(2,3(5),4)
+		      /|\
+		     / | \
+		    /  |  \
+		 2 *   * 3 * 4
+		       |
+		       |
+		       * 5
+   observatie: la AB nu se poate folosi sintaxa pentru A deoarece aici daca
+   un nod are un singur fiu, trebuie precizat daca este cel stang sau drept;
+   indicatie: avand in vedere ca definitia sintactica este una recursiva,
+   se pot implementa functii de citire recursive care urmaresc structura
+   definitiei sintactice; expresia cu paranteze complete se poate da de la
+   tastatura pe o linie, de unde se citeste intr-un string global, iar
+   citirea arborilor se face din acest string, unde se poate analiza mai
+   usor ce caracter urmeaza la fiecare pas;
+   atentie: intre atomii lexicali din expresia cu paranteze complete pot
+   aparea blank-uri; functiile de citire trebuie sa poata detecta
+   eventulalele erori in scrierea expresiei (de exemplu parantezele nu se
+   imperecheaza bine); vor returna: 1 = succes, 0 = esec (de exemplu
+   expresia este incorecta sau nu s-a putut aloca memorie);
+ - (2 puncte) afisarea unui arbore pe ecran, folosind expresii cu paranteze
+   complete:
+
+     void scrieab(arboreb *a);
+     void scriea(arbore *a);
+
+   in urma afisarii arborele ramane nemodificat;
+   indicatie: se poate folosi o functie recursiva, care construieste
+   expresia conform definitiei sintactice;
+ - (3 puncte) copierea unui arbore in alt arbore:
+
+     int copiazaab(arboreb *d, arboreb *s);
+     int copiazaa(arbore *d, arbore *s);
+
+   "*d" este arborele destinatie, "*s" este arborele sursa; arborele sursa
+   ramane nemodificat; returneaza: 1 = succes, 0 = esec (de exemplu nu s-a
+   putut aloca memorie);
+ Program ilustrativ.
+
+10.2 (puncte: cate 3 pentru fiecare functie)
+ Scrieti functii pentru citirea interactiva a unui arbore de la tastatura:
+
+     int icitesteab(arboreb *a);
+     int icitestea(arbore *a);
+
+  functia va cere pentru radacina si fiecare subarbore in parte raspuns daca
+  e nevid, informatia aferenta nodului (intregul continut), fii acestuia,
+  etc.; ele vor returna: 1 = succes, 0 = esec (de exemplu nu s-a putut aloca
+  memorie) - caz in care se dezaloca nodurile deja alocate, iar arborele
+  ramane vid; functiile pot fi recursive.
+ Program ilustrativ care citeste cate un arboe de fiecare tip, apoi il
+  afisaza (de exemplu cu paranteze complete).
+
+10.3 (puncte: 8)
+ Scrieti functii pentru afisarea sub o forma semigrafica a unui arbore pe
+  ecran (in mod text), asemanator comenzii "tree" din DOS:
+
+     void gscrieab(arboreb *a);
+     void gscriea(arbore *a);
+
+   de exemplu arborele binar:    * 10
+				/ \
+			       /   \
+			   20 *     * 30
+				   /
+				  /
+			      40 *
+
+  se va afisa: 10
+	       |-- 20
+	       |   |-- .
+	       |   \-- .
+	       \-- 30
+		   |-- 40
+		   |   |-- .
+		   |   \-- .
+		   \-- .
+
+  iar arborele oarecare:         * 1
+				/|\
+			       / | \
+			      /  |  \
+			   2 *   * 3 * 4
+				/ \    \
+			       /   \    \
+			      * 5   * 6  * 7
+  se va afisa:  1
+		|-- 2
+		|-- 3
+		|   |-- 5
+		|   \-- 6
+		\-- 4
+		    \-- 7
+
+ Program ilustrativ care citeste cate un arboe de fiecare tip, apoi il
+  afisaza.
+
+10.4 (puncte: cate 2 pentru fiecare functie)
+ Scrieti functii recursive care construiesc un vector cu informatiile
+  asociate nodurilor unui AB, parcurgandu-l in preordine, inordine,
+  postordine:
+
+     int * pre(arboreb *a, int *n);
+     int * in(arboreb *a, int *n);
+     int * post(arboreb *a, int *n);
+
+ Scrieti functii recursive care construiesc un vector cu informatiile
+  asociate nodurilor unui A, parcurgandu-l in A-preordine, A-postordine:
+
+     int * apre(arbore *a, int *n);
+     int * apost(arbore *a, int *n);
+
+ In toate cazurile "*a" este arborele, vectorul respectiv se aloca dinamic
+ (treptat, cu realloc, pe masura ce sunt necesare noi componente), functiile
+ returneaza adresa vectorului si pun in "*n" numarul sau de componente; in
+ caz de eroare (de exemplu nu s-a putut aloca memorie sau "*n" este NULL)
+ functiile vor returna NULL, vor elibera componentele de vector deja alocate
+ iar daca "*n" nu e NULL vor pune in el -1; in toate cazurile "*a" ramane
+ nemodificat.
+ Program ilustrativ care citeste cate un arbore de fiecare tip, apoi ii
+  afisaza nodurile in toate ordinile implementate.
+ Observatie: pentru un AB sau A vid, secventa nodurilor in oricare in ordini
+   este vida;
+  pentru un AB nevid, secventa nodurilor in pre/in/post ordine este
+  respectiv RSD, SRD, SDR (unde R este nodul radacina iar S si D sunt
+  respectiv secventele nodurilor subarborelui stang si drept, parcurese in
+  acceeasi pre/in/post ordine) - regula se retine usor daca observam ca
+  numele metodei este dat de locul lui R intre cele trei:
+  inainte/in mijloc/dupa;
+
+  de exemplu pentru arborele binar:    * 10
+				      / \
+				     /   \
+				 20 *     * 30
+					 /
+					/
+				    40 *
+
+  secventele sunt: preordine: 10 20 30 40
+		    inordine: 20 10 40 30
+		  postordine: 20 40 30 10
+
+  pentru un A nevid, secventa nodurilor in A-pre/A-post ordine este
+  respectiv RF, FR (unde R este nodul radacina iar F este secventa (eventual
+  vida a) secventelor nodurilor subarborilor fiu, parcuresi in acceeasi
+  A-pre/A-post ordine); aici nu mai avem inordine deoarece nu stim intre
+  care fii sa inseram radacina;
+
+  de exemplu pentru arborele oarecare:    * 1
+					 /|\
+					/ | \
+				       /  |  \
+				    2 *   * 3 * 4
+					  |
+					  |
+					  * 5
+
+  secventele sunt: A-preordine: 1 2 3 5 4
+		  A-postordine: 2 5 3 4 1
+
+10.5 (puncte: a se vedea in text)
+ Realizati urmatoarele:
+ - (3 puncte) Scrieti functii nerecursive care afisaza informatiile asociate
+   nodurilor unui AB/A, parcurgandu-l in preordine, respectiv A-preordine,
+   folosind o stiva:
+
+     int spre(arboreb *a);
+     int sapre(arbore *a);
+
+   Algoritmul pentru un AB "t" poate fi descris in pseudocod astfel, folsind
+    o stiva S de (sub)arbori (ganditi ca pointeri la nodul radacina):
+
+      S := 0;         /* initial stiva este vida */
+      t => S;         /* t este inserat (push) in stiva */
+      while(S <> 0){  /* cat timp stiva este nevida */
+	p <= S;       /* extragem (pop) un arbore din stiva in p */
+	if(p<>0){     /* daca arborele este nevid */
+	  write(p->inf);   /* afisam informatia din radacina lui p */
+	  (p->dr) => S; (p-st) => S;     /* inseram (push) in S subarborele
+					    drept, apoi stang al lui p */
+	}
+      }
+
+   Pentru un A algoritmul este analog, in stiva reinserandu-se fii radacinii
+    (sub)arborelui scos, de la ultimul spre primul.
+   Se pot folosi stivele de pointeri la void implementate la o problema de
+    la sectiunea "Liste alocate inlantuit".
+   In toate cazurile "*a" ramane nemodificat iar functiile returneaza:
+    1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie la stive).
+ - (3 puncte) Scrieti o functie nerecursiva care afisaza informatiile
+   asociate nodurilor unui A, parcurgandu-l pe nivele, folosind o coada:
+
+     int qniv(arbore *a);
+
+   pentru un A vid, secventa nodurilor in ordinea pe nivele este vida;
+   pentru un A nevid ea este RF, unde R este nodul radacina iar F este
+   secventa (eventual vida a) secventelor nodurilor subarborilor fiu,
+   parcuresi tot pe nivele;
+   de exemplu pentru:            * 1
+				/|\
+			       / | \
+			      /  |  \
+			   2 *   * 3 * 4
+				/ \    \
+			       /   \    \
+			      * 5   * 6  * 7
+
+   secventa data de parcurgerea pe nivele este: 1 2 3 4 5 6 7
+   Algoritmul este similar celui pentru parcurgere in A-preordine, doar ca
+   se inlocuieste stiva cu o coada.
+   Se pot folosi cozile de pointeri la void implementate la o problema de
+    la sectiunea "Liste alocate inlantuit".
+   "*a" ramane nemodificat iar functia returneaza: 1 = succes, 0 = esec (de
+    exemplu nu s-a putut aloca memorie la coada).
+ Program ilustrativ care citeste un arbore de fiecare tip si afisaza
+  secventele de intregi rezultate prin toate parcurgerile implementate.
+
+10.6 (puncte: 4)
+ Scrieti functii nerecursive care afisaza informatiile asociate nodurilor
+  unui AB/A, parcurgandu-l in in/post ordine, respectiv A-postordine,
+  folosind o stiva:
+
+     int sin(arboreb *a);
+     int spost(arboreb *a);
+     int sapost(arbore *a);
+
+ Algoritmii sunt putin mai complicati decat cei pentru preordine/A-preordine
+  sau pe nivele, deoarece unii sau toti fii unui nod trebuie afisati
+  inaintea nodului respectiv; deci atunci cand scoatem prima data radacina
+  unui (sub)arbore din stiva nu o afisam ci ii determinam fii (o expandam),
+  apoi introducem in stiva aceasta radacina si radacinile fiilor, a.i. cei
+  care trebuie afisati primii sa fie introdusi ultimii, si abia cand scoatem
+  a doua oara aceeasi radacina din stiva o afisam fara sa-i mai determinam
+  fii; astfel fiecare nod este trecut pana la urma de doua ori prin stiva si
+  trebuie sa marcam undeva daca aparitia sa la un moment dat este prima sau
+  a doua; putem face acest lucru inserand in stiva perechi (p, i), unde p
+  este un arbore (adresa radacinii sale) iar i este un marcaj 0 sau 1;
+  practic asemenea perechi pot fi implementate ca structuri alocate dinamic
+  si dezalocate la eliminarea din stiva - in stiva se stocheaza adresele
+  lor;
+ Algoritmul pentru parcurgerea in inordine a unui AB "t" poate fi descris in
+  pseudocod astfel, folsind o stiva S de (adrese de) perechi (p, i) unde p
+  este un (sub)arbore (gandit ca pointer la nodul radacina) iar i un intreg
+  0 sau 1:
+
+      S := 0;         /* initial stiva este vida */
+      (t, 0) => S;    /* inseram (push) in S pe t marcat cu 0 */
+      while(S <> 0){  /* cat timp stiva este nevida */
+	(p, i) <= S;  /* extragem (pop) din S arbore p si marcajul sau i */
+	if(p<>0)      /* daca arborele p este nevid */
+	  if(i=0){    /* daca p este la prima inserare in S */
+	    (p->dr, 0) => S; (p, 1) => S; (p->st, 0) => S
+		   /* inseram in S fiul drept al lui p marcat 0,
+		      apoi p marcat 1, apoi fiul stang al lui p marcat 0 */
+	  }else       /* daca p este la a doua inserare in S */
+	    write(p->inf);   /* afisam informatia din radacina lui p */
+      }
+
+   Pentru a parcurge in postordine un AB se interschimba "(p->dr, 0) => S"
+    cu "(p, 1) => S".
+   Pentru a parcurge in A-postordine un A algoritmul este analog, in stiva
+    reinserandu-se (p, 1) si apoi fii lui p marcati cu 0, de la ultimul spre
+    primul.
+   Se pot folosi stivele de pointeri la void implementate la o problema de
+    la sectiunea "Liste alocate inlantuit".
+   In toate cazurile "*a" ramane nemodificat iar functiile returneaza:
+    1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie la stive).
+ Program ilustrativ care citeste un arbore de fiecare tip si afisaza
+  secventele de intregi rezultate prin toate parcurgerile implementate.
+
+10.7 (puncte: 10)
+ Scrieti functiile urmatoare pentru copierea unui arbore in alt arbore, cu
+   conversie intre tipuri de arbori diferite:
+
+     int ab2a(arbore *d, arboreb *s);
+     int a2ab(arboreb *d, arbore *s);
+
+ Codificarea unui A printr-un AB se face folosind legaturile fiu-frate:
+  AB are aceleasi noduri ca A, dar la fiecare nod legatura "st" merge catre
+  primul fiu, iar legatura "dr" catre urmatorul frate al nodului respectiv
+  in A initial.
+ De exemplu avem trecerile:
+
+	* 1                      1 * ---- .                   1 *
+       /|\                        /                            /
+      / | \                      /                            /
+     /  |  \         ====>      /    3     4        ===>   2 *
+  2 *   * 3 * 4      <====   2 * --- * --- * --- .  <===      \
+       / \    \                |     |     |                    \
+      /   \    \               |     |     |                     * 3
+     * 5   * 6  * 7            .     |   7 * --- .              / \
+				     |     |                   /   \
+				     |     |                5 *     \
+				     |     .                   \     \
+				     |                          \     \
+				     |                         6 *     * 4
+				   5 * --- * --- .                    /
+				     |   6 |                         /
+				     |     |                      7 *
+				     .     .
+
+  (in stanga este un A, in dreapta AB echivalent, in mijloc un alt desen al
+   AB din dreapta pe care se vede mai clar regula de transformare)
+  Trecerile de mai sus sunt inverse una alteia, in sensul ca daca unui
+   arbore ii aplicam o transformare apoi transformarea duala regasim
+   arborele initial.
+  In toate cazurile "*s" ramane nemodificat iar functiile returneaza:
+    1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie).
+  Program ilustrativ care citeste un A apoi face trecerea A -> AB -> A,
+   afisand arborii obtinuti, apoi citeste un AB si face trecerea
+   AB -> A -> AB, afisand arborii obtinuti (la finalul fiecarei treceri
+   trebuie regasit arborele de plecare).
+
+10.8 (puncte: 8)
+ Scrieti functia:
+
+     int insabs(arboreb *a, int x);
+
+  care insereaza un nod nou avand informatia "x" in arborele "*a" privit ca
+  arbore de sortare; intr-un arbore (binar) de sortare, pentru fiecare nod
+  informatia asociata este mai mare sau egala decat informatiile asociate
+  nodurilor din subarborele sau stang si mai mica sau egala decat
+  informatiile asociate nodurilor din subarborele sau drept - astfel o
+  parcurgere in inordine a sa genereaza secventa informatiilor asociate
+  nodurilor in ordine crescatoare; inserarea unui nod nou intr-un asemenea
+  arbore presupune cautarea (eventual recursiva) de la radacina spre frunze
+  a unui loc unde poate fi inserat nodul a.i. sa se pastreze regula
+  referitoare la inegalitatea informatiilor; functia va returna:
+  1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie la stive) - in
+  acest caz "*a" ramane nemodificat.
+ Scrieti functie:
+
+     int abssort(int *v, int n);
+
+  care sorteaza vectorul ce incepe de la adresa "v" (presupus deja existent)
+  si avand "n" componente folosind un arbore de sortare construit in
+  interior - acesta este initial vid, apoi incarcat succesiv cu elementele
+  din vector folosind functia dinainte, apoi in vector se pune secventa
+  informatiilor din arbore in inordine iar arborele se dezaloca; functia
+  returneaza: 1 = succes, 0 = esec (de exemplu nu s-a putut aloca memorie
+  pentru arbore) - in acest caz vectorul ramane nemodificat.
+ Program ilustrativ care citeste un vector si afisaza vectorul sortat.
+
+10.9 (puncte: 2)
+ Scrieti functiile urmatoare, care determina numarul aparitiilor unei valori
+  intr-un arbore:
+
+     int numaraparitiiab(arboreb *a, int val);
+     int numaraparitiia(arbore *a, int val);
+
+  "*a" este lista; "val" este valoarea cautata; functiile returneaza numarul
+  aparitiilor; "*a" ramane nemodificat.
+ Program ilustrativ care citeste cate un arbore de fiecare tip, apoi un
+  intreg si determina de cate ori apare intregul respectiv in fiecare
+  arbore.
+
+10.10 (puncte: 6)
+ Scrieti functia urmatoare care plecand de la secventele informatiilor
+  asociate nodurilor unui AB in preordine si inordine reconstituie arborele:
+
+     int pi2ab(const int *p, const int *i, int n, arboreb *a);
+
+  "p" si "i" sunt adresele vectorilor ce contin secventele in preordine,
+  respectiv postordine (parametri de intrare, vectorii raman in final
+  nemodificati), "n" este numarul de componente ale fiecaruia, "*a" este
+  un parametru de iesire in care se va pune adresa radacinii arborelui
+  construit; functia returneaza: 1 = succes, 0 = esec (de exemplu nu s-a
+  putut aloca memorie pentru arbore).
+ Program ilustrativ care citeste secventa informatiilor in preordine si
+  inordine si afisaza AB corespunzator (de exemplu prin expresii cu
+  paranteze complete).
+ Varianta: incercati ca plecand de la cele doua secvente sa obtineti
+  reprezentarea cu paranteze complete a arborelui corespunzator fara a
+  construi efectiv arborele.
+ (Problema data la olimpiada de informatica, faza locala, in 1994).
+
+							DRAGULICI DANIEL
+                                                        2002

@@ -1,0 +1,45 @@
+FREAD(3)		   Linux Programmer's Manual		      FREAD(3)
+
+
+
+NAME
+       fread, fwrite - binary stream input/output
+
+SYNOPSIS
+       #include <stdio.h>
+
+       size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+       size_t	fwrite(const  void  *ptr,  size_t  size,  size_t  nmemb,  FILE
+       *stream);
+
+DESCRIPTION
+       The function fread reads nmemb elements of data, each size bytes	 long,
+       from  the  stream  pointed  to  by stream, storing them at the location
+       given by ptr.
+
+       The function fwrite writes nmemb elements  of  data,  each  size	 bytes
+       long, to the stream pointed to by stream, obtaining them from the loca-
+       tion given by ptr.
+
+       For non-locking counterparts, see unlocked_stdio(3).
+
+RETURN VALUE
+       fread and fwrite return the number of items successfully read or	 writ-
+       ten  (i.e.,  not the number of characters).  If an error occurs, or the
+       end-of-file is reached, the return value is  a  short  item  count  (or
+       zero).
+
+       fread  does  not distinguish between end-of-file and error, and callers
+       must use feof(3) and ferror(3) to determine which occurred.
+
+CONFORMING TO
+       The functions fread and fwrite  conform	to  ANSI  X3.159-1989  (``ANSI
+       C'').
+
+SEE ALSO
+       read(2), write(2), feof(3), ferror(3), unlocked_stdio(3)
+
+
+
+BSD MANPAGE			  1996-05-17			      FREAD(3)

@@ -1,0 +1,108 @@
+
+                                TEME
+                                ~~~~
+
+F1. (0.5 puncte) Scrieti un program care primeste ca argumente in linia de
+ comanda doi intregi si afisaza cmmdc al lor.
+
+F2. (0.5 puncte) Scrieti un program care primeste ca argument in linia de
+ comanda un intreg si verifica daca este prim.
+
+F3. (2.5 puncte) Scrieti un program care primeste ca argument in linia de
+ comanda un intreg si afisaza descompunerea sa in factori primi.
+
+F4. (1 punct) Scrieti un program care primeste ca argument in linia de
+ comanda un intreg si afisaza suma cifrelor sale.
+
+F5. (1 punct) Scrieti un program care primeste ca argument in linia de
+ comanda un intreg si afisaza imaginea sa in oglinda (ex: 1234 -> 4321).
+
+F6. (0.5 puncte) Scrieti un program care converteste un fisier (text) cu
+ reprezentari externe zecimale de intregi intr-un fisier (binar) cu
+ reprezentarile lor interne. Specificatorii fisierelor sunti dati ca
+ argumente in linia de comanda.
+
+F7. (0.5 puncte) Scrieti un program care converteste un fisier (binar) cu
+ reprezentari interne de intregi intr-un fisier (text) cu reprezentarile
+ lor externe zecimale. Specificatorii fisierelor sunti dati ca argumente
+ in linia de comanda.
+
+F8. (0.5 puncte) Simularea comenzii "cp" in forma cea mai simpla: program
+ ce copiaza un fisier intr-alt fisier; specificatorii fisierelor sunti dati
+ ca argumente in linia de comanda.
+
+F9. (0.5 puncte) Scrieti un program care concateneaza un fisier la sfarsitul
+ altui fisier. Specificatorii fisierelor sunti dati ca argumente in linia de
+ comanda.
+
+F10. (2 puncte) Scrieti un program care concateneaza mai multe fisiere sursa
+ intr-unul destinatie. Se va lansa sub forma:
+   concat   f1 + f2 + ... + fn   f
+ unde f1, ..., fn sunt fisierele sursa iar f este fisierul destinatie.
+ Daca n=1, va copia pe f1 in f.
+
+F11. (2 puncte) Scrieti un program care compara din punct de vedere
+ lexicografic continutul a doua fisiere (privite ca sir de caractere).
+ Specificatorii fisierelor sunti dati ca argumente in linia de comanda.
+
+F12. (1.5 puncte) Scrieti un program care inverseaza ordinea caracterelor
+ intr-un fisier al carui specificator este dat ca argument in linia de
+ comanda. Nu se vor folosi fisiere auxiliare.
+
+F13. (0.5 puncte) Scrieti un program care numara aparitiile unui caracter
+ intr-un fisier dat. Caracterul si specificatorul fisierului sunt dati ca
+ argumente in linia de comanda.
+
+F14. (3 puncte) Scrieti un program care numara aparitiile unui string
+ intr-un fisier dat. Stringul si specificatorul fisierului sunt dati ca
+ argumente in linia de comanda.
+
+F15. (1.5 puncte) Scrieti un program ce simuleaza comanda "cat", cu tot cu
+ cazul cand specificatorul fisierului este dat ca argument in linia de
+ comanda. Programul va putea fi lansat astfel astfel:
+   cat f   ==>  citeste din f si scrie la stdout
+   cat     ===> citeste de la stdin si scrie la stdout
+
+F16. (5 puncte) Scrieti un program ce simuleaza comanda "wc", cu tot cu
+ cazul cand specificatorul fisierului este dat ca argument in linia de
+ comanda si avem optiuni. Programul va putea fi lansat astfel astfel:
+   wc f            ==>  citeste din f si scrie la stdout
+   wc -optiuni f   ==>  citeste din f si scrie la stdout
+   wc              ==> citeste de la stdin si scrie la stdout
+   wc -optiuni     ==> citeste de la stdin si scrie la stdout
+ Optiunile pot fi orice sir nevid format din literele l,w,c.
+
+F17. (2 puncte) Scrieti un program ce simuleaza comanda "grep" in forma cea
+ mai simpla. Programul va putea fi lansat astfel astfel:
+   grep sir   ===>   citeste de la stdin si scrie la stdout
+
+F18. (2 puncte) Scrieti un program care sorteaza caracterele dintr-un fisier
+ al carui specificator este dat ca argument in linia de comanda. Nu se vor
+ folosi fisiere auxiliare.
+
+F19. (3 puncte) Scrieti un program care sorteaza intregii dintr-un fisier
+ (binar) continand reprezentari interne de intregi. Specificatorul
+ fisierului este dat ca argument in linia de comanda. Nu se vor folosi
+ fisiere auxiliare. Nota: acest program se poate testa cu fisiere produse
+ de programele de la F6 si F7.
+
+F20. (10 puncte) Implementarea matricilor dreptunghiulare de numere reale ca
+ fisiere binare: O matrice va fi stocata intr-un fisier binar continand
+ elementele sale pe linii (in format intern), plus o informatie suplimentara
+ din care sa se poata deduce numarul de linii si de coloane. Scrieti functii
+ pentru urmatoarele operatii:
+   void new(m,n)  ==>  creaza o matrice m x n initializata cu 0;
+   float get(f,i,j) ==> returneaza elementul de pe pozitia i,j din matricea
+                         stocata in fisierul f;
+   void set(f,i,j,x) ==> scrie elementul real x pe pozitia i,j in matricea
+                         stocata in fisierul f.
+ Scrieti programe care folosesc aceste functii pentru a calcula suma
+ si produsul a doua matrici. Programele se vor apela sub forma:
+   sum f1 f2 f
+   pro f1 f2 f
+ unde f1, f2 sunt specificatorii fisierelor continand matricile sursa, iar
+ f specificatorul fisierului care va contine matricea destinatie. Fisierele
+ f1 si f2 vor fi generate in prealabil cu alte programe ajutatatoare (a se
+ vedea de exemplu problema F6).
+
+                                                       DRAGULICI DANIEL

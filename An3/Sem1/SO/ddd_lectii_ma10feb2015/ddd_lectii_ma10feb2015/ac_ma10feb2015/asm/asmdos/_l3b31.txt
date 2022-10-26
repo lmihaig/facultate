@@ -1,0 +1,3869 @@
+Assembler, lectia 3 - Proceduri si Macroinstructiuni:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1) Proceduri:
+~~~~~~~~~~~~~
+
+ Daca o prelucrare trebuie facuta de mai multe ori in acelasi fel (eventual
+cu alte date), in loc sa rescriem grupul respectiv de instructiuni de mai 
+multe ori in program putem sa-l incapsulam intr-o subrutina si de fiecare
+data cand avem nevoie de el sa apelam subrutina (eventual cu noile date 
+transmise ca parametri).
+ Practic, se incarca eventualii parametri intr-un loc accesibil subrutinei
+(registri, memorie, stiva), se transfera executia la prima instructiune a
+subrutinei (apel), se executa subrutina, ocazie cu care aceasta poate
+plasa o valoare rezultata (valoare de retur) intr-un loc accesibil codului
+apelant (registri, memorie, stiva), se transfera executia la instructiunea 
+urmatoare celei care a provocat apelul (revenire sau return) si se continua 
+executarea codului apelant.
+ Incapsularea prelucrarilor in subrutine permite atat micsorarea dimensiunii
+codului rezultat cat si o implem. mai usoara a unor alg.complicati - odata ce 
+am creat o subrutina ce rezolva corect o anumita problema putem sa o apelam
+de cate ori vrem fara a ne mai aminti exact ce prelucrari se fac in ea - e
+suficient sa stim doar cum se apeleaza si ce problema rezolva. De asemenea,
+intr-un program impartit in subrutine putem localiza/remedia mai usor erorile
+de programare.
+ In limbalele de programare uzuale subrutinele pot fi proceduri (la care sunt
+importante efectele laterale rezultate, cum ar fi modificarea unor variabile
+globale) si functii (la care este importanta valoarea returnata) - ele se
+declara si se apeleaza diferit. In asm exista doar proceduri (deci un singur
+mod de declarare si apelare a subrutinelor), dar acestea pot simula si 
+comportamentul de procedura si pe cel functie.
+
+1a) Definire, apelare, revenire:
+--------------------------------
+
+ O procedura se defineste in zona de cod intr-unul din urmatoarele moduri:
+
+  nume PROC
+   ;
+   ; corpul procedurii
+   ;
+  ENDP
+
+  nume PROC NEAR
+   ;
+   ; corpul procedurii
+   ;
+  ENDP
+
+  nume PROC FAR
+   ;
+   ; corpul procedurii
+   ;
+  ENDP
+
+unde "nume" este numele procedurii; corpul procedurii trebuie sa contina 
+macar o instructiune de revenire, care are una din formele:
+
+  RET
+  RETN
+  RETF
+  RET nr
+  RETN nr
+  RETF nr
+
+unde "nr" este un intreg; in absenta unei asemenea instructiuni nu se va
+semnala eroare la compilare, dar functionarea va fi defectuoasa.
+ O procedura se apeleaza intr-unul din urmatoarele moduri:
+
+  CALL nume
+  CALL NEAR PTR nume
+  CALL FAR PTR nume
+
+unde "nume" este numele procedurii.
+ 
+Detalii si restrictii:
+
+- definitia procedurii trebuie plasata intr-un segment de cod si atunci
+ codul acesteia va fi inclus in segmentul respectiv chiar in acel loc;
+ daca acest loc este in interiorul segmentului, cand se vor executa normal
+ instructiunile din segmentul respectiv se vor executa instructiunile de 
+ dinaintea corpului procedurii, apoi cele din corpul ei, apoi eventual cele 
+ de dupa corpul ei; daca dorim ca corpul procedurii sa fie executat doar ca 
+ urmare a unui apel (de tip "CALL"), trebuie sa includem definitia acesteia 
+ intre un "jmp eticheta" si acea "eticheta", ca in urmatorul exemplu:
+
+   .code
+   start:
+     ;
+     ;
+    mov ax,1d
+    jmp et
+    p proc
+      mov ax,2d
+      ret
+    p endp
+    et:
+    mov ax,3d
+    call p
+    mov ax,4d
+     ;
+     ;
+   end start
+
+ la executie AX va primi succesiv valorile 1, 3, 2, 4;
+ daca nu am pune liniile "jmp et" si "et:" iar in corpul procedurii n-ar
+ exista nici un "ret" (care deviaza firul excutiei, vom vedea mai incolo):
+
+   .code
+   start:
+     ;
+     ;
+    mov ax,1d
+    p proc
+      mov ax,2d
+    p endp
+    mov ax,3d
+    call p
+    mov ax,4d
+     ;
+     ;
+   end start
+
+ atunci la executie AX ar primi succesiv valorile 1, 2, 3, 2, 3, 2, 3, ...
+
+  de obicei def. procedurilor se pun intre ".code" si punctul de start:
+
+   .code
+      proc p1
+        ...
+      endp
+      proc p2
+        ...
+      endp
+   start:
+     ...
+   end start
+
+  sau dupa instructiunile ce incheie programul:
+
+   .code
+   start:
+       ...
+   mov ah,4ch
+   int 21h
+      proc p1
+        ...
+      endp
+      proc p2
+        ...
+      endp
+   end start
+
+  in ambele cazuri nu mai este necesar saltul "jmp" peste def. procedurii;
+
+- la compilare numele procedurii este inlocuit in cod cu o constanta - adresa
+ primei ei instructiuni; daca procedura este declarata cu "NEAR" sau "FAR" 
+ aceasta adresa este considerata in format "NEAR" (contine doar offsetul in 
+ segmentul de cod respectiv), resp. "FAR" (contine atat offsetul cat si 
+ adresa de segment); daca proc. este declarata fara "NEAR" sau "FAR", tipul 
+ ei este dedus din modelul de memorie folosit - de ex. daca modelul este 
+ "large",tipul este implicit "FAR";
+  corespunzator exista apeluri de tip NEAR ("CALL NEAR PTR nume") sau FAR 
+ ("CALL FAR PTR nume") si reveniri de tip NEAR ("RETN", "RETN nr") sau FAR 
+ ("RETF", "RETF nr"); in cazul instructiunilor "CALL nume", "RET", "RET nr"
+ tipul apelului/revenirii (NEAR sau FAR) este dedus din tipul procedurii;
+  tipul procedurii, apelului ei si revenirii din ea trebuie sa coincida;
+  o procedura NEAR poate fi apelata doar din segmentul de cod in care a fost
+ definita, in timp ce o procedura FAR poate fi apelata si din alte segmente;  
+
+- efectul unui apel de tip NEAR ("CALL NEAR PTR nume" sau "CALL nume" facut
+   implicit NEAR) este urmatorul:
+
+    SP := SP - 2
+    [SP] := IP
+    IP := offsetul primei instructiuni din procedura
+
+   deci se incarca in stiva offsetul instructiunii la care se va reveni la
+   iesirea din apel, apoi se transfera controlul procedurii; fiind apel NEAR,
+   adresa de segment este aceeasi atat pt. instr. la care se va reveni cat
+   si pt. instr. din procedura si este continuta in CS;
+
+  efectul unui apel de tip FAR ("CALL FAR PTR nume" sau "CALL nume" facut
+   implicit FAR) este urmatorul:
+
+    SP := SP - 2    
+    [SP] := CS
+    SP := SP - 2
+    [SP] := IP
+    CS := adresa de segment a primei instructiuni din procedura
+    IP := offsetul primei instructiuni din procedura
+
+   deci se incarca in stiva adresa completa (offset urmat de segment - vezi
+   little endian) a instructiunii la care se va reveni la iesirea din apel, 
+   apoi se transfera controlul procedurii actualizand atat CS cat si IP; 
+   intr-adevar, fiind apel FAR, adresele de segment nu mai sunt neaparat 
+   aceleasi si trebuie salvate/actualizate explicit;   
+
+ efectul unui return de tip NEAR ("RETN", "RETN nr" sau "RET", "RET nr" 
+  facute implicit NEAR) este in cazul fara "nr":
+
+    IP := word ptr [SP]
+    SP := SP + 2
+
+  iar in cazul cu "nr":
+
+    IP := word ptr [SP]
+    SP := SP + 2
+    SP := SP + nr
+
+   deci se copiaza word-ul din vf. stivei in IP si se descarca din stiva; 
+   in consecinta, urmatoarea instr. care se va executa va fi cea de la 
+   offsetul dat de acest word (in segmentul curent, fiind vorba de apeluri si
+   reveniri NEAR); daca inainte de return SP indica aceeasi pozitie in stiva 
+   ca imediat dupa intrarea din apel (ceea ce nu se intampla automat, trebuie
+   sa avem noi grija), practic se transfera executia la instr. urmatoare 
+   celei care a provocat apelul; varianta cu "nr" este utila pt. a descarca 
+   din stiva si parametrii actuali (vom vedea mai incolo);
+
+ efectul unui return de tip FAR ("RETF", "RETF nr" sau "RET", "RET nr" 
+  facute implicit FAR) este in cazul fara "nr":
+
+    IP := word ptr [SP]
+    SP := SP + 2
+    CS := word ptr [SP]
+    SP := SP + 2
+
+  iar in cazul cu "nr":    
+
+    IP := word ptr [SP]
+    SP := SP + 2
+    CS := word ptr [SP]
+    SP := SP + 2
+    SP := SP + n
+
+  efectul este analog, dar acum se descarca din stiva si se transfera
+  executia la o adresa completa (offset si segment).
+
+  in toate cazurile observam ca returnul functioneaza corect doar daca 
+ inainte de efectuarea lui SP indica aceeasi pozitie in stiva ca imediat dupa
+ intrarea in apel; in caz contrar se copiaza in IP sau CS:IP alte valori 
+ decat adresa instr. la care trebuie sa se revina, se vor interpreta acele 
+ valori ca adresa si se va face saltul acolo - in acest caz se pot produce 
+ erori la executie (daca la adresa respectiva nu este o instr. valida) sau se
+ va deturna firul executiei pe alte trasee, ceea ce iarasi se poate solda cu 
+ erori, blocaje, etc.; de obicei daca la rularea vom obtine blocaje, afisarea
+ unor caractere fara sens pe ecran, etc., cauza cea mai probabila este 
+ controlul defectuos al stivei;
+
+- desi nu este ceva natural, putem sa nu punem nici un return in corpul
+ procedurii si putem folosi return-uri in afara corpului procedurilor pt.
+ a obtine diverse efecte; de exemplu urmatoarele doua coduri sunt echivalente
+ (se dau lui AX succesiv valorile 0, 1, 2, ...):
+
+    .code                                   .code
+    start:                                  start:
+      ;                                       ;
+      ;                                       ;
+     mov ax,0                                 ;
+     dec sp                                   ;
+     dec sp                                  mov ax,0
+     p proc                                  p:
+       inc ax                                  inc ax
+     p endp                                  jmp p
+     inc sp                                   ;
+     inc sp                                   ;
+     call p                                   ;
+      ;                                       ;
+      ;                                       ;
+    end start                               end start
+
+ in stanga instructiunile "inc sp"/"dec sp" sunt necesare pt. a compensa
+ efectul de "push ip" pe care il realizeaza "call p1";
+  de asemenea, indiferent unde apar in cod (chiar in afara corpului unei
+ proceduri), sunt echivalente:
+
+    jmp eticheta
+
+ si
+
+    push offset eticheta
+    ret
+
+ (unde "eticheta" este o eticheta NEAR); asemenea gen de salturi este folosit
+ in metoda salturilor indirecte (a se vedea mai jos).
+
+-  notam ca instructiunile de tip "CALL"/"RET" controleaza doar pe unde o va 
+ lua firul executiei, nu si pasarea parametrilor, preluarea valorilor 
+ returnate (in cazul functiilor) etc. - acestea trebuie gestionate separat 
+ in mod explicit, prin alte instructiuni.
+
+ Un prim exemplu (program) complet contine proceduri (NEAR) cu care putem 
+seta/sterge AF (stim din lectia 2 ca nu exista o instr. predefinita pt.asta):
+
+Exemplul 1:
+~~~~~~~~~~~
+ .model small
+ .stack
+ .code
+ start:
+ mov ax,@stack
+ mov ss,ax
+   xor ah,ah  ;acum b4 din AH este 0 (ca de altfel intreg AH)
+   call sta
+   lahf       ;acum b4 din AH are val. lui AF, care este 1
+   call cla
+   lahf       ;acum b4 din AH are val. lui AF, care este 0
+ mov ah,4ch
+ int 21h
+ sta proc ;seteaza AF
+   pushf
+   mov si,sp
+   or byte ptr ss:[si],10h
+   popf
+   ret
+ sta endp
+ cla proc ;sterge AF
+   pushf
+   mov si,sp
+   and byte ptr ss:[si],0efh
+   popf
+   ret
+ cla endp
+ end start
+
+Comentarii:
+- intrucat nu putem adresa indirect stiva folosind SP (trebuie BX, BP, SI sau
+ DI), am copiat SP in SI si am adresat cu SI; pe de alta parte reg. segment 
+ implicit pt. SI este DS si de aceea a trebuit sa mentionam explicit SS;
+- evolutia stivei pana dupa "pushf" din procedura "sta" este:
+
+  |46h|32h|0Ah|00h|
+ ----------------------
+  ^       ^       ^
+  |       |       inainte de "call sta"
+  |       imediat dupa "call sta" (0Ah este offs. primei instr."lahf")
+  dupa "pushf" din "sta"; 42h este octetul low al reg.flaguri in acest moment
+ 
+ dupa "or byte ptr ss:[si],10h", intrucat SP=SI, stiva devine:
+
+  |56h|32h|0Ah|00h|
+ ----------------------
+  ^
+  SP (= SI)
+ 
+ obs. ca daca in aces moment am face "ret", IP ar lua val. 3256h, nu 000Ah
+ (care este adr. instr. "lahf" unde trebuie sa revenim) iar firul executiei
+ ar fi deturnat; dupa ce procedura "sta" face "popf", SP ajunge in acelasi 
+ loc ca dupa "call sta":
+
+          |0Ah|00h|
+ ----------------------
+          ^
+          SP
+ 
+ iar acum "ret" transfera corect executia la "lahf" (si scoate word-ul 000Ah
+ din stiva);
+- procedura "cla" produce o evolutie asemanatoare;
+- la rularea cu TD se vor urmari in fer. Registers flagurile si AH, iar in
+ fer Watches: ss:[sp], ss:[sp+2].
+
+1b) Pasarea de parametri:
+-------------------------
+
+ O procedura poate comunica cu restul programului folosind parametri (prin
+valoare sau referinta); acestia pot fi pasati prin registri, memorie sau 
+stiva. In urmatoarele trei exemple ilustram aceste modalitati in cazul unei
+proceduri ce aduna doua word-uri (parametri prin valoare) si pune suma intr-o
+variabila word (parametru prin referinta):
+
+Exemplul 2: pasarea parametrilor prin registri - incarc param. actuali in
+~~~~~~~~~~  registri si apelez procedura; ea si-i va lua de acolo; 
+  codul este simplu si rapid, executabilul este mic,dar parametrii nu pot fi 
+ multi si/sau mari deoarece in general avem putini reg. liberi disponibili;
+ (la rularea cu TD vom urmari in fer. Registers: AX, BX, CX iar in fer.
+ Watches: a, b, c, p, r, ss:[sp]):
+
+.model small
+.stack
+.data
+  a dw 1
+  b dw 2
+  c dw ?
+  p dw 10
+  r dw ?
+.code
+start:
+mov ax,@stack
+mov ss,ax
+mov ax,@data
+mov ds,ax
+  mov bx,offset c
+  mov ax,a
+  mov cx,b
+  call aduna  
+    ; acum c contine 3
+  mov bx,offset r
+  mov ax,p
+  mov cx,20
+  call aduna
+    ; acum r contine 30
+mov ah,4ch
+int 21h
+  aduna proc   ;parametri formali: bx=adresa destinatie, ax=sursa1, cx=sursa2
+    add ax,cx
+    mov [bx],ax
+    ret
+  aduna endp
+end start
+
+Exemplul 3: pasarea prin memorie - parametrii actuali se incarca in niste 
+~~~~~~~~~~~  var. din mem. (var. globale) iar. proc si-i ia de acolo;
+   codul este mai lung si mai lent (mem. se acceseaza mai lent ca registrii):
+
+.model small
+.stack
+.data
+  a dw 1
+  b dw 2
+  c dw ?
+  p dw 10
+  r dw ?
+  x dw ? ; primul parametru al procedurii
+  y dw ? ; al doilea parametru al procedurii
+  z dw ? ; al treilea parametru al procedurii
+.code
+start:
+mov ax,@stack
+mov ss,ax
+mov ax,@data
+mov ds,ax
+  mov ax,offset c
+  mov z,ax
+  mov ax,a
+  mov x,ax
+  mov ax,b
+  mov y,ax
+  call aduna  
+    ; acum c contine 3
+  mov ax,offset r
+  mov z,ax
+  mov ax,p
+  mov x,ax
+  mov y,20
+  call aduna
+    ; acum r contine 30
+mov ah,4ch
+int 21h
+  aduna proc   ;parametri formali: z=adresa destinatie, x=sursa1, y=sursa2
+    push ax    ; salvez reg. pe care ii folosesc la lucru
+    push bx    ;   (deoarece rutina apelanta poate mai are nevoie de val.lor)
+    mov ax,x
+    add ax,y
+    mov bx,z
+    mov [bx],ax
+    pop bx     ; restaurez reg. salvati
+    pop ax
+    ret
+  aduna endp
+end start
+
+  (la rularea cu TD vom urmari in fer. Registers: AX, BX iar in fer.
+  Watches: a, b, c, p, r, x, y, z, ss:[sp], ss:[sp+2], ss:[sp+4]).
+
+Exemplul 4: pasarea prin stiva - parametrii actuali se incarca in stiva
+~~~~~~~~~~~  iar proc. si-i ia de acolo (param. trebuie incarcati in stiva in
+             aceeasi ordine in care ii cauta procedura);
+   este cel mai puternic si mai flexibil mod de a pasa parametrii;
+   dimensiunea si viteza codului sunt de obicei intermediare intre cele 
+ obtinute in cazul pasarii prin registri si prin memorie; structura codului 
+ este insa mai complicata:
+
+.model small
+.stack
+.data
+  a dw 1
+  b dw 2
+  c dw ?
+  p dw 10
+  r dw ?
+.code
+start:
+mov ax,@stack
+mov ss,ax
+mov ax,@data
+mov ds,ax
+  push b
+  push a
+  push offset c
+  call aduna
+  add sp,6  ;scot parametrii din stiva
+    ; acum c contine 3
+  push 20
+  push p
+  push offset r
+  call aduna
+  add sp,6
+    ; acum r contine 30
+mov ah,4ch
+int 21h
+  aduna proc   ;parametri formali in ordine: adresa dest., sursa1, sursa2
+    push bp   ; intrucat nu pot accesa indirect stiva cu SP, plasez BP si
+    mov bp,sp ;  adresez par. cu deplasamente fata de BP
+    push ax   ; salvez reg. pe care ii folosesc la lucru (si-i restaurez
+    push bx   ;  la sfarsit)
+  ;acum [SP]: (BX vechi)(AX vechi)(BP vechi)(adr.retur)(adr.dest)(src1)(src2)
+  ;                               ^
+  ;                              [BP]:
+    mov ax,[bp+6] ; BP fol. implicit SS, deci nu mai tb. specificat reg.segm.
+    add ax,[bp+8]
+    mov bx,[bp+4]
+    mov [bx],ax   ; BX fol. implicit DS
+    pop bx    ; restaurez reg. salvati
+    pop ax
+    pop bp
+    ret
+  aduna endp
+end start
+
+Comentarii:
+- la rularea cu TD se vor urmari in fer. Registers: AX, BX iar in fer.
+ Watches: a, b, c, p, r, [sp], [sp+2], [sp+4], [sp+6], [sp+8], [sp+10d],
+ [sp+12d], [bp], [bp+2], [bp+4], [bp+6], [bp+8];
+- daca pe parcursul unui apel vrem sa folosim anumiti registri, e bine ca la
+ inceputul apelului sa salvam in stiva valorile lor vechi iar la sfarsitul 
+ apelului sa le restauram - aceasta deoarece codul apelant poate a stocat in 
+ ei anumite valori pe care doreste sa le regaseasca dupa revenirea din apel; 
+  aici am folosit BP, AX, BX si de aceea la inceputul apelului am facut 
+ "push bp", "push ax", "push bx", iar la sfarsit "pop bx", "pop ax","pop bp";
+  daca stim sigur ca dupa revenirea din apel codul apelant nu doreste sa 
+ regaseasca vechile valori ale anumitor registri, pe acestia nu mai e necesar
+ sa-i salvam/restauram - de exemplu in programul nostru nu e necesara 
+ salvarea/restaurarea niciunuia dintre BP, AX, BX, dar am lucrat asa pentru a
+ ilustra o tehnica generala (si asa vom proceda si in continuare);
+  atentie ca atunci cand restauram registrii SP sa fie pozitionat corect !
+- in acest program am avut de accesat (indirect) stiva (anume par. actuali); 
+ acest lucru nu se poate realiza cu SP (am vazut in ex. 1, unde a trebuit sa 
+ folosim (impropriu) SI) si am folosit BP - BP este special creat in acest 
+ scop (nu SI) si de aceea el foloseste implicit SS, deci nu mai trebuie 
+ mentionat explicit reg. segment;
+  pentru a accesa indirect stiva, pozitionam BP intr-un anumit loc (ce poate
+ fi oarecare, dar e bine sa fie langa datele incarcate in stiva pt. apelul
+ curent) si accesam datele din stiva specificand deplasamente fata de BP;
+ de regula la intrarea in apel se salveaza vechea val. a lui BP (pt. cazul
+ cand e nevoie de ea la revenirea in codul apelant), apoi se pozitioneaza BP
+ la SP; deci in acest moment [BP] indica vechea val. a lui BP, [BP+2] adr. de
+ revenire (offsetul), [BP+4] ultimul par. actual incarcat, etc.; daca apelul
+ este FAR, [BP+4] indica partea segment a adr. de revenire iar [BP+6] ult. 
+ par. actual incarcat;
+  daca procedura foloseste variabile locale automatice tot BP se va folosi si 
+ pentru accesarea acestora (vom vedea in exemplul urmator);
+  desi nu se observa in acest exemplu (vom vedea in exemplul urmator), BP mai
+ are un avantaj: pe parcursul efectuarii apelului stiva mai poate fluctua (de
+ ex. se incarca/descarca val. temporare obtinute in procesul evaluarii unor 
+ expresii complexe) si atunci parametrii actuali si var. locale automatice
+ vor avea deplasamente variabile fata de SP, deci un cod care i-ar accesa 
+ cu SP ar fi greu de scris; in schimb, deoarece BP este mentinut fixat pe 
+ perioada apelului, ei vor avea deplasamente constante fata de BP, iar codul
+ care-i acceseaza cu BP este mai usor de scris;
+- salvarea/restaurarea BP este esentiala doar atunci cand proc. e apelata din
+ alta proc. (incluzand aici si cazul proc. recursive) - vom vedea mai incolo;
+- in fine notam ca daca in procedura foloseam "ret 6" in loc de "ret" nu mai 
+ era nevoie de "add sp,6" dupa fiecare "call aduna" in codul apelant.
+
+2c) Variabile locale automatice:
+--------------------------------
+
+ Urmatorul exemplu ilustreaza modul cum putem lucra cu var. locale automatice
+(alocate pe stiva) si al doilea avantaj al lui BP (anume posib. de a accesa
+cu deplasamente constante par. actuali si var. locale automatice, indiferent
+cum fluctueaza SP):
+
+Exemplul 5: simulam urmatoarea functie C:
+~~~~~~~~~~~
+
+void p(unsigned short *r, unsigned short x, unsigned short y){
+  unsigned short p, q;
+  p=x*y+x/y;
+  q=x*x+y*y;
+  *r=p+q;
+}
+
+vom scrie un prog. asm ce emuleaza fidel codul C (fara optimizari, asa cum
+face compilatorul de C):
+
+.model small
+.stack
+.data
+  a dw 10
+  b dw 20
+  c dw ?
+.code
+start:
+mov ax,@stack
+mov ss,ax
+mov ax,@data
+mov ds,ax
+  push b         ; incarcam par. in ord. inversa, dupa conventiile C
+  push a
+  push offset c
+  call p
+  add sp,6       ; scot parametrii din stiva
+    ; acum c contine 700
+mov ah,4ch
+int 21h
+  p proc      ;par. formali in ordine: adr. dest. (r), src1 (x), src2 (y)
+    push bp
+    mov bp,sp
+    sub sp,4  ; rezerv spatiu pt. cele doua var. automatice (p, q)
+    push ax   ; salvez reg. pe care ii folosesc la lucru
+    push bx
+    push dx
+      ;acum stiva este (am prescurtat "vechi" prin "v"):
+      ;     [SP]: (dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    mov ax,[bp+6]          ; ax=x
+    mul word ptr [bp+8]    ; ax=x*y (ignor depasirile)
+    push ax                ; salvez val. tmp
+      ;acum stiva este:
+      ;[SP]: (tmp)(dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    mov ax,[bp+6] ; ax=x
+    mov dx,0
+    div word ptr [bp+8]    ; ax=x/y (catul intreg din limbajul C)
+    pop [bp-2]    ; p=x*y (tmp din stiva)
+      ;acum stiva este:
+      ;     [SP]: (dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    add [bp-2],ax ; p=x*y+x/y (p e gata, acum calculam q)
+    mov ax,[bp+6] ; ax=x
+    mul ax        ; ax=x*x (ignor depasirile)
+    push ax       ; salvez val. tmp
+      ;acum stiva este:
+      ;[SP]: (tmp)(dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    mov ax,[bp+8] ; ax=y
+    mul ax        ; ax=y*y
+    pop [bp-4]    ; q=x*x (tmp din stiva)
+      ;acum stiva este:
+      ;     [SP]: (dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    add [bp-4],ax ; q=x*x+y*y (q e gata)
+    mov bx,[bp+4] ; bx=r
+    mov ax,[bp-2] ; ax=p
+    mov [bx],ax   ; *r=p (BX foloseste implicit DS)
+    mov ax,[bp-4] ; ax=q
+    add [bx],ax   ; *r=p+q
+    pop dx        ; restaurez AX, BX, DX
+    pop bx
+    pop ax
+      ;acum stiva este:
+      ;                       [SP]: (loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    add sp,4      ; sar peste var. locale automatice, pt. a putea restaura BP
+      ;acum stiva este:
+      ;                                     [SP]: (bp v)(adr.ret.)(r)(x)(y)
+      ;                                           ^
+      ;                                          [BP]:
+    pop bp        ; restaurez BP
+    ret
+  p endp
+end start
+
+Comentarii:
+- la rularea cu TD vom urmari in fer. Registers: AX, BX iar in fer. Watches:
+ a, b, c, [sp], [sp+2], ..., [sp+18d] (din 2 in 2), [bp-4], [bp-2], [bp], 
+ [bp+2], ..., [bp+8] (din 2 in 2);
+- am rezervat spatiu pentru var. locale automatice imediat sub BP si le-am 
+ alocat in mem. in ordinea inversa declararii in functia C (asa face 
+ compilatorul BC++ 3.1:); puteam insa sa le alocam in orice ordine si de 
+ asemenea puteam sa fixam BP dupa ele:
+
+  p proc      ;par. formali in ordine: adr. dest. (r), src1 (x), src2 (y)
+    push bp
+    sub sp,4  ; rezerv spatiu pt. cele doua var. automatice (p, q)
+    mov bp,sp
+    push ax   ; salvez reg. pe care ii folosesc la lucru
+    push bx
+    push dx
+      ;acum stiva este (am prescurtat "vechi" prin "v"):
+      ;     [SP]: (dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^
+      ;                            [BP]:
+    mov ax,[bp+10]         ; ax=x
+    mul word ptr [bp+12]   ; ax=x*y (ignor depasirile)
+    push ax                ; salvez val. tmp
+      ;acum stiva este:
+      ;[SP]: (tmp)(dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^
+      ;                            [BP]:
+    mov ax,[bp+10]        ; ax=x
+    mov dx,0
+    div word ptr [bp+12]  ; ax=x/y (catul intreg din limbajul C)
+    pop [bp+2]            ; p=x*y (tmp din stiva)
+      ;acum stiva este:
+      ;     [SP]: (dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^
+      ;                            [BP]:
+    add [bp+2],ax ; p=x*y+x/y (p e gata, acum calculam q)
+    mov ax,[bp+10]; ax=x
+    mul ax        ; ax=x*x (ignor depasirile)
+    push ax       ; salvez val. tmp
+      ;acum stiva este:
+      ;[SP]: (tmp)(dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^
+      ;                            [BP]:
+    mov ax,[bp+12]; ax=y
+    mul ax        ; ax=y*y
+    pop [bp]      ; q=x*x (tmp din stiva)
+      ;acum stiva este:
+      ;     [SP]: (dx v)(bx v)(ax v)(loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^
+      ;                            [BP]:
+    add [bp],ax   ; q=x*x+y*y (q e gata)
+    mov bx,[bp+8] ; bx=r
+    mov ax,[bp+2] ; ax=p
+    mov [bx],ax   ; *r=p (BX foloseste implicit DS)
+    mov ax,[bp]   ; ax=q
+    add [bx],ax   ; *r=p+q
+    pop dx        ; restaurez AX, BX, DX
+    pop bx
+    pop ax
+      ;acum stiva este:
+      ;                       [SP]: (loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^
+      ;                            [BP]:
+    add sp,4      ; sar peste var. locale automatice, pt. a putea restaura BP
+      ;acum stiva este:
+      ;                             (loc q)(loc p)(bp v)(adr.ret.)(r)(x)(y)
+      ;                             ^             ^
+      ;                            [BP]:         [SP]:
+    pop bp        ; restaurez BP (vf. logic de unde se face "POP" este la SP)
+    ret
+  p endp
+end start
+
+ in felul acesta atat par. actuali cat si var. locale automatice vor fi 
+ accesate cu deplasamente pozitive fata de BP - astfel am putea suprapune o
+ structura peste zona ce-i contine si sa accesam par. actuali si var. locale
+ automatice prim intermediul membrilor structurii (vezi lucrarea [2] din 
+ bibliografie);
+- observam ca pe parcursul apelului stiva a fluctuat, deoarece de doua ori a 
+ fost incarcata/descarcata cate o val. temporara; astfel par. actuali si var.
+ locale automatice au avut deplasamente variabile fata de SP (de exemplu par.
+ x era fie la [SP+14] fie la [SP+16] iar var. p era fie la [sp+6] fie la 
+ [SP+8]); insa, deoarece BP a fost mentinut constant pe perioada apelului,
+ atat par. actuali cat si var. locale automatice au avut deplasamente 
+ constante fata de BP (de exemplu x a fost mereu la [BP+6] iar p mereu la 
+ [bp-2]) si astfel codul a putut fi scris mai usor;
+  deplasamentele variabile sunt un inconvenient major mai ales atunci cand
+ folosim cicluri - daca deplasamentele difera de la o iteratie la alta, ele
+ nu mai pot fi specificate in codul iterat prin valori imediate:
+- subliniem modul de utilizare a reg. SP si BP in gestionarea unui apel:
+  SP indica mereu vf. stivei si poate fluctua pe parcursul apelului, in 
+ functie de diveresle val. temp. care trebuie salvate/recuperate;
+  BP este pozitionat la inceputul apelului si ramane fixat in acelasi loc
+ pana la sfarsitul apelului, iar par. actuali si var. locale automatice vor 
+ fi accesate folosind offseturi fixe fata de BP;
+  de aceea (poate) nu a fost implmentata posibilitatea de a accesa indirect 
+ stiva cu SP, iar registrul segment folosit de BP este implicit SS (deci nu 
+ mai trebuie specificat); SP va fi manevrat doar indirect, prin instr. "push"
+ si "pop".
+
+2d) Returnarea valorilor (functii):
+-----------------------------------
+
+ In limbajele de nivel inalt intalnim atat subrutine de tip procedura (cum 
+sunt cele tratate pana acum) cat si de tip functie, care nu isi propun sa 
+produca efecte laterale ci doar sa calculeze o anumita valoare (de ex. pe 
+baza parametrilor) pe care s-o furnizeze la sfarsit (s-o returneze) codului
+apelant. In asm functiile se vor defini tot ca niste proceduri (avem un 
+singur mecanism de a defini subrutine), dar in care vom implementa un 
+comportament de tip functie.
+ La fel ca pasarea parametrilor, returnarea unei valori se poate 
+face prin registri, memorie sau stiva. In continuare ilustram cele trei
+modalitati in cazul unei functii "f" ce primeste ca parametri doua worduri 
+si returneaza suma patratelor lor (ignorand depasirile):
+
+Exemplul 6: returnarea prin registri - este cel mai des folosita (si de
+~~~~~~~~~~~  regula se returneaza in acumulator, eventual in perechea DX
+ (sau EDX) si acumulator); codul este scurt si rapid, dar nu se pot returna 
+ valori de dim. mari (vectori, stringuri, etc.); compilatoarele Borland fol.
+ aceasta metoda ca metoda standard de a returna valori de max. 32 biti
+
+.model small
+.stack
+.data
+  a dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+  push 1   ; incarc par. actuali
+  push 2
+  call f
+  add sp,4 ; descarc stiva de par. actuali
+  mov a,ax ; recuperez val. returnata
+    ; acum a contine 5
+mov ah,4ch
+int 21h
+  f proc
+    push bp
+    mov bp,sp
+    push dx     ;           [sp]:(dx vechi)[BP]:(bp vechi)(adr.ret)(pa2)(pa1)
+    mov ax,[bp+6]
+    mul ax      ;(DX,AX)=pa1*pa1, ignor DX, deci AX=pa1*pa1
+    push ax     ;    [sp]:(tmp)(dx vechi)[BP]:(bp vechi)(adr.ret)(pa2)(pa1)
+    mov ax,[bp+4]
+    mul ax      ;AX=pa2*pa2
+    pop dx      ;DX=pa1*pa1,[sp]:(dx vechi)[BP]:(bp vechi)(adr.ret)(pa2)(pa1)
+    add ax,dx   ;AX=pa2*pa2+pa1*pa1
+    pop dx      ;                     [sp]:[BP]:(bp vechi)(adr.ret)(pa2)(pa1)
+    pop bp
+    ret
+  f endp
+end start
+
+Comentarii:
+- functia returneaza valoarea in AX; intrucat la revenirea in codul apelant
+ conteaza noua val. pusa de "f" in AX, functia nu mai trebuie sa salveze/
+ restaureze acest registru (ci doar pe BP, DX);
+- la rularea cu TD se vor urmari in fer. Registers: AX, DX iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+10d], [BP], [BP+2], ..., [BP+6] (fiecare din
+ 2 in 2), a.
+
+Exemplul 7: returnarea prin memorie - anume prin parametri de iesire sau
+~~~~~~~~~~~  variabile statice asociate functiei special in acest scop;
+ tehnica nu este recomandata ca model de programare structurata, dar permite
+ (si se foloseste la) returnarea unor valori de dimensiuni. mari (vectori, 
+ stringuri, etc.);
+  varianta cu parametri de iesirea fost deja descrisa in ex. anterioare si
+ implementeaza de fapt un comportament de procedura (nu de functie) - trebuie
+ sa dam noi explicit ca par. actual adresa locatiei unde se va ret. valoarea;
+  in urmatorul program ilustram ambele variante;
+  ca mai inainte, in comentariile inserate in cod am prescurtat "vechi" prin 
+ "v"; in plus, vom desena stiva pe o singura linie, inserand "[SP]:", "[BP]:"
+ inaintea elementelor pe care le pointeaza - astfel (a)[BP]:(b) nu inseamna 
+ ca in stiva e salvat BP intre a si b ci ca dupa a urmeaza b iar BP il
+ pointeaza pe b, ca in desenul: (a)(b); aceste conventii vor fi folosite si
+ in exemplele urmatoare            ^
+                                  [BP]:
+.model small
+.stack
+.data
+  x dw ? ; var. statica asociata functiei f2
+  a dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+  push 1       ; incarc par. actuali pt. f1
+  push 2
+  push offset a
+  call f1
+  add sp,6     ; descarc stiva de par. actuali ai lui f1
+    ; acum a contine 5
+  push 10      ; incarc par. actuali pt. f2
+  push 20
+  call f2
+  add sp,4     ; descarc stiva de par. actuali ai lui f2
+  mov ax,x
+  mov a,ax
+    ; acum a contine 500
+mov ah,4ch
+int 21h
+ f1 proc          ; parametri: adr.dest, src1, src2
+   push bp
+   mov bp,sp
+   push ax
+   push bx
+   push dx   ;     [sp]:(dx v)(bx v)(ax v)[BP]:(bp v)(adr.ret)(adr.d)(s1)(s2)
+   mov ax,[bp+8]
+   mul ax 
+   push ax   ;[sp]:(tmp)(dx v)(bx v)(ax v)[BP]:(bp v)(adr.ret)(adr.d)(s1)(s2)
+   mov ax,[bp+6]
+   mul ax      
+   pop dx    ;     [sp]:(dx v)(bx v)(ax v)[BP]:(bp v)(adr.ret)(adr.d)(s1)(s2)
+   add ax,dx      ; AX=s1*s1+s2*s2
+   mov bx,[bp+4]
+   mov [bx],ax    ; *(adr.ret)=s1*s1+s2*s2
+   pop dx
+   pop bx
+   pop ax         ;                  [sp]:[BP]:(bp v)(adr.ret)(adr.d)(s1)(s2)
+   pop bp
+   ret
+ f1 endp
+ f2 proc          ; parametri: src1, src2, returneaza in x
+   push bp
+   mov bp,sp
+   push ax
+   push dx        ;       [sp]:(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(s2)
+   mov ax,[bp+6]
+   mul ax 
+   push ax        ;  [sp]:(tmp)(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(s2)
+   mov ax,[bp+4]
+   mul ax      
+   pop dx         ;       [sp]:(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(s2)
+   add ax,dx      ; AX=s1*s1+s2*s2
+   mov x,ax
+   pop dx
+   pop ax         ;                   [sp]:[BP]:(bp v)(adr.ret)(s1)(s2)
+   pop bp
+   ret
+ f2 endp
+end start
+
+Comentarii:
+- acum la revenirea in codul apelant nu conteaza valoarea pusa de functii in
+ AX, dar poate conta valoarea veche; de aceea, acum AX trebuie salvat/
+ restaurat ca si BX, DX, BP;
+- la rularea cu TD se vor urmari in fer. Registers: AX, DX iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+16d], [BP], [BP+2], ..., [BP+8] (fiecare din
+ 2 in 2), a, x.
+
+Exemplul 8: returnarea prin stiva  - valoarea ret. este plasata in stiva 
+~~~~~~~~~~~  acolo de unde codul apelant a inceput incarcarea datelor pt.
+ apelul respectiv (suprascriind deci o parte din par. actuali si poate chiar 
+ adr. de retur), iar acolo se pune vf. stivei; astfel codul apelant incarca 
+ parametrii, apeleaza functia, apoi descarca pur si simplu val. returnata;
+   metoda este nestandard,se fol.mai rar si este mai complicat de  programat:
+
+.model small
+.stack
+.data
+  a dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+  push 1       ; incarc par. actuali
+  push 2       
+    ; acum [SP]: (2)(1)  - par. actuali
+  call f
+    ; acum [SP]: (5)     - val. returnata
+  pop a
+    ; acum a contine 5
+mov ah,4ch
+int 21h
+  f proc          ; parametri: src1, src2
+   push bp
+   mov bp,sp
+   push ax
+   push dx        ;     [sp]:(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(s2)
+   mov ax,[bp+6]
+   mul ax 
+   push ax        ;[sp]:(tmp)(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(s2)
+   mov ax,[bp+4]
+   mul ax      
+   pop dx         ;     [sp]:(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(s2)
+   add ax,dx      ;AX=s1*s1+s2*s2
+     ;incepand de acum pregatesc stiva pentru retur
+   mov [bp+6],ax  ;     [sp]:(dx v)(ax v)[BP]:(bp v)(adr.ret)(s1)(rezultat)
+   mov ax,[bp+2]
+   mov [bp+4],ax  ;     [sp]:(dx v)(ax v)[BP]:(bp v)(adr.ret)(adr.ret)(rez.)
+   pop dx         ; restaurez dx, ax
+   pop ax         ;                 [sp]:[BP]:(bp v)(adr.ret)(adr.ret)(rez.)
+   pop bp         ; restaurez bp, iar stiva e  [SP]:(adr.ret)(adr.ret)(rez.)
+   add sp,2       ;                                     [SP]:(adr.ret)(rez.)
+   ret
+  f endp
+end start
+
+(la rularea cu TD se vor urmari in fer. Registers: AX, DX iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+12d], [BP], [BP+2], ..., [BP+6] (fiecare din
+ 2 in 2), a)
+
+ Uneori val. ret. prin stiva este atat de mare incat suprascrie toti par. 
+actuali si chiar adr. de retur sau reg. salvati si care trebuie restaurati; 
+in acest caz intai se deplaseaza spre stanga (spre adr. mici) reg. salvati si
+adr. de retur, apoi se plaseaza in stiva val. returnata:
+
+Exemplul 9: implementam o functie care primeste ca par. doua worduri p si n
+~~~~~~~~~~~   si returneaza un vector ce contine de n ori wordul p; pres. n>0
+
+.model small
+.stack
+.data
+  s dw 10 dup(?) ; buffer suficient pt. a salva in el un vector de 10 word
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+    ; incarc par. actuali p=7, n=8
+  push 8    
+  push 7
+    ; acum [SP]: (7)(8)  - par. actuali
+  call f
+    ; acum [SP]: (7)(7)(7)(7)(7)(7)(7)(7)  - val. returnata
+    ; recuperez valoarea ret. in bufferul s
+  lea si,s
+  mov cx,8
+  et:
+  pop [si]  ; foloseste implicit DS
+  add si,2
+  loop et
+    ; acum de la adr.lui s s-au stocat 8 worduri egale cu 7,iar stiva e goala
+mov ah,4ch
+int 21h
+  f proc        ; parametri: p, n
+   push bp
+   mov bp,sp
+   push ax
+   push cx
+   push si
+   push di   ; [sp]:(di v)(si v)(cx v)(ax v)[BP]:(bp v)(adr.ret)(p)(n)
+     ; deplasez reg. salvati, adr. ret. si par. actuali (8 worduri) cu n-2
+     ; worduri spre stg. si mut BP cu n-2 worduri la stanga
+   mov cx,[bp+6]
+   sub cx,2  ; CX = n-2, nr. de worduri cu care tb. sa mutam
+   mov ax,cx
+   shl ax,1  ; AX = 2*AX = nr. de octeti, nu de worduri, cu care tb. sa mutam
+   sub bp,ax
+   mov si,sp
+   sub sp,ax
+   mov di,sp
+   mov cx,8  ; cate worduri mutam
+   etf1:
+   mov ax,ss:[si]
+   mov ss:[di],ax ; SI si DI folosesc implicit DS, deci trebuie specificat SS
+   add si,2
+   add di,2
+   loop etf1
+     ;[sp]:(di v)(si v)(cx v)(ax v)[BP]:(bp v)(adr.ret)(p)(n)()()()()()()
+     ;construim val. returnata:
+   mov cx,[bp+6] ; CX=n (desi era suficient n-1)
+   mov ax,cx
+   shl ax,1      ; AX=2*n
+   mov di,bp
+   add di,ax
+   add di,2
+    ;[sp]:(di v)(si v)(cx v)(ax v)[BP]:(bp v)(adr.ret)(p)(n)()()()()()[DI]:()
+   mov ax,[bp+4] ; AX=p
+   etf2:
+   mov ss:[di],ax
+   sub di,2
+   loop etf2
+   ;[sp]:(di v)(si v)(cx v)(ax v)[BP]:(bp v)(adr.ret)(p)(p)(p)(p)(p)(p)(p)(p)
+   pop di        ; restaurez registrii salvati
+   pop si
+   pop cx
+   pop ax
+   pop bp
+     ;[sp]:(adr.ret)(p)(p)(p)(p)(p)(p)(p)(p)
+   ret
+  f endp
+end start
+
+(la rularea cu TD se vor urmari in fer. Registers: AX, CX, SI, DI iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+26d], [BP], [BP+2], ..., [BP+18d] (fiecare 
+ din 2 in 2), s).
+
+2e) Conventiile Pascal/C:
+-------------------------
+
+ Am vazut ca exista mai multe reguli posibile in ceea ce priveste ordinea
+incarcarii par. actuali, ordinea alocarii var. locale automatice, modul de
+ret. a valorii sau cine descarca stiva la sfarsitul apelului (codul apelant
+sau rutina apelata). Dintre acestea importante sunt ordinea de incarcare a 
+par. actuali si cine descarca stiva la sfarsit - aceste reguli precizeaza 
+modul in care comunica rutina apelata si codul apelant (ambele trebuie sa 
+respecte aceleasi conventii pt. a putea comunica corect). 
+ In practica se folosesc urmatoarele doua conventii:
+- conventia Pascal: parametrii sunt push-ati in ordinea in care apar in
+ declaratia procedurii (deci langa BP este parametrul declarat cel mai la
+ dreapta), iar stiva este descarcata de rutina apelata (cu instructiuni gen
+ "ret nr");
+- conventia C: parametrii sunt push-ati in ordinea inversa celei in care apar
+ in declaratia procedurii (deci langa BP este parametrul declarat cel mai la
+ stanga), iar stiva este descarcata de codul apelant (cu instructiuni gen
+ "add sp,nr"); aceasta conventie a fost folosita in exemplele de pana acum.
+In plus, functiile Pascal rezerva o locatie automatica pentru stocarea 
+valorii returnate - la revenire valoarea se ia de acolo (si de exempu se 
+copiaza in AX).
+ Urmatorul exemplu ilustreaza aceste conventii:
+
+Exemplul 10: program care aduna doua worduri folosind o functie;
+~~~~~~~~~~~~  functia primeste ca parametri un word "a" prin referinta/adresa
+ si un word "b" prin valoare si returneaza maximul dintre cele doua worduri;
+ prezentam codul Pascal/C si un echivalent asm neoptimizat (deci nu asa cum 
+ il genereaza compilatoarele acestor limbaje):
+
+varianta pascal:
+  
+  function max(var a:word; b:word):word;
+    begin
+     if a>b then max:=a else max:=b
+    end;
+  var x,y:word;
+  begin
+  x:=10;
+  y:=max(x,5)
+  end.
+
+ echivalent asm:
+
+  .model small
+  .stack
+  .data
+    x dw ?
+    y dw ?
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+    mov x,10
+    lea ax,x
+    push ax  ; incarc parametrii in ordinea in care apar in decl. functiei
+    push 5   ;   (a, apoi b)
+    call max
+    mov y,ax ; stiva e descarcata de "max", iar val. ret. este in ax
+  mov ah,4ch
+  int 21h
+    max proc
+      push bp
+      mov bp,sp
+      sub sp,2  ; rezerv loc pt. val. de retur (folosita in instr."max:=...")
+      push bx   ; in apel folosesc reg. AX, BX; AX e pt. returnarea valorii,
+                ;   deci nu trebuie salvat/restaurat; BX insa trebuie;
+                ; [SP]:(bx v)(loc.val.ret)[BP]:(bp v)(adr.ret)(b)(adr.a)
+      mov bx,[bp+6]
+      mov ax,[bx]    ; AX = val. de la adr. a
+      cmp ax,[bp+4]  ; compar val. de la adr. a cu b
+      ja etf1
+      mov ax,[bp+4]
+      mov [bp-2],ax  ; max := b
+      jmp etf2
+      etf1:
+      mov [bp-2],ax  ; max := val. de la adr. a
+      etf2:
+      pop bx         ; restaurex BX
+      mov ax,[bp-2]  ; initializaz reg. de retur AX cu val. ret.
+      add sp,2       ; sar (descarc) peste locatia val. de retur
+      pop bp         ; restaurez BP
+      ret 4          ; functia descarca din stiva par. actuali
+    max endp
+  end start
+
+varianta C:
+
+  unsigned short max(unsigned short *a, unsigned short b){
+    if(*a>b) return *a; else return b;
+  }
+  unsigned short x,y;
+  void main(){
+    x=10;
+    y=max(&x,5);
+  }
+
+ echivalent asm:
+
+  .model small
+  .stack
+  .data
+    x dw ?
+    y dw ?
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+    mov x,10
+    push 5   ; incarc parametrii in ordinea inversa celei din decl. functiei
+    lea ax,x ;   (b, apoi a)
+    push ax  ;
+    call max
+    add sp,4 ; stiva e descarcata de codul apelant
+    mov y,ax ; val. ret. este in AX
+  mov ah,4ch
+  int 21h
+    max proc
+      push bp
+      mov bp,sp
+      push bx   ; in apel folosesc reg. AX, BX; AX e pt. returnarea valorii,
+                ;   deci nu trebuie salvat/restaurat; BX insa trebuie;
+                ; [SP]:(bx v)[BP]:(bp v)(adr.ret)(a, care e pointer)(b)
+      mov bx,[bp+4]
+      mov ax,[bx]    ; AX = *a
+      cmp ax,[bp+6]  ; compar *a cu b
+      ja etf1
+      mov ax,[bp+6]  ; Ax = b
+      etf1:
+        ; acum AX contine val. ret (*a sau b)
+      pop bx         ; restaurex BX
+      pop bp         ; restaurez BP
+      ret            ; retur fara descarcarea stivei
+    max endp
+  end start
+
+Comentarii:
+- la rularea cu TD se vor urmari in fer. Registers: AX, BX iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+12d], [BP-2], [BP], [BP+2], [BP+4], [BP+6],
+ x, y);
+- in cazul Pascal, daca functia are var. locale automatice, compilatorul de
+ BP 7 le rezerva loc imediat in stanga locatiei pt. stocarea valorii de retur
+ (i.e. la adr, mai mici); deci locatia pentru stocarea val. de retur este 
+ mereu langa BP;
+- putem examina/rula in depanare codul generat cu BP 7 astfel:
+   * in mediul BP 7, in meniul Options/Debugger setam (cu [x]) optiunea
+      Standalone debugging;
+   * cream executabilul cu F9 (sau din meniul Compile cu comanda Make);
+   * incarcam executabilul generat in TD si deschidem din meniul View 
+      fereastra CPU; apoi continuam normal;
+  putem examina/rula in depanare codul generat cu BC++ 3.1 astfel:
+   * in mediul BC++ 3.1, in meniul Options/Compiler/Code generation setam 
+      (cu [x]) optiunea Generate assembler source;
+   * compilam cu ALt-F9 (sau din meniul Compile cu comanda Compile);
+      in felul acesta se va genera pe langa fisierul obiect si un fisier
+      sursa asm;
+   * cu fisierul asm continuam normal;
+- programele asm prezentate mai sus nu sunt exact asa cum le genereaza
+   compilatoarele BP 7/BC++ 3.1, dar respecta aceleasi conventii; de exemplu 
+   BC++ 3.1 foloseste SI in loc de Bx iar in locul secventei:
+
+      push bx
+      mov bx,[bp+4]
+      mov ax,[bx]    ; AX = *a
+      cmp ax,[bp+6]  ; compar *a cu b
+      ja etf1
+      mov ax,[bp+6]  ; Ax = b
+      etf1:
+        ; acum AX contine val. ret (*a sau b)
+      pop bx
+
+   genereaza o secventa de tipul:
+
+	push	si
+	mov	si,word ptr [bp+4]  ; SI = a (deci o adresa)
+	mov	dx,word ptr [bp+6]  ; DX = b
+	cmp	word ptr [si],dx    ; compar *a cu b (SI fol. implicit DS)
+	jbe	@1@142
+	mov	ax,word ptr [si]    ; AX = *a
+     @1@86:
+	jmp	@1@170
+     @1@142:
+	mov	ax,dx               ; Ax = b
+	jmp	@1@86
+     @1@170:
+	pop	si
+
+2f) Proceduri cu numar variabil de parametri:
+---------------------------------------------
+
+ In limbajul C (nu si in Pascal) exista functii cu nr. variabil de parametri;
+la declarare se precizeaza lista fixa si lista variabila de par. formali;
+lista fixa este neaparat in stanga, iar cea variabila este desemnata de"...",
+de exemplu un program cu o functie ce ret. suma unui nr. oarecare de intregi 
+este:
+
+  #include<stdarg.h>
+  unsigned short aduna(unsigned short n, ...){
+    unsigned short i,s;
+    va_list l;
+    va_start(l,n);
+    s=0;
+    for(i=0;i<n;++i) s+=va_arg(l,unsigned short);
+    va_end(l);
+    return s;
+  }
+  unsigned short s;
+  void main(){
+    s=aduna(3,1,2,3);  /* 3=nr. numerelor, 1,2,3=numerele; obtinem s=6 */
+    s=aduna(2,10,20);  /* obtinem s=30 */
+  }
+
+comentarii:
+- "va_list", "va_start", "va_end", "va_arg" sunt descrise in "stdarg.h":
+ "va_list" este un tip de date gen pointer (implementat a.i. sa poata pointa 
+    par. actuali din stiva); BC++ 3.1 il implementeaza ca pointer la void;
+ "va_start(l,n)" e un macro ce face ca "l" sa pointeze dupa parametrul actual
+    "n" (octetul urmator locatiei lui n din stiva);
+ "va_arg(l,unsigned short)" avanseaza pointerul "l" pana dupa urmatorul par. 
+    actual (presupunand ca acesta este de tip unsigned short), apoi ret.
+    val. par. peste care a trecut convertita la tipul indicat (unsigned 
+    short); practic, o invocare "va_arg(l,tip)" ret. ceva de forma:
+
+         *(tip *)  ( ((*(char **)&l) += sizeof(tip)) - sizeof(tip) )
+
+ "va_end(l)" elibereaza resursele folosite de "l" (dupa "va_end(l)" nu mai 
+    pot face "va_arg(l,ceva)" decat daca incep iar cu "va_start")
+- compilatorul de C nu implementeaza un mecanism de autodetectare in functie
+ a listei de par. actuali incarcati - programatorul trebuie sa comunice 
+ functiei explicit informatiile necesare; aceasta se poate face de ex. prin
+ intermediul par. din lista fixa - noi am transmis nr. numerelor prin n;
+  daca in functie incercam sa procesam mai multi/mai putini parametri decat
+ am dat, nu se genereaza eroare la compilare, dar la executie stiva va fi 
+ exploatata fie prea mult, fie prea putin (de ex. daca dupa "for" mai fac un 
+ "va_arg(l,unsigned short)" se iau urmatorii doi octeti din stiva de dupa 
+ ult. par. actual, se priveste informatia din ei ca "unsigned short" si se 
+ proceseaza); ceva asemanator se intampla si daca procesam par.actuali cu alt
+ tip decat i-am incarcat (de ex. am incarcat valori "int" iar in functie ii
+ procesez cu "va_arg(l,double)") - octetii din stiva se vor procesa grupati
+ si interpretati altfel decat i-am incarcat; deci e sarcina programatorului
+ sa apeleze functia cu exact atatia par. actuali cati proceseaza ea, iar in
+ apel sa-i proceseze cu tipul corect;
+- in ceea ce priveste codul asm/masina generat de compilator, faptul ca
+ parametrii din lista fixa trebuie declarati intotdeauna primii face ca, in
+ baza conventiei C, ei sa fie incarcati in stiva mereu ultimii (adica langa 
+ BP) si astfel vor avea deplasamente constante fata de BP, indiferent de nr. 
+ par. actuali incarcati in total - astfel este posibila generarea unui cod
+ masina/asm unic, care sa functioneze corect indiferent de nr. par. actuali;
+- daca compilatorul ar folosi conventia Pascal ca stiva sa fie descarcata de 
+ par. actuali in functie, ar fi imposibil sa deduca cu cat trebuie descarcata
+ fara a consulta textul codului apelant (acolo e scris cati par. actuali se 
+ incarca) si astfel functia nu ar putea fi dezvoltata intr-o biblioteca 
+ independenta care sa fie ulterior linkeditata cu acest program (sau cu 
+ altele); intrucat in C codul care incarca stiva este si cel care o descarca,
+ compilatorul gaseste in el toate informatiile necesare si astfel atat 
+ functia cat si restul programului pot fi dezvoltate/compilate separat si 
+ linkeditate impreuna;
+  acelasi motiv (anume ca din textul functiei nu rezulta cati par. actuali
+ s-au incarcat) face imposibila implementarea returnarii valorii prin stiva -
+ intr-adevar, val. returnata ar trebui plasata acolo de unde a inceput
+ incarcarea par. actuali, iar compilatorul nu poate determina acest loc 
+ doar din textul (C al) functiei.
+
+Exemplul 11: Prezentam un cod asm echivalent cu programul C de mai inainte
+~~~~~~~~~~~~   (iarasi, nu este exact ce genereaza compilatorul BC++ 3.1,
+               dar respecta aceleasi principii):
+
+  .model small
+  .stack
+  .data
+    s dw ?
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+    push 3     ; incarcam parametrii, conform conventiei C
+    push 2
+    push 1
+    push 3
+    call aduna ; functia returneaza in AX
+    add sp,8   ; descarcam atatia par. cati am incarcat (adica 4 parametri)
+    mov s,ax   ; val. ret. este in AX
+     ; acum s contine 6
+    push 20
+    push 10
+    push 2
+    call aduna
+    add sp,6   ; acum am incarcat doar 3 parametri
+    mov s,ax
+     ; acum s contine 30    
+  mov ah,4ch
+  int 21h
+    aduna proc
+      push bp
+      mov bp,sp
+      push cx         ; salvez reg. pe care ii folosesc la lucru
+      push si         ;  (fara AX, in care returnam valoarea)
+        ; [SP]:(si v)(cx v)[BP]:(bp v)(adr.ret)(n)()()()...     
+        ; s va fi alocat direct in AX, iar i si l vor fi simulate prin SI
+      mov si,6        ; va_start(l,n); acum [BP+SI-2]=n
+      mov ax,0        ; s=0
+      mov cx,[bp+4]   ; CX=n
+      inceput:
+      cmp cx,0
+      jbe sfarsit
+      add si,2
+      add ax,[bp+si-2]; s+=va_arg(l,unsigned short)
+      dec cx
+      jmp inceput
+      sfarsit:
+      pop si        ; restauram registrii salvati
+      pop cx
+      pop bp
+      ret           ; AX contine deja val. ce trebuie returnata
+    aduna endp
+  end start
+
+Comentarii:
+- la rularea cu TD se vor urmari in fer. Registers: AX, Si, CX iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+14d], [BP], [BP+2], ..., [BP+10d] (fiecare 
+ din 2 in 2), s);
+- obs. ca par. din lista fixa (adica "n") a fost accesat cu un deplasament
+ constant (anume 4) fata de BP, indiferent de nr. par. actuali incarcati;
+- daca vrem sa scriem direct in asm programul cu functia cu nr. variabil de
+ parametri putem implementa manual orice comportament - de exemplu consultand
+ in functie par. "n" putem deduce cati par. actuali s-au incarcat si putem
+ scrie codul a.i. sa descarcam stiva in functie (sau sa returnam valoarea
+ prin stiva); 
+  un compilator de C nu poate sa faca asta automat pt. ca nu stie ca "n" va
+ purta in el informatia referitoare la numarul par. actuali si e foarte greu
+ sa deduca acest lucru din modul cum e folosit "n" in functie (de ex. sa
+ vada ca se fac in total "n" invocari "va_arg") - asta tine de gandirea 
+ programatorului, compilatorul ar trebui sa analizeze algoritmul implementat
+ pt. a o descoperi, ceea ce e f. greu, asa ca pt. el "n" este doar un par. ca
+ toti ceilalti;
+  modul de implementare manuala a comportamentului dorit va fi facut de 
+ programator in mod diferit de la o procedura/functie la alta, in functie de
+ maniera de transmitere a informatiei privind nr. par. actuali (prin ce par.
+ s-a transmis aceasta inf., etc.) - deci in fct. de algoritmul implementat
+ in procedura/functie.
+
+2g) Proceduri apelate din alte proceduri; proceduri recursive:
+--------------------------------------------------------------
+
+ In exemplele de pana acum am salvat pe perioada unui apel vechea valoare a
+lui BP desi nu a fost necesar - la revenirea din apel codul apelant nu a avut
+nevoie de vechea valoare a lui BP; am vrut doar sa ilustram un mod general de
+lucru. Salvarea/restaurarea vechii valori a lui BP este necesara atunci cand
+procedura respectiva este apelata din alta procedura (care dupa revenire va 
+dori sa-si acceseze din nou par. actuali si/sau var. locale automatice); aici
+este inclus si cazul procedurilor/functiilor recursive.
+ Urmatorul exemplu ilustreaza apelarea unei proceduri din alta procedura:
+
+Exemplul 12: calculul celui de-al n-lea termen al sirului Fibonacci, folosind
+~~~~~~~~~~~~  o functie care aduna doi termeni si o procedure care 
+              translateaza termenii; functia returneaza prin stiva;
+ mai exact vom emula urmatorul cod C:
+
+  unsigned short aduna(unsigned short a, unsigned short b){
+    return a+b;
+  }
+  void iteratie(unsigned short *a, unsigned short *b){
+    unsigned short c;
+    c=aduna(*a, *b);
+    (*a)=(*b); (*b)=c;
+  }
+  void main(){
+    unsigned short n=5,i,x=1,y=1,z;
+    for(i=2;i<n;++i)iteratie(&x,&y);
+    z=y;
+  }
+
+ programul asm echivalent (dar care iarasi, nu este exact ceea ce genereaza 
+ compilatorul BC++ 3.1) este:
+
+  .model small
+  .stack
+  .data
+    n dw 5
+    x dw 1
+    y dw 1
+    z dw ?
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+    cmp n,2    
+    jbe sfarsit   ; daca n<=2 nu avem ce itera
+    mov cx,n
+    sub cx,2      ; primii doi termeni deja sunt calculati
+    inceput:
+    lea ax,y      ; incarcam parametrii pt. "iteratie", conform conventiei C
+    push ax    
+    lea ax,x
+    push ax
+       ;[sp]:(&x)(&y)
+    call iteratie
+    add sp,4      ; descarcam stiva de par. actuali ai lui "iteratie"
+    loop inceput
+    sfarsit:
+    mov ax,y
+    mov z,ax
+     ; acum z contine 5
+  mov ah,4ch
+  int 21h
+    iteratie proc
+      push bp
+      mov bp,sp
+      sub sp,2          ; rezerv spatiu pt. var. automatica c
+      push bx           ; salvez reg. pe care il folosesc la lucru
+        ;[SP]:(bx v)(loc c)[BP]:(bp v)(adr.ret.)(a=&x)(b=&y)
+      mov bx,[bp+6]     ; incarc par. actuali ai lui "aduna":
+      push [bx]         ;   incarc (*b)
+      mov bx,[bp+4]
+      push [bx]         ;   incarc (*a)
+        ;[SP]:(*a=x)(*b=y)(bx v)(loc c)[BP]:(bp v)(adr.ret.)(a=&x)(b=&y)
+      call aduna
+        ;am convenit ca "aduna" sa returneze prin stiva, deci acum:
+        ;[SP]:(x+y)(bx v)(loc c)[BP]:(bp v)(adr.ret.)(a=&x)(b=&y)
+      pop bx            ; preiau val. returnata
+      mov [bp-2],bx     ; c=aduna(*a,*b)
+      mov bx,[bp+6]
+      push [bx]
+      mov bx,[bp+4]
+      pop [bx]          ; (*a):=(*b), adica x:=y
+      push [bp-2]
+      mov bx,[bp+6]
+      pop [bx]          ; (*b):=c, adica y:=c
+      pop bx            ; restaurez BX
+      add sp,2          ; elimin var. automatica c
+      pop bp
+      ret
+    iteratie endp
+    aduna proc
+      push bp
+      mov bp,sp
+      push ax           ; salvez reg. pe care il folosesc la lucru
+        ;acum stiva (desenata vertical) este:
+        ;[SP]:(ax vechi salvat de "aduna")
+        ;[BP]:(bp vechi salvat de "aduna")
+        ;     (adr.ret.din "aduna")
+        ;     (a al lui "aduna" = x)
+        ;     (b al lui "aduna" = y)
+        ;     (bx vechi salvat de "iteratie")
+        ;     (loc c)
+        ;     (bp vechi salv. de "iteratie")
+        ;     (adr.ret.din "iteratie")
+        ;     (a al lui "iteratie" = &x)
+        ;     (b al lui "iteratie" = &y)
+      mov ax,[bp+4]
+      add ax,[bp+6] ; AX=a+b
+        ;pregatim stiva cu valoarea returnata
+      mov [bp+6],ax
+      mov ax,[bp+2]
+      mov [bp+4],ax
+      mov ax,[bp]
+      mov [bp+2],ax
+        ;acum stiva (desenata vertical) este:
+        ;[SP]:(ax vechi salvat de "aduna")
+        ;[BP]:(bp vechi salvat de "aduna")
+        ;     (bp vechi salvat de "aduna")
+        ;     (adr.ret.din "aduna")
+        ;     (val.ret.x+y)
+        ;     (bx vechi salvat de "iteratie")
+        ;     (loc c)
+        ;     (bp vechi salv. de "iteratie")
+        ;     (adr.ret.din "iteratie")
+        ;     (a al lui "iteratie" = &x)
+        ;     (b al lui "iteratie" = &y)
+      pop ax            ; restaurez ax
+      add sp,2
+      pop bp            ; restaurez bp
+      ret
+    aduna endp
+  end start
+
+Comentarii:
+- "i" nu a fost implementat explicit,am numarat iteratiile cu CX (si "LOOP");
+- obs. ca "aduna" a fost obligata sa salveze/restaureze bp, deoarece dupa
+ revenire "iteratie" a avut nevoie de BP-ul sau pt. a-si accesa variabila c
+ (cu deplasamentul cunoscut de el, 2);
+- la rularea cu TD se vor urmari in fer. Registers: AX, BX, CX iar in fer.
+ Watches: [SP], [SP+2], ..., [SP+20d], [BP-2], [BP], [BP+2], ..., [BP+18d] 
+ (fiecare din 2 in 2), x, y, z).
+
+ Prezentam si doua exemple de proceduri recursive:
+
+Exemplul 13: problema turnurilor din Hanoi, folosind o procedura recursiva;
+~~~~~~~~~~~~ 
+* enuntul problemei:
+  avem 3 pari (numerotati 1,2,3); pe parul 1 avem o stiva de n discuri, cu
+ diametrele descrescatoare de la baza spre varf; putem face mutari - o mutare
+ consta in mutarea discului de sus de pe un par pe altul, cu conditia sa nu-l
+ punem peste un disc mai mic decat el; vrem o succesiune de mutari prin care
+ tot teancul de discuri sa fie mutat de pe parul 1 pe parul 3;
+* solutie (de complexitate exponentiala):
+  notam h(k,a,b,c) = succesiunea de mutari necesare mutarii unei stive de pe
+ parul a pe parul b, folosind parul c ca auxiliar; atunci:
+  daca k=1, h(1,a,b,c)=ab;
+  daca k>1, h(k,a,b,c)=h(k-1,a,c,b) ab h(k-1,c,b,a)
+ (intr-adevar, cand deplasam primele k-1 discuri il putem ignora pe cel de-al
+ k-lea, care este cel mai mare si este jos de tot - deci putem pune orice 
+ peste el);
+* implementare:
+ mutarile succesive vor fi scrise intr-un vector "m" de byte ca perechi de 
+  cifre (12,13, sau 23);
+ vom folosi o procedura h(k,a,b,c) cu 4 parametri byte (primul e nr. de
+  discuri ce trebuie mutate, ultimii sunt parii folositi in ordinea descrisa
+  mai sus); ea va lucra astfel:
+    daca n=1, atunci scrie in "m" (de la pozitia curenta): ab;
+    altfel, apeleaza (recursiv) h(k-1,a,c,b), apoi scrie in "m" (de la
+      pozitia curenta) ab, apoi apeleaza recursiv h(k-1,c,b,a);
+ pozitia curenta in "m" va fi urmarita global cu SI;
+ in programul principal vom apela h(n,1,3,2);
+programul este:
+
+  .model small
+  .stack
+  .data
+    m db 100 dup (?)
+    n dw 3
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+    lea si,m
+    mov ax,2 ; incarcam parametrii, conform conventiei C
+    push ax
+    mov ax,3
+    push ax
+    mov ax,1
+    push ax
+    mov ax,n
+    push ax
+    call h
+    add sp,8 ; descarcam stiva de par. actuali
+     ; acum m contine 13123213212313
+  mov ah,4ch
+  int 21h
+    h proc
+      push bp
+      mov bp,sp
+      push ax           ; salvez reg. pe care il folosesc la lucru
+        ;[SP]:(ax v)[BP]:(bp v)(adr.ret.)(n)(a)(b)(c)
+      cmp word ptr [bp+4],1
+      ja et
+      mov ax,[bp+6]
+      mov byte ptr [si],al
+      inc si
+      mov ax,[bp+8]
+      mov byte ptr [si],al
+      inc si
+      jmp sf
+     et:
+      push [bp+8]     ; apel recursiv h(k-1,a,c,b)
+      push [bp+10]
+      push [bp+6]
+      mov ax,[bp+4]
+      dec ax
+      push ax
+      call h
+      add sp,8
+      mov ax,[bp+6]     ; scriu ab
+      mov byte ptr [si],al
+      inc si
+      mov ax,[bp+8]
+      mov byte ptr [si],al
+      inc si
+      push [bp+6]     ; apel recursiv h(k-1,c,b,a)
+      push [bp+8]
+      push [bp+10]
+      mov ax,[bp+4]
+      dec ax
+      push ax
+      call h
+      add sp,8
+     sf:
+      pop ax            ; restaurez AX
+      pop bp
+      ret
+    h endp
+  end start
+
+Comentarii:
+- evolutia stivei este (am notat rm = adr. de ret. din prog., rp = adr. de 
+ ret. din procedura, bpi = diverse val. ale lui BP (am desenat deasupra si 
+ unde pointeaza ele), ? = diverse val. ale lui AX):
+
+h(3,1,3,2):
+|(?)(bp0)(rm)(3)(1)(3)(2)
+|h(2,1,2,3):                bp1
+||                           V
+||(?)(bp1)(rp)(2)(1)(2)(3)(?)(bp0)(rm)(3)(1)(3)(2)
+||
+||h(1,1,3,2):                bp2                     bp1
+|||                           V                       V
+|||(?)(bp2)(rp)(1)(1)(3)(2)(?)(bp1)(rp)(2)(1)(2)(3)(?)(bp0)(rm)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 13
+|||_
+||
+||==> se scrie: 12          bp1
+||                           V
+||(?)(bp1)(rp)(2)(1)(2)(3)(?)(bp0)(rm)(3)(1)(3)(2)
+||
+||h(1,3,2,1):                bp2                     bp1
+|||                           V                       V
+|||(?)(bp2)(rp)(1)(3)(2)(1)(?)(bp1)(rp)(2)(1)(2)(3)(?)(bp0)(rm)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 32
+|||_
+||_
+|
+|==> se scrie: 13
+|
+|(?)(bp0)(rm)(3)(1)(3)(2)
+|
+|h(2,2,3,1):                bp1
+||                           V
+||(?)(bp1)(rp)(2)(2)(3)(1)(?)(bp0)(rm)(3)(1)(3)(2)
+||
+||h(1,2,1,3):                bp2                     bp1
+|||                           V                       V
+|||(?)(bp2)(rp)(1)(2)(1)(3)(?)(bp1)(rp)(2)(2)(3)(1)(?)(bp0)(rm)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 21
+|||_
+||
+||==> se scrie: 23          bp1
+||                           V
+||(?)(bp1)(rp)(2)(2)(3)(1)(?)(bp0)(rm)(3)(1)(3)(2)
+||
+||h(1,1,3,2):                bp2                     bp1
+|||                           V                       V
+|||(?)(bp2)(rp)(1)(1)(3)(2)(?)(bp1)(rp)(2)(2)(3)(1)(?)(bp0)(rm)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 13
+|||_
+||_
+|_
+
+- la rularea cu TD se vor urmari in fer. Registers: AX, Si, CX iar in fer.
+ Watches: [byte ptr m], [byte ptr m+1], ..., [byte ptr m+13d] (din 1 in 1),
+[SP], [SP+2], ..., [SP+40d] (din 2 in 2)).
+
+Exemplul 14: calculul lui n! folosind o functie recursiva (pe baza metodei:
+~~~~~~~~~~~~  daca n<=1 atunci n!=1, altfel n!=n*(n-1)!, iar pt. (n-1)! se
+  apeleaza recursiv aceeasi functie); parametrii si valoarea returnata se 
+  transmit prin stiva:
+
+  .model small
+  .stack
+  .data
+    n dw 3
+    x dw ?
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+    push n   ; incarcam in stiva par. actual
+    call fact
+    pop x    ; am convenit ca fct. sa ret. prin stiva si descarcam val. ret.
+     ; acum x contine 6
+  mov ah,4ch
+  int 21h
+    fact proc
+      push bp
+      mov bp,sp
+      push ax               ; salvez reg. pe care il folosesc la lucru
+      push dx
+        ;[SP]:(dx v)(ax v)[BP]:(bp v)(adr.ret.)(n)
+      cmp word ptr [bp+4],1
+      ja et
+      mov word ptr [bp+4],1 ; daca n<=1 plasez val. ret. 1 in stiva si inchei
+      jmp sf
+     et:
+      mov ax,[bp+4]
+      dec ax
+      push ax
+        ;[SP]:(n-1)(dx v)(ax v)[BP]:(bp v)(adr.ret.)(n)
+      call fact             ; apelez recursiv "fact" cu par. actual n-1
+        ;[SP]:((n-1)!)(dx v)(ax v)[BP]:(bp v)(adr.ret.)(n)
+      pop ax                ; AX=(n-1)!
+        ;[SP]:(dx v)(ax v)[BP]:(bp v)(adr.ret.)(n)
+      mul word ptr [bp+4]   ; (DX,AX)=(n-1)!*n, ignor DX, deci AX=val. finala
+      mov [bp+4],ax         ; plasez val. ret. in stiva
+     sf:
+      pop dx                ; restaurez reg. salvati
+      pop ax
+      pop bp
+      ret
+    fact endp
+  end start
+
+Comentarii:
+- la adancimea maxima, stiva ajunge (ca mai inainte,am notat rm = adr.de ret.
+ din prog., rp = adr. de ret. din procedura, bpi = diverse val. ale lui BP 
+ (am desenat deasupra si unde pointeaza ele), ? = diverse val.ale lui AX,DX):
+                             bp2               bp1
+                              V                 V
+ [SP]:(?)(?)(bp2)(rp)(1)(?)(?)(bp1)(rp)(2)(?)(?)(bp0)(rm)(3)
+
+- la rularea cu TD se vor urmari in fer. Registers: AX iar in fer. Watches: 
+ [SP], [SP+2], ..., [SP+28d] (din 2 in 2), [BP], [BP+2], [BP+4], x).
+
+ Notam ca daca intram de multe ori in apeluri fara sa mai si iesim sau daca
+incarcam parametri multi si/sau mari, la un moment dat spatiul stiva se va
+umple iar stiva va invada alte zone (de cod, date, etc.) ceea ce se soldeaza
+de obicei cu blocarea sau terminarea anormala a programului (de exemplu o 
+recursie infinita va produce la un moment dat stack overflow).
+
+2h) Metoda salturilor indirecte:
+--------------------------------
+
+ Este o metoda de a efectua salturi de tip "JMP" folosind instr.de tip "RET".
+ Se foloseste de exemplu la implementarea unor cicluri "while" ce itereaza 
+structuri "switch" (in limbajul C) in care pe fiecare ramura trebuie apelata 
+o procedura. 
+ Mai exact, sa presupunem ca vrem sa implementam ceva de forma:
+
+  while(c=get_comanda())
+    switch(c){
+      case valoare0: p0(); break;
+      case valoare1: p1(); break;
+      ...
+    }
+
+ O modalitate de implementare asm ar fi de forma:
+
+  et:
+  call get_comanda   ; presupunem ca returneaza in AX
+   cmp ax,valoare0
+   jne et0
+   call p0
+   jmp et
+  et0:
+   cmp ax,valoare1
+   jne et1
+   call p1
+   jmp et
+  et1:
+   .....
+  etn:
+  jmp et
+
+ Aceasta modalitate are dezavantajul ca poate face multe comparatii inainte 
+de a decide care procedura trebuie apelata. Putem elimina compararile 
+succesive daca cream un "tabel de salt" "t" care pe pozitia i contine adresa
+procedurii "pi", "get_comanda" sa returneze in loc de "valoare0", "valoare1",
+..., numere succesive 0, 1, ..., iar ciclul de mai sus sa se reduca la:
+
+  et:
+  call get_comanda   ; presupunem ca returneaza in AX
+  mov bx,ax
+  shl bx,1           ; acum BX contine deplasamentul comp. de indice AX din t
+                     ;  fata de inceputul vectorului (vector de worduri)
+  call [bx+t]
+  jmp et
+
+ O solutie care presupune tot un tabel de salt dar care in plus evita instr.
+"CALL" si "JMP" realizeaza transferul executiei de la o adresa la alta cu
+ajutorul unor instr. de tip "RET" si s.n. metoda salturilor indirecte. Ea
+consta in efectuarea urmatorilor pasi:
+ 1. PUSH adresa "get_comanda" (procedura care presupunem ca furnizeaza in AX 
+  o val. de retur dintr-un interval 0...n)
+ 2. PUSH adresa din tabelul de salt "t" continuta in componenta de indice AX
+  (in ex. de mai sus este adresa procedurii "pi"); acum stiva este:
+            [SP]:(adr.proc.pi)(adr.proc.get_comanda)...
+ 3. RET
+Instr. "RET" de la pasul 3 scoate din stiva IP := adr. proc. "pi" transferand 
+executia la procedura "pi"; la incheierea executarii acestei proceduri,
+"RET"-ul ei va scoate din stiva IP := adr. proc. "get_comanda" provocand 
+reexecutarea lui "get_comanda" si reluarea de la pasul 1. Practic, codul va 
+fi de forma:
+
+  get_comanda:
+   ... ; cod ce pune in AX o valoare 0,...,n
+  push offset get_comanda
+  mov bx,ax
+  shl bx,1
+  push [bx+t]
+  ret
+
+(in codul de mai sus "get_comanda" nici nu mai este o procedura propriuzisa
+ci doar o eticheta de la care incepe un cod care calculeaza o val. in AX si
+apoi efectueaza pasii 1-3 descrisi mai inainte).
+
+ Metoda salturilor indirecte este folosita in programele de tip interpretor
+(Basic-Sinclair, GW-Basic, etc.).
+
+Exemplul 15: Emularea unui interpretor de comenzi de tip "command.com" foarte
+~~~~~~~~~~~~   restrans: accepta de la intrare doar comenzi de un caracter, 
+ in fiecare caz efectul fiind scrierea la iesire a cate unui alt caracter; 
+ comenzile suportate si caracterul scris la exec. fiecareia din ele sunt:
+  comanda 'a' --> caracterul '+' (adunare)
+  comanda 's' --> caracterul '-' (scadere)
+  comanda 'n' --> caracterul '!' (negare)
+ pe langa aceste comenzi mai accepta si:
+  comanda 't' --> produce terminarea programului
+ daca la intrare vine alt caracter decat 'a', 's', 'n', se va scrie 'e' 
+ (eroare) - acest lucru se va realiza cu o comanda suplimentara (care se va
+ executa automat in asemenea cazuri);
+  fluxul de intrare va fi simulat printr-un string ce contine o succesiune de
+ caractere (nume de comenzi sau alte caractere, care vor genera erori); 
+  fluxul de iesire va fi simluat printr-un string ce va contine caracterele
+ scrise la executarea fiecarei comenzi;
+  de exemplu daca stringul de intrare contine: "assaxnyyt"
+         atunci stringul de iesire va contine: "+--+e!ee"
+
+ programul este urmatorul:
+
+.model small
+.stack
+.data
+  comenzi db "asnte"           
+     ; vector cu numele comenzilor (doar primele 4 sunt valide);
+     ; poz. in vector da codul de identificare 0..4 al comenzii
+  t dw aduna, scade, neaga, termina, eroare 
+     ; tabel de salt 
+     ;  (pe poz. i (0..4) este adr. proc. ce realizeaza comanda cu  codul i)
+  intrare db "assaxnyyt"       ; fluxul de intrare
+  iesire  db 100 dup (?)       ; fluxul de iesire
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov es,ax
+mov ax,@stack
+mov ss,ax
+  cld          ; setez directia de prelucrare a stringurilor spre adrese mari
+  lea si,intrare
+  lea di,iesire
+  get_comanda:
+      lodsb           ; AL=caracterul curent din fluxul de intrare
+      push di         ; salv.poz.curenta in fluxul de iesire (voi refol. DI)
+      lea di,comenzi  ; acum DI parcurge stringul "comenzi"
+      mov cx,5        ; sunt 5 comenzi (ultima = eroare)
+      repne scasb     ; caut AL in "comenzi" (pana il gasesc sau pana CX=0
+                      ;   si atunci DI-1 indica comanda de eroare)
+      dec di          ; acum DI este poz. (idf. numeric al) comenzii (4=err)
+      mov bx,di       ; acum BX este poz. (idf. numeric al) comenzii (4=err)
+      pop di          ; restaurez poz. curenta in fluxul de iesire
+  push offset get_comanda
+  shl bx,1     ; acum BX este deplasam.proc. respective fata de incep.lui "t"
+  push [bx+t]  ; acum stiva este: [SP]:(adr.unei proc.)(adr.lui"get_comanda")
+  ret          ; scoate IP:=adr. unei proc. (transfera executia), 
+               ;  iar stiva ramane [SP]:(adr.lui"get_comanda")
+;;;;; proceduri de implementare a comenzilor: ;;;;;
+  aduna proc     ; ia intrare stiva este: [SP]:(adr.lui"get_comanda")
+    mov al,'+'
+    stosb
+    ret          ; scoate IP:=adr.lui"get_comanda" (transfera executia)
+                 ;  iar stiva ramane goala
+  aduna endp
+  scade proc
+    mov al,'-'
+    stosb
+    ret
+  scade endp
+  neaga proc
+    mov al,'!'
+    stosb
+    ret
+  neaga endp
+  termina proc
+    mov ah,4ch
+    int 21h
+  termina endp
+  eroare proc
+    mov al,'e'
+    stosb
+    ret
+  eroare endp
+end start
+
+Comentarii:
+- SI a fost folosit atat pentru a parcurge sirul de intrare cat si pentru a
+ parcurge sirul de comenzi (trebuia sa-l folosim tot pe SI daca am vrut sa
+ lucram cu instructiunile specializate pentru stringuri "lodsb", "cmpsb ");
+ de aceea, cand am trecut de la un string la altul am salvat/restaurat SI al
+ primului string in stiva;
+- observam ca programul apeleaza proceduri si revine din ele fara sa
+ foloseasca instructiuni de tip "call" (ci doar "ret");
+- la rularea cu TD se vor urmari in fer.Registers: SI, DI, BX, AL iar in fer.
+ Watches: comenzi, intrare, iesire, [byte ptr SI], [byte ptr DI], [SP],
+ [SP+2], [SP+4]);
+- putem realiza in acelasi mod un interpretor care sa execute comenzi avand
+ nume mai lungi de un caracter si avand parametri (vezi exercitiile de la
+ sfarsit).
+
+ Un alt exemplu de folosire a metodei salturilor indirecte ar putea fi un
+joc in care iterativ se citeste cate o tasta directionala si in functie de
+ea se deplaseaza pe ecran (cu ajutorul unor proceduri de desenare) un 
+personaj in sus, jos, dreapta, stanga (tema !).
+
+2i) Corutine: - TODO
+-------------
+
+2j) Alte exemple:
+-----------------
+
+Exemplul **: Emularea functiilor din limbajul C "strcpy","itoa" si "ssprintf"
+~~~~~~~~~~~~  (care suporta insa doar formatele "%d", "%s" si nu ret.nimic):
+
+.model small
+.stack
+.data
+ s1 db "abc de",0
+ s2 db "A BB CCC",0
+ f  db "~~%s---%s====%d",0
+ n dw 1023
+ d db 100 dup (?)
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov es,ax
+mov ax,@stack
+mov ss,ax
+  push n
+  push offset s2
+  push offset s1
+  push offset f
+  push offset d
+  call sprintf   ; sprintf(d,"~~%s---%s====%d",s1,s2,n)
+  add sp,10
+   ; acum d contine "~~abc de---A BB CCC====1023"
+mov ah,4ch
+int 21h
+strcpy proc
+  ; copiaza un sir in altul, pana la caracterul 0 inclusiv
+  ; parametri: adr. sir destinatie, adr. sir sursa
+  ; returneaza (in AX): adr. sir destinatie
+  push bp
+  mov bp,sp
+  push cx
+  push si
+  push di
+  pushf 
+    ;[SP]:(flags v)(di v)(si v)(cx v)[BP]:(bp v)(adr.ret)(adr.dest)(adr.src)
+  cld   ; stabilim par. stringurilor spre adr. mari
+  mov di,[bp+6]
+  mov al,0
+  mov cx,0ffffh
+  repne scasb   ; presupunem ca ES pointeaza segmentul de date
+  not cx        ; acum CX=lungimea sirului sursa (inclusiv 0 de la sfarsit)
+  mov si,[bp+6]
+  mov di,[bp+4]
+  rep movsb
+  mov ax,[bp+4] ; valoarea returnata
+  popf
+  pop di
+  pop si
+  pop cx
+  pop bp
+  ret
+strcpy endp
+itoa proc
+  ; pune cifrele unui nr. natural (word) intr-un string
+  ; parametri: nr. convertit, adr.destinatie, baza de enumeratie (word)
+  ; returneaza (in AX): adr. destinatie
+  push bp
+  mov bp,sp
+  push bx
+  push cx
+  push dx
+  pushf
+   ; [SP]:(flags v)(dx v)(cx v)(bx v)[BP]:(bp v)(adr.ret)(nr)(adr.dest)(baza)
+  cld
+  mov cx,0
+  mov ax,[bp+4]
+  eitoa1:
+  mov dx,0
+  div word ptr [bp+8]
+  push dx
+  inc cx
+  cmp ax,0
+  jne eitoa1
+    ; acum in stiva sunt cifrele numarului in ord. inversa, iar CX = nr. lor
+  mov bx,[bp+6]
+  eitoa2:
+  pop ax
+  add al,48          ; car. ce reprezinta cifra i (0..9) are codul ASCII 48+i
+  mov byte ptr [bx],al
+  inc bx
+  loop eitoa2
+    ; acum cifrele au fost scoase din stiva si puse in stringul destinatie
+  mov byte ptr [bx],0; adaugam la dest. si un car. 0
+  mov ax,[bp+6] ; val. de retur
+  popf
+  pop dx
+  pop cx
+  pop bx
+  pop bp
+  ret
+itoa endp
+sprintf proc
+  ; scrie niste valori word sau string intr-un string dest. cf. unui format C
+  ; parametri: adr. stringului dest., adr. stringului de format (contine 
+  ;   caractere obisnuite, %d, %s) si valorile ce trebuie scrise (numere word
+  ;   sau adrese de stringuri) - nr. variabil de parametri
+  ; nu returneaza nimic
+  push bp
+  mov bp,sp
+  push si
+  push di
+  push ax
+  push bx
+  push cx
+  push dx
+  pushf
+   ; [SP]:(flags v)(dx v)(cx v)(bx v)(ax v)(di v)(si v)[BP]:...
+   ; [BP]:(bp v)(adr.ret)(adr.dest)(adr.sir format)()()()...
+  cld
+  mov di,[bp+4] ; adresa sirului destinatie
+  mov si,[bp+6] ; adresa sirului de format
+  mov dx,8      ; deplasamentul primul par. din lista variabila fata de BP
+ esprintf1:
+  lodsb         ; incarc in AL caracterul curent din sirul de format
+  cmp al,0
+  je esprintff  ; daca caracterul curent este 0, am terminat
+  cmp al,'%'
+  je esprintf2  ; daca caracterul curent este '%' sarim la "esprintf2"
+  stosb         ; caracterele obisnuite se copiaza ca atare la destinatie
+  jmp esprintf1
+ esprintf2:     ; aici caracterul curent este '%' 
+  lodsb         ; mai iau un caracter
+  cmp al,'d'
+  jne esprintf3
+  mov bx,bp     ; cazul '%d'
+  add bx,dx
+  push 10
+  push di
+  push word ptr [bx]
+  call itoa     ; in cazul '%d' scriu cu "itoa"
+  add sp,6      ; descarc stiva de par. lui "itoa"
+  add dx,2      ; trec la urm. par. din lista variabila
+  mov al,0
+  mov cx,0ffffh
+  repne scasb   ; avansez pana dupa car. 0 scris la destinatie de "itoa"
+  dec di        ; acum car. curent (peste care se va scrie) la dest. este 0
+  jmp esprintf1
+ esprintf3:
+  cmp al,'s'
+  jne esprintf4
+  mov bx,bp     ; cazul '%s'
+  add bx,dx
+  push word ptr [bx]
+  push di
+  call strcpy   ; in cazul '%s' scriu cu "strcpy"
+  add sp,4      ; descarc stiva de par. lui "strcpy"
+  add dx,2      ; trec la urm. par. din lista variabila
+  mov al,0
+  mov cx,0ffffh
+  repne scasb   ; avansez pana dupa car. 0 scris la destinatie de "strcpy"
+  dec di        ; acum car. curent (peste care se va scrie) la dest. este 0
+  jmp esprintf1
+ esprintf4:     ; cazul '%altceva'
+  stosb         ; daca car.de dupa '%' nu este 'd' sau 's' il copiez ca atare
+  jmp esprintf1
+ esprintff:
+  stosb         ; adaugam si car. 0 (care este acum in AL) la destinatie
+  popf
+  pop dx
+  pop cx
+  pop bx
+  pop ax
+  pop di
+  pop si
+  pop bp
+  ret
+sprintf endp
+end start
+
+Comentarii:
+- la intrarea in procedurile care folosesc instructiuni specifice 
+ stringurilor am setat DF=0 ca sa parcurgem strigurile spre adr. mari (pentru
+ siguranta, chiar daca DF era 0 implicit); de aceea, pentru a restaura la
+ revenire exact situatia dinaintea apelului, am salvat/restaurat si reg. de
+ flaguri (care continea DF anterior), cu "pushf"/"popf"; recomandam ca aceast
+ lucru sa fie facut in general, la toate proc. ce fol. instr. pt. stringuri;
+- la rularea cu TD se pot urmari de ex. in fer. Registers: AL, DX, CX iar in
+ fer. Registers: offset s1, offset s2, offset f, offset d, s1, s2, f, d,
+ [byte ptr SI], [byte ptr DI], [BP], [BP+2], ..., [BP+12d] (din 2 in 2); daca
+ vrem sa urmarim doar funtionarea lui "sprintf", cand rulam pas cu pas putem
+ executa liniile "call strcpy" si "call itoa" cu F8 - atunci procedurile
+ respective vor fi rulate continuu, nu pas cu pas).
+
+Exemplul **: realizam un generator de numere pseudoaleatoare pe 16 biti
+~~~~~~~~~~~~  (inspirat de un exemplu din cartea [2]); numerele generate sunt
+ termenii succesivi ai unui sir definit a.i. termenii sai sa fie suficient de
+ "imprastiati"; regula de generare este insa fixata, deci daca dam primul
+ termen al sirului (germen), restul sunt unic determinati - de aceea sunt
+ "pseudo"; vom emula urmatoarele functii C:
+
+ srand(n)
+   ==> fixeaza pe "n" ca germen
+ rnd()
+   ==> genereaza si returneaza urmatorul termen al sirului
+ random(n)
+   ==> returneaza un nr. pseudoaleator de la 0 la n-1; noi il vom implementa
+         a.i. sa returneze rand() % n
+
+ vom fol. o var. statica (care persista de la un apel la altul al lui "rnd")
+ "x_rnd" in care vom genera termenii succesivi ai sirului, dupa regula
+ x := median(x*x+c_rand), unde "c_rand" este o constanta pe 32 biti, x*x+c
+ se calculeaza pe 32 biti, iar median(z) reprezinta word-ul format din bitii
+ b23-b8 ai lui z;
+
+programul este:
+
+.model small
+.stack
+.data
+; variabile locale statice ale procedurilor "srand", "rand", "random"
+;  (se pot aloca intr-un segm. separat)
+ c_rnd dd 10203040h
+ x_rnd dw 0
+; variabile ale programului
+ n dw 1234
+ x dw ?
+ y dw ?
+ z dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+ ;apelez srand(n)
+  push n
+  call srand
+  add sp,2
+ ;calculez x = rand()
+  call rand
+  mov x,ax
+    ; acum x contine 14188
+ ;calculez y = rand()
+  call rand
+  mov y,ax
+    ; acum y contine 8133
+ ;calculez z = random(100)
+  push 100
+  call random
+  add sp,2
+  mov z,ax
+    ; acum z contine 77
+mov ah,4ch
+int 21h
+srand proc
+  ; initializeaza germenul sirului de nr. pseudoaleatoare, setand var."x_rnd"
+  ; parametru: germenul (word)
+  ; nu returneaza nimic
+  push bp
+  mov bp,sp
+  push ax       ;[SP]:(ax v)[BP]:(bp v)(adr.ret)(germen)
+  mov ax,[bp+4]
+  mov x_rnd,ax
+  pop ax
+  pop bp
+  ret
+srand endp
+rand proc
+  ; nu are parametri;
+  ; genereaza urmatorul nr. pseudoaleator din secventa (x=median(x*x+c));
+  ;  si-l returneaza (in AX)
+  push bp
+  mov bp,sp
+  push dx
+  pushf  ; salvam si flag-urile, caci facem op. aritmetice care le pot modif.
+  mov ax,x_rnd
+  mul ax                   ; produsul de 32 biti este in (DX,AX)
+  add ax,word ptr c_rnd    ; adun la (DX,AX) pe c_rnd, word cu word
+  adc dx,word ptr c_rnd+2
+  mov al,ah
+  mov ah,dl                ; am pus partea mediana a lui (DX,AX) in AX
+  mov x_rnd,ax ; valoarea ramane si in AX si va fi returnata
+  popf
+  pop dx
+  pop bp
+  ret
+rand endp
+random proc
+  ; primeste un par. n (word) si returneaza (in AX) un nr. (pseudo)aleator
+  ;  intre 0, ..., n-1; de fapt returneaza: rand() % n
+  push bp
+  mov bp,sp
+  push bx
+  pushf         ; salvez reg. de lucru; [SP]:(bx v)[BP]:(bp v)(adr.ret)(n)
+  mov bx,[bp+4] ; pres. ca n incape in BL (din BX vom pastra doar BL)
+  call rand     ; in AX ret. un word pseudoaleator
+  div bl        ; in AH este restul dorit
+  xchg ah,al
+  cbw           ; acum AX contine rezultatul dorit
+  popf
+  pop bx
+  pop bp
+  ret
+random endp
+end start
+
+ (la rularea cu TD se vor urmari in fer. Registers: AX, DX, BL, iar in
+  fer Watches: x_rnd, c_rnd, x, y, z, [sp], [BP], [BP+2], [BP+4]).
+
+Exemplul **: segment de cod separat pt. proceduri si apeluri far; pasare de
+~~~~~~~~~~~~   dword-uri - TODO
+
+ In final subliniem urmatorul fapt: chiar daca o procedura este apelata de 
+mai multe ori, corpul procedurii are o singura instanta in codul generat si 
+la ea se fac salturi (cu call/ret) din diverse puncte ale programului.
+
+2) Macroinstructiuni:
+~~~~~~~~~~~~~~~~~~~~~
+
+ O macroinstructiune (pe scurt un macro) este o portiune de text (ce poate
+contine cod, declaratii de date, directive, etc.) careia i s-a asociat un 
+nume. Ea poate fi invocata in diverse locuri din program, iar la compilare
+asamblorul va inlocui in codul generat fiecare invocare cu o copie a codului
+prin care s-a tradus textul respectiv.
+ Un macro poate avea parametri formali; atunci fiecare invocare trebuie
+insotita de parametri actuali corespunzatori, iar asamblorul va inlocui in
+copia inserata parametrii formali cu cei actuali.
+ Macro-urile seamana cu procedurile, dar sunt tratate in faza de compilare nu
+de executie - la compilare definitia macro-ului dispare din program iar 
+fiecare invocare a sa este expandata (inlocuita cu o copie a codului prin
+care s-a definit), astfel ca la executie macro-ul nu mai exista ca o 
+portiune de cod izolata la care se tot sare (cu "CALL") din diverse locuri,
+in schimb copii ale codului respectiv sunt inserate in diverse locuri din
+program. Macro-urile din asm seamana cu macro-urile din limbajul C (definite 
+cu "#define").
+ Subliniem diferenta de terminologie: procedurile se apeleaza, macro-urile se
+invoca.
+
+2a) Definire, invocare, expandare:
+----------------------------------
+
+ Un macro se defineste astfel:
+
+  nume MACRO pf1, ..., pfn
+   ;
+   ; corpul macro-ului
+   ;
+  ENDM
+
+("pf1",...,"pfn" sunt identificatori ce desemneaza par. formali) si se invoca
+ astfel:
+ 
+  nume pa1, ..., pan
+
+("pa1",...,"pan" sunt par. actuali); obs. ca invocarea seamana cu o instr.asm
+oarecare care are n operanzi - astfel, limbajul asm este extensibil.
+
+ Mai general, putem scrie definitiile unor macro-uri intr-un fisier sursa 
+separat, pe care sa-l includem in programe cu directiva (similara lui
+"#include" din limbajul C):
+
+  include fisier
+
+iar in programe vom pune doar invocarile macro-urilor; in faza de compilare
+se va inlocui atat directiva "include fisier" cu o copie a fisierului, cat si
+invocarile macro-urilor cu codul prin care se expandeaza fiecare.
+
+ De exemplu putem crea un fisier "unelte.inc" ce contine (primele patru 
+macro-uri nu au parametri, ultimul are doi parametri):
+
+  initializare macro
+    mov ax,@data   
+    mov ds,ax   
+    mov es,ax 
+    mov ax,@stack
+    mov ss,ax
+  endm
+
+  terminare macro
+    mov ah,4ch
+    int 21h
+  endm
+
+  salveaza_registrii macro
+    push ax
+    push bx
+    push cx
+    push dx
+  endm
+
+  restaureaza_registrii macro
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+  endm
+
+  ;atribuie un word; merge si intre mem. si mem. si nu strica registrii;
+  ;obs. ca daca dorim un cod robust atunci si la macro-uri trebuie salvati/
+  ; restaurati registrii si flagurile modif. de corpul macro-ului (e o regula
+  ; generala);
+  atrw macro d, s
+    push ax
+    mov ax, s
+    mov d,ax
+    pop ax
+  endm
+
+atunci un program care interschimba 2 variabile word ar putea arata astfel:
+
+  .model small
+  include unelte.inc
+  .stack
+  .data
+    x dw 1
+    y dw 2
+    z dw ?
+  .code
+  start:
+    initializare
+    atrw z,x
+    atrw x,y
+    atrw y,z    
+    terminare
+  end start    
+
+La compilare textul de mai sus se va inlocui cu:
+
+  .model small
+  initializare macro
+    mov ax,@data
+    mov ds,ax
+    mov es,ax
+    mov ax,@stack
+    mov ss,ax
+  endm
+
+  terminare macro
+    mov ah,4ch
+    int 21h
+  endm
+
+  salveaza_registrii macro
+    push ax
+    push bx
+    push cx
+    push dx
+  endm
+
+  restaureaza_registrii macro
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+  endm
+
+  ;atribuie un word; merge si intre mem. si mem. si nu strica registrii
+  atrw macro d, s
+    push ax
+    mov ax, s
+    mov d,ax
+    pop ax
+  endm
+
+  .stack
+  .data
+     x dw 1
+     y dw 2
+     z dw ?
+  .code
+  start:
+    initializare
+    atrw z,x
+    atrw x,y
+    atrw y,z    
+    terminare
+  end start    
+
+apoi cu:
+
+  .model small
+  .stack
+  .data
+     x dw 1
+     y dw 2
+     z dw ?
+  .code
+  start:
+    mov ax,@data
+    mov ds,ax
+    mov es,ax
+    mov ax,@stack
+    mov ss,ax
+    push ax
+    mov ax, x
+    mov z,ax
+    pop ax
+    push ax
+    mov ax, y
+    mov x,ax
+    pop ax
+    push ax
+    mov ax, z
+    mov y,ax
+    pop ax
+    mov ah,4ch
+    int 21h
+  end start
+
+si apoi se va translata in cod masina; etapele de mai sus nu sunt neaparat
+succesive, operatiile de includere/expandare putandu-se efectua si simultan.
+
+ Mai general, intr-un fisier inclus cu "include" putem pune orice parte de
+program, nu neaparat definitii de macro-uri.
+
+ Stim (lectia 1) ca la compilarea cu "tasm /l" se genereaza pe langa fisierul
+obiect (cu ext. ".obj") si un fisier listing adnotat al programului sursa 
+(cu ext. ".lst"); in acest listing invocarile de macro-uri pot aparea 
+expandate sau nu (chiar daca in cod masina se translateaza textul cu toate 
+expandarile facute); noi putem controla cum sa apara invocarile in listingul
+generat (expandate sau nu) inserand in fisierul sursa in diverse locuri 
+directive ca:
+ .LALL
+   ==> de aici in jos textul sursa inclus in listing va contine atat 
+        invocarile cat si expandarile (list all);
+ .SALL
+   ==> de aici in jos textul sursa inclus in listing va contine doar 
+        invocarile, nu si expandarile (supress all);
+ .XALL
+   ==> de aici in jos textul sursa inclus in listing va contine doar 
+        expandarile, nu si invocarile; daca macro-urile invoca la randul
+        lor alte macro-uri, la al doilea nivel se listeaza numai invocarea.
+In absenta oricaror asemenea directive setarea implicita este ".XALL" (desi 
+in practica am observat setarea implicita ".LALL").
+ Subliniem ca listingul generat la "tasm /l" nu reflecta ordinea in care
+s-au facut expandarile iar daca o invocare apare in el neexpandata (de ex.din
+cauza lui ".SALL") nu inseamna ca ea nu s-a facut - in fisierul obiect ".obj"
+se translateaza textul cu toate expandarile facute.
+ Subliniem de asemenea ca expandarile pe care le vom prezenta in exemplele 
+urmatoare ilustreaza niste pasi logici de procesare, care nu sunt redati
+ca atare intotdeauna in listingul generat cu "tasm /l".
+
+ In corpul unui macro se pot apela proceduri (si atunci fiecare expandare a
+macro-ului va contine apelurile acelor proceduri), in corpul unei proceduri
+se pot invoca macro-uri (si atunci in unica instanta pe care o va avea 
+corpul procedurii in codul generat invocarile macro-urilor vor fi expandate
+prin corpul lor), un macro poate invoca alt macro (si atunci se vor face
+expandari incuibate). De exemplu daca vrem ca o procedura sa restaureze 
+valorile reg. generali la sfarsitul fiecarul apel, putem invoca la inceputul 
+si sfarsitul ei doua dintre macro-urile de mai sus:
+
+  procedura proc
+    salveaza_registrii    
+    ;
+    ; corpul procedurii
+    ;
+    restaureaza_registrii
+    ret
+  procedura endp
+
+ Daca parametrii actuali ai unui macro sunt registri sau locatii de memorie,
+ei sunt acceasti prin referinta, nu prin valoare; de ex. in urm. program:
+
+  .model small
+  aduna macro s, x, y
+    push ax
+    mov ax,x
+    add ax,y
+    mov s,ax
+    pop ax
+  endm
+  .stack
+  .data
+    a dw ?
+    b dw ?
+    c dw ?
+  .code
+  start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,@stack
+  mov ss,ax
+
+    mov a,1
+    aduna b,a,2
+     ;face b:=a+2
+
+  mov ah,4ch
+  int 21h
+  end start
+
+secventa "mov a,1", "aduna b,a,2" se translateaza in:
+
+    mov a,1
+    push ax
+    mov ax,a
+    add ax,2
+    mov b,ax
+    pop ax
+
+deci se opereaza chiar asupra variabilelor "a" si "b" din program, nu asupra
+unor copii temporare pe stiva - astfel par. actuali "a" si "b" sunt accesati 
+prin referinta; algoritmul implementat de macro face insa ca doar par. formal
+"s" sa fie de iesire si deci doar variabila "b" se modifica ("a" este doar
+consultata).
+
+2b) Simboluri locale unei macroinstructiuni:
+--------------------------------------------
+
+ Modul de substituire directa a par. formali cu cei actuali in expandarea
+macro-ului poate crea confuzii atunci cand unii par. actuali coincid ca
+scriere cu unele entitati folosite incorpul macro-ului; de exemplu daca 
+vrem sa folosim macro-ul "aduna" de mai sus pt. a aduna ceva cu AX:
+
+  mov ax,1
+  mov bx,2
+  aduna cx,bx,ax
+    ;vrem sa facem cx:=bx+ax
+
+atunci secventa de mai sus se expandeaza in:
+
+  mov ax,1
+  mov bx,2
+  push ax
+  mov ax,bx
+  add ax,ax
+  mov cx,ax
+  pop ax
+
+iar dupa executarea ei CX va contine 4 nu 3 (= 2 + 1).
+
+ Putem micsora riscul de confuzii daca definim simboluri locale macro-ului cu
+directiva "local"; o asemenea directiva se poate plasa in interiorul def.
+macro-ului si are forma:
+
+  LOCAL nume1, ..., numen
+
+unde "nume1", ..., "numen" sunt diverse nume folosite in aceasta definitie;
+atunci la fiecare expandare a macro-ului "nume1", ..., "numen" vor fi
+inlocuite cu nume unice (de forma ??0000, ??0001, ...), care nu coincid 
+cu numele definite in afara macro-ului si nu se repeta de la o expandare la 
+alta.
+ Aceasta facilitate ne permite de exemplu sa definim etichete si salturi
+locale macro-ului; de exemplu presupunem ca avem urmatorul macro care 
+determina max. dintre doi registri si-l pune intr-un al treilea:
+
+  maxim macro r3,r1,r2
+    cmp r1,r2
+    jb et
+    mov r3,r2
+   et:
+    mov r3,r1
+  endm 
+
+si presupunem ca apelam acest macro de mai multe ori:
+
+  maxim ax,bx,cx
+  maxim dx,si,di
+
+atunci secventa de mai sus se expandeaza in:
+
+  cmp bx,cx
+  jb et
+  mov ax,cx
+ et:
+  mov ax,bx
+  cmp si,di
+  jb et
+  mov dx,di
+ et:
+  mov dx,si
+
+si se va produce o eroare la compilare, deoarece in programul final eticheta
+"et" este definita de mai multe ori (indica mai multe pozitii in cod).
+ Putem defini insa macro-ul sub forma:
+
+  maxim macro r3,r1,r2
+   local et
+    cmp r1,r2
+    jb et
+    mov r3,r2
+   et:
+    mov r3,r1
+  endm 
+
+si atunci secventa respectiva se va expanda in ceva de forma:
+
+    cmp bx,cx
+    jb ??0000
+    mov ax,cx
+   ??0000:
+    mov ax,bx
+    cmp si,di
+    jb ??0001
+    mov dx,di
+   ??0001:
+    mov dx,si
+
+deci in fiecare expandare "et" s-a inlocuit cu un nume unic, folosit doar in
+expandarea respectiva (si distinct de numele definite in afara macro-ului).
+ Folosind simboluri locale, putem 'repara' si macro-ul "aduna" dinainte:
+
+  aduna macro s,x,y
+    local v1,v2,et
+    jmp et
+    v1 dw ?
+    v2 dw ?
+    et:
+    push ax
+    push x
+    pop v1
+    push y
+    pop v2
+    mov ax,v1
+    add ax,v2
+    mov s,ax    
+    pop ax
+  endm
+
+Dpv. logic, practic am definit doua variabile locale macro-ului, am copiat
+parametrii in ele (folosind stiva) si apoi am facut calculele (adunarea) pe
+variabilele locale; concret, la compilare secventa:
+
+  aduna b,a,2
+  aduna cx,bx,ax
+
+se va inlocui cu:
+
+  jmp ??0002
+  ??0000 dw ?
+  ??0001 dw ?
+  ??0002:
+  push ax
+  push a
+  pop ??0000
+  push 2
+  pop ??0001
+  mov ax,??0000
+  add ax,??0001
+  mov b,ax
+  pop ax
+  jmp ??0005
+  ??0003 dw ?
+  ??0004 dw ?
+  ??0005:
+  push ax
+  push bx
+  pop ??0003
+  push ax
+  pop ??0004
+  mov ax,??0003
+  add ax,??0004
+  mov cx,ax
+  pop ax
+
+Obs.ca in urma expandarilor au fost adaugate programului patru variabile noi,
+definite (si alocate) chiar in zona de cod; a trebuit insa sa inseram 
+"jmp"-uri pentru ca firul executiei sa sara peste locatiile lor si sa se
+execute doar instructiunile obisnuite (nu si continutul locatiilor acestor
+variabile). Putem evita aceste salturi artificiale daca facem ca variabilele 
+noi sa fie adaugate segmentului de date, nu celui de cod; in acest scop ne
+reamintim ca directivele ".data" si ".code" pot aparea de mai multe ori in
+textul unui program si ceea ce urmeaza dupa fiecare ".data" va fi adaugat
+segmentului de date, iar ceea ce urmeaza dupa fiecare ".code" va fi adaugat 
+segmentului de cod; atunci putem rescrie macro-ul sub forma:
+
+  aduna macro s,x,y
+    local v1,v2
+   .data
+    v1 dw ?
+    v2 dw ?
+   .code
+    push ax
+    push x
+    pop v1
+    push y
+    pop v2
+    mov ax,v1
+    add ax,v2
+    mov s,ax    
+    pop ax
+  endm
+
+iar secventa:
+
+   aduna b,a,2
+   aduna cx,bx,ax
+
+se va expanda prin: 
+
+  .data
+   ??0000 dw ?
+   ??0001 dw ?
+  .code
+   push ax
+   push a
+   pop ??0000
+   push 2
+   pop ??0001
+   mov ax,??0000
+   add ax,??0001
+   mov b,ax
+   pop ax
+  .data
+   ??0002 dw ?
+   ??0003 dw ?
+  .code
+   push ax
+   push bx
+   pop ??0002
+   push ax
+   pop ??0003
+   mov ax,??0002
+   add ax,??0003
+   mov cx,ax
+   pop ax
+
+dar practic, la compilare, variabilele vor fi plasate la un loc in zona de 
+date, iar instructiunile la un loc in zona de cod, ca si cand asi fi scris 
+programul direct sub forma:
+
+   ..........
+  .data
+   ..........
+  ??0000 dw ?
+  ??0001 dw ?
+  ??0003 dw ?
+  ??0004 dw ?
+   ..........
+  .code
+   ..........
+  push ax
+  push a
+  pop ??0000
+  push 2
+  pop ??0001
+  mov ax,??0000
+  add ax,??0001
+  mov b,ax
+  pop ax
+  push ax
+  push bx
+  pop ??0003
+  push ax
+  pop ??0004
+  mov ax,??0003
+  add ax,??0004
+  mov cx,ax
+  pop ax
+   ..........
+
+ In toate cazurile de mai sus se constata insa o risipa de var. noi - daca
+macro-ul este invocat de n ori se creaza 2*n var. noi, desi ar fi suficiente
+doar doua (care sa fi distincte de alte var. din program si care sa fie
+(re)folosite la toate expandarile). Putem limita crearea de var. noi la
+doua daca scriem macro-ul a.i. la prima invocare sa creeza acele var. si
+sa-si inlocuiasca definitia cu o alta, care nu creaza var. noi ci doar le
+foloseste pe cele existente:
+
+  aduna macro s,x,y
+    local v1,v2
+   .data
+    v1 dw ?
+    v2 dw ?
+   .code
+   aduna macro ss,xx,yy
+     push ax
+     push xx
+     pop v1
+     push yy
+     pop v2
+     mov ax,v1
+     add ax,v2
+     mov ss,ax    
+     pop ax
+   endm
+   aduna s,x,y
+  endm
+
+atunci secventa:
+
+   aduna b,a,2
+   aduna cx,bx,ax
+
+se va inlocui cu:
+
+  .data
+   ??0000 dw ?
+   ??0001 dw ?
+  .code
+   push ax
+   push a
+   pop ??0000
+   push 2
+   pop ??0001
+   mov ax,??0000
+   add ax,??0001
+   mov b,ax
+   pop ax
+   push ax
+   push bx
+   pop ??0000
+   push ax
+   pop ??0001
+   mov ax,??0000
+   add ax,??0001
+   mov cx,ax
+   pop ax
+
+Intr-adevar, invocarea "aduna b,a,2" s-a expandat intr-un cod care creaza 
+variabilele cu numele ??0000 si ??0001, un text ce da macro-ului o noua 
+definitie in care cele doua nume apar ca atare (nu sunt generate altele 
+pentru ca noua definitie nu contine "local"), si o invocare a noului macro
+cu aceiasi par. actuali:
+
+  .data
+   ??0000 dw ?
+   ??0001 dw ?
+  .code
+   aduna macro ss,xx,yy
+     push ax
+     push xx
+     pop v1
+     push yy
+     pop v2
+     mov ax,v1
+     add ax,v2
+     mov ss,ax    
+     pop ax
+   endm
+   aduna b,a,2
+
+iar acestea s-au expandat mai departe in:
+
+  .data
+   ??0000 dw ?
+   ??0001 dw ?
+  .code
+   push ax
+   push a
+   pop ??0000
+   push 2
+   pop ??0001
+   mov ax,??0000
+   add ax,??0001
+   mov b,ax
+   pop ax
+
+
+apoi invocarea "aduna cx,bx,ax" s-a expandat conform noii definitii a 
+macro-ului in:
+
+   push ax
+   push bx
+   pop ??0000
+   push ax
+   pop ??0001
+   mov ax,??0000
+   add ax,??0001
+   mov cx,ax
+   pop ax
+
+Notam ca in noua definitie a macro-ului am folosit alte nume pt. parametrii
+formali (anume "ss,xx,yy") intrucat cele vechi (adica "s,x,y") ar fi fost 
+expandate la tratarea primei invocari (si noua definitie ar fi iesit ceva de 
+forma "aduna macro b,a,2"..."endm").
+
+2c) Directive pentru controlul nr. de par. actuali:
+---------------------------------------------------
+
+ Daca invocam un macro cu un nr. de par. actuali diferit de nr. de  par.
+formali, se vor produce erori la compilare greu de inteles, deoarece mesajele
+de eroare se refera la textul rezultat dupa expandari. 
+ Putem insera verificari ale nr. de par. si provoca mesaje de eroare la
+compilare in locuri dorite de noi folosind urmatoarele directive (subliniem
+ca ele sunt rezolvate la compilare si nu sunt translatate in instructiuni 
+masina in codul generat):
+
+  %OUT mesaj
+    ;cand compilarea ajunge la aceasta linie se afisaza mesajul (si se trece
+    ;  mai departe)
+
+  .ERR
+    ;provoaca o eroare la compilare (nu se mai genereaza fisierul obiect)
+
+  IFB <text>
+      ;o portiune de program
+  ENDIF
+    ;testeaza daca "text" este vid (textul poate contine constructii care
+    ;  la compilare se expandeaza, iar testarea se face dupa expandare) si
+    ;  daca este vid incorporeaza in codul generat portiunea descrisa pana 
+    ;  la "ENDIF"; daca nu este vid nu incorporeaza portiunea respectiva;
+    ;  subliniem ca liniile "IFB..." si "ENDIF" nu sunt incorporate
+
+  IFNB <text>
+      ;o portiune de program
+  ENDIF
+    ;este invers ca la "IFB": incorporeaza portiunea d.d. textul e nevid
+
+ De exemplu un macro care interschimba continutul a doua var. word date ca
+par. poate fi scris cu trei par. in felul urmator:
+
+  swap macro x,y,z
+    ifnb <z>
+      %out prea multi parametri
+      .err
+    endif
+    ifb <y>
+      %out prea putini parametri
+      .err
+    endif
+    push x
+    push y
+    pop x
+    pop y
+  endm
+
+Atunci secventa urmatoare (continand o invocare corecta si trei gresite):
+
+  swap a,b
+  swap c,d,e
+  swap f
+  swap
+
+se va expanda in:
+
+  push a
+  push b
+  pop a
+  pop b
+  %out prea multi parametri
+  .err
+  push c
+  push d
+  pop c
+  pop d
+  %out prea putini parametri
+  .err
+  push f
+  push
+  pop f
+  pop
+  %out prea putini parametri
+  .err
+  push
+  push
+  pop
+  pop
+
+Intr-adevar:
+- la a doua expandare textul "z", expandat in "e" este nevid, deci se 
+ incorporeaza textul dintre "ifb" ... "endif", iar textul "y", expandat in
+ "d"este tot nevid, deci nu se incorporeaza textul dintre "ifnb" ... "endif";
+- la a treia si a patra expandare textele "z" si "y" se expandeaza in vid
+ (la a patra expandare chiar si "x" se expandeaza in vid, dar nu am testat 
+ asta);
+- la toate cele patru expandari se incorporeaza cate doua "push" si doua 
+ "pop" (n-am conditionat incorporarea acestora), cu argumentele expandate in
+ conformitate cu par. actuali din fiecare caz; evident, ultimile "push", 
+ "pop" au un nr. ilegal de argumente.
+La compilarea (cu "tasm /l") se vor afisa cele trei mesaje cu "%" si se vor
+produce mai multe erori de compilare (nu se va genera fisierul obiect), trei
+dintre ele fiind cele generate de utilizator cu ".err" (user error), restul
+fiind generate de instructiunile "push"/"pop" cu nr. ilegal de par.; pe ecran
+se va afisa ceva de forma:
+
+prea multi parametri
+prea putini parametri
+prea putini parametri
+**Error** 1.asm(33) SWAP(3) User error
+**Error** 1.asm(34) SWAP(7) User error
+**Error** 1.asm(34) SWAP(10) Too few operands to instruction
+**Error** 1.asm(34) SWAP(12) Too few operands to instruction
+**Error** 1.asm(35) SWAP(7) User error
+**Error** 1.asm(35) SWAP(9) Too few operands to instruction
+**Error** 1.asm(35) SWAP(10) Too few operands to instruction
+**Error** 1.asm(35) SWAP(11) Too few operands to instruction
+**Error** 1.asm(35) SWAP(12) Too few operands to instruction
+Error messages:    9
+Warning messages:  None
+
+Se va genera insa fisierul listing (din cauza optiunii "/l"), dar in el
+nu vom vedea liniile cu "%" si ".err" (ele au fost procesate si eliminate).
+
+2d) Macrodefinitii recursive:
+-----------------------------
+
+ Folosind directivele "IFB", "IFNB" putem defini macro-uri recursive, de
+exemplu:
+
+;push cel mult 10 worduri
+ multipush macro v1,v2,v3,v4,v5,v6,v7,v8,v9,v10
+   ifnb <v1>
+     push v1
+     multipush v2,v3,v4,v5,v6,v7,v8,v9,v10
+   endif
+ endm
+
+ ;aduna in ax cel mult 10 worduri
+ adunaax macro v1,v2,v3,v4,v5,v6,v7,v8,v9,v10
+   ifnb <v1>
+     ifb <v2>
+       mov ax,v1
+     endif
+     ifnb <v2>
+       adunaax v2,v3,v4,v5,v6,v7,v8,v9,v10
+       add ax,v1
+     endif
+   endif
+ endm
+
+atunci secventa:
+
+  multipush ax,bx,cx,dx
+  adunaax a,b,c,d
+
+se va translata in:
+
+  push ax
+  push bx
+  push cx
+  push dx
+  mov ax,d
+  add ax,c
+  add ax,b
+  add ax,a
+
+3) Proceduri versus macroinstructiuni:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ De multe ori o aceeasi prelucrare se poate realiza atat cu un macro cat si
+cu o procedura; se pune problema care varianta de implementare este mai 
+convenabila. In cele ce urmeaza vom face o comparatie intre proceduri si
+macro-uri pentru a vedea avantajele/dezavantajele lor in diverse cazuri si a
+putea face in final o alegere buna. Vom avea in vedere urmatoarele aspecte:
+
+3a) Viteza de excutare a codului si lungimea acestuia:
+
+ Ca viteza, macro-urile sunt mai avantajoase - in cazul lor intrarea/iesirea 
+din apel se face mai rapid, deoarece nu se mai executa instr. "call", "ret"
+si nu se mai incarca/descarca stiva (daca parametrii actuali sunt multi/mari,
+acest proces poate dura semnificativ).
+
+ Din punct de vedere al lungimii codului, procedurile sunt mai avantajoase,
+deoarece in programul generat corpul procedurii se afla intr-o singura 
+instanta (o singura copie), indiferent cate apelari ale ei se fac - pentru
+fiecare apelare se se mai genereaza in plus doar cateva instructiuni (de 
+incarcare/descarcare a stivei si "call"); in schimb corpul unui macro are in
+programul generat atatea instante (copii) cate invocari se fac (fiecare
+invocare se inlocuieste cu o noua copie inserata in program).
+ Avantajul procedurilor este real doar daca corpul este mult mai mare decat
+grupurile de instructiuni care se insereaza la fiecare apelare. In cartea [4]
+este mentionata urmatoarea formula folosita de programatorii asm atunci cand
+au de implementat o prelucrare simpla si au de ales intre o procedura si un
+macro: 
+ fie:
+   X = nr. de instructiuni ale corpului prelucrarii
+   C = nr. de apelari/invocari ale prelucrarii
+ calculam: 
+   F = (x * C) / (X + 4 * C)
+ atunci:
+   daca F < 1 vom folosi un macro, altfel vom folosi o procedura.
+
+ Concluzii:
+- macro-urile se vor folosi pt. implementarea unor operatii simple, care se 
+ fac foarte des si trebuie efectuate foarte repede - de exemplu o operatie
+ de tip "putpixel", care deseneaza un pixel pe ecran si cu ajutorul careia 
+ vrem sa facem desene mari sau animate (deci trebuie sa desenam repede);
+- procedurile se vor folosi pt. implementarea unor operatii complexe, care
+ se apeleaza rar sau nu conteaza consumul suplimentar de timp pentru intrarea
+ si iesirea din apel, in schimb dorim ca programul generat in total sa fie
+ cat mai scurt;
+- mai pe scurt: daca prelucrarea e simpla si dorim viteza mare, vom prefera
+ macro-uri; daca prelucrarea e complexa si dorim un cod total cat mai scurt,
+ vom prefera procedurile.
+
+3b) Flexibilitatea in programare:
+
+ Macro-urile sunt supuse la mai putine restrictii - de exemplu avem o 
+libertate mai mare in ceea ce priveste folosirea parametrilor - expandarea se
+face la compilare, cand se fac operatii pe textul sursa la nivel de siruri de
+caractere care se substituie, deci nu se verifica atat de strict tipul/
+dimensiunea/numarul parametrilor actuali; de exemplu putem da ca parametri 
+actuali portiuni de cod:
+
+Exemplul **: Macro-uri (cu parametri cod) ce emuleaza instructiunile de nivel
+~~~~~~~~~~~~ inalt (din C):
+ if(x<y)goto et;
+
+ {i0 ... i9}     (instruct. compusa cu max. 10 compinente care se 
+                   poate subordona ca un tot unitar unei alte instr.)
+ while(!c)i      (unde "c" este o conditie iar "i" o instr. unitara
+                   ce poate fi si o secventa)
+ Vom folosi aceste macro-uri intr-un program care calculeaza "a := a mod b"
+facand scaderi repetate, conform algoritmului:
+
+ while (!(a<b)) a=a-b;
+
+Programul este:
+
+;;;;;;;;;;;;;;;;;;;;;;; macro-uri:
+maimic macro x,y,eticheta
+  push ax
+  push bx
+  mov ax,x
+  mov bx,y
+  cmp ax,bx
+  pop bx
+  pop ax
+  jb eticheta
+endm
+;;;;;;;;;;;;;;;;;;;;;;;
+secventa macro i0,i1,i2,i3,i4,i5,i6,i7,i8,i9
+  ifnb <i0>
+    i0
+    secventa <i1>,<i2>,<i3>,<i4>,<i5>,<i6>,<i7>,<i8>,<i9>
+  endif
+endm
+;;;;;;;;;;;;;;;;;;;;;;;
+whilenot macro conditie,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9
+  local inceput,sfarsit
+  inceput:
+    conditie,sfarsit
+    secventa <i0>,<i1>,<i2>,<i3>,<i4>,<i5>,<i6>,<i7>,<i8>,<i9>
+    jmp inceput
+  sfarsit:
+endm
+;;;;;;;;;;;;;;;;;;;;;;; program pentru "a := a mod b" prin scaderi:
+.model small
+.stack
+.data
+ a dw 10
+ b dw 3
+.code
+start:
+mov ax,@data
+mov ds,ax
+  whilenot <maimic a,b>,<mov ax,a>,<sub ax,b>,<mov a,ax>
+   ; acum a contine 1 (adica 10 mod 3)
+mov ah,4ch
+int 21h
+end start
+
+Comentarii:
+- la compilare, linia
+
+    whilenot <maimic a,b>,<mov ax,a>,<sub ax,b>,<mov a,ax>
+
+ se expandeaza initial in:
+
+  ??0000:
+    maimic a,b,??0001
+    secventa <mov ax,a>,<sub ax,b>,<mov a,ax>
+    jmp ??0000
+  ??0001:
+
+ apoi in:
+
+  ??0000:
+    push ax
+    push bx
+    mov ax,a
+    mov bx,b
+    cmp ax,bx
+    pop bx
+    pop ax
+    jb ??0001
+    mov ax,a
+    sub ax,b
+    mov a,ax
+    jmp ??0000
+  ??0001:
+
+- in "maimic" am putut face "JB" cu trei linii mai jos decat "CMP", deoarece
+ instructiunile intermediare nu au afectat flagurile (instr. "PUSH" si "POP"
+ nu afecteaza flagurile);
+- prezenta in lista parametrilor actuali a unei constructii de forma "<text>"
+ face ca "text" sa fie considerat ca un singur parametru actual, chiar daca 
+ contine separatori (' ', ',',etc.); astfel, in linia:
+
+  whilenot <maimic a,b>,<mov ax,a>,<sub ax,b>,<mov a,ax>
+
+ primul par. actual este textul "maimic a,b", al doilea textul "mov ax,a", 
+ etc.; daca nu puneam "<>":
+
+  whilenot maimic a,b,mov ax,a,sub ax,b,mov a,ax
+
+ atunci apareau erori, deoarece "maimic","a","b","mov","ax","a",... erau 
+ considerati parametri actuali distincti si aparea eroare deoarece (de ex.)
+ intre parametrii "maimic" si "a" nu exista virgula;
+  operatorul "<>" este tratat la compilare si inseamna literalizare; el se 
+ poate folosi atat in definitiile macro-urilor cat si in invocari;
+  putem literaliza un singur caracter punandu-i in fata "!" - atunci el este
+ considerat ca atare si, chiar daca este un caracter special, nu mai este 
+ interpretat;de ex. "!>" inseamna caracterul '>', nu op. de literalizare ">".
+
+ Procedurile sunt mult mai flexibile in a putea modela algoritmi complecsi,
+de exemplu:
+- recursii care se fac diferit in functie de valorile par. actuali (care se 
+ cunosc doar la momentul executiei, deci compilatorul, cel care expandeaza 
+ macro-urile, nu le cunoaste);
+- folosirea de var. locale automatice, mai ales in cazul recursiilor, cand o
+ aceeasi var. automatica (un acelasi nume) are la un moment dat mai multe 
+ instante (locatii) care exista simultan in stiva;
+- folosirea de par. prin valoare (am vazut ca la macro-uri parametrii-locatie
+ de memorie sau registri sunt accesati implicit prin referinta).
+
+ Concluzie: unii algoritmi nu se pot implementa (sau se pot implementa foarte
+greu) ca macro-uri, si atunci vom folosi proceduri.
+
+3c) Lizibilitatea codului:
+
+ Aici macro-urile sunt avantajate; intr-adevar, scrierea invocarii seamana 
+cu scrierea unei instructiuni obisnuite cu operanzi (practic putem inventa 
+instructiuni noi, cu acelasi tip de scriere, sub forma unor macro-uri - ele 
+s.n. pseudoinstructiuni), a.i. codul este mai sugestiv; de ex. putem scrie:
+
+    citeste a
+    citeste b
+    aduna c, a, b
+    afisaza c
+
+(unde "citeste","aduna","afisaza" se definesc ca macro-uri, iar "aduna c,a,b"
+ efectueaza c:=a+b).
+
+ In schimb la proceduri trebuie sa explicitam la fiecare apel mecanismul de
+pasare a parametrilor (incarcarea stivei), recuperarea val. returnate si
+refacerea contextului anterior la revenire (descarcarea stivei) - deci codul
+se scrie mai greu si este mai putin lizibil. De ex. daca mai sus "citeste", 
+"aduna" si "afisaza" ar fi fost proceduri, ar fi trebuit sa scriem (mai putin
+sugestiv):
+
+    lea ax,a ; la citire "a" trebuie pasat prin referinta
+    push ax  ;
+    call citeste
+    add sp,2
+    lea ax,b ; la citire "b" trebuie pasat prin referinta
+    push ax  ;
+    call citeste
+    add sp,2
+    push b   ; la adunare "c" este prin referinta, "a" si "b" prin valoare;
+    push a   ; am presupus ca "a", "b" sunt word; altfel pentru fiecare ar
+    lea ax,c ;   trebui mai multe push-uri, care sa incarce pe rand partile
+    push ax  ;   hi si low
+    call aduna
+    add sp,6
+    push c   ; la afisare "c" trebuie pasat prin val. si l-am presupus word
+    call afisaza
+    add sp,2
+
+ Putem combina insa sugestibilitatea invocarii macro-urilor cu flexibilitatea
+procedurilor implementand prelucrarea respectiva ca un macro care se rescrie
+intr-o procedura: la prima invocare macro-ul defineste procedura si-si 
+inlocuieste propria definitie cu una care doar apeleaza procedura, iar 
+urmatoarele invocari vor folosi noua definitie si doar vor apela procedura. 
+Astfel declansarea prelucrarii se va face dupa sintaxa simpla si sugestiva a
+invocarilor, iar efectuarea prelucrarii se va face dupa mecanismul flexibil 
+al executarii procedurilor.
+
+Exemplul **: macro de adunare a doua numere, care se rescrie intr-o
+~~~~~~~~~~~~  procedura:
+
+aduna macro z,x,y ; face z := x + y (trebuie z prin ref., x si y prin val.)
+  local eticheta,functie
+  aduna macro z,x,y
+    push y
+    push x
+    call functie
+    pop z
+  endm
+  jmp eticheta
+  functie proc    ; functie cu par. x, y ce ret. (prin stiva) x+y
+    push bp
+    mov bp,sp
+    push ax  
+    pushf         ;[SP]:(fl v)(ax v)[BP]:(bp v)(adr.ret.)(x)(y)
+    mov ax,[bp+4]
+    add ax,[bp+6]
+    mov [bp+6],ax ;[SP]:(fl v)(ax v)[BP]:(bp v)(adr.ret.)(x)(x+y)
+    mov ax,[bp+2] ; translatam adr.ret.
+    mov [bp+4],ax ;[SP]:(fl v)(ax v)[BP]:(bp v)(adr.ret.)(adr.ret.)(x+y)
+    popf     ; restauram flagurile
+    pop ax   ; restauram AX
+    pop bp   ; restauram BP; acum [SP]:(adr.ret.)(adr.ret.)(x+y)
+    add sp,2 ; acum [SP]:(adr.ret.)(x+y)
+    ret
+  functie endp
+  eticheta:
+  aduna z,x,y
+endm
+
+.model small
+.stack
+.data
+ a dw 10
+ b dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+  mov bx,20
+  aduna ax,a,bx
+   ; acum AX contine 30
+  aduna b,bx,30
+   ; acum b contine 50
+mov ah,4ch
+int 21h
+end start
+
+Comentarii:
+- prima invocare al lui "aduna" redefineste acest macro, apoi adauga la cod o
+ procedura si un salt peste corpul ei (corpul ei se insereaza exact acolo
+ unde era invocarea, deci printre instructiunile zonei de cod, iar executarea
+ secventiala a acestora ar face sa se execute la un moment dat si corpul,
+ fara sa se fi facut "call"), apoi invoca "aduna", care se va expanda cu noua
+ definitie; noua definitie doar apeleaza functia definita de prima invocare;
+ numele functiei si eticheta folosita pt. salt au fost declarate "LOCAL" si
+ astfel compilatorul va alege pt. ele un nume unic (distinct de numele altor
+ entitati definite de utilizator), evitandu-se astfel eventualele confuzii;
+- practic prima invocare (adica "aduna ax,a,bx") a generat in final codul:
+
+  jmp ??0000
+  ??0001 proc
+    ............ (corpul functiei)
+  ??0001 endp
+  ??0000:
+  push bx
+  push a
+  call ??0001
+  pop ax
+
+ iar a doua invocare (adica "aduna b,bx,30") a generat in final codul:
+
+  push 30
+  push bx
+  call ??0001
+  pop b
+
+- constatam ca in total "aduna" se invoca simplu, ca un macro, dar se executa
+ dupa un mecanism flexibil, ca o procedura; de asemenea "aduna" isi acceseaza
+ primul parametru prin referinta, iar ultimii doi prin valoare (macro-urilor
+ care se rescriu in proceduri le putem pasa si par. prin val., nu numai prin
+ ref. ca in cazul macro-urilor obisnuite).
+
+ Putem combina mai simplu lizibilitatea invocarii macro-urilor cu 
+flexibilitatea executarii procedurilor astfel: pentru fiecare procedura
+(obisnuita) scriem in program si un macro companion care ii incarca/descarca
+stiva si o apeleaza, iar orice apelare a procedurii din program va fi facuta
+numai via macro-ul respectiv:
+
+Exemplul **: functie de adunare a doua numere, insotita de un macro de
+~~~~~~~~~~~~  apelare a ei:
+
+aduna macro z,x,y ; face z := f_aduna(x,Y) (z prin ref., x si y prin val.)
+  push y
+  push x
+  call f_aduna  ; functia returneaza prin stiva
+  pop z
+endm
+
+.model small
+.stack
+.data
+ a dw 10
+ b dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+mov ax,@stack
+mov ss,ax
+  mov bx,20
+  aduna ax,a,bx
+   ; acum AX contine 30
+  aduna b,bx,30
+   ; acum b contine 50
+mov ah,4ch
+int 21h
+
+f_aduna proc    ; functie cu par. x, y ce ret. (prin stiva) x+y
+  push bp
+  mov bp,sp
+  push ax  
+  pushf         ;[SP]:(fl v)(ax v)[BP]:(bp v)(adr.ret.)(x)(y)
+  mov ax,[bp+4]
+  add ax,[bp+6]
+  mov [bp+6],ax ;[SP]:(fl v)(ax v)[BP]:(bp v)(adr.ret.)(x)(x+y)
+  mov ax,[bp+2] ; translatam adr.ret.
+  mov [bp+4],ax ;[SP]:(fl v)(ax v)[BP]:(bp v)(adr.ret.)(adr.ret.)(x+y)
+  popf     ; restauram flagurile
+  pop ax   ; restauram AX
+  pop bp   ; restauram BP; acum [SP]:(adr.ret.)(adr.ret.)(x+y)
+  add sp,2 ; acum [SP]:(adr.ret.)(x+y)
+  ret
+f_aduna endp
+
+end start
+
+Comentarii:
+- programul se testeaza ca si cel din exemplul anterior;
+- ca stil de lucru, putem pune procedurile intr-un fisier sursa compilat
+ separat si linkeditat cu programul nostru, iar macro-urile de apelare a lor
+ intr-un fisier sursa inclus (cu "include") in prog. nostru (la compilare);
+  astfel biblioteca de functii poate fi folosita la mai multe programe - si
+ fiecare program va include la compilare sursa cu macro-urile de apelare si
+ se va combina la linkeditare cu fisierul (compilat de) implementare a 
+ procedurilor; 
+  astfel fisierele sursa cu macro-uri de apel care se includ la compilare
+ joaca un rol similar fisierelor header ".h" din limbajul C.
+
+ Ca o concluzie finala, procdurile si macro-urile au avantajele/dezavantajele
+aprox. invers una fata de alta - de ex. procedurile ofera viteza mica dar
+cod total scurt, macro-urile viteza mare dar cod total lung; in plus nici
+unele nu ofera avantaje la toate capitlolele. De aceea in practica trebuie
+investigate mai multe aspecte inainte de a face o alegere, mergand pana la a
+incerca ambele variante de implementare si a analiza/testa/evalua codul 
+obtinut pentru a vedea care este mai convenabil.
+
+4) Exercitii:
+~~~~~~~~~~~~~
+
+ In toate cazurile, in afara celor mentionate explicit, parametrii 
+procedurilor se vor pasa prin stiva, valoarea returnata (in cazul functiilor)
+se va intoarce tot prin stiva,iar macro-urile nu se vor rescrie in proceduri.
+ In general programele se vor rula cu TD; cele referitoare la argumente in
+linia de comanda se vor lansa de pe prompter (cu argumente).
+ Programele marcate cu (*) se vor realiza in clasa.
+
+III.1) (puncte - vezi in text) (*)
+a) (1 punct) 
+  Functie "abs(x)" ce returneaza (prin AX) modulul lui x (de tip word).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru ca la (a) dar cu retur prin stiva.
+c) (1 punct)
+  Acelasi lucru ca la (a) dar cu un macro.
+
+III.2) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie (nerecursiva) ce primeste ca parametri adresa de inceput si nr. 
+   elementelor unui vector de word si returneaza max. elementelor sale. 
+   Program ilustrativ.
+b) (3 punct)
+  Acelasi lucru ca la (a) dar cu o functie recursiva; ideea recursiei: 
+   * daca vectorul are un element, el este max.;
+   * daca vectorul are mai multe elemente, se imparte in doua, se afla max.
+      din fiecare jumatate (apeland recursiv functia) si se ret. max. celor
+      doua max.;
+   functia primeste ca par. adresa de inceput a bucatii analizate si lungimea
+   ei si ret. max. elementelor din bucata respectiva.
+c) (1 punct)
+  Acelasi lucru ca la (a) dar cu un macro.
+
+III.3) (1.5 puncte) (*)
+ Functie recursiva ce ret. (in AX) suma cifrelor in baza 10 ale unui word dat 
+ca parametru;ideea recursiei: s(0) = 0, altfel s(n) = n mod 10 + s(n div 10).
+Program ilustrativ.
+
+III.4) (3.5 puncte)
+ Functie ce primeste ca parametru un numar natural n si un caracter c si 
+returneaza un string (construit in stiva) ce contine de n ori caracterul c 
+si un caracter nul la sfarsit (n este variabile initializata si poate fi par
+sau impar). Program ilustrativ.
+
+III.5) (1.5 puncte)
+ Program care implementeaza (respectand conventiile C):
+
+  #include<stdarg.h>
+  void aduna(unsigned short *a, unsigned short n, ...){
+    unsigned short i;
+    va_list l;
+    va_start(l,n);
+    *a=0;
+    for(i=0;i<n;++i) *a+=va_arg(l,unsigned short);
+    va_end(l);
+  }
+  unsigned short s;
+  void main(){
+    s=aduna(3,1,2,3);  /* obtinem s=6 */
+    s=aduna(2,10,20);  /* obtinem s=30 */
+  }
+
+ (i nu va fi alocat automatic ci pentru el se va folosi un registru).
+
+III.6) (puncte - vezi in text) (*)
+a) (2 puncte )
+  Procedura recursiva ce transforma un vector de word a.i. la inceput sa 
+   apara elem. sale impare in aceeasi ordine ca in vecorul initial, apoi 
+   elem. sale pare in ordinea inversa fata de vectorul initial. Parametri: 
+   adr. de inceput a vect. sursa, adr. vect. destinatie, nr. de elem. ale
+   vect. sursa. Ideea recursiei: se foloseste o var. locala automatica; la
+   fiecare apel se ia cate un word din vectorul sursa si: 
+    - daca e impar se scrie in vectorul destinatie, apoi se apeleaza recursiv
+       pt. restul vectorului sursa;
+    - daca e par se retine in var. locala apelului, se apeleaza recursiv pt.
+       restul vectorului sursa, apoi (la revenirea din recursie) se scrie in 
+       vect. destinatie valoarea salvata.
+   Ex: 1, 2, 7, 8, 2, 5, 6, 1, 5, 4, 3  --> 1, 7, 5, 1, 5, 3, 4, 6, 2, 8, 2
+b) (2 puncte)
+  Acelasi lucru cu un macro recursiv.
+
+III.7) (puncte - vezi in text) (*)
+a) (3.5 puncte)
+  Functie C(n,k) recursiva ce calculeaza combinari de n luate cate k dupa 
+   formula: C(0,0) = C(1,0) = 0, C(n,k) = C(n,k-1) + C(n-1,k-1). Program 
+   ilustrativ.
+b) (3.5 puncte)
+  Aclesai lucru cu un macro recursiv (si retur prin AX).
+
+III.8) (8 puncte) (*)
+  Procedura ce transforma o expresie din forma infixata in forma sufixata
+   (forma poloneza inversa); expresia poate contine operanzi litera mica, 
+   operatori aditivi '+', '-', operatori multiplicativi '*', '/' si paranteze
+   '(', ')'; toti operatorii sunt binari, cei aditivi avand prioritate mai 
+   mica decat cei multiplicativi; exemplu de transformare:
+
+    sursa: '(a+b)*(a-c)+a' -> 'ab+ac-*a+'
+
+   expresia sursa se considera data intr-un string declarat cu initializare, 
+   cea destinatie intr-un string declarat fara initializare; expresia sursa
+   se considera scrisa corect; procedura va opera asupra celor doua stringuri
+   ca date globale si va primi ca parametru nivelul prioritatii (adica daca 
+   la apelul curent se trateaza o operatie aditiva, multiplicativa, etc.).
+  Ideea recursiei urmareste definitia recursiva a unei expresii infixate:
+
+   <expresie> ::= <termen> | <termen> <op_aditiva> <expresie>
+   <termen>   ::= <factor> | <factor> <op_multiplicativa> <termen>
+   <factor>   ::= <litera> | (<expresie>)
+
+   in functie de parametrul - nivel procedura va urmari cate una din cele 
+   trei definitii.
+  Indicatie: sirul sursa se citeste liniar, caracter cu caracter, folosind o
+   variabila globala "c"; la fiecare apel se va procesa cate un car. "c" din
+   sirul sursa; acest caracter este "citit" in codul apelant (deci primul 
+   caracter este citit in programul principal); la sfarsitul unui apel se va
+   citi caracterul care se va procesa dupa revenire; de exemplu un apel de 
+   nivel 1 (expresie) va proceda astfel:
+   - apel recursiv cu nivel 2 (caracterul curent "c", citit deja, se transm.
+      apelului imbricat - intr-adevar, primul caracter dintr-o expresie este 
+      primul caracter din primlul termen al expresiei); conform conventiei,
+      la iesirea din apelul imbricat este deja citit noul "c";
+   - daca "c" este '+' sau '-', se salveaza intr-o var. locala automatica "k"
+      (fiecare apel are deci propria instanta a lui "k"), se mai citeste un 
+      "c",  se apeleaza recursiv cu acelasi nivel 1, la revenire se scrie "k"
+      in sirul destinatie (apelul imbricat va furniza si un nou car. "c"),
+      apoi se iese;
+   - daca nu, se iese (si "c" va fi prelucrat in alta parte).
+   In loc de o variabila explicita "c" se poate parcurge sirul sursa cu SI
+   (si in loc de "c" vom folosi [SI]); sirul destinatie se poate parcurge 
+   cu DI (el este construit tot liniar).
+  Program ilustrativ.
+
+III.9) (8 puncte)
+ Program pentru sortarea unui vector de word (declarat cu initializare in 
+program) prin metoda Qsort, folosind o procedura recursiva; interactiunea 
+dintre procedura si program se va face doar prin parametri/valoare returnata
+(nu prin variabile globale).
+
+III.10) (puncte - vezi in text) (*)
+a) (3 puncte) 
+  Procedura pentru sortarea unui vector de word prin metoda Bubble sort;
+   procedura primeste ca parametri adresa de inceput a vectorului si numarul 
+   elementelor sale. Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.11) (puncte - vezi in text) (*)
+a) (3.5 puncte)
+  Functie asm ce implementeaza functia C "atoi" (cu retur prin AX).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.12) (1.5 puncte)
+ Procedura de interclasare a doi vectori sortati de word; parametri: adresele
+de inceput ale celur doi vectori sursa si a vectorului destinatie si nr.
+elementelor celor doi vectori sursa (deci 5 parametri); functia returneaza
+(prin AX) nr. elementelor vectorului destinatie. Program ilustrativ.
+
+III.13) (puncte - vezi in text) (*)
+a) (2.5 puncte)
+  Functie asm ce implementeaza functia C "strcmp" (cu retur prin AX).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.14) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie asm ce implementeaza functia C "strset" (cu retur prin AX).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.15) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie asm ce implementeaza functia C "strcat" (cu retur prin AX).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.16) (puncte - vezi in text) (*)
+a) (1 punct)
+  Functie asm ce implementeaza functia C "strlen" (cu retur prin AX).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.17) (puncte - vezi in text)
+a) (3.5 puncte)
+  Functie asm ce implementeaza functia C "strstr" (cu retur prin AX).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.18) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie asm ce implementeaza functia C "memcpy".
+   Program ilustrativ care copiaza continutul unui vect. de worduri in altul.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.19) (puncte - vezi in text) (*)
+a) (2 puncte)
+  Functie asm ce implementeaza functia C "strrev" (fara retur).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.20) (5 puncte)
+  Functie asm ce implementeaza functia C "sscanf" (doar cu formatele "%d" si
+   "%s" si fara alte caractere in stringul de format). Program ilustrativ.
+
+III.21) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Procedura ce primeste ca parametri adresele de inceput a doua stringuri
+   si il copiaza pe primul in al doilea inlocuind toate literele mici cu mari
+   (restul caracterelor se copiaza neschimbate); stringul sursa se considera
+   terminat cu 0. Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru ca la (a) dar cu un macro.
+c) (3 puncte)
+  Acelasi lucru ca la (a) dar procedura are doar un parametru, pt. stringul
+   sursa, stringul destinatie este returnat prin stiva.
+
+III.22) (12 puncte)
+  Folosind metoda salturilor indirecte emulati un interpretor de comenzi de 
+ tip "command.com" ca in exemplul de la sectiunea 2h, dar care sa accepte 
+ si comenzi cu argumente. Mai exact, comenzile acceptate la intrare si 
+ rezultatul scris la iesire in fiecare caz sunt:
+
+  "a nr1 nr2 ... nrn" (adunare, n>=1) --> scrie suma nr1+...+nrn
+  "s nr1 nr2" --> scrie diferenta nr1-nr2
+  "n nr" --> scrie opusul -nr
+
+ in cele de mai sus, "nr", "nri" sunt intregi byte, iar intre componentele
+ comenzilor (nume, nr-uri) sunt caractere blank; fiecare comanda va fi
+ implementata printr-o procedura cu parametri (adunarea are numar variabil
+ de parametri);
+  vor fi implementate doua comenzi suplimentare, care nu vor putea aparea
+ in fluxul de intrare si care se vor executa automat atunci cand vor fi 
+ intrunite anumite conditii: o comanda de eroare, care scrie la iesire un
+ caracter "e", si o comanda de terminare, a carei efect este terminarea 
+ programului.
+  Fluxul de intrare va fi un string ce contine comenzi separate prin 
+ caractere <LF> (cod ASCII zecimal 10) iar la sfarsit un caracter <EOF> 
+ (cod ASCII zecimal 26); fluxul de iesire va fi un string ce va contine 
+ rezultatele scrise de comenzi, separate prin caractere <LF>.
+  Programul va parcurge liniar fluxul (stringul) de intrare procesand 
+ succesiv comenzile; pentru fiecare comanda corecta va executa procedura
+ care o implementeaza si care va scrie la iesire rezultatul comenzii si un 
+ <LF>; pentru fiecare comanda eronata va executa automat comanda (procedura)
+ de eroare, care va scrie la iesire un "e"; la intalnirea lui <EOF> va 
+ executa automat comanda (procedura) de terminare a programului.
+  De exemplu daca stringul de intrare contine:
+
+  "a 1 2 3<LF>s 30 10<LF>a 100 200<LF>s 20<LF>n 1<LF><EOF>"
+
+ atunci stringul de iesire va contine:
+
+  "6<LF>20<LF>300<LF>e<LF>ff<LF>"
+
+III.23) (2 puncte)
+ Macro care la prima invocare declara niste var. locale (in ".data") si isi 
+inlocuieste definitia cu una recursiva, care nu mai declara var. locale, dar
+le foloseste pe cele declarate la prima invocare.
+
+III.24) (6 puncte) (*)
+ Scrieti urmatoarele trei macro-uri pentru accesarea argumentelor din linia
+de comanda (detalii despre aceste argumente sunt in lectia 2):
+ init_par
+   ==> la prima apelare copiaza coada liniei de comanda din PSP intr-un 
+         vector obisnuit "ldc" din zona de date a programului, apoi isi 
+         inlocuieste propria definitie cu una vida; deci la prima apelare
+         "init_par" va copia argumentele, iar la urmatoarele apelari nu va
+         face nimic;
+ get_par x, i, c
+   ==> efectueaza succesiv operatiile:
+       - apeleaza "init_par" (deci, tinand cont de definitia lui "init_par",
+          doar la prima apelare a lui "get_par" se vor recupera argumentele,
+          la apelarile urmatoare nu se va face nimic la acest pas);
+       - apoi copiaza intr-un vector "ldc_buf" din zona de date al i-lea 
+          argument din vectorul "ldc" si adauga la sfarsitul lui (in
+          "ldc_buf") caracterul "c" (care de regula este 0 sau '$');
+       - apoi pune in "x" (care trebuie sa fie registru sau locatie de mem.
+          word) adr. de inceput (offsetul) lui "ldc_buf";
+       par. sunt: "x" - reg. sau locatie de mem. word, "i" word, "c" byte.
+ Program ilustrativ care isi afisaza (cu int 21h, functia 9 - vezi lectia 2)
+  argumentele din linia de comanda cu care a fost lansat.
+
+III.25) (20 puncte)
+ Implementati un alocator de memorie astfel:
+- alocati (eventual intr-un segment de date separat):
+ * o zona mare "mem" (vector de db) din care ulterior se vor aloca diverse 
+   bucati;
+ * un vector "log" de word, in care se vor inregistra adresele bucatilor
+   alocate si lungimile lor;
+ * alte variabile necesare gestionarii vectorilor de mai sus (de ex. pt. a
+   retine dimensiunile lor si pana unde s-au ocupat);
+- scrieti doua functii:
+   "malloc" - primeste ca parametru un word "d", gaseste in "mem" o zona
+     nerezervata de "d" octeti, o rezerva (adaugand la "log" doua worduri - 
+     offsetul zonei fata de inceputul vectorului si dimensiunea ei "d"), si
+     returneaza (prin AX) offsetul ei in segmentul sau; daca nu exista o
+     zona libera de dimensiunea ceruta nu rezerva nimic si ret. 0;
+   "free" - primeste ca parametru un word, desemnand un offset in segmentul
+     ce contine "mem", cauta in "log" inregistrarea respectiva, o elimina,
+     si eventual translateaza celelalte inregistrari si zonele 
+     corespunzatoare din "mem" a.i. zonele alocate sa fie adiacente (pt.
+     translatare se mai dau 10 puncte).
+Program ilustrativ.
+
+III.26) (4 puncte)
+ Scrieti un macro care emuleaza structura if_then_else, cu parametri (text)
+pt. conditie si fiecare instr. in parte (nr. variabil de parametri).
+ Program ilustrativ ce calculeaza d=max(a,b,c), unde a,b,c,d sunt variabile,
+primele trei declarate cu initializare; programul va decide ce variabila se
+atribuie lui d folosind invocari (incuibate) ale macro-ului si nu va face
+alte atribuiri; se pot crea si macro-uri auxiliare (pt. testarea inegalitatii
+"<", etc.).
+
+III.27) (10 puncte)
+ Scrieti urmatoarele macro-uri:
+ matrice a,k,v
+   ==> declara pe "a" ca vector de "k" word-uri initializate cu val. "v" ("k"
+        si "v" trebuie sa fie literali) - noi vom folosi vectorul ca o 
+        matrice m x n (unde m*n=k);
+       macro-ul se va invoca in sectiunea ".data", deci nu mai e nevoie sa
+        contine ".data" in corpul ei;
+ get x,a,m,n,i,j
+   ==> atribuie x:=a[i][j], unde "a" este o matrice m x n de word-uri
+        presupusa declarata anterior; practic lui x i se va atribui
+        word-ul aflat la offsetul: (offset a)+(i*n+j)*2; i,j sunt 0..m-1,
+        resp. 0..n-1;
+ set x,a,m,n,i,j
+   ==> atribuie a[i][j]:=x, unde "a" este o matrice m x n de word-uri
+        presupusa declarata anterior; practic x se va copia in word-ul aflat
+        la offsetul: (offset a)+(i*n+j)*2; i,j sunt 0..m-1, resp. 0..n-1;
+ for c,p,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9
+   ==> implementeaza o structura de forma: 
+         for(c=0;c<p;++c){i0 ... i9}
+       "c" este o variabila sa reg. word, "p" o val. word, "i0"..."i9"
+         textul unor instr. (sau invocari);
+       implementarea "for"-ului se va face cu "LOOP"; el va salva/restaura
+         CX vechi (folosind stiva) inainte de a folosi CX (astfel vom putea
+         scrie cicluri incuibate) si va da lui "c" la fiecare iteratie
+         valoarea p-CX.
+ Cu ajutorul acestor macro-uri scrieti un program care aduna doua matrici.
+
+III.28) (6 puncte)
+ Scrieti un macro de adunare a n numere, care se rescrie intr-o procedura; 
+parametri: nr. numerelor, apoi numerele (nr. variabil de parametri); retur
+prin AX. Numarul parametrilor este nelimitat (indicatie: fiecare rescriere
+recursiva a macro-ului va insera un "PUSH"/"POP").
+
+III.29) (2 puncte)
+ Scrieti o functie pentru adunarea unui sir de numere, cu nr. variabil de 
+parametri (par. sunt nr. numerelor si apoi numerele) si retur prin stiva.
+Program ilustrativ.
+
+Bibliografie:
+~~~~~~~~~~~~~
+
+1. "Gavin's Guide to 80x86 Assembly",
+  Intrenet: http://www.redbrick.dcu.ie/~creech/assembly/asm.html
+2. "Programare in limbaj de asamblare"
+  Gheorghe Musca, ed. Teora, 1997
+3. "Limbaje si calculator"
+  Vlad Bazon, ed. Petrion
+4. "Initiere in C++ Programare orientata pe obiecte"
+  Ionut Muslea, ed. Microinformatica, Cluj-Napoca, 1992
+
+
+DANIEL DRAGULICI
+noiembrie, 2005
+actualizat: 2 decembrie 2005

@@ -1,0 +1,590 @@
+
+              Solutii de implementare a claselor AFD, AFN, AFNL
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AFD in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare:
+
+/**************************************************************************/
+#define getbit(s,i) ((s)[(i)/8] & 0x01<<(i)%8)
+#define setbit(s,i) ((s)[(i)/8] |= 0x01<<(i)%8)
+#define killbit(s,i) ((s)[(i)/8] &= ~(0x01<<(i)%8))
+// testeaza, seteaza, respectiv anuleaza bitul cu nr. i>=0
+//   numarand de la adresa de memorie s
+
+#define MAXNRSTARIAFD 64
+
+class AFD{
+ int nrstari;
+  // nr. de stari; starea initiala este 0; -1=stare nedefinita
+ unsigned char *finala;
+  // vector caracteristic al starilor finale;
+  // bitul s%8 din octetul finala[s/8] este 1 sau 0
+  //   dupa cum s este stare finala sau nu;
+ int (*tranzitie)[256];
+  // tranzitiile;
+  // daca din (s,c) se trece in d, atunci t[s][c]=d;
+  // daca tranzitia din (s,c) nu este definita, t[s][c]=-1;
+public:
+ AFD();
+ ~AFD();
+ int getnrstari();
+  // ret. nr. de stari nrstari;
+ int setnrstari(int pns);
+  // seteaza nr. de stari cu pns si aloca memorie pt. automat;
+  // ret. 1=succes, 0=esec;
+ int estefinala(int s);
+  // ret. ceva !=0 daca s este stare finala si 0 daca nu este stare finala;
+ int setfinala(int s);
+  // marcheaza starea s ca fiind finala;
+  // ret. 1=succes, 0=esec;
+ int gettranzitie(int s, unsigned c);
+  // ret. starea in care se trece cu tranzitia din (s,c);
+  // daca tranzitia din (s,c) nu este definita, ret. -1;
+ int settranzitie(int s, unsigned c, int d);
+  // incarca in automat tranzitia (s,c) -> d;
+  // ret. 1=succes, 0=esec;
+ int recunoaste(char const *cuv, int *f);
+  // ret. ceva !=0 daca AFD recunoaste cuvantul cuv
+  //   si 0 daca nu-l recunoaste (inclusiv daca se blocheaza);
+  // in *f furnizeaza starea in care AFD s-a oprit din procesarea lui cuv
+  //   (daca nu l-a procesat pana la capat, e starea in care s-a blocat);
+};
+
+AFD::AFD(){nrstari=0; finala=NULL; tranzitie=NULL;}
+
+AFD::~AFD(){delete finala; delete tranzitie;}
+
+int AFD::getnrstari(){return nrstari;}
+
+int AFD::setnrstari(int pns){
+   int i; unsigned c;
+   if(pns<0 || pns>MAXNRSTARIAFD)return 0;
+   nrstari=pns;
+   delete finala;
+   delete tranzitie;
+   i=sizeof(unsigned char) * (7+nrstari)/8;
+   if((finala=new unsigned char[i])==NULL)return 0;
+   while(i--)finala[i]=0x00;
+   if((tranzitie=new int[nrstari][256])==NULL)
+     {delete finala; return 0;}
+   for(i=0;i<nrstari;++i)
+     for(c=0;c<256;++c)
+       tranzitie[i][c]=-1;
+   return 1;
+  }
+
+int AFD::estefinala(int s){return getbit(finala,s)!=0;}
+
+int AFD::setfinala(int s){
+   if(s<0 || s>=nrstari)return 0;
+   setbit(finala,s);
+   return 1;
+ }
+
+int AFD::gettranzitie(int s, unsigned c){return tranzitie[s][c];}
+
+int AFD::settranzitie(int s, unsigned c, int d){
+   if(s<0 || s>=nrstari || d<-1 || d>=nrstari)return 0;
+   tranzitie[s][c]=d;
+   return 1;
+ }
+
+int AFD::recunoaste(char const *cuv, int *f){
+  int s=0;
+  while(s!=-1 && *cuv!='\0'){
+    s=tranzitie[s][*cuv];
+    ++cuv;
+  }
+  if(s==-1)return 0;
+  if(f)*f=s;
+  return estefinala(s);
+ }
+
+int citeste(AFD &a){  // citire interactiva; ret. 1=succes,0=esec
+  int ns, s, d; unsigned c;
+  cout<<"Alfabet: setul ASCII axtins\n";
+  cout<<"Dati numarul de stari: "; cin>>ns; if(!a.setnrstari(ns))return 0;
+  cout<<"Starea initiala: 0\n";
+  cout<<"Dati starile finale (-1 dupa ultima): ";
+  cin>>s; while(s!=-1){if(!a.setfinala(s))return 0; cin>>s;}
+  cout<<"Dati tranzitiile (st_sursa, cod_zec_caracter, st_destinatie):\n";
+  cout<<"  (dupa ultima tranzitie introduceti -1)\n";
+  do{cin>>s; if(s==-1)break;
+     cin>>c>>d;
+     if(!a.settranzitie(s,c,d))return 0;
+  }while(1);
+  return 1;
+}
+/* Exemplu de input:
+4
+2 -1
+0 97 1
+0 98 2
+1 97 0
+1 98 2
+2 98 3
+3 97 3
+3 98 3
+-1
+*/
+
+void afisaza(AFD &a){  // afisare;
+  int ns;
+  int i; unsigned int c;
+  ns=a.getnrstari();
+  cout<<"Alfabet: setul ASCII axtins\n";
+  cout<<"Numarul de stari: "<<ns<<"\n";
+  cout<<"Starea initiala: 0\n";
+  cout<<"Stari finale:";
+  for(i=0; i<ns; ++i)if(a.estefinala(i))cout<<" "<<i;
+  cout<<"\n";
+  cout<<"Tranzitiile:\n";
+  for(i=0; i<ns; ++i){
+    for(c=0; c<32; ++c)if(a.gettranzitie(i,c)!=-1)
+      cout<<" delta("<<i<<",#"<<c<<")="<<a.gettranzitie(i,c)<<"\n";
+    for(c=32; c<128; ++c)if(a.gettranzitie(i,c)!=-1)
+      cout<<" delta("<<i<<","<<(char)c<<")="<<a.gettranzitie(i,c)<<"\n";
+    for(c=128; c<256; ++c)if(a.gettranzitie(i,c)!=-1)
+      cout<<" delta("<<i<<",#"<<c<<")="<<a.gettranzitie(i,c)<<"\n";
+  }
+}
+/* Exemplu de output (daca a este initializat ca la functia citeste):
+Alfabet: setul ASCII axtins
+Numarul de stari: 4
+Starea initiala: 0
+Stari finale:  2
+Tranzitiile:
+ d(0, a) = 1
+ d(0, b) = 2
+ d(1, a) = 0
+ d(1, b) = 2
+ d(2, b) = 3
+ d(3, a) = 3
+ d(3, b) = 3
+*/
+/* Pentru AFD initializat ca la functia citeste se pot testa urmatoarele
+     cuvinte:
+aaab  - recunoscut
+b     - recunoscut
+bb    - nerecunoscut
+baa   - nerecunoscut
+bbab  - nerecunoscut
+a     - nerecunoscut
+*/
+/**************************************************************************/
+
+AFN in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare:
+
+/**************************************************************************/
+#define getbit(s,i) ((s)[(i)/8] & 0x01<<(i)%8)
+#define setbit(s,i) ((s)[(i)/8] |= 0x01<<(i)%8)
+#define killbit(s,i) ((s)[(i)/8] &= ~(0x01<<(i)%8))
+
+#define MAXNRSTARIAFN 64
+
+class AFN{
+ int nrstari;
+  // nr. de stari; starea initiala este 0;
+ unsigned char *finala;
+  // vector caracteristic al starilor finale;
+ unsigned char *buftranzitie;
+  // tranzitiile;
+  // daca din (s,c) exista tranzitie in d (nu e neaparat singura tranzitie
+  //   din (s,c)), atunci notand x = s*nrstari*256 + d*256 + c,
+  //   bitul x%8 din buftranzitie[x/8] este 1, altfel este 0;
+public:
+ AFN();
+ ~AFN();
+ int getnrstari();
+ int setnrstari(int pns);
+ int estefinala(int s);
+ int setfinala(int s);
+ int gettranzitie(int s, unsigned c, int d);
+  // ret. 1 daca din (s,c) exista tranzitie in d si 0 daca nu exista;
+ int settranzitie(int s, unsigned c, int d);
+ int recunoaste(char const *cuv);
+ // ret. 1 daca AFN recunoaste cuvantul cuv, 0 daca nu-l recunoaste
+ //   si -1 in caz de eroare;
+};
+
+AFN::AFN(){nrstari=0; finala=NULL; buftranzitie=NULL;}
+
+AFN::~AFN(){delete finala; delete buftranzitie;}
+
+int AFN::getnrstari(){return nrstari;}
+
+int AFN::setnrstari(int pns){
+   long i;
+   if(pns<0 || pns>MAXNRSTARIAFN)return 0;
+   nrstari=pns;
+   delete finala;
+   delete buftranzitie;
+   i=sizeof(unsigned char) * (nrstari+7)/8;
+   if((finala=new unsigned char[i])==NULL)return 0;
+   while(i--)finala[i]=0x00;
+   i=nrstari*32L*nrstari;
+   if((buftranzitie=new unsigned char[i])==NULL)
+     {delete finala; return 0;}
+   while(i--)buftranzitie[i]=0x00;
+   return 1;
+  }
+
+int AFN::estefinala(int s){return getbit(finala,s)!=0;}
+
+int AFN::setfinala(int s){
+   if(s<0 || s>=nrstari)return 0;
+   setbit(finala,s);
+   return 1;
+ }
+
+int AFN::gettranzitie(int s, unsigned c, int d){
+   long x;
+   x=(long)s*(long)nrstari*256l + (long)d*256l + c;
+   return getbit(buftranzitie,x)!=0;
+ }
+
+int AFN::settranzitie(int s, unsigned c, int d){
+   long x;
+   if(s<0 || s>=nrstari || d<0 || d>=nrstari)return 0;
+   x=(long)s*(long)nrstari*256l + (long)d*256l + c;
+   setbit(buftranzitie,x);
+   return 1;
+ }
+
+int AFN::recunoaste(char const *cuv){
+  int i,j,k,max1,max2;
+  unsigned char *buf1,*buf2,*tmp;
+  long x;
+  k=(nrstari+7)/8;
+  if((buf1=new unsigned char[k])==NULL)return -1;
+  if((buf2=new unsigned char[k])==NULL){delete buf1; return -1;}
+  for(i=0;i<k;++i)buf1[i]=buf2[i]=0x00;
+  buf1[0]=0x01; max1=0;
+  while(*cuv!='\0'){
+    for(i=0;i<k;++i)buf2[i]=0x00;
+    max2=-1;
+    for(i=0;i<=max1;++i)if(getbit(buf1,i))
+    for(j=0;j<nrstari;++j)if(gettranzitie(i,*cuv,j)){
+	setbit(buf2,j);
+	if(j>max2)max2=j;
+    }
+    ++cuv;
+    tmp=buf1;buf1=buf2;buf2=tmp;
+    i=max1;max1=max2;max2=i;
+  }
+  delete buf2;
+  for(i=0;i<=max1;++i)if(getbit(buf1,i))if(estefinala(i))
+    {free(buf1); return 1;}
+  free(buf1);
+  return 0;
+ }
+
+int citeste(AFN &a){
+  int ns, s, d; unsigned c;
+  cout<<"Alfabet: setul ASCII axtins\n";
+  cout<<"Dati numarul de stari: "; cin>>ns; if(!a.setnrstari(ns))return 0;
+  cout<<"Starea initiala: 0\n";
+  cout<<"Dati starile finale (-1 dupa ultima): ";
+  cin>>s; while(s!=-1){if(!a.setfinala(s))return 0; cin>>s;}
+  cout<<"Dati f. de tranz. (st_sursa, cod_zec_carac, sir_de_st_dest, -1):\n";
+  cout<<"  (dupa ultima linie semnificativa introduceti -1)\n";
+  do{cin>>s; if(s==-1)break;
+     cin>>c>>d;
+     while(d!=-1){if(!a.settranzitie(s,c,d))return 0; cin>>d;}
+  }while(1);
+  return 1;
+}
+/* Exemplu de input:
+5
+2 3 -1
+0 97 1 2 -1
+0 98 3 -1
+1 97 0  1 -1
+1 98 2 -1
+2 98 4 -1
+3 97 0 -1
+4 97 1 -1
+4 98 2 3 -1
+-1
+*/
+
+void afisaza(AFN &a){
+  int ns;
+  int i,j,sem; unsigned c;
+  ns=a.getnrstari();
+  cout<<"Alfabet: setul ASCII axtins\n";
+  cout<<"Numarul de stari: "<<ns<<"\n";
+  cout<<"Starea initiala: 0\n";
+  cout<<"Stari finale:";
+  for(i=0; i<ns; ++i)if(a.estefinala(i))cout<<" "<<i;
+  cout<<"\n";
+  cout<<"Functia de tranzitie:\n";
+  for(i=0; i<ns; ++i){
+    for(c=0; c<256; ++c){
+     sem=1;
+     for(j=0; j<ns; ++j)if(a.gettranzitie(i,c,j)){
+       if(sem){cout<<" delta("<<i<<",";
+	       if(c>=32 && c<=127)cout<<(char)c;else cout<<"#"<<c;
+	       cout<<")=";
+	       sem=0;}
+       cout<<" "<<j;
+     }
+     if(!sem)cout<<"\n";
+    }
+  }
+}
+/* Exemplu de output (daca a este initializat ca la functia citeste):
+Alfabet: setul ASCII axtins
+Numarul de stari: 5
+Starea initiala: 0
+Stari finale: 2 3
+Functia de tranzitie:
+ delta(0,a)= 1 2
+ delta(0,b)= 3
+ delta(1,a)= 0 1
+ delta(1,b)= 2
+ delta(2,b)= 4
+ delta(3,a)= 0
+ delta(4,a)= 1
+ delta(4,b)= 2 3
+*/
+/* Pentru AFN initializat ca la functia citeste se pot testa urmatoarele
+     cuvinte:
+abb   - recunoscut
+ba    - nerecunoscut
+aabb  - nerecunoscut
+*/
+/**************************************************************************/
+
+AFNL in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare:
+
+/**************************************************************************/
+#define getbit(s,i) ((s)[(i)/8] & 0x01<<(i)%8)
+#define setbit(s,i) ((s)[(i)/8] |= 0x01<<(i)%8)
+#define killbit(s,i) ((s)[(i)/8] &= ~(0x01<<(i)%8))
+
+#define MAXNRSTARIAFN 64
+
+class AFNL{
+ int nrstari;
+  // nr. de stari; starea initiala este 0;
+ unsigned char *finala;
+  // vector caracteristic al starilor finale
+ unsigned char *buftranzitie;
+  // tranzitiile;
+  // daca din (s,c) exista tranzitie in d (nu e neaparat singura tranzitie
+  //   din (s,c)), atunci notand x = s*nrstari*257 + d*257 + c,
+  //   bitul x%8 din buftranzitie[x/8] este 1, altfel este 0;
+  // c=256 tine loc de lambda (pentru lambda-tranzitii);
+public:
+ AFNL();
+ ~AFNL();
+ int getnrstari();
+ int setnrstari(int pns);
+ int estefinala(int s);
+ int setfinala(int s);
+ int gettranzitie(int s, unsigned c, int d);
+  // ret. 1 daca din (s,c) exista tranzitie in d si 0 daca nu exista;
+  // c este litera obisnuita din alfabetul de intrare, 0 <= c <= 255;
+ int gettranzitie(int s, int d);
+  // ret. 1 daca din s exista lambda-tranzitie in d si 0 daca nu exista;
+ int settranzitie(int s, unsigned c, int d);
+  // incarca in automat tranzitia (s,c) -> d, 0 <= c <= 255;
+  // ret. 1=succes, 0=esec;
+ int settranzitie(int s, int d);
+  // incarca in automat lambda-tranzitia din s in d;
+  // ret. 1=succes, 0=esec;
+ int recunoaste(char const *cuv);
+};
+
+AFNL::AFNL(){nrstari=0; finala=NULL; buftranzitie=NULL;}
+
+AFNL::~AFNL(){delete finala; delete buftranzitie;}
+
+int AFNL::getnrstari(){return nrstari;}
+
+int AFNL::setnrstari(int pns){
+   long i;
+   if(pns<0 || pns>MAXNRSTARIAFN)return 0;
+   nrstari=pns;
+   delete finala;
+   delete buftranzitie;
+   i=sizeof(unsigned char) * (nrstari+7)/8;
+   if((finala=new unsigned char[i])==NULL)return 0;
+   while(i--)finala[i]=0x00;
+   i=(nrstari*257l*nrstari+7l)/8l;
+   if((buftranzitie=new unsigned char[i])==NULL)
+     {delete finala; return 0;}
+   while(i--)buftranzitie[i]=0x00;
+   return 1;
+  }
+
+int AFNL::estefinala(int s){return getbit(finala,s)!=0;}
+
+int AFNL::setfinala(int s){
+   if(s<0 || s>=nrstari)return 0;
+   setbit(finala,s);
+   return 1;
+ }
+
+int AFNL::gettranzitie(int s, unsigned c, int d){
+   long x;
+   x=(long)s*(long)nrstari*257l + (long)d*257l + c;
+   return getbit(buftranzitie,x)!=0;
+ }
+
+int AFNL::gettranzitie(int s, int d){
+   long x;
+   x=(long)s*(long)nrstari*257l + (long)d*257l + 256;
+   return getbit(buftranzitie,x)!=0;
+ }
+
+int AFNL::settranzitie(int s, unsigned c, int d){
+   long x;
+   if(s<0 || s>=nrstari || d<0 || d>=nrstari)return 0;
+   x=(long)s*(long)nrstari*257l + (long)d*257l + c;
+   setbit(buftranzitie,x);
+   return 1;
+ }
+
+int AFNL::settranzitie(int s, int d){
+   long x;
+   if(s<0 || s>=nrstari || d<0 || d>=nrstari)return 0;
+   x=(long)s*(long)nrstari*257l + (long)d*257l + 256;
+   setbit(buftranzitie,x);
+   return 1;
+ }
+
+int AFNL::recunoaste(char const *cuv){
+  int sem,i,j,k;
+  unsigned char *buf1,*buf2,*tmp;
+  long x;
+  k=(nrstari+7)/8;
+  if((buf1=new unsigned char[k])==NULL)return -1;
+  if((buf2=new unsigned char[k])==NULL){delete buf1; return -1;}
+  for(i=0;i<k;++i)buf1[i]=buf2[i]=0x00;
+  buf1[0]=0x01;
+  do{sem=0;
+     for(i=0; i<nrstari; ++i)if(getbit(buf1,i))
+     for(j=0; j<nrstari; ++j)if(gettranzitie(i,j))
+     if(!getbit(buf1,j)){
+       setbit(buf1,j);
+       sem=1;
+     }
+  }while(sem);
+  while(*cuv!='\0'){
+    for(i=0; i<k; ++i)buf2[i]=0x00;
+    for(i=0; i<nrstari; ++i)if(getbit(buf1,i))
+    for(j=0; j<nrstari; ++j)if(gettranzitie(i,*cuv,j))
+      setbit(buf2,j);
+    tmp=buf1;buf1=buf2;buf2=tmp;
+    do{sem=0;
+       for(i=0; i<nrstari; ++i)if(getbit(buf1,i))
+       for(j=0; j<nrstari; ++j)if(gettranzitie(i,j))
+       if(!getbit(buf1,j)){
+	 setbit(buf1,j);
+	 sem=1;
+       }
+    }while(sem);
+    ++cuv;
+  }
+  delete buf2;
+  for(i=0; i<nrstari; ++i)if(getbit(buf1,i))if(estefinala(i))
+    {delete buf1; return 1;}
+  delete buf1;
+  return 0;
+ }
+
+int citeste(AFNL &a){
+  int ns, s, d; unsigned c;
+  cout<<"Alfabet: setul ASCII axtins\n";
+  cout<<"Dati numarul de stari: "; cin>>ns; if(!a.setnrstari(ns))return 0;
+  cout<<"Starea initiala: 0\n";
+  cout<<"Dati starile finale (-1 dupa ultima): ";
+  cin>>s; while(s!=-1){if(!a.setfinala(s))return 0; cin>>s;}
+  cout<<"Dati f. de tranz. (st_sursa, cod_zec_caract (256 pt. "<<(char)238
+      <<"), sir_de_st_dest, -1):\n";
+  cout<<"  (dupa ultima linie semnificativa introduceti -1)\n";
+  do{cin>>s; if(s==-1)break;
+     cin>>c>>d;
+     while(d!=-1){
+       if(c!=256){if(!a.settranzitie(s,c,d))return 0;}
+       else{if(!a.settranzitie(s,d))return 0;}
+       cin>>d;
+     }
+  }while(1);
+  return 1;
+}
+/* Exemplu de input:
+5
+4 -1
+0 97 1 -1
+0 256 0 2 -1
+1 97 3 4 -1
+1 98 2 -1
+2 98 0 -1
+2 256 4 -1
+4 97 3 -1
+-1
+*/
+
+void afisaza(AFNL &a){
+  int ns;
+  int i,j,sem; unsigned c;
+  ns=a.getnrstari();
+  cout<<"Alfabet: setul ASCII axtins\n";
+  cout<<"Numarul de stari: "<<ns<<"\n";
+  cout<<"Starea initiala: 0\n";
+  cout<<"Stari finale:";
+  for(i=0; i<ns; ++i)if(a.estefinala(i))cout<<" "<<i;
+  cout<<"\n";
+  cout<<"Functia de tranzitie:\n";
+  for(i=0; i<ns; ++i){
+    for(c=0; c<256; ++c){
+     sem=1;
+     for(j=0; j<ns; ++j)if(a.gettranzitie(i,c,j)){
+       if(sem){cout<<" delta("<<i<<",";
+	       if(c>=32 && c<=127)cout<<(char)c;else cout<<"#"<<c;
+	       cout<<")=";
+	       sem=0;}
+       cout<<" "<<j;
+     }
+     if(!sem)cout<<"\n";
+    }
+    sem=1;
+    for(j=0; j<ns; ++j)if(a.gettranzitie(i,j)){
+      if(sem){cout<<" delta("<<i<<","<<(char)238<<")=";
+	 sem=0;}
+      cout<<" "<<j;
+    }
+    if(!sem)cout<<"\n";
+  }
+}
+/* Exemplu de output (daca a este initializat ca la functia citeste):
+Alfabet: setul ASCII axtins
+Numarul de stari: 5
+Starea initiala: 0
+Stari finale: 4
+Functia de tranzitie:
+ delta(0,a)= 1
+ delta(0,î)= 0 2
+ delta(1,a)= 3 4
+ delta(1,b)= 2
+ delta(2,b)= 0
+ delta(2,î)= 4
+ delta(4,a)= 3
+*/
+/* Pentru AFNL initializat ca la functia citeste se pot testa urmatoarele
+     cuvinte:
+a     - nerecunoscut
+aa    - recunoscut
+(vid) - recunoscut
+*/
+/**************************************************************************/
+
+
+DANIEL DRAGULICI
+februarie, 2007

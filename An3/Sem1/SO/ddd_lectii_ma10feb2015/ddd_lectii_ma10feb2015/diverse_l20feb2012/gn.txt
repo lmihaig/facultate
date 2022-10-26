@@ -1,0 +1,1324 @@
+                       Alte generalitati de limbaj C
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A. Argumente in linia de comanda:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Un program poate fi lansat de la prompterul unui shell folosind o linie de
+comanda de forma:
+
+>program arg1 arg2 ... argn
+
+unde "program" este specificatorul programului lansat iar "arg1", .... "argn"
+argumente in lina de comanda (siruri de caractere non-blank delimitate prin
+blank-uri).
+
+ Un program scris in C/C++ isi poate accesa argumentele in lina de comanda
+prin parametrii lui "main", care trebuie declarati astfel (conteaza ordinea
+si tipul lor, nu numele lor):
+
+   main(int argc, char *argv[])
+
+La rulare, acesti parametri vor primi automat urmatoarele valori:
+argc: numarul de cuvinte care au format linia de comanda;
+      in exemplul de mai sus este n+1 (numarul de argumente + 1);
+argv[0], ..., argv[argc-1]: adresele de inceput ale unor stringuri ce contin
+      cuvintele din linia de comanda; deci argv[0] indica numele programului
+      iar argv[1], ..., argv[argc-1] cele n argumente;
+argv[argc]: NULL
+
+Exemplu: program care isi afisaza argumentele din linia de comanda:
+========
+
+#include<stdio.h>
+int main(int argc, char *argv[]){
+  int i;
+  for(i=0;i<argc;++i) printf("%s\n",argv[i]);
+  printf("\n");
+  return 0;
+}
+
+Daca punem acest program intr-un fisier "program.c" si il compilam obtinand
+"program.exe", atunci il putem lansa in urmatoarele feluri,obtinand pe ecran:
+
+C:\>program
+C:\PROGRAM.EXE
+
+sau:
+
+C:\>program a 12 xyz
+C:\PROGRAM.EXE
+a
+12
+xyz
+
+ Shell-ul interpreteaza blank-urile din linia de comanda drept separatori de
+argumente; de aceea nu putem transmite argumente care contin blank-uri decat
+daca facem artificii - de exemplu includem argumentul cu blank-uri intre "".
+De exemplu putem lansa programul de mai sus astfel:
+
+C:\>program aa bb cc dd ee ff gg
+C:\PROGRAM.EXE
+aa
+bb
+cc
+dd
+ee
+ff
+gg
+
+
+C:\>program "aa bb" cc dd "ee ff gg"
+C:\PROGRAM.EXE
+aa bb
+cc
+dd
+ee ff gg
+
+ Argumentele din linia de comanda sunt preluate mereu initial ca stringuri;
+daca vrem sa fie considerate caractere, intregi, etc., trebuie sa le
+convertim explicit in program. In acest scop putem folosi instrumente
+predefinite ca:
+
+ #include<stdlib.h>
+ int atoi(const char *s);
+   ==> converteste stringul pointat de "s", care se presupune a contine
+       reprezentarea externa a unui intreg zecimal, la intregul respectiv,
+       pe care il returneaza ca int; in caz de eroare returneaza 0;
+  
+ #include<stdio.h>
+ int sscanf(const char *s, const char *format, ...);
+   ==> ca si scanf dar citeste din stringul pointat de "s", nu de la stdin;
+
+ int sprintf(char *s, const char *format, ...);
+   ==> ca si printf dar scrie in stringul pointat de "s", nu la stdout.
+
+Exemplu: program care calculeaza media aritmetica a unor intregi dati ca
+========   argumente in linia de comanda:
+
+#include<stdio.h>
+int main(int argc, char *argv[]){
+  int i,s;
+  s=0;
+  for(i=1;i<argc;++i)s=s+atoi(argv[i]);
+  printf("%f\n",s/(float)(argc-1));
+  return 0;
+}
+
+varianta:
+
+#include<stdio.h>
+int main(int argc, char *argv[]){
+  int i,s,x;
+  s=0;
+  for(i=1;i<argc;++i) {sscanf(argv[i],"%d",&x); s=s+x;}
+  printf("%f\n",s/(float)(argc-1));
+  return 0;
+}
+
+Exemplu de rulare (presupunand ca executabilul s.n. "program.exe"):
+
+C:\>program 1 2 3 4
+2.500000
+
+
+B. Alocarea dinamica a memoriei:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Este vorba de alocarea/dezalocarea explicita (prin instructiuni scrise de
+utilizator in program special in acest scop) de memorie in timpul executiei.
+Zonele de memorie alocate/dezalocate sunt luate din heap.
+ Se folosesc urmatoarele functii (pentru care trebuie inclus stdlib.h):
+
+#include<stdlib.h>
+
+void *malloc(size_t dim);
+  ==> aloca un bloc liber de "dim" octeti din heap si returneaza adresa lui;
+      daca alocarea nu e posibila (nu exista in heap un bloc liber de
+        dimensiune "dim") sau daca "dim" = 0, returneaza NULL;
+
+void *calloc(size_t nr, size_t dim);
+  ==> aloca un bloc liber de "nr*dim" octeti din heap, il initializeaza cu
+        toti octetii 0 si returneaza adresa lui;
+      daca alocarea nu e posibila (nu exista in heap un bloc liber de
+        dimensiune "nr*dim") sau daca "nr" = 0 sau daca "dim" = 0, returneaza
+        NULL;
+      
+void *realloc(void *adr, size_t dim);
+  ==> presupunand ca "adr" este adresa unui bloc alocat dinamic anterior,
+        ajusteaza dimensiunea acestui bloc la "dim" octeti;
+      daca "dim" este mai mare decat dimensiunea initiala a blocului
+        respectiv si nu exista suficient spatiu liber in continuarea
+        acestuia, se incearca alocarea unui nou bloc (de la o alta adresa)
+        de "dim" octeti iar in caz de succes se copiaza continutul primului
+        bloc la inceputul celui de al doilea bloc si se dezaloca primul bloc;
+      in caz de succes (ajustarea blocului sau alocarea in alta parte a
+        reusit), returneaza adresa blocului final; aceasta adresa va coincide
+        cu "adr" in caz ca a fost posibila ajustarea sau va fi o alta adresa
+        daca s-a alocat un alt bloc;
+      in caz de esec (nu a fost posibila nici ajustarea nici alocarea in alta
+        parte) returneaza NULL, iar practica arata ca blocul initial nu este
+        dezalocat/alterat;
+      daca "dim" = 0 returneaza NULL, iar practica arata ca blocul initial
+        este dezalocat (ca la free);
+      daca "adr" = NULL, realloc actioneaza ca "malloc(dim)";
+
+void free(void *adr):
+  ==> presupunand ca "adr" este adresa unui bloc alocat dinamic anterior,
+        dezaloca acel bloc;
+
+Observatii:
+- "size_t" este un tip intreg; pentru siguranta/portabilitate se recomanda
+ conversia explicita a tipurilor intregi spre/dinspre acest tip;
+- cand se aloca dinamic un bloc (cu malloc, calloc, realloc) sistemul retine
+ automat intr-o evidenta proprie adresa "a" a blocului si dimensiunea "n" a
+ lui; cand apelam free dand ca parametru adresa "a" acesta cauta automat in
+ evidentele respective "a" si afla de acolo dimensiunea "n" a memoriei ce
+ trebuie dezalocate; de aceea e suficient sa retinem si sa transmitem ca
+ informatie doar adresa respectiva, nu si dimensiunea zonei; totodata lui
+ realloc sau free nu trebuie sa-i dam ca parametru "adr" decat o adresa
+ returnata anterior de un malloc, calloc sau realloc, altfel ea nu va fi
+ gasita in evidentele respective iar efectul este imprevizibil; practica
+ arata ca apelul "free(NULL)" nu are nici un efect; exemple:
+
+ int *p,*q; p=(int *)malloc(10); q=p; free(q); /* dezaloca 10 octeti */
+
+ int a; free(&a); /* efect imprevizibil */
+
+- in urma dezalocarii unui bloc acesta nu isi pierde automat continutul iar
+ pointerii care il adresau nu devin automat NULL, insa blocul sau o parte din
+ el vor putea fi cuprinse in alt bloc alocat ulterior (si astfel continutul
+ sau va putea fi accesat/modificat prin alti pointeri fara stirea
+ utilizatorului); exemple:
+
+ int *p,*q;
+ p=(int *)malloc(sizeof(int));
+ q=(int *)malloc(sizeof(int)); 
+   /* p si q pointeaza variabile dinamice diferite*/
+ *p=10; *q=20; printf("%d",*p);/* afisaza 10 */
+
+ int *p,*q;
+ p=(int *)malloc(sizeof(int)); 
+   /* p pointeaza o noua variabila dinamica */
+ free(p); 
+   /* p nu devine NULL si pointeaza aceeasi variabila */
+ q=(int *)malloc(sizeof(int)); 
+   /* intamplator va aloca aceeasi variabila pe care o pointeaza p,
+      deoarece acum e considerata libera */
+ *p=10; *q=20; printf("%d",*p);/* afisaza 20 */
+
+- calloc este util pentru a aloca vectori sau pentru a aloca zone
+ initializate cu 0 fara sa mai initializam noi explicit; exemplu:
+
+ int *v; v=(int *)calloc(10,sizeof(int));
+
+este echivalent cu:
+
+ int *v,i; v=(int *)malloc(10*sizeof(int)); for(i=0;i<10;++i)v[i]=0;
+
+- realloc este util pentru a implementa vectori de dimensiune variabila; cu
+ ajutorul lor putem implementa stive fara sa folosim liste inlantuite (a se
+ vedea un exemplu mai jos).
+
+Exemplu: Stive (de intregi) alocate secvential, folosind vectori de
+========    dimensiune variabila; aplicatie la un program care verifica daca
+ un sir de paranteze este corect imperechiat; in acest sens asimilam o
+ paranteza deschisa cu un numar intreg pozitiv si o paranteza inchisa cu un
+ numar intreg negativ; modulul numarului da tipul parantezei; de exemplu:
+   1 2 3 -3 -2 4 -4 -1 este corect imperechiat
+   1 2 3 -2 4 -4 -1    nu este corect imperechiat
+
+#include<stdio.h>
+#include<stdlib.h>
+
+struct stiva{int *v, n, i;};
+ /* v = adresa bufferului cu elemente (gestionat ca un vector)
+    i = indicele elementului din varf
+    n = dimensiunea curenta a bufferului 
+ */
+
+void init(struct stiva *s){s->v=NULL; s->n=0; s->i=-1;}
+ /* initializeaza stiva pentru prima folosire (constructor) */
+
+void clear(struct stiva *s){free(s->v); s->v=NULL; s->n=0; s->i=-1;}
+ /* dezaloca resursele stivei dupa ultima folosire (destructor) */
+
+int push(struct stiva *s, int x){ /* insereaza un element */
+  if(s->i==s->n-1){
+    int *p;
+    if((p=realloc(s->v,s->n+10))==NULL)return 0;
+    s->v=p; s->n+=10;
+  }
+  ++s->i; s->v[s->i]=x;
+  return 1;
+}
+
+int pop(struct stiva *s, int *x){ /* extrage un element */
+  if(s->i==-1)return 0;
+  *x=s->v[s->i]; --s->i;
+  if(s->i==-1)clear(s);
+  else if(s->i<s->n-20){s->n-=10; realloc(s->v,s->n);}
+  return 1;
+}
+
+int vida(struct stiva *s){return s->i==-1;} /* test stiva vida */
+
+int main(){
+  int v[]={1, 2, 3, -3, -2, 4, -4, -1}, n=sizeof(v)/sizeof(int), i, x;
+  struct stiva s;
+  init(&s);
+  for(i=0;i<n;++i)
+    if(v[i]>0) push(&s,v[i]);
+    else if(vida(&s)) break;
+                 else {pop(&s,&x); if(v[i]!=-x)break;}
+  if(i==n && vida(&s))printf("Sir corect.\n");
+                 else printf("Sir gresit.\n");
+  clear(&s);
+  return 0;
+}
+
+Comentarii:
+- pentru a evita alocarea/dezalocarea succesiva atunci cand facem multe
+ operatii push/pop alternate iar s->i==s->n-1, cand a trebuit sa extindem
+ bufferul (la push) acesta a fost extins cu 10 elemente (nu doar cu 1),
+ iar restrangerea acestuia (la pop) a fost facuta doar cand s->i<s->n-20
+ si atunci l-am restrans cu 10 elemente;
+- functia init trebuie apelata o singura data pentru fiecare stiva din
+ program, atunci cand aceasta isi incepe existenta (inaintea primei sale
+ folosiri); ea este asemeni unui constructor din limbajul C++; functia
+ clear trebuie apelata o singura data pentru fiecare stiva din program,
+ atunci cand aceasta isi inceteaza existenta (dupa ultima sa folosire); ea
+ este asemeni unui destructor din limbajul C++; in programul nostru nu a
+ fost necesara apelarea lui clear la sfarsit deoarece la terminarea normala
+ a programului memoria dinamica alocata de acesta si nedezalocata explicit
+ se dezaloca automat; am vrut insa sa ilustram un stil general de lucru;
+- in main, initializarea lui n cu sizeof(v)/sizeof(int) (dimensiunea
+ vectorului / dimensiunea componentelor) face ca n sa fie initializat
+ automat cu numarul de elemente din vector; de aceea, daca vrem sa schimbam
+ sirul de paranteze verificat, e suficient sa schimbam initializarea lui v,
+ nu si n;
+- functiile push, pop de mai sus returneaza 1 cand operatia reuseste si
+ 0 cand nu; am presupus ca esecul poate fi cauzat doar de imposibilitatea
+ alocarii sau extinderii bufferului (push) nu si la restrangerea acestuia
+ (pop) - de aceea nu am testat succesul lui realloc(s->v,s->n) din pop;
+ pentru claritatea algoritmului de verificare a sirului de paranteze, in
+ programul nostru nu am testat succesul/esecul operatiilor push/pop; o
+ varianta a lui main in care se fac si aceste teste (e suficient sa testam
+ push, deoarece pop se face doar daca testul de vida da fals) este
+ urmatoarea:
+
+int main(){
+  int v[]={1, 2, 3, -3, -2, 4, -4, -1}, n=sizeof(v)/sizeof(int), i, x;
+  struct stiva s;
+  init(&s);
+  for(i=0;i<n;++i)
+    if(v[i]>0)
+      {if(!push(&s,v[i]))
+         {printf("Eroare la alocare.\n"); clear(&s); return 1;}
+      }
+    else if(vida(&s)) break;
+                 else {pop(&s,&x); if(v[i]!=-x)break;}
+  if(i==n && vida(&s))printf("Sir corect.\n");
+                 else printf("Sir gresit.\n");
+  clear(&s);
+  return 0;
+}
+
+Exemplu: implemetarea matricilor cu numar oarecare, alocat dinamic, de linii
+========  si coloane, de numere intregi.
+
+  #include<stdio.h>
+  #include<stdlib.h>
+
+  int ** alocmat(int nl, int nc){
+    int i,j,**p;
+    if((p=malloc(nl*sizeof(int *)))==NULL)return NULL;
+    for(i=0;i<nl;++i)
+      if((p[i]=malloc(nc*sizeof(int)))==NULL){
+        for(j=0;j<i;++j)free(p[j]);
+        free(p);
+        return NULL;
+      }
+     return p;
+  }
+
+  void delmat(int nl, int nc, int **p){
+    int i;
+    for(i=0;i<nl;++i)free(p[i]);
+    free(p);
+  }  
+
+  void citmat(int nl, int nc, int **a){
+    int i,j;
+    for(i=0;i<nl;++i)for(j=0;j<nc;++j)scanf("%d",&a[i][j]);
+  }
+
+  void scrmat(int nl, int nc, int **a){
+    int i,j;
+    for(i=0;i<nl;++i){
+      for(j=0;j<nc;++j)printf("%4d ",a[i][j]);
+      printf("\n");
+    }
+  }
+
+  void addmat(int nl, int nc, int **a, int **b, int **c){
+    int i,j;    
+    for(i=0;i<nl;++i)for(j=0;j<nc;++j)c[i][j]=a[i][j]+b[i][j];
+  }
+
+  void main(){
+    int l, c, **x, **y, **z;
+
+    printf("Dati nl si nc comune:\n");
+    scanf("%d%d",&l,&c);
+
+    if((x=alocmat(l,c))==NULL){
+      printf("Eroare la alocarea primei matrici.\n");
+      goto incheiere1;
+    }
+    printf("Dati componentele primei matrici:\n");
+    citmat(l,c,x);
+
+    if((y=alocmat(l,c))==NULL){
+      printf("Eroare la alocarea celei de-a doua matrici.\n");
+      goto incheiere2;
+    }
+    printf("Dati componentele celei de-a doua matrici:\n");
+    citmat(l,c,y);
+
+    if((z=alocmat(l,c))==NULL){
+      printf("Eroare la alocarea matricii suma.\n");
+      goto incheiere3;
+    }
+    addmat(l,c,x,y,z);
+    printf("Matricea suma este:\n");
+    scrmat(l,c,z);
+
+    delmat(l,c,z);
+   incheiere3:
+    delmat(l,c,y);
+   incheiere2:
+    delmat(l,c,x);
+   incheiere1:
+  }
+
+Exemplu: Functie care citeste o linie de text si o furnizeaza intr-un string
+========  alocat dinamic si un program ilustrativ:
+
+  #include<stdio.h>
+  #include<stdlib.h>
+
+  char *mygets(){
+    char c,*s,*s1; int n;
+    s=NULL; n=0;
+    do{
+      if((s1=realloc(s,n+1))==NULL){free(s); fflush(stdin); return NULL;}
+      scanf("%c",&c); s=s1; s[n]=c; ++n;
+    }while(c!='\n'&&c!='\r');
+    s[n-1]='\0';
+    fflush(stdin);
+    return s;
+  }
+      
+  void main(){
+    char *a;
+    printf("Dati un string: "); a=mygets();
+    printf("Am citit: %s\n",a);
+    free(a);
+  }
+
+
+C. Fisiere:
+~~~~~~~~~~~
+
+ Fisierele sunt secvente de octeti stocate pe un suport de memorie, incepand
+de la o anumita adresa (fisiere diferite au adrese diferite). Diverse
+sisteme de operare retin diverse informatii auxiliare in legatura cu un
+fisier, ca: nume, extensie (a numelui), atribute, drepturi, etc.
+ Fisierele sunt grupate in directoare. In legatura cu directoarele sistemele
+retin informatii auxiliare asemanatoare celor pentru fisiere (nume,
+atribute, etc.). Directoarele figureaza in alte directoare. Astfel, intr-un
+director gasim un grup de fisiere si alte directoare. In MS-DOS si Windows
+discurile fizice sunt impartite in discuri logice (desemnate printr-o litera
+urmata de ":") si fiecare din acestea are cate o arborescenta de directoare
+si fisiere; directorul radacina al fiecarui disc logic are numele vid.
+ Putem avea mai multe fisiere/directoare cu acelasi nume si extensie, dar
+ele nu trebuie sa figureze in acelasi director tata. De aceea, cand
+utilizatorul uman sau un program solicita sistemului de operare accesul la
+un fisier/director nu este suficient sa indice doar numele si extensia
+acestuia ci trebuie sa indice si calea (sirul de directoare succesive) prin
+care trebuie sa trecem pentru a ajunge plecand dintr-un punct cunoscut (de
+exemplu directorul radacina al unui disc) la fisierul/directorul respectiv.
+De exemplu:
+
+  c:\ion\lucru\fis.txt
+
+este o specificare (un specificator) al fisierului "fis.txt" ce spune ca
+pentru a ajunge la el trebuie sa parcurgem calea care pleaca din directorul
+radacina al discului "c:", apoi trece prin directorul "ion", apoi trece prin
+directorul "lucru" si ajunge la fisierul "fis.txt". In functie de sistemul
+de operare exista conventii ce ne permit sa scriem specificatori mai scurti.
+
+ Dintr-un program C putem aceesa fisierele din sistemul gazda folosind
+structuri de date si functii din biblioteca standard C, pentru care trebuie
+inclus:
+
+#include<stdio.h>
+
+ Un fisier poate fi gestionat folosind o structura de tipul predefinit FILE;
+membrii ei contin printre altele:
+- un descriptor (intreg); el este folosit pentru a desemna fisierul in
+ interactiunea cu sistemul de operare (la nivel inferior - nu detaliem);
+- un buffer; operatiile de citire/scriere in fisiere prin intermediul
+ structurilor FILE este automat buffer-izata; astfel, daca initial vrem
+ sa citim din fisier un caracter (folosind de exemplu fscanf) se transfera
+ automat in buffer mai multe caractere succesive si se preia de acolo primul
+ caracter; daca apoi citim iar un caracter, el se ia din buffer (nu se
+ acceseaza discul); abia cand buffer-ul se goleste, o noua citire acceseaza
+ discul si il incarca cu caractere din fisier;
+- un indicator de pozitie curenta; el indica caracterul curent din fisier,
+ care este caracterul ce URMEAZA a fi citit/suprascris la prima operatie
+ de citire/scriere care se va face in continuare; aceasta pozitie este una
+ logica, nu fizica (caracterul respectiv poate fi la momentul respectiv fie
+ pe disc fie in buffer); dupa fiecare citire/scriere indicatorul avanseaza
+ automat pana dupa ultimul caracter citit/scris; putem muta acest indicator
+ si fortat, fara ca sa citim/scriem caractere, folosind functia fseek;
+ pozitiile indicatorului sunt numere intregi succesive incepand de la 0;
+- niste indicatori (flaguri) de stare; fiecare operatie efectuata asupra
+ fisierului folosind structura FILE respectiva pozitioneaza indicatorii
+ acesteia la o configuratie ce arata daca operatia a reusit sau nu, si in
+ caz ca nu de ce; acesti indicatori pot fi testati ulterior cu alte functii
+ (de exemplu feof).
+
+ Obs: in limbajul Pascal exista mai multe tipuri de date cu ajutorul carora
+poate fi gestionat un fisier: file of integer, file of real, text, etc.;
+in functie de tipul folosit un (acelasi) fisier va fi abordat in mod automat
+ca avand o anumita (alta) structura. De exemplu daca un fisier e gestionat
+cu o variabila de tip file of integer, informatia din el va putea fi citita/
+scrisa doar ca formand o succesiune de intregi in format intern; daca
+acelasi fisier este gestionat cu o variabila file of real, aceeasi
+informatie va fi privita automat ca fiind o succesiunde de reali in format
+intern; in fine, daca este gestionat cu o variabila de tip text, aceeasi
+informatie din el va fi privita ca fiind o succesiune de date diverse in
+format extern. Deci in limbajul Pascal instrumentul folosit pentru
+gestionarea fisierului ofera in mod nativ o anumita perspectiva asupra
+continutului sau. In limbajul C exista un singur tip de date folosit la
+gestionarea fisierelor (anume FILE) iar el prezinta informatia din fisier
+asa cum arata pe disc - o simpla secventa de octeti, fara o structura anume;
+deci, daca in program vrem ca aceasta informatie sa fie privita ca avand o
+anumita structura, trebuie sa implementam operatiile necesare in mod
+explicit.
+
+ Un program, pentru a prelucra un fisier, trebuie mai intai sa-l deschida
+si sa-i asocieze o structura FILE (folosind fopen); la deschidere trebuie
+precizat tipul de operatii (citire, scriere) pentru care se face deschiderea
+iar ulterior, prin intermediul structurii FILE respective, se vor putea face
+asupra fisierului doar operatii de tipul indicat la deschidere.
+ Cand am terminat de prelucrat un fisier, el trebuie inchis iar structura
+FILE asociata eliberata (aceasta se face cu fclose). Ulterior (in cursul
+aceleiasi executii a programului) el poate fi redeschis (asociindu-i alta
+structura FILE), eventual la alt tip de operatii.
+ Numarul de fisiere ce pot fi deschise simultan de un program este limitat
+(de sistemul de operare); de aceea, daca vrem sa prelucram mai multe
+fisiere, deschidem cateva, le prelucram, inchidem cateva, deschidem altele,
+etc., a.i. niciodata numarul de fisiere deschise simultan sa nu depaseasca
+acea valoare limita.
+ La terminarea normala a unui program (sfarsitul lui main, return din main
+sau functia exit) fisierele deschise de acesta si neinchise inca se inchid
+automat. Recomandam insa inchiderea explicita a tuturor fisierelor (in
+exemplele urmatoare asa vom face).
+ Un fisier poate fi gestionat cu mai multe structuri FILE simultan
+(deschiderile putand fi chiar pentru tipuri de operatii diferite), dar
+trebuie sa avem grija caci pot aparea efecte nedorite - de exemplu fiecare
+structura FILE are propriul sau buffer si indicator de pozitie curenta si
+pot aparea inconsistente daca bauffer-ele si indicatorii nu sunt
+sincronizati.
+
+ Prezentam cateva functii din biblioteca standard C care lucreaza cu fisiere
+(pentru ele trebuie inclus stdio.h) si exemple de folosire a lor:
+
+FILE *fopen(const char *specificator, const char *mod);
+  ==> deschide fisierul cu specificatorul "specificator" la operatiile
+   indicate de stringul "mod", aloca dinamic o structura FILE pe care o
+   initializeaza cu informatii despre fisier si returneaza adresa ei;
+   in caz de esec returneaza NULL; stringul pointat de "mod" poate fi:
+    "r" ==> deschidere la citire;
+            daca fisierul nu exista se semnaleaza eroare;
+            daca fisierul exista se deschide la citire iar in structura FILE
+             asociata indicatorul se pune inaintea primului caracter;
+    "w" ==> deschidere la suprascriere;
+            daca fisierul nu exista se creaza ca fisier vid, iar daca exista
+             i se sterge vechiul continut;
+            in ambele cazuri, fisierul se deschide apoi la scriere iar in
+             structura FILE asociata indicatorul se pune la inceput
+             (fisierul fiind vid acesta este si sfarsitul);
+            de exemplu daca initial fisierul exista si continea "abc", dupa
+             deschiderea cu "w" si scrierea in al a sirului "xy" el va
+             contine "xy";
+    "a" ==> deschidere la apendare;
+            daca fisierul nu exista se creaza ca fisier vid, iar daca exista
+             NU i se sterge vechiul continut;
+            in ambele cazuri, fisierul se deschide apoi la scriere iar in
+             structura FILE asociata indicatorul se pune la sfarsit (deci
+             scrierile vor adauga informatii la sfarsit);
+            de exemplu daca initial fisierul exista si continea "abc", dupa
+             deschiderea cu "a" si scrierea in al a sirului "xy" el va
+             contine "abcxy";
+    "r+"==> deschidere la citire si scriere;
+            comportamentul initial este ca la "r", adica daca fisierul nu
+             exista se semnaleaza eroare, iar daca exista nu i se sterge
+             vechiul continut, indicatorul se pune la inceput (si in
+             continuare putem citi si scrie);
+            de exemplu daca initial fisierul exista si continea "abc", dupa
+             deschiderea cu "r+" si scrierea in al a sirului "xy" el va
+             contine "xyc";
+    "w+"==> deschidere la citire si scriere;
+            comportamentul initial este ca la "w", adica daca fisierul nu
+             exista se creaza ca fisier vid, iar daca exista i se sterge
+             vechiul continut, indicatorul se pune la inceput, care coincide
+             cu sfarsitul (si in continuare putem citi si scrie - evident,
+             fisierul fiind initial vid, putem doar scrie, dar ulterior
+             putem da inapoi indicatorul cu fseek si putem citi ce am
+             scris);
+    "a+"==> deschidere la citire si scriere;
+            comportamentul initial este ca la "a", adica daca fisierul nu
+             exista se creaza ca fisier vid, iar daca exista nu i se sterge
+             vechiul continut, indicatorul se pune la sfarsit (si in
+             continuare putem citi si scrie - evident, indicatorul fiind
+             initial la sfarsit, iar ca sa citim trebuie sa dam indicatorul
+             inapoi cu fseek);
+   la oricare din variantele de mai sus putem adauga "b" sau "t": "rb",
+    "wb", "ab", "r+b", "w+b", "a+b", "rt", "wt", "at", "r+t", "w+t", "a+t";
+    prezenta lui "b" specifica faptul ca operatiile respective vor fi facute
+    in mod binar, adica toate caracterele din fisier vor fi tratate la fel;
+    "t" inseamna ca operatiile vor fi facute in mod text - atunci
+    caracterele sunt tratate diferentiat; de exemplu la citirea in mod text,
+    la intalnirea caracterlui cu cod 26 comportamentul este ca la intalnirea
+    sfarsitului de fisier; in absenta lui "b" sau "t" operatiile se vor face
+    implicit intr-unul din modurile binar sau text, depinzand de compilator;
+    unele compilatoare ignora "b" sau "t" (de exemplu gcc); pentru
+    portabilitate, recomandam mentionarea explicita a lui "b" sau "t"; in
+    exemplele care urmeaza vom folosi doar "b".
+
+Intrucat structurile FILE asociate de fopen fisierelor sunt alocate dinamic,
+ele pot fi controlate din program prin variabile FILE *. Se recomanda
+testarea valorii returnate de fopen intr-o variabila FILE * inainte de a o
+folosi, deoarece deschiderea poate esua (iar valoarea returnata e NULL).
+De exemplu putem scrie:
+
+  FILE *f;
+  f=fopen("nae.txt","rb");
+  if(f==NULL){/* eroare */}     /* sau if(!f) ... */
+  else {/* prelucram fisierul indicat de f */}
+
+sau:
+
+  FILE *f;
+  if((f=fopen("nae.txt","rb"))==NULL) /* sau if(!(f=fopen("nae.txt","rb"))) ... */
+    {/* eroare */}     
+  else 
+    {/* prelucram fisierul indicat de f */}
+
+
+int fclose(FILE *f);
+  ==> inchide fisierul indicat de "f" (gestionat de structura FILE a carei
+   adresa este "f") si dezaloca structura FILE respectiva; practica arata
+   ca fclose(NULL) nu are nici un efect; altfel, parametrul trebuie sa fie
+   o adresa returnata in prealabil de fopen, altfel efectul este
+   imprevizibil;
+     functia returneaza 0 in caz de succes si EOF (adica -1) in caz de esec;
+
+int fcloseall(void);
+  ==> inchide toate fisierele ramase deschise de program, in afara de
+   intrarile si iesirile standard (stdin, stdout, stderr, etc.); in caz de
+   succes returneaza numarul de inchideri reusite, in caz de esec returneaza
+   EOF (adica -1);
+
+De exemplu functia fcloseall este utila intr-o situatie de tipul urmator:
+ presupunem ca vrem sa deschidem in ordine fisierele f1, f2, f3; daca
+ deschiderea lui f1 esueaza, de oprim; daca deschiderea lui f2 esueaza,
+ intai trebuie inchis f1 (care, daca am ajuns la f2, inseamna ca s-a
+ deschis) si apoi ne oprim; daca deschiderea lui f3 esueaza, intai trebuie
+ inchise f1, f2 si apoi ne oprim; codul se va scrie mult mai simplu daca
+ in fiecare caz facem fcloseall (se de fiecare data se vor inchide exact
+ acele fisiere care trebuie).
+
+int fscanf(FILE *f, const char *format, ...);
+int fprintf(FILE *f, const char *format, ...);
+  ==> citire/scriere cu conversie de format (intre format extern-intern),
+   similara cu scanf/printf dar opereaza cu fisierul indicat de "f";
+    notam ca scanf,fscanf returneaza numarul de campuri corect procesate
+    (de obicei inseamna numarul de variabile corect citite), sau 0 daca nici
+    un camp nu a fost corect procesat dar din alta cauza decat intalnirea
+    sfarsitului de fisier, sau -1 daca nici un camp nu a fost corect
+    procesat, motivul fiind intalnirea sfarsitului de fisier; printf,
+    fprintf returneaza numarul de octeti (nu de valori) scrisi, sau -1 in
+    caz de eroare;
+
+Exemple:
+
+Presupunem ca fisierul "f" contine 10 20 30 iar in program avem
+ int a=1,b=2,c=3;
+atunci fscanf(f,"%d%d%d",&a,&b,&c) returneaza 3 si vom obtine a=10, b=20,
+ c=30;
+daca fisierul contine 10 x 30, atunci fscanf(f,"%d%d%d",&a,&b,&c) returneaza
+ 1 (doar o variabila citita corect) si vom avea a=10, b=2, c=3 (variabilele
+ necitite raman cu vechile valori);
+daca fisierul contine x 20 30, atunci fscanf(f,"%d%d%d",&a,&b,&c) returneaza
+ 0 (nici o variabila citita corect, motivul fiind date incorecte nu
+ intalnirea sfarsitului de fisier) si vom avea a=1, b=2, c=3;
+daca fisierul este vid, atunci fscanf(f,"%d%d%d",&a,&b,&c) returneaza -1
+ (nici o variabila citita corect, motivul fiind intalnirea sfarsitului de
+ fisier) si vom avea a=1, b=2, c=3.
+
+Daca in program avem int a=10, b=20;, atunci fprintf(f,"%d %d",a,b) va scrie
+ in fisier 10 20 si va returna 5 (s-au scris 5 octeti: 1,0,blank,2,0).
+
+Ca si scanf, functia fscanf ignora si sare automat peste caracterele albe
+(blank, tab, cap de linie) la citirea numerelor si a stringurilor (in
+particular, cu cu fscanf si "%s" nu putem citi stringuri ce contin blank-uri
+si trebuie sa folosim de exemplu fgets) dar nu ignora nici un caracter la
+citirea cu %c; pentru alte detalii a se consulta fisierul g2d.txt. Exemple:
+
+           int a,b; char c; fscanf(f,"%d%d%c",&a,&b,&c)
+f: 10 20 x ===========================================> a=10, b=20, c=' '
+
+          int a,b; char c; fscanf(f,"%d%d%c",&a,&b,&c)
+f: 10 20x ===========================================> a=10, b=20, c='x'
+
+notam ca interpretarea unei valori in format extern se face pana la primul
+caracter care nu poate face parte din formatul respectiv - de exemplu in al
+doilea caz citirea/interpretarea lui b s-a facut pana la caracterul x.
+
+size_t fread(void *adr, size_t dim, size_t nr, FILE *f);
+size_t fwrite(void *adr, size_t dim, size_t nr, FILE *f);
+ ==> citire/scriere fara conversie de format;
+     se incearca copierea a nr*dim octeti din fisierul indicat de f in
+      memorie la adresa adr (fread), respectiv din memorie de la adresa
+      adr in fisierul indicat de f (fwrite);
+     daca nu este posibil transferul a nr*dim octeti (de exemplu la fread
+      daca nu exista suficienti octeti de la pozitia curenta in fisier pana
+      la sfarsit sau la fwrite daca nu exista suficient spatiu liber pe
+      disc) se transfera un multiplu intreg de dim octeti;
+     ambele functii returneaza numarul de blocuri de dimensiune dim
+      transferate;
+
+De exemplu daca in fisierul desemnat de f mai sunt doar 35 octeti de la
+pozitia curenta pana la sfarsit, apelul fread(a,10,5,f) (care isi propune
+sa copieze 50 octeti din fisierul f in memorie la adresa a) va citi doar
+30 octeti (in fisier indicatorul va ramane la 5 octeti fata de sfarsit)
+si va returna 3.
+
+Daca fscanf, fprintf permit citirea/scrierea valorilor cu conversie intre
+formatul extern si intern (in fisier sunt in format extern, in memorie sunt
+in format intern), fread, fwrite permit citirea/scrierea valorilor doar in
+format intern (atat in fisier cat si in memorie valorile sunt in format
+intern).
+
+Exemplul urmator arata cum putem copia un intreg scris intr-un fisier in
+format extern zecimal in alt fisier in format intern si invers:
+fie numarul 16961 = 65+66*256;
+avand in vedere ca in Borland C++ 3.1 tipul int este pe doi octeti iar 65,
+ 66 sunt codurile caracterelor 'A', respectiv 'B', rezulta va reprezentarea
+ interna a lui 16961 ca int este "AB" (2 caractere); in schimb reprezentarea
+ externa zecimala este "16961" (5 caractere);
+presupunand ca f, g desemneaza niste fisiere deschise corespunzator in
+ prealabil, putem face transformarile:
+
+       int n; fread(&n,sizeof(int),1,f); fprintf(g,"%d",n);
+ f: AB ==================================================> g: 16961
+       <==================================================
+       int n; fscanf(g,"%d",&n); fwrite(&n,sizeof(int),1,f); 
+
+(deci daca f contine AB, in g se va scrie 16961).
+Notam ca daca am fixat valoarea matematica si tipul ei, formatul intern este
+unic determinat, in schimb formatul extern nu; de exemplu valoarea 16961 de
+tip int are formatul intern AB dar formatele externe 16961 (zecimal), 4241
+(hexa), etc.
+
+Cateva comentarii legate de stocarea datelor in fisiere in format intern sau
+ extern:
+- daca un fisier contine intregi in format extern, acestia au diverse
+ lungimi si de aceea intre ei trebuie sa existe separatori (caractere ce
+ nu pot face parte dintr-o reprezentare externa de intreg, de exemplu
+ blank-uri) pentru a permite lui fscanf sa recunoasca de unde pana unde
+ tine un intreg;
+  de aceea nu se poate calcula de unde incepe intregul al n-lea si astfel
+ nu putem ajunge la el direct (cu fseek) ci doar citind (in particular
+ recunoscand) toti intregii de pana la el; astfel, de regula fisierele cu
+ reprezentari externe nu se pot prelucra decat secvential; accesul direct
+ este posibil doar daca impunem restrictii care sa permita calcularea
+ adresei de unde incepe fiecare intreg - de exemplu fiecare intreg sa aibe
+ o cifra si intre ei sa existe un singur blank;
+- daca un fisier contine intregi in format intern, acestia au aceeasi
+ lungime (indiferent de valoarea lor matematica) - de exemplu in Borland C++
+ 3.1 doi octeti - si nu se separa (in fisier apar lipiti); nici nu ii putem
+ separa, deoarece nu exista caractere care nu pot face parte dintr-o
+ reprezentare interna de int (orice numar 0...255, deci orice caracter
+ ASCII, poate fi cifra in baza 256); in plus nu e nevoie sa ii separam,
+ deoarece putem determina de unde si pana unde tine fiecare numarand
+ octetii; in particular putem determina adresa de unde incepe intregul
+ al n-lea (anume n*sizeof(int)) si putem muta indicatorul acolo direct cu
+ fseek; astfel, fisierele cu reprezentari interne se pot prelucre in acces
+ direct (nu numai secvential);
+- daca intregii sunt mici ca valoare, reprezentarea externa poate fi mai
+ avantajoasa ca spatiu ocupat; de exemplu in gcc tipul int are 4 octeti;
+ atunci, daca avem de stocat 100 intregi avand valori 0...9, in format
+ extern zecimal ei vor ocupa 200 octeti (fiecare intreg necesita o cifra
+ si un blank) iar in format intern 400 octeti (fiecare intreg cate 4
+ octeti);
+  daca intregii sunt mari, este mai avantajoasa stocarea in format intern;
+ de exemplu daca avem de stocat 100 intregi avand valori 10000...99999,
+ in format extern zecimal ei vor ocupa 600 octeti (fiecare intreg necesita
+ 5 cifre si un blank), iar in format intern tot 400 octeti;
+- daca fisierul cu intregi este creat sau urmeaza a fi citit direct de om,
+ suntem obligati sa folosim reprezentarea externa (doar aceasta este usor de
+ inteles de catre om); daca fisierul este creat de un program si urmeaza a
+ fi citit de alt program, de multe ori este mai avantajos sa folosim
+ reprezentarea interna (programele care il prelucreaza sunt mai simplu de
+ scris).
+
+int fseek(FILE *f, long offset, int origine);
+ ==> plaseaza indicatorul de pozitie curenta retinut in structura FILE
+  pointata de "f" la distanta "offset" fata de originea "origine" (fara
+  ca cu aceasta ocazie sa fie citite/scrise caractere); "origine" poate avea
+  trei valori posibile, iar pentru a le specifica putem folosi niste
+  constante simbolice predefinite (pentru care este suficienta includerea
+  lui stdio.h) - si este de preferat sa lucram asa, deoarece este mai
+  portabil; aceste constante simbolice , valorile lor si semnificatiile lor
+  sunt:
+   SEEK_SET (=0) ==> inceputul fisierului;
+   SEEK_CUR (=1) ==> pozitia curenta;
+   SEEK_END (=2) ==> sfarsitul fisierului
+  functia returneaza 0 in caz de succes si ceva !=0 in caz de esec;
+
+Exemple:
+
+fseek(f,0l,SEEK_SET);  ==> pune indicatorul la inceputul fisierului;
+fseek(f,0l,SEEK_END);  ==> pune indicatorul la sfarsitul fisierului;
+fseek(f,0l,SEEK_CUR);  ==> lasa indicatorul pe loc;
+fseek(f,1l,SEEK_CUR);  ==> da indicatorul cu un octet (o pozitie) inainte;
+fseek(f,-1l,SEEK_CUR); ==> da indicatorul cu un octet inapoi;
+fseek(f,-5l,SEEK_END); ==> pune indicatorul cu 5 octeti inainte de sfarsitul
+                            fisierului;
+in exemplele de mai sus am mentionat explicit ca valoarea data ca parametru
+din mijloc este long (punand de exemplu "0l" si nu "0"); in mod normal o
+asemenea precizare sau un cast explicit la long nu sunt necesare, dar
+practica arata ca e bine sa le facem.
+
+long ftell(FILE *f);
+ ==> returneaza pozitia curenta in fisier (retinuta de indicatorul de
+      pozitie curenta din structura FILE pointata de "f"), sau -1l in caz de
+      esec; valoarea returnata de ftell poate fi ulterior transmisa ca
+      parametru lui fseek;
+
+Obs: in cazul fisierelor deschise in mod binar, distanta "offset" de la
+ functia fseek si pozitia returnata de functia ftell sunt masurate ca numar
+ de octeti; la fisierele deschise in mod text e bine ca "offset" sa fie zero
+ sau o valoare returnata anterior de fseek.
+
+void rewind(FILE *f);
+ ==> pune indicatorul de pozitie curenta la inceputul fisierului, asemeni
+      unui apel de forma fseek(f, 0l, SEEK_SET);
+
+Exemplu: functie care returneaza dimensiunea unui fisier (deschis in
+   prealabil):
+
+long filesize(FILE *f){
+  long p,d;
+  p=ftell(f);           /* retinem pozitia curenta */
+  fseek(f,0l,SEEK_END); /* punem ind.la sfarsit; acum pozitia=dimensiunea */
+  d=ftell(f);           /* aflam pozitia (=dimensiunea) */
+  fseek(f,p,SEEK_SET);  /* readucem indicatorul unde era */
+  return d;             /* returnam dimensiunea */
+}
+
+int feof(FILE *f);
+ ==> daca in structura FILE pointata de "f" este setat flag-ul de sfarsit de
+  fisier, functia returneaza o valoare nenula (care se asimileaza cu true),
+  iar daca nu este setat returneaza 0 (false);
+   functiile care lucreaza cu fisierul prin intermediul structurii FILE
+  seteaza acest flag daca esueaza din cauza intalnirii sfarsitului de
+  fisier;
+   deci feof testeaza daca ultima operatie anterioara efectuata asupra
+  fisierului (prin intermediul structurii FILE pointate de "f") a esuat sau
+  nu din cauza intalnirii sfarsitului de fisier; de aceea el trebuie apelat
+  (pe post de test de sfarsit de fisier) imediat dupa o operatie de tip
+  fscanf, fread, etc. si doar daca a returnat 0 (false) rezultatele acelei
+  operatii sunt valide si se pot folosi in continuare;
+   notam ca flag-ul de sfarsit de fisier este resetat de rewind(f) sau
+  fseek(f,0l,SEEK_SET);
+
+Exemplu: program care copiasa un fisier in alt fisier, fisierele fiind
+========   primite ca argumente in linia de comanda:         
+
+#include<stdio.h>
+int main(int argc, char *argv[]){
+ FILE *s, *d; char c;
+ if(argc!=3)
+   {fprintf(stderr,"Nr. incorect de argumente"); return 1;}
+ if((s=fopen(argv[1],"rb"))==NULL)
+   {fprintf(stderr,"Nu pot deschide fis. %s\n",argv[1]); return 1;}
+ if((d=fopen(argv[2],"wb"))==NULL)
+   {fprintf(stderr,"Nu pot deschide fis. %s\n",argv[2]);fclose(s);return 1;}
+ while(1){
+   fscanf(s,"%c",&c);
+   if(feof(s))break;
+   fprintf(d,"%c",c);
+ }   
+ fclose(s); fclose(d);
+ return 0;
+}
+
+in acest program partea care copiaza efectiv primul fisier in al doilea
+ este:
+
+ while(1){
+   fscanf(s,"%c",&c);
+   if(feof(s))break;
+   fprintf(d,"%c",c);
+ }   
+
+alternativ, putem folosi:
+
+ for(fscanf(s,"%c",&c);!feof(s);fscanf(s,"%c",&c))
+   fprintf(d,"%c",c);
+
+sau:
+
+ while(fscanf(s,"%c",&c)==1)
+   fprintf(d,"%c",c);
+
+ La executie (sub forma unui proces), orice program are automat o intrare
+standard (de unde poate citi), o iesire standard si o iesire standard pentru
+erori (unde poate scrie); de obicei ele duc la consola, dar pot fi
+redirectate spre fisiere sau alte procese; aceste intrari/iesiri sunt
+gestionate asemeni fisierelor avand asignate automat trei structuri FILE
+predefinite; adresele acestor structuri FILE sunt accesibile din program
+prin cuvintele predefinite stdin, stdout, respectiv stderr (ele au deci
+semnificatia unor FILE *). Functiile scanf/printf lucreaza automat cu stdin,
+respectiv stderr. De exemplu:
+
+  scanf("%d",&n)   <==>   fscanf(stdin,"%d",&n)
+
+Din program, putem asocia stdin, stdout, stderr unor fisiere, folosind:
+
+FILE *freopen(const char *specificator, const char *mod, FILE *f);
+ ==> asociaza un nou fisier, specificat de "specificator", unei structuri
+  FILE existente (alocata in prealabil cu ocazia altei deschideri), pointate
+  de "f", deschizand noul fisier conform lui "mod" (a carui constructie si
+  semnificatie este la fel ca la fopen); fisierul anterior gestionat de
+  structura FILE este inchis (indiferent daca deschiderea noului fisier
+  reuseste sau nu); in caz de succes functia returneaza valoarea lui "f" iar
+  in caz de esec returneaza NULL.
+
+De exemplu:
+
+#include<stdio.h>
+
+int main(){
+  FILE *f;
+  if(freopen("test.txt","w",stdout)==NULL) return 1;
+    /* acum stdout este redirectat spre fisierul "test.txt" */
+  printf("Hello !");  /* mesajul "Hello !" apare in fisierul "test.txt" */
+  fclose(stdout);
+  return 0;
+}
+
+ O situatie cand este utila redirectarea stdin spre fisiere este urmatoarea:
+sa presupunem ca avem de scris un program care citeste de consola (prin
+stdin) niste date complexe; pana cand programul este finalizat, uneori el
+trebuie rulat de mai multe ori cu niste aceleasi date, pentru a vedea daca
+functioneaza corect; daca datele sunt complexe (matrici), este incomod sa le
+introducem de fiecare data de la consola; de aceea putem scrie aceste date
+intr-un fisier si temporar (pana acceptam ca programul functioneaza corect)
+sa redirectam cu freopen stdin-ul programului catre acest fisier - atunci la
+fiecare rulare, scanf-urile din program vor citi automat datele din fisier
+si nu va trebui sa le introducem de fiecare data de la consola; la sfarsit
+vom elimina acel freopen din program.
+
+int fflush(FILE *f);
+ ==> goleste buffer-ul structurii FILE pointate de "f"; daca fisierul este
+  deschis in citire, caracterele respective se pierd (din buffer, nu din
+  fisierul de pe disc); daca fisierul este deschis in scriere, caracterele
+  respective sunt scrise in fisierul de pe disc; returneaza 0 = succes,
+  EOF (-1) = esec;
+
+fflush este util de exemplu pentru a goli buffer-ul stdin daca am citit un
+numar sau string si urmeaza sa facem un scanf cu %c (pentru a elimina
+separatorii ramasi dupa numerele sau stringurile respective, ca sa putem
+citi corect noul caracter); a se vedea in acest sens lectia din fisierul
+g2d.txt.
+
+ O functie ce nu apartine bibliotecii standard C (deci folosirea ei nu este
+portabila) dar care insoteste multe compilatore de C este unlink, care
+permite stergerea unui fisier de disc; in Borland C++ 3.1 ea are prototipul:
+
+int unlink(const char *specificator);
+ ==> sterge de pe disc fisierul cu specificatorul "specificator";
+  stergerea esueaza daca fisierul are atributul read-only; de asemenea,
+  daca fisierul este deschis, el trebuie inchis in prealabil; functia
+  returneaza 0 = succes si -1 = esec.
+
+D. Assert:
+~~~~~~~~~~
+
+ Cand scriem un program si vrem sa-l depanam, de multe ori este util sa
+inseram in diverse locuri instructiuni de forma:
+
+ if(!conditie){afisam mesaj de eroare; exit();}
+
+care testeaza anumite conditii ce in mod normal ar trebui satisfacute in
+acele locuri, iar daca ele nu sunt indeplinite sa afiseze un mesaj adecvat
+si sa incheie programul.
+ Cand programul este terminat/depanat aceste instructiuni trebuie scoase
+(caci consuma timp la executie), dar daca sunt multe sunt greu de regasit.
+
+ O modalitate eleganta de a insera asemenea teste de corectitudine este
+folosind instrumentul predefinit assert:
+
+#include<assert.h>
+
+void assert(int test);
+ ==> este un macro care la preprocesare se expandeaza intr-o instructiune if
+  ce testeaza conditia "test" iar daca aceasta se evalueaza la 0 (false)
+  afisaza pe stderr un mesaj de forma:
+
+    Assertion failed: test, fisierul sursa, linia sursa
+
+  si apoi termina executia programului apeland functia abort; fisierul sursa
+  si linia sursa sunt cele unde a fost inserat assert-ul care a produs
+  afisarea;
+
+ Dupa ce am terminat de depanat programul, vom insera in el, deasupra liniei
+
+#include<assert.h>
+
+linia:
+
+#define NDEBUG
+
+aceasta va face ca instructiunile prin care se expandeaza la preprocesare
+toate assert-urile ulterioare sa apara ca niste comentarii - deci la
+compilare nu vor fi incluse in executabil si astfel nu vor influienta timpul
+executiei (ca si cand le-am fi scos manual din text); astfel, dupa ce am
+terminat de depanat programul, nu mai e nevoie sa cautam in el toate
+assert-urile si sa le stergem manual, ci doar sa includem deasupra lui
+#include<assert.h> linia #define NDEBUG
+
+Obs: in fisierul assert.h din Borland C++ 3.1 macro-ul assert este definit
+ a.i. in cazul in care este definit NDEBUG, invocarile assert(p) se
+ transcriu prin ((void)0) (deci nu este vorba de un comentariu, ci de o
+ expresie ce nu influienteaza rezultatele programului).
+
+Exemplu: program care aduna doua numere rationale, date ca fractii:
+=======
+
+Versiunea debug (cu assert-uri active inserate) este urmatoarea:
+
+#include<assert.h>
+#include<stdio.h>
+
+/* functie ce determina cmmdc a doi intregi folosind algoritmul lui Euclid
+    cu diferente; cmmdc nu are sens daca ambii intregi sunt nuli si de aceea
+    testam cu assert acest lucru */
+int cmmdc(int a, int b){
+  assert(a!=0 || b!=0);
+  if(a<0)a=-a; if(b<0)b=-b;
+  if(a==0 || b==0) return a+b;
+  while(a!=b) if(a>b)a-=b; else b-=a;
+  return a;
+}
+
+/* functie ce aduce un nr. rational (ai carui numarator si numitor sunt
+    transmisi ca parametri) la forma normalizata - adica numaratorul si
+    numitorul prime intre ele, numitorul pozitiv, iar daca numaratorul e 0
+    numitorul e 1*/
+void norm(int *nr, int *num){
+  int d;
+  assert(*num!=0); /* numitorul nu poate fi nul */
+  d=cmmdc(*nr, *num);
+  *nr/=d; *num/=d;
+  if(*num<0){*nr=-*nr; *num=-*num;}
+  assert(cmmdc(*nr, *num)==1 && *num>0 && (*nr==0?*num==1:1));
+    /* verificam ca fractia e normalizata */
+}
+
+/* program ce aduna doua numere rationale date prin numarator si numitor */
+int main(){
+ int a1,b1,a2,b2,a3,b3;
+ scanf("%d%d%d%d",&a1,&b1,&a2,&b2);
+ norm(&a1,&b1); norm(&a2,&b2);
+ a3=a1*b2+a2*b1; b3=b1*b2;
+ norm(&a3,&b3);
+ assert(a1/(double)b1+a2/(double)b2==a3/(double)b3);
+  /* verificam ca obtinem acelasi rezultat ca la impartirea ca double */
+ printf("%d %d\n",a3,b3);
+ return 0;
+}
+
+Astfel, daca la rulare dam 1 2 3 0 (adica fractiile 1/2 si 3/0) va afisa:
+
+Assertion failed: *num!=0, file PROGRAM.C, line 21
+Abnormal program termination
+
+in schimb daca dam 1 2 3 4 (adica fractiile 1/2 si 3/4) va afisa:
+
+5 4
+
+adica fractia 5/4
+
+Dupa terminarea depanarii vom obtine versiunea finala (fara assert-uri
+ active) inserand o singura linie (#define NDEBUG, deasupra lui
+ #include<assert.h>):
+
+#define NDEBUG
+#include<assert.h>
+#include<stdio.h>
+
+/* functie ce determina cmmdc a doi intregi folosind algoritmul lui Euclid
+    cu diferente; cmmdc nu are sens daca ambii intregi sunt nuli si de aceea
+    testam cu assert acest lucru */
+int cmmdc(int a, int b){
+  assert(a!=0 || b!=0);
+  if(a<0)a=-a; if(b<0)b=-b;
+  if(a==0 || b==0) return a+b;
+  while(a!=b) if(a>b)a-=b; else b-=a;
+  return a;
+}
+
+/* functie ce aduce un nr. rational (ai carui numarator si numitor sunt
+    transmisi ca parametri) la forma normalizata - adica numaratorul si
+    numitorul prime intre ele, numitorul pozitiv, iar daca numaratorul e 0
+    numitorul e 1*/
+void norm(int *nr, int *num){
+  int d;
+  assert(*num!=0); /* numitorul nu poate fi nul */
+  d=cmmdc(*nr, *num);
+  *nr/=d; *num/=d;
+  if(*num<0){*nr=-*nr; *num=-*num;}
+  assert(cmmdc(*nr, *num)==1 && *num>0 && (*nr==0?*num==1:1));
+    /* verificam ca fractia e normalizata */
+}
+
+/* program ce aduna doua numere rationale date prin numarator si numitor */
+int main(){
+ int a1,b1,a2,b2,a3,b3;
+ scanf("%d%d%d%d",&a1,&b1,&a2,&b2);
+ norm(&a1,&b1); norm(&a2,&b2);
+ a3=a1*b2+a2*b1; b3=b1*b2;
+ norm(&a3,&b3);
+ assert(a1/(double)b1+a2/(double)b2==a3/(double)b3);
+  /* verificam ca obtinem acelasi rezultat ca la impartirea ca double */
+ printf("%d %d\n",a3,b3);
+ return 0;
+}
+
+Astfel, la compilare executabilul nu va mai contine instructiunile if prin
+care se expandau assert-urile.
+
+Teme:
+~~~~~
+
+1. Scrieti functii pentru citirea/afisarea/adunarea vectorilor de intregi
+  si un program ilustrativ, avand structura:
+
+  #include<stdio.h>
+
+  void citvec(int *n, int *v){
+    /* citeste *n=nr.componentelor, v[0],...,v[*n]=componentele */
+  }
+
+  void scrvec(int n, int *v){
+    /* afisaza v[0],...,v[n] (si trece la rand nou) */
+  }
+
+  void addvec(int n, int *a, int *b, int *c){
+    /* aduna vectorii a, b (de dimensiune n) in vectorul c */
+  }
+
+  void main(){
+    int n1, n2, x[10], y[10], z[10];
+    printf("Dati nr. de componente si componentele primului vector:\n");
+    citvec(&n1,x);
+    printf("Dati nr. de comp. si comp. celui de-al doilea vector:\n");
+    citvec(&n2,y);
+    if(n1!=n2)printf("Vectorii au dimensiuni diferite.\n");
+          else{addvec(n1,x,y,z);
+               printf("Vectorul suma este:\n");
+               scrvec(n1,z);
+              }
+  }
+
+2. Scrieti functii pentru citirea/afisarea/adunarea vectorilor de intregi
+  integrati in structuri si un program ilustrativ, avand structura:
+
+  #include<stdio.h>
+
+  struct vector{int n, a[20];};
+
+  void citvec(struct vector *v){
+    /* citeste v->n=nr.componentelor, v->a[0],...,v->a[v->n]=componentele */
+  }
+
+  void scrvec(struct vector v){
+    /* afisaza v.a[0],...,v.a[v->n] (si trece la rand nou) */
+  }
+
+  int addvec(struct vector a, struct vector b, struct vector *c){
+    /* aduna vectorii a, b (daca au aceeasi dimensiune) in vectorul c;
+       returneaza 0=ok (au aceeasi dimensiune), -1=esec (dim. diferite) */
+  }
+
+  void main(){
+    struct vector x,y,z;
+    printf("Dati primul vector:\n");
+    citvec(&x);
+    printf("Dati cel de-al doilea vector:\n");
+    citvec(&y);
+    if(!addvec(x,y,&z))printf("Vectorii nu se pot aduna.\n");
+          else{printf("Vectorul suma este:\n");
+               scrvec(z);
+              }
+  }
+
+3. Scrieti functii pentru citirea/afisarea/adunarea matricilor cu maxim
+  100 coloane, de numere intregi, si un program ilustrativ, avand structura:
+
+  #include<stdio.h>
+
+  void citmat(int *nl, int *nc, int (*a)[100]){
+    /* citeste *nl = nr. de linii,
+               *nc = nr. de coloane
+               a[0][0]...a[*nl-1][*nc-1] = componentele
+    */
+  }
+
+  void scrmat(int nl, int nc, int (*a)[100]){
+    /* afisaza a[0][0]...a[nl-1][nc-1],
+       trecand la rand nou la fiecare nc elemente afisate
+    */
+  }
+
+  void addmat(int nl, int nc, int (*a)[100], int (*b)[100], int (*c)[100]){
+    /* aduna matricile a, b (de dimensiuni nlxnc) in matricea c */
+  }
+
+  void main(){
+    int l1, c1, l2, c2, x[10][100], y[10][100], z[10][100];
+    printf("Dati nr. de linii, coloane si componentele primei matrici:\n");
+    citmat(&l1,&c1,x);
+    printf("Dati nr. de lin., col. si comp. celei de-a doua matrici:\n");
+    citmat(&l2,&c2,y);
+    if(l1!=l2 || c1!=c2)printf("Matricile au dimensiuni diferite.\n");
+                   else{addmat(l1,c1,x,y,z);
+                        printf("Matricea suma este:\n");
+                        scrmat(l1,c1,z);
+              }
+  }
+
+4. Scrieti functii pentru citirea/afisarea/adunarea matricilor de intregi
+  cu maxim 20 linii si 100 coloane, integrati in structuri, si un program
+  ilustrativ, avand structura:
+
+  #include<stdio.h>
+
+  struct matrice{int l, c, a[20][100];};
+
+  void citmat(struct matrice *m){
+    /* citeste m->l = nr. de linii,
+               m->c = nr. de coloane,
+               m->a[0][0],...,m->a[m->l-1][m->c-1] = componentele
+    */
+  }
+
+  void scrmat(struct matrice m){
+    /* afisaza m.a[0][0],...,m.a[m.l-1][m.c-1],
+       trecand la rand nou la fiecare m.c elemente afisate
+    */
+  }
+
+  int addmat(struct matrice a, struct matrice b, struct matrice *c){
+    /* aduna matricile a, b (daca au aceleasi dimensiuni) in matricea c;
+       returneaza 0=ok (au aceleasi dimensiuni), -1=esec (dim. diferite) */
+  }
+
+  void main(){
+    struct matrice x,y,z;
+    printf("Dati prima matrice:\n");
+    citmat(&x);
+    printf("Dati cea de-a doua matrice:\n");
+    citmat(&y);
+    if(!addmat(x,y,&z))printf("Matricile nu se pot aduna.\n");
+          else{printf("Matricea suma este:\n");
+               scrmat(z);
+              }
+  }
+
+5. Scrieti un program care primeste niste intregi ca argumente in linia de
+ comanda si afisaza valorile distincte care apar printre ele. Programul va
+ avea structura:
+
+ #include<assert.h>
+ #include<stdio.h>
+
+ int *distinct(int *v, int n, int *k){
+   /* presupunand ca v este adresa unui vector de intregi cu n componente,
+       determina valorile distincte care apar in el si le stocheaza intr-un
+       nou vector alocat dinamic progresiv (cu realloc), pe masura ce mai
+       trebuie stocata o noua valoare distincta; va furniza in *k numarul de
+       elemente ale noului vector si va returna adresa acestuia;
+      de exemplu vectorul 1, 4, 1, 2, 2, 5 va genera vectorul de valori
+       distincte 1, 4, 2, 5;
+   */
+ }
+
+ int main(int argc, char *argv[]){
+   int *v, *d, n, k, i;
+   /* initializeaza n=argc-1 (nr. de numere date ca argument);
+      aloca dinamic (cu malloc) un vector de n intregi, ii retine adresa de
+        inceput in v si copiaza numerele date ca argument in el;
+      apeleaza d=distinct(v,n,&k);
+      afisaza vectorul pointat de d (avand k elemente);
+      dezaloca vectorii pointati de v, d (cu free);
+   */
+   return 0;
+ }
+
+ Programul va contine conditii assert de verificare a corectitudinii.
+
+6. Scrieti un program care primeste ca argument in linia de comanda
+ specificatorul unui fisier cu intregi in format extern zecimal si care
+ citeste acesti intregi si ii stocheaza intr-un vector, apoi afisaza
+ vectorul. Acest vector va fi alocat dinamic progresiv (cu realloc) pe
+ masura ce mai trebuie adaugat cate un intreg, iar dupa afisare va fi
+ dezalocat (cu free). Programul va contine conditii assert pentru
+ verificarea corectitudinii.
+
+7. Scrieti un program care primeste ca argumente in linia de comanda
+ specificatorul unui fisier si niste intregi si scrie acesti intregi in
+ fisierul respectiv (pe care il deschide in suprascriere) in format extern
+ zecimal, separati prin cate un blank.
+
+8. Scrieti un program care transforma un fisier ce contine intregi in format
+ extern zecimal (separati prin blank-uri) intr-un fisier ce contine aceiasi
+ intregi in format intern (lipiti intre ei). Specificatorii celor doua
+ fisiere sunt date ca argumente in linia de comanda.
+
+9. Scrieti un program care transforma un fisier ce contine intregi in format
+ intern (lipiti intre ei) intr-un fisier ce contine aceiasi intregi in
+ format extern zecimal (separati prin blank-uri). Specificatorii celor doua
+ fisiere sunt date ca argumente in linia de comanda.
+
+10. Scrieti un program care primeste ca argument in linia de comanda
+ specificatorul unui fisier ce contine intregi in format intern (lipiti
+ intre ei) si sorteaza (ordoneaza crescator) acesti intregi, operand
+ direct asupra fisierului (cu fread, fwrite, fseek, ftell, rewind, eof) -
+ deci nu se vor incarca intregii intr-un vector (ca sa se sorteze vectorul)
+ si nici nu se vor folosi fisiere auxiliare. Programul va contine conditii
+ assert pentru verificarea corectitudinii.
+  Programul se poate testa folosind programele 7, 8, 9.
+
+
+DANIEL DRAGULICI
+ianuarie, 2007

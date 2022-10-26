@@ -1,0 +1,738 @@
+Limbajul MIPS - Lectia 1 - Generalitati:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Calculatorul este format din unitatea centrala, memorie si periferice; ele
+ comunica intre ele prin magistrale (de adrese, date, semnale).
+
+Calculatorul pe care il avem in vedere are urmatoarele caracteristici:
+
+Unitatea centrala (procesorul) are un numar de registri; fiecare registru
+ este desemnat in programul sursa (MIPS) prin $numar sau $nume, iar intern
+ (in programul scris in limbaj masina) printr-un numar intreg (anume numarul
+ care apare in scrierea $numar).
+
+Prezentam cativa registri si rolul lor:
+
+Nume                Numar             Rol
+-----               -----             --------------------
+$zero               $0                are mereu valoarea 0
+$at                 $1                rezervat pentru asamblor
+$v0, $v1            $2,$3             val. prod. de o expr.sau ret. de o fct.
+$a0 - $a3           $4 - $7           parametri actuali
+$t0 - $t7,$t8,$t9   $8 - $15,$24,$25  val.temporare (nerestaurate de apeluri)
+$s0 - $s7           $16 - $23         val.temporare (restaurate de apeluri)
+
+Subliniem ca toti reg. de mai sus in afara de $zero pot fi modificati de
+ utilizator, dar se recomanda ca ei sa fie folositi doar in scopurile
+ mentionate - astfel asiguram compatibilitatea cu programe scrise de altii
+ si evitam efecte imprevizibile. De ex. $at este folosit de compilator in
+ instructiunile prin care se expandeaza pseudoinstructiunile; astfel,
+ manevrarea explicita a lui de catre utilizator poate produce efecte
+ imprevizibile.
+In programele obisnuite vom folosi cu precadere $t0 - $t9.
+
+Memoria are 2^32 octeti, avand adrese numere succesive pe 32 biti:
+ 0x00000000, 0x00000001, ..., 0xffffffff.
+
+Ea se poate accesa la nivel de byte (1 octet), word (4 octeti), etc.
+Datele word se pot aloca/citi/scrie doar la adrese multiplu de 4 (tentativele
+ de a face altfel genereaza erori).
+
+Programele se scriu in limbajul de asmablare MIPS, iar la compilare 
+ sunt traduse in limbaj masina. Programul MIPS contine instructiuni si
+ pseudoinstructiuni. La compilare o instr. MIPS este translatata intr-o
+ instr. masina, in timp ce o pseudoinstr. MIPS este translatata in 1 - 3
+ instr. masina. Instructiunile masina ocupa fiecare cate 1 word.
+
+Memoria este impartita in zone (segmente) cu destinatii specifice - stocarea
+ datelor statice, stiva, stocarea programului (in cod masina) executat, etc.
+
+-----
+
+PCSpim este o masina virtuala.
+
+Interfata ei contine urmatoarele panouri:
+- Registers:
+   afisaza continutul curent al registrilor;
+   se reactuaizeaza de fiecare data cand programul se opreste din executie
+    (de exemplu intre pasi, la rularea pas cu pas);
+- Text segment:
+   afisaza zona de memorie ce contine instructiunile (in cod masina ale)
+    programului si ale sistemului (kernel - un nucleu de sistem de operare,
+    care se incarca automat);
+   fiecare instructiune ocupa 1 word si se afisaza pe cate o linie, de ex.:
+
+   [0x00400000]   0x8fa40000   lw $4, 0($29)      ; 175: lw $a0 0($sp) # argc
+    (a)            (b)          (c)                (d)
+
+   (a) - este adresa din memorie a instructiunii;
+         cum o instructiune are 1 word, adresele vor fi din 4 in 4;
+   (b) - este codificarea hexa interna (1 word) a instructiunii;
+   (c) - este descrierea mnenomica (in limbajul MIPS) a instructiunii;
+   (d) - ce e dupa ";" este linia sursa (MIPS) care a generat instructiunea;
+         linia este precedata de numarul ei din fisierul sursa si ":";
+
+  o linie sursa poate contine o instructiune sau o pseudoinstructiune MIPS;
+  o instr. MIPS se translateaza la compilare intr-o singura instr. masina;
+   ei ii va corespunde o linie in fereastra "Text segment", care in (c) va
+   contine un text MIPS identic sau echivalent cu linia din fisier;
+  o pseudoinstr. MIPS se translateaza la compilare prin una sau mai multe
+   instr. MIPS, care se translateaza fiecare in cate o instr. masina; in
+   acest caz liniei sursa respective ii vor corespunde mai multe linii in
+   fereastra "Text segment"; aceste linii vor avea in (c) mnemonicul MIPS al
+   instr. generate (deci alt text ca linia din fisierul sursa); de asemenea,
+   doar prima dintre linii va avea ceva dupa ";" (anume linia din fisierul
+   sursa), urmatoarele nu vor avea nimic;
+- Data segment:
+   afisaza zona de momorie ce contine datele statice ale programului, stiva
+    (programul si sistemul folosesc aceeasi stiva) si datele sistemului;
+- Messages:
+   afisaza mesajele PCSpim (de ex. mesajele de eroare);
+- Console:
+   este continuta intr-o fereastra separata si simuleaza ecranul (text al)
+    masinii virtuale; interactiune programului rulat cu utilizatorul (intrari
+    si iesiri) se fac in aceast afereastra.
+
+Programele sunt continute in fisiere text cu extensia".s".
+Ele sunt editate separat (de ex. cu "notepad").
+Se incarca cu: File -> Open
+Programele se pot rula:
+ -  continuu: instructiunile se executa una dupa alta automat;
+ -  pas cu pas: dupa executarea fiecarei instructiuni se asteapta o comanda
+     (de obicei tasta) de continuare; intre timp se poate urmari/modifica (in
+     panouri si casete de dialog) continutul memoriei si al registrilor;
+Diverse comenzi care se pot da:
+ F5 - lansarea executiei continue; se cere adresa instructiunii de la care sa
+       inceapa rularea; valoarea care apare implicit este ok pentru
+       majoritatea cazurilor asa ca se poate da ENTER;
+ Ctr-C - inreruperea rularii continue si comutarea in rularea pas cu pas
+      (utila de ex. daca se intra intr-un ciclu infinit);
+ F10 - se executa un pas - o instructiune (instructiunea curenta);
+ F11 - se executa mai multi pasi - un grup de instructiuni incepand de la cea
+        curenta (se cere numarul de instructiuni);
+ Ctrl+B - adaugare/eliminare breackpoint-uri (se cer adresele instructiunilor
+        unde se pun breackpoint-uri); cand executia un mod continuu ajunge la
+        un breackpoint, ea se intrerupe si comuta in modul pas cu pas;
+ Simulator -> Set Value - modificarea continutului memoriei sau registrilor
+        in timpul executiei pas cu pas (se cere numarul registrului sau
+        adresa de memorie si noua valoare);
+
+-----
+
+Structura unui program simplu (fisier ".s"):
+
+
+.data
+ # declaratii date
+.text
+ # cod
+main: # eticheta marcand punctul de start
+ # cod
+li $v0,10
+syscall
+ # o linie goala
+
+
+Comentariile se scriu in stil C++, dar incep cu #.
+Etichetele sunt nume carora la compilare li se asociaza adrese de memorie;
+ plasarea intr-un loc al programului a unei etichete urmate de ":" face ca
+ la compilare sa se asocieze etichetei adresa de memorie la care s-a ajuns
+ cu generarea programului executabil in acel moment.
+Secventa "li $v0,10", "syscall" incarca valoarea imediata 10 in registrul $v0
+ si apeleaza sistemul cu syscall (care preia valoarea din $v0 ca parametru);
+ efectul este terminarea executiei programului; mecanismul este analog
+ apelarii intreruperii 21h cu functia 4ch in assembler sub MS-DOS.
+
+-----
+
+Datele se declara astfel:
+
+ nume:  tip  valori
+
+unde
+ "nume" este o eticheta, careia i se asociaza la compilare adresa pana la
+   care s-a ajuns cu umplerea zonei de date a memoriei in acel moment;
+ "tip" este un tip de date si poate fi ".byte", ".word", ".space", etc.;
+ "valori" este o lista de valori compatibile cu "tip"; ele vor fi stocate in
+   zona de date incepand de la adresa "nume", fiecare data ocupand o locatie
+   corespunzatoare lui "tip"; valorile se pot scrie numeric zecimal (ex. 2,
+   10, -1), numeric hexa (ex. 0x21 care inseamna 33 zecimal), caracter (ex.
+   'A', 'b'), etc.
+
+Exemplu:
+
+  var1: .word 3
+  x: .byte 'a', 'b'
+  y: .space 12
+
+va face ca in zona de date sa se aloce urmatoarele:
+
+                     |   3   | a | b |                       |
+                   | | | | | |   |   | | | | | | | | | | | | | | |
+                  --------------------------------------------------
+                     ^       ^       ^   ^                       ^
+                     |       |       |  (*)                     (**)
+            0x10010000  0x10010004  0x10010006
+
+etichetei "var1" i se va asocia adresa 0x10010000 (fiind declarata cu tipul
+ word, este un multiplu de 4); aici se stocheaza valoarea 3 in format intern
+ de intreg fara semn pe 4 octeti; conventia de ordonare a octetilor este cea
+ a masinii gazda - in cazul procesoarelor intel este little-endian, i.e.
+ octetii mai putin semnificativi se afla la adrese mai mici; astfel la
+ adresele 0x10010000, 0x10010001, 0x10010002, 0x10010003 vom gasi octeti
+ continand respectiv valorile 3, 0, 0, 0;
+etichetei "x" i se va asocia adresa 0x10010004 (aici s-a ajuns cu umplerea
+ zonei de date); intrucat este declarata cu tipul byte, nu se fac alinieri
+ suplimentare; incepand de aici se stocheaza caracterele 'a', 'b', i.e.
+ codurile lor ASCII pe cate un octet (fiind date de cate un octet nu se pune
+ problema conventiei de ordonare little-endian);  astfel ,la adresa
+ 0x10010004 vom gasi un octet continand valoarea 0x61, iar la adresa
+ 0x10010005 un octet continand valoarea 0x62;
+etichetei "y" i se va asocia adresa 0x10010006 (aici s-a ajuns cu umplerea
+ zonei de date); nici tipul space nu impune alinieri suplimentare; valoarea
+ de initializare 12 face ca de la adresa "y" sa se lase un spatiu de 12
+ octeti;
+
+notam urmatoarele:
+daca dupa "y" am declara o eticheta word, ei i s-ar asocia adresa 0x10010012
+ (pe care am notat-o cu (*)) si nu 0x10010010, cea de la sfarsitul locatiei
+ space 12, deoarece tipul word impune alinierea la o ardesa multiplu de 4;
+daca dupa "y" am declara o eticheta byte, ei i s-ar asocia adresa 0x10010010;
+la adresa "y" (adica 0x10010006) nu putem citi/scrie un word (nu e o adresa
+ multiplu de 4), dar putem citi/scrie un byte;
+la adresa "y+2" (adica 0x10010008) putem citi/scrie atat un word cat si un
+ byte (este o adresa multiplu de 4);
+
+verificare practica:
+scriem cu notepad programul "lab1_1.s", continand:
+
+.data
+  var1: .word 3
+  x: .byte 'a', 'b'
+  y: .space 12
+.text
+main:
+li $v0,10
+syscall
+
+il incarcam cu File -> Open;
+urmarim panoul "Data segment" si constatam ca de la adresa 0x10010000 s-au
+ alocat word-urile 0x00000003, 0x00006261, etc.; 0x00000003 este valoarea
+ de initializare indicata in program pentr "var1"; 0x00006261 este
+ interpretarea ca word (tinand cont de ordinea little-endian) a celor 4
+ octeti care urmeaza, adica 0x61 ('a'), 0x62 ('b'), 0, 0 (primii doi octeti
+ din space 12); deci zona de date este afisata in panou ca sir de word-uri;
+cu Simulator -> Reinitialize stergem memoria si registrii; astfel programul
+ dispare din memorie si putem incarca altul;
+
+Subliniem: etichetele declarate dupa ".data" joaca rolul variabilelor din
+ limbajele de programare obisnuite, dar aici numele respective nu desemneaza
+ locatii ci adrese de inceput (asemeni numelor de vectori din C); astfel,
+ "var1+1" inseamna adresa 0x10010000+1=0x10010001, nu valoarea 3+1=4.
+
+-----
+
+Instructiunile se codifica intern pe cate 1 word, intr-unul dintre formatele
+ R, I, J - detalii in lectia 2.
+
+Stilul de lucru: datele se incarca din memorie in regisri, se opereaza asupra
+ lor lucrand doar cu registrii, apoi rezultatele se scriu in memorie;
+ singurele instructiuni care acceseaza memoria sint cele de transfer intre
+ memorie si registri; instructiunile care fac calcule opereaza doar cu
+ registri; prezentam cateva instructiuni si formatul lor intern:
+
+- instructiuni de transfer memorie <-> registri:
+  codificarea interna se face in formatul I:
+                                         op = codul operatiei;
+b: 31  26 25 21 20 16 15             0   rs, rt = codurile a doi registri
+  |  op  | rs  |  rt |    val         |  val = o valoare imediata (i.e. care
+  -------------------------------------    in prog. sursa este scrisa ca
+    6 b    5 b   5 b       16 b            atare iar la compilare este
+                                           inglobata in codul instructiunii,
+                                           nu stocata ca o data obisnuita)
+Sintaxa:
+
+ lw  rt, adr  # in reg. "rt" se incarca un word incepand de la adresa "adr"
+ lb  rt, adr  # in octetul low al reg. "rt" se incarca un byte citit din mem.
+              #  incepand de la adr. "adr"; semnul se extinde la restul reg.
+ sw  rt, adr  # in mem.se scrie incepand de la adr."adr" word-ul din reg."rt"
+ sb  rt, adr  # in mem.se scrie incepand de la adr."adr" byte-ul low din reg.
+              #  "rt"
+
+in aceasta scriere:
+numele "lw", "lb", "sw", "sb" defineste valoarea campului "op" din formatul
+  I, anume: 0x23 (lw),  0x20 (lb),  0x2b (sw),  0x28 (sb);
+"rt" este un registru care se scrie sub forma $nume sau $cod (ex.$t0 sau $8),
+  iar codul sau va fi stocat in campul "rt" din formatul I;
+"adr" este o expresie a carei evaluare produce o adresa de memorie; poate fi:
+ imm - valoare imediata (desemnand adresa respectiva); se stocheaza ca atare
+        in campul "val" din formatul I;
+ eticheta - adresa desemnata este adresa asociata la compilare etichetei;
+        aceasta adresa se stocheaza in campul "val" din formatul I;
+ eticheta +/- imm - adresa desemnata este adresa asociata la compilare
+        etichetei +/- valoarea imediata; aceasta adresa se stocheaza in
+        campul "val" din formatul I;
+ (rs) - un registru (scris sub forma $nume sau $cod) intre paranteze;
+        adresa desemnata este continutul registrului (determinat deci la
+        momentul executiei); codul registrului se stocheaza in campul "rs"
+        din formatul I;
+ imm(rs) - adresa desemnata este valoarea imediata (care poate fi si nula sau
+        negativa) + continutul registrului (determinat deci la momentul
+        executiei); in formatul I campul "rs" va contine codul registrului
+        iar campul "val" valoarea imediata;
+ eticheta +/- imm(rs) - adresa desemnata este adresa asociata la compilare
+        etichetei +/- valoarea imediata + continutul registrului;
+desi nu scrie in cartea [1], merge si:
+ eticheta(rs) - adresa desemnata este adresa asociata la compilare etichetei
+        + continutul registrului;
+
+Notam ca doar forma "lw/lb/sw/sb  rt,  imm(rs)" este compilata intr-o
+ singura instructiune masina, restul fiind translatate la fel ca si
+ pseudoinstructiunile.
+
+Utile sunt si pseudoinstructiunile urmatoare:
+
+ li  reg,  val      # incarca in reg. "reg" val. imediata "val" (privita ca
+                    #  word)
+
+ move rdest, rsrc   # copiaza valoarea din reg. "rsrc" in reg "rdest"
+
+ la  reg,  var      # incarca in reg. "reg" adresa variabilei (de fapt val.
+                    #  etichetei) cu numele "var"
+
+Exemplu practic:
+
+Scriem programul "lab1_2.s" (care permuta continutul a doua variabile):
+
+#swap
+.data
+ x:.word 1
+ y:.word 2
+.text
+main:
+ lw $t0,x
+ lw $t1,y
+ sw $t0,y
+ sw $t1,x
+li $v0,10
+syscall
+
+Il incarcam (File -> Open) si constatam (privind panoul "Text segment") ca
+ pentru secventa "lw $t0,x", "lw $t1,y", "sw $t0,y", "sw $t1,x" s-a generat:
+
+[0x00400024]    0x3c011001  lui $1, 4097     ; 7: lw $t0,x
+[0x00400028]    0x8c280000  lw $8, 0($1)
+[0x0040002c]    0x3c011001  lui $1, 4097     ; 8: lw $t1,y
+[0x00400030]    0x8c290004  lw $9, 4($1)
+[0x00400034]    0x3c011001  lui $1, 4097     ; 9: sw $t0,y
+[0x00400038]    0xac280004  sw $8, 4($1)
+[0x0040003c]    0x3c011001  lui $1, 4097     ; 10: sw $t1,x
+[0x00400040]    0xac290000  sw $9, 0($1)
+
+De exemplu pentru "lw $t0,x" s-a generat secventa "lui $1, 4097",
+ "lw $8, 0($1)"; cu "lui $1, 4097" se incarca numarul 4097, adica 0x1001 in
+ jumatatea hi a lui $1 (registrul $at rezervat asamblorului) completand
+ jumatatea inferioara cu 0; astfel reg. $1 va contine 0x10010000 care este
+ (se constata privind panoul "Data segment") adresa asociata etichetei "x";
+ apoi "lw $8, 0($1)" incarca in reg. $8 (adica $t0) un word de la adresa
+ continuta in $1, adica de la adr. lui "x";
+Codificarea interna (pe 1 word) a instr. "lw $8, 0($1)" este 0x8c280000;
+ intr-adevar, avem (pe biti):
+
+              5 biti
+           rs=0x1($1,$at)  
+   6 biti        |      5 biti               16 biti
+ op=0x23 (lw)    |   rt=0x8($8,$t0)        val=0x0 (imm=0)
+    |            |         |                    |
+ ----------- --------- --------- -------------------------------
+ |         | |       | |       | |                             |
+ 1 0 0 0 1 1 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ |             | |             | |             | |             |
+ --------------- --------------- --------------- ---------------
+  octet 3 (hi)       octet 2         octet 1      octet 0 (low)
+      0x8c            0x28            0x00            0x00
+      ----------------------------------------------------
+                        total: 0x8c280000
+
+Analog, codificarea interna a instr. "sw $8, 4($1)" este 0xac280004:
+
+              5 biti
+           rs=0x1($1,$at)  
+   6 biti        |      5 biti               16 biti
+ op=0x2b (sw)    |   rt=0x8($8,$t0)        val=0x4 (imm=4)
+    |            |         |                    |
+ ----------- --------- --------- -------------------------------
+ |         | |       | |       | |                             |
+ 1 0 1 0 1 1 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0
+ |             | |             | |             | |             |
+ --------------- --------------- --------------- ---------------
+  octet 3 (hi)       octet 2         octet 1      octet 0 (low)
+      0xac            0x28            0x00            0x04
+      ----------------------------------------------------
+                        total: 0xac280004
+
+Rulati pas cu pas (cu F10) programul, urmarind in panoul "Data segment" cum
+ se modifica variabilele "x", "y" (de fapt locatiile word care incep de la
+ etichetele respective).
+
+Varianta a programului in care datele se initializeaza la exeutie:
+
+.data
+ x:.space 4
+ y:.space 4
+.text
+main:
+ li $t0,1
+ sw $t0,x
+ li $t0,2
+ sw $t0,y
+# de aici e ca inainte
+ lw $t0,x
+ lw $t1,y
+ sw $t0,y
+ sw $t1,x
+li $v0,10
+syscall
+
+Varianta a programului in care folosim adresarea indexata:
+
+.data
+ x:.word 1
+ y:.word 2
+.text
+main:
+ la $t2,x      # incarca in $t2 adresa corespunzatoare lui "x"
+ lw $t0,0($t2) # incarca in $t0 word-ul aflat la distanta 0 de x, adica 1
+ lw $t1,4($t2) # incarca in $t1 word-ul aflat la distanta 4 de x, 
+               # adica la distanta 0 de y, adica 2
+ sw $t0,4($t2)
+ sw $t1,0($t2)
+li $v0,10
+syscall
+
+Urmatorul proram ilustreaza alte particularitati legate de stocarea datelor:
+
+.data
+ x:.word 2,65536    # adica 0x02, 0x10000
+ y:.space 12
+.text
+main:
+ la $t0,y      # $t0 primeste adr. lui y, care este adr. lui x + 8
+ li $t1,5      # $t1 primeste valoarea 5
+ sw $t1,($t0)   # I
+ sw $t1,4($t0)  # II
+ sw $t1 -4($t0) # III
+ sb $t1,-3($t0) # IV
+li $v0,10
+syscall
+
+ilustram modul cum se modifca memoria (am subliniat cu "=" zona modificata):
+
+ x               y   
+ |   2   | 65536 |   0   |   0   |   0   | initial
+ |2|0|0|0|0|0|1|0|0|0|0|0|0|0|0|0|0|0|0|0|
+ -----------------------------------------
+ x               y   
+ |   2   | 65536 |   5   |   0   |   0   | dupa I
+ |2|0|0|0|0|0|1|0|5|0|0|0|0|0|0|0|0|0|0|0|
+ ----------------=========----------------
+ x               y   
+ |   2   | 65536 |   5   |   5   |   0   | dupa II
+ |2|0|0|0|0|0|1|0|5|0|0|0|5|0|0|0|0|0|0|0|
+ ------------------------=========--------
+ x               y   
+ |   2   |   5   |   5   |   5   |   0   | dupa III (obs. ca scrierea unui
+ |2|0|0|0|5|0|0|0|5|0|0|0|5|0|0|0|0|0|0|0| word a alterat 4 octeti de la adr.
+ --------=========------------------------ respectiva, astfel si 1 a dev. 0)
+ x               y   
+ |   2   | 1285  |   5   |   5   |   0   | dupa IV (obs. ca scrierea unui
+ |2|0|0|0|5|5|0|0|5|0|0|0|5|0|0|0|0|0|0|0|  byte a alterat doar 1 octet de la
+ ----------===----------------------------  adr. respectiva, astfel nu s-a
+                                            modificat 5-ul de la adr y)
+
+notam ca n-ar fi mers "sw $t1,-3($t0)", caci adr. destinatie nu e aliniata la
+ multiplu de 4;
+
+instr. "sb $t1,-3($t0)" a fost codificata intern 0xa109fffd; intr-adevar:
+
+              5 biti
+           rs=0x8($8,$t0)  
+   6 biti        |      5 biti               16 biti
+ op=0x28 (sb)    |   rt=0x9($9,$t1)        val=0xfffd (imm=-3)
+    |            |         |                    |
+ ----------- --------- --------- -------------------------------
+ |         | |       | |       | |                             |
+ 1 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1
+ |             | |             | |             | |             |
+ --------------- --------------- --------------- ---------------
+  octet 3 (hi)       octet 2         octet 1      octet 0 (low)
+      0xa1            0x09            0xff            0xfd
+      ----------------------------------------------------
+                        total: 0xa109fffd
+
+codul -3 s-a obtinut dupa regula "(not 3) + 1" trecand astfel succesiv prin
+ codurile (de 16 biti): 0000000000000011 (3) -> 1111111111111100 (not 3) 
+ -> 1111111111111101 ((not 3) + 1)
+
+- instructiuni de ramificare si salt;
+
+instructiuni de ramificare :
+
+ b  eticheta  # ramificare neconditionata la eticheta respectiva;
+
+ beq/blt/ble/bgt/bge/bne  rs,  rt,  eticheta
+   # testeaza continuturile reg. rs si rt (scrisi sub forma $nume sau $cod)
+   #  verificand daca avem respectiv rs=rt,rs<rt,rs<=rt,rs>rt,rs>=rt,rs!=rt;
+   #  verificarea se face considerand continuturile ca intregi cu semn;
+   #  daca da, executia ramifica la eticheta respectiva;
+   #  daca nu, executia trece la instructiunea urmatoare logic;
+
+ bleu/bltu/bgeu/bgtu  rs,  rt,  eticheta
+   # ca mai sus, verifica daca avem rs<=rt,rs<=rt,rs>=rt,rs>rt;
+   # continuturile reg. sunt considerate intregi fara semn;
+
+toate cele de mai sus pseudoinstructiuni in afara de "beq", care se codifica
+ in format I, cu campurile:
+ op = 0x04;
+ rs,rt = codurile reg. respectivi;
+ val = nr.de instr. peste care trebuie sa sara executia, calculat la momentul
+  compilarii facand diferenta dintre adr. instr. "beq" si adr. asociata
+  etichetei si impartind la 4; find pe 16 biti, se poate sari peste maxim
+  2^15-1 instructiuni;
+
+este important sa stim daca o configuratie de biti continuta intr-un registru
+ este considerata la comparare intreg cu sau fara semn; de exemplu config.
+ 0xffffffff inseamna 2^32-1 ca intreg fara semn si -1 ca intreg cu semn;
+ deci 0xffffffff > 1 ca intreg fara semn si 0xffffffff < 1 ca intreg cu semn.
+
+pentru a compara cu 0 putem folosi reg. $zero sau niste instr. de ramificare
+ specifice - vezi lectia 2;
+
+instructiuni de salt:
+
+ j  eticheta  # salt neconditionat la eticheta respectiva
+
+are efect asemanator cu "b eticheta", dar se codifica intern altfel, anume
+ in format J:
+
+b: 31  26 25                       0
+  |  op  |           val            |
+  -----------------------------------
+    6 b             26 b
+
+ op = codul operatiei, aici 0x02;
+ val = o valoare imediata, aici este numarul de ordine al instructiunii
+   (word-ului din memorie) la care se sare (calculat la momentul compilarii
+   din adresa asociata etichetei); fiind pe 26 biti,se poate sari intr-o zona
+   de 2^26 instructiuni, deci este mai flexibil ca la "b etichetei";
+
+ jr  rs  # salt neconditionat la adresa continuta in registrul rs (scris sub
+         #  forma $nume sau $cod)
+
+codificarea interna este:
+                             
+b: 31  26 25 21 20            6 5    0
+  |  0   | rs  |       0       |  8   |  rs = codul reg. rs
+  ------------------------------------- 
+    6 b    5 b        15 b        6 b
+
+Exemple:
+
+Programul "lab1_3.s" ilustreaza cateva fenomene legate de ramificare si salt:
+
+.data
+ x:.word 2
+.text
+main:
+ li $t0,2
+ lw $t1,x
+ beq $t1,$t0,egal
+ nop
+ j sfarsit
+ egal:
+ nop
+ sfarsit:
+li $v0,10
+syscall
+
+Comentarii:
+- incarcam si urmarim panoul "Text segment";
+- "nop" este instructiunea de efect nul; se codifica intern cu toti cei 32
+ biti 0; am folosit-o ca o instructiune manechin depre care sa stiu sigur ca
+ nu se expandeaza (nu e pseudo) - astfel pot calcula usor nr. de octeti peste
+ care se sare in zona de cod;
+- "beq $t1,$t0,egal" se codifica intern (format I) 0x11280003; intr-adevar:
+
+              5 biti
+           rs=0x9($9,$t1)  
+   6 biti        |      5 biti               16 biti
+ op=0x4 (beq)    |   rt=0x8($8,$t0)        val=0x3 (3)
+    |            |         |                    |
+ ----------- --------- --------- -------------------------------
+ |         | |       | |       | |                             |
+ 0 0 0 1 0 0 0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1
+ |             | |             | |             | |             |
+ --------------- --------------- --------------- ---------------
+  octet 3 (hi)       octet 2         octet 1      octet 0 (low)
+      0x11            0x28            0x00            0x03
+      ----------------------------------------------------
+                        total: 0x11280003
+
+ obs. ca val=3, deci s-a calculat ca trebuie sa se sara 3 instructiuni
+  (word-uri), adica peste  "beq $t1,$t0,egal", "nop" si "j sfarsit"; daca
+  in loc de "nop" si "j sfarsit" foloseam doua pseudoinstructiuni, nr. de
+   instructiuni peste care trebuia sa se sara (i.e. nr. de instructiuni
+   generate) era altul si mai greu de anticipat la scrierea programului.
+- "j sfarsit" se codifica intern (format J) 0x08100010; intr-adevar:
+
+   6 biti                         26 biti
+ op=0x2 (j)                     val=0x100010
+    |                                 |
+ ----------- ---------------------------------------------------
+ |         | |                                                 |
+ 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0
+ |             | |             | |             | |             |
+ --------------- --------------- --------------- ---------------
+  octet 3 (hi)       octet 2         octet 1      octet 0 (low)
+      0x08            0x10            0x00            0x10
+      ----------------------------------------------------
+                        total: 0x08100010
+
+ privind adresele instructiunilor (in panoul "Text segment"), constatam ca
+  instructiunea la care se sare, "li $v0,10" (care se transcrie la compilare
+  in "ori $2, $0, 10"), incepe de la adresa 0x00400040 (asociata etichetei
+  "sfarsit"), fiind astfel al 0x400040 / 0x4 = 0x100010 - lea word din
+  zona de memorie, adica valoarea lui "val";
+- rulam pas cu pas (cu F10) si constatam ca dupa " beq $t1,$t0,egal" se
+ executa ultimul "nop";
+- in loc de "j sfarsit" putem folosi o secventa de tip:
+
+      la $t2, sfarsit
+       ...
+      jr $t2
+
+ iar atunci in $t2 se va pune adresa, nu numarul de ordine al word-ului;
+
+Programul "lab1_4.s" calculeaza maximul a doua numere:
+
+#z:=max(x,y)
+.data
+ x:.word 2
+ y:.word 1
+ z:.space 4
+.text
+main:
+ lw $t0,x
+ lw $t1,y
+ blt $t0,$t1,et1
+ sw $t0,z
+ j sfarsit
+et1:
+ sw $t1,z
+sfarsit:
+li $v0,10
+syscall
+
+Programul "lab1_5.s" sorteaza trei numere x, y, z simuland metoda bubble sort
+ cu doi registri (se compara/interschimba (x,y), (y,z), (x,y)):
+
+#sort(x,y,z)
+.data
+ x:.word 3
+ y:.word 1
+ z:.word 2
+.text
+main:
+ lw $t0,x
+ lw $t1,y
+ ble $t0,$t1,et1
+ sw $t0,y
+ sw $t1,x
+et1:
+ lw $t0,y
+ lw $t1,z
+ ble $t0,$t1,et2
+ sw $t0,z
+ sw $t1,y
+et2:
+ lw $t0,x
+ lw $t1,y
+ ble $t0,$t1,et3
+ sw $t0,y
+ sw $t1,x
+et3:
+li $v0,10
+syscall
+
+Programul "lab1_6.s" calculeaza maximul dintr-un vector de numere.
+
+Avem nevoie de instructiuni pentru incrementarea unui indice. Putem folosi:
+
+ add  rd,  rs,  rt  # rd,rs,rt sunt tergistri; calculeaza rd := rs + rt
+
+ addi rt,  rs, imm  # rt,rs sunt registri, imm este o valoare imediata;
+                    # calculeaza rt := rs + imm
+
+Programul este urmatorul:
+
+.data
+ v:.word 2, 1, 3, 2, 3  # vectorul
+ n:.word 5              # nr. de elemente ale vectorului
+ i:.space 4             # indice (putem folosi si un registru)
+ max:.space 4           # aici vom stoca valoarea maxima
+.text
+main:
+#initializari
+ li $t0,0
+ sw $t0,i    # i:=0
+ lw $t0,v
+ sw $t0,max  # max:=v[0]
+#ciclu
+intrare:
+ lw $t0,i
+ addi $t0,$t0,1
+ sw $t0,i            # i:=i+1
+ lw $t1,n
+ bge $t0,$t1,iesire  # daca i>=n iesim din ciclu
+ add $t0,$t0,$t0
+ add $t0,$t0,$t0     # acum $t0=4*i, adica offsetul in octeti al lui v[i]
+                     #  fata de v
+ lw $t0,v($t0)       # $t0:=v[i]
+ lw $t1,max
+ ble $t0,$t1,et
+ sw $t0,max
+et:
+ j intrare
+iesire:
+li $v0,10
+syscall
+
+Programul de mai sus poate fi scris in mai multe variante - de ex. putem
+ folosi pentru indice si/sau nr. de elemente un reg. dedicat si sa nu mai
+ tot incarcam/salvam aceste valori in memorie.
+
+
+Exercitii:
+----------
+
+1. Program care calculeaza maximul a trei numere.
+2. Program care ordoneaza trei numere x, y, z simuland metoda sortarii prin
+  selectie cu doi registri (se compara/interschimba (x,y), (x,z), (y,z)).
+  Sa se foloseasca cat mai putine instructiuni - de ex. cand incarcam o
+  valoare intr-un reg. sa folosim cat mai mult acel reg.
+3. Program care calculeaza suma elementelor unui vector de numere.
+4. Program care cauta un numar x intr-un vector de numere si pune in y
+  valoarea 1/0 dupa cum x apare/nu apare in vector.
+5. Program care sorteaza un vector de numere.
+
+
+Bibliografie:
+~~~~~~~~~~~~~
+1."Organizarea si proiectarea calculatoarelor - interfata hardware/software",
+  John L. Hennessy, David A. Patterson, ed. All, 2002,
+  cap. 3 si anexa A
+
+
+DANIEL DRAGULICI
+septembrie, 2006
+actualizat: 4 noiembrie 2006

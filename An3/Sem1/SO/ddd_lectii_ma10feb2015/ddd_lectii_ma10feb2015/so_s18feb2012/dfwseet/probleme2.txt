@@ -1,0 +1,223 @@
+Alte probleme (descriptori, fork, wait, system, environment, exec, tuburi):
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A1. (2 puncte) Scrieti un program "copy" care se va lansa sub forma:
+     copy   f1 + ... + fn    f
+ (unde f1, ..., fn, f sunt fisiere) si are ca efect crearea lui f continand
+ concatenarea lui f1, ..., fn; daca n=1 se copiaza f1 in f. Se vor folosi
+ doar functiile de la nivelul inferior de prelucrare a fisierelor.
+
+A2. (3 puncte) Scrieti un program "sortint" care se va lansa sub forma:
+     sortint   f
+ unde f este un fisier continand reprezentari interne de intregi si sorteaza
+ intregii din acest fisier. Se vor folosi doar functiile de la nivelul 
+ inferior de prelucrare a fisierelor si nu se vor folosi fisiere auxiliare.
+
+A3. (1 punct) Scrieti o functie "creaza" care primeste ca parametri un 
+ specificator de fisier si un string continand o bara de drepturi, de exemplu:
+     creaza("f","rwxr_xr_x")
+ si creaza fisierul respectiv, cu drepturile respective, returnand 0. Daca 
+ fisierul exista sau nu se poate crea, va returna un cod nenul. Functia va
+ folosi doar functii de la nivelul inferior de prelucrare a fisierelor.
+ Scrieti un program ilustrativ pentru aceasta functie - programul va primi
+ ca argumente in linia de comanda fisierul si bara de drepturile si va crea
+ fisierul respectiv; in caz ca nu reuseste, va afisa un mesaj de eroare.
+
+A4. (3.5 puncte) Simulati functia "int mkstemp(char *sablon)" (avand
+ prototipul in "stdlib.h"), care creaza un fisier nou avand un nume unic
+ inspirat de "sablon". Sirul "sablon" trebuie sa aibe ultimele sase caractere 
+ "XXXXXX"; functia va genera pe aceste pozitii toate combinatiile de caractere
+ posibile (modificand deci zona pointata de "sablon", care nu trebuie sa fie o
+ zona constanta) si pentru fiecare sir (complet) "sablon" obtinut va incerca 
+ sa creeze un fisier cu numele respectiv folosind la "open" modul O_EXCL 
+ (aceasta va garanta ca fisierul creat e unul nou); in momentul cand va reusi 
+ prima data, va iesi returnand descriptorul alocat. Functia creaza noul fisier 
+ cu drepturi de citire si scriere pentru proprietar si il deschide pentru 
+ citire si scriere. In caz de eroare functia returneaza -1 si seteaza "errno" 
+ la valorile: EINVAL (daca ultimele sase caractere ale lui sablon nu sunt 
+ "XXXXXX"), EEXIST (daca pentru toate inlocuirile incercate ale lui "XXXXXX"
+ exista deja un fisier cu numele respectiv si astfel nu s-a putut crea un 
+ fisier nou); in cazul EINVAL, "sablon" ramane nemodificat.
+  Pentru scrierea functiei "mkstemp" se vor folosi doar functii de la nivelul
+ inferior de prelucrare a fisierelor.
+  Scrieti un program demonstrativ pentru aceasta functie.
+ 
+A5. (3.5 puncte) Scrieti o functie "getint" care primeste ca argument un 
+ descriptor de fisier (presupus a fi deschis in prealabil pentru citire) si 
+ citeste cu format zecimal un intreg din fisierul respectiv, returnand acel 
+ intreg. Functia nu va folosi decat functii de la nivelul inferior de 
+ prelucrare a fisierelor. Deci, daca se poate citi intregul, apelul:
+     int x; x=getint(d);
+ este echivalent cu:
+     int x; FILE *f;
+     f=fdopen(d,"r");
+     fscanf(f,"%d",&x);     
+ (deci functia "getint" va citi caractere cat timp ele se potrivesc cu o
+ reprezentare externa de intreg zecimal si la sfarsit va returna intregul
+ respectiv; cand un caracter nu se mai potriveste, indicatorul in fisier este
+ mutat inapoi cu lseek). In citirea intregului, functia "getint" va ignora
+ eventualele caractere albe (blank, tab, cap de linie) prealabile. Daca de la
+ bun inceput intregul nu se poate citi (primul caracter nealb nu poate face 
+ parte dintr-o reprezentare de intreg sau dupa eventualel caractere albe s-a
+ intalnit sfarsitul fisierului) functia va returna 0 si va seta adecvat errno.
+ Scrieti un program ilustrativ pentr aceasta functie.
+ 
+A6. (2 puncte) Scrieti un program care primeste ca argument in linia de
+ comanda un fisier si inlocuieste in el orice succesiune de caractere albe
+ (blank, tab, cap de linie) cu un singur blank. Se vor folosi doar functii de
+ la nivelul inferior de prelucrare a fisierelor, fara lseek si nu se vor folosi
+ fisiere auxiliare. Indicatie: fisierul va fi accesat prin doi descriptori,
+ unul in citire, altul in scriere.
+----------
+A7. (2 puncte) Scrieti niste programe care arata daca fii obtinuti cu fork
+ ai unui proces "p" mostenesc redirectarile intrari/iesirii standard care au
+ loc daca lansam "p" in cadrul unui filtru:
+     ... | p | ...
+     
+A8. (1.5 puncte) Scrieti un program care genereaza un fiu cu fork iar acesta 
+ trimite tatalui un numar aleator de semnale SIGUSR1; fiul numara cate a 
+ trimis, tatal numara cate a primit, apoi fiecare afisaza numarul respectiv. 
+ Se va asigura protectia la pierderea unor semnale.
+
+A9. (2 puncte) Scrieti un program cara arata ce se intampla daca mai multe 
+ procese care se ruleaza in paralel in foreground incearca in acelasi timp
+ sa citeasca de la tastatura un caracter (fiecare il va citi, sau doar unul
+ aleator il va citi, etc.); procesele respective vor fi fii cu fork ai 
+ programului initial. Nu se vor folosi decat functii de la nivelui inferior
+ de prelucrare a fisierelor.
+ 
+A10. (6 puncte) Scrieti un program care sa sorteze prin interclasare un fisier
+ de caractere in maniera descrisa mai jos.
+  Sortarea prin interclasare presupune impartirea sirului in doua jumatati,
+ sortarea fiecarei parti prin aceeasi metoda (deci recursiv), apoi 
+ interclasarea celor doua parti (care sunt acum sortate).
+  Programul va lucra astfel: se imparte sirul in doua, se genereaza doua 
+ procese fiu (fork) care sorteaza cele doua jumatati in paralel, tatal ii 
+ asteapta sa se termine (wait sau waitpid), apoi interclaseaza jumatatile.
+ Nu se vor folosi fisiere auxiliare. 
+ 
+A11. (5 puncte) Scrieti un program care genereaza prin backtracking recursiv
+ permutarile multimii {1,...,n} (n citit de la tastatura), in asa fel incat
+ de fiecare data cand se completeaza o pozitie, pentru a genera toate
+ continuarile posibile nu se intra in apel recursiv ci se lanseaza un proces 
+ fiu (cu fork) care genereaza aceste continuari; nu se va astepta terminarea
+ fiului pentru a incerca o alta valoare pentru pozitia curenta si astfel
+ vectorii sunt construiti in paralel. In momentul cand un proces gaseste o
+ permutare o scrie cu printf fara fflush, iar un proces nu se termina decat
+ dupa ce i s-au terminat totii fii (ii asteapta cu wait) - astfel riscul ca 
+ permutarile sa se amestece pe ecran este redus.
+----------
+A12. (4 puncte) Scrieti un program care numara aparitiile unui sir de caractere
+ ca subcuvant in alt sir de caractere (cele doua siruri sunt date ca argumente
+ in linia de comanda). De fiecare data cand se verifica daca primul sir apare
+ ca subcuvant incepand de pe o pozitie, verificarea se va face de catre un 
+ proces fiu (obtinut cu fork) iar procesul tata nu asteapta ca acesta sa se
+ termine pentru a initia o cautare incepand de la o alta pozitie - astfel
+ verificarile au loc in paralel. Fiecare proces fiu returneaza 0 = nu s-a 
+ verificat (nu apare ca subcuvant de la pozitia respectiva), 1 = s-a verificat.
+ Dupa initierea tuturor cautarilor, procesul tata asteapta sa i se termine
+ toti fii si aduna codurile lor de retur - acesta valoarea se afisaza (este
+ numarul de aparitii ca subcuvant). 
+
+A13. (4 puncte) Scriet un program care verifica daca un numar apare sau nu
+ intr-un vector (numarul se vectorul sunt dati ca argumente in linia de 
+ comanda) printr-o strategie de tip divide et impera: se imparte vectorul in
+ doua, apoi se initiaza cate un proces fiu care cauta numarul in fiecare
+ jumatate, in aceeasi maniera; cele doua procese se desfasoara in paralel. 
+ Fiecare subproces returneaza 0 = negasit, 1 = gasit. Fiecare proces nu se 
+ termina pana nu i se termina toti fii si in final returneaza suma valorilor
+ returnate de ei. Procesul initial trebuie in plus sa afiseze un mesaj de tip 
+ "gasit"/"negasit".
+----------
+A14. (2 puncte) Scrieti niste programe care arata daca fii obtinuti cu system
+ ai unui proces "p" mostenesc redirectarile intrari/iesirii standard care au
+ loc daca lansam "p" in cadrul unui filtru:
+     ... | p | ...
+
+A15.(1.5 puncte) Scrieti niste programe care arata daca fii obtinuti cu system
+ ai unui proces "p" mostenesc suplimentar eventualele argumente in linia de
+ comanda cu care a fost lansat "p".
+----------
+A16. (1 punct) Scrieti un program care afisaza valoarea variabilei de 
+ environment TERM, apoi o asigneaza la valoarea "vt52", apoi genereaza un
+ proges fiu (cu fork) care afisaza valoarea lui TERM mostenita.
+ 
+A17. (1 punct) Scrieti un program care sa verifice daca schimbandu-si valoarea
+ variabilei de environment PWD, functia getcwd returneaza acelasi director
+ curent.
+ 
+A18. (2.5 puncte) Scrieti un program care isi concateneaza valoarea fiecarei
+ variabile de environment de pe pozitie para la sfarsitul valorii variabilei
+ pe pozitia impara anterioara. Programul isi va afisa environmentul inainte
+ si dupa aceasta operatie.
+ 
+A19. (1 punct) Scrieti niste programe care arata daca procesele obtinute cu 
+ o functie din familia exec dintr-un proces "p" mostenesc redirectarile 
+ intrari/iesirii standard care au loc daca lansam "p" in cadrul unui filtru:
+     ... | p | ...
+
+A20. (4 puncte) Scrieti un program "executa" care se lanseaza sub forma:
+     executa   comanda    [argumente]
+ unde "comanda" este specificatorul unui fisier executabil de pe disc iar
+ "argumente" este un sir de 0 - 3 din urmatoarele constructii (nu conteaza
+ ordinea):
+     #0 fisier   (avand semnificatia: "< fisier")     
+     #1 fisier   (avand semnificatia: "> fisier")     
+     #2 fisier   (avand semnificatia: "2> fisier")     
+ (prezenta parantezelor [] arata ca "argumente" poate lipsi) si lanseaza
+ "comanda" cu redirectarile "argumente". Nu se va folosi system.
+ 
+A21. (4 puncte) Scrieti un program "filtru" care se lanseaza sub forma:
+     filtru f1 ... fn
+ unde f1, ..., fn sunt fisiere executabile de pe disc si lanseaza procesul:
+     f1 | ... | fn
+----------     
+A22. (4 puncte) Implenetati tipul arbore binar cu varfuri numere intregi alocat
+ inlantuit (cu pointeri). Scrieti o functie care primeste ca parametru un
+ arbore (pointer la radacina sa) si afisaza varfurile sale parcurgandu-l pe
+ nivele. In general algoritmul de parcurgere pe nivele foloseste o coada in
+ care initial se incarca radacina, apoi intr-un ciclu care tine cat timp coada
+ e nevida se extrage un varf, se afisaza, apoi se introduc in coada fii lui
+ (pointeri la radacinile lor). Pe post de coada functia va folosi un fisier 
+ tub fara nume (care va exista doar pe perioada apelului). Scrieti un program
+ ilustrativ pentru aceasta functie.
+
+A23. (3 puncte) Scrieti un program "nrc" care se lanseaza sub forma:
+     nrc   com
+ unde "com" este o comanda externa (adica asociata unui fisier executabil de 
+ pe disc) avand eventual si argumente in linia de comanda (deci com este un 
+ sir de cuvinte) si care lanseaza comanda "com", numarand cuvintele scrise 
+ de ea pe standard output. In acest scop procesul "nrc" creaza un tub fara
+ nume, apoi se bifurca (cu "fork") a.i. intrarea standard a tatalui si iesirea 
+ standard a fiului sa fie in acest tub, apoi fiul se inlocuieste (cu o functie
+ din familia "exec") cu un proces ce executa "com".
+ 
+A24. (8 puncte) Scrieti un program "#paralel" care se lanseaza sub forma:
+     #paralel   com1   #,   com2   #,   ...   #,   comn   #endparalel
+ (tot ce e dupa "#paralel" sunt argumentele lui), unde com1, ..., comn sunt
+ comenzi externe (adica asociate unor fisiere executabile de pe disc) avand
+ eventual si argumente in linia de comanda (deci comi este un sir de cuvinte)
+ si lanseaza n+2 procese care se desfasoara in paralel:
+  - cate un proces care executa fiecare dintre comi;
+  - un proces de intrare care citeste caractere de la intrarea standard si 
+     multiplica fiecare caracter in n copii, pe care le trimite in niste tuburi 
+     conectate fiecare la intrarea standard a uneia din comi (deci fiecare din 
+     comi are intrarea standard redirectata la cate un tub)
+  - un proces de iesire care citeste caractere dintr-un tub si le scrie la 
+     iesirea standard; la tubul respectiv sunt conectate iesirile standard ale
+     proceselor comi.
+ Schema de functionare va fi:
+               /---> tubi1 ---> com1 ---\
+             /                            \
+     intrare    ........................    ---> tubo ---> iesire         
+             \                            /
+	       \---> tubin ---> comn ---/            
+ Tuburile sunt fara nume si exista doar pe perioada executiei acestor procese.
+ Procesul de intrare are SIGPIPE anihilat, pentru a nu se termina daca comi nu
+ se termina toate in acelasi timp (si isi inchid tubul de intrare la citire).
+ Pentru a nu crea confuzii, in scrierea comenzilor comi nu va aparea #.	       
+ Aplicati programul "#paralel" pentru a crea generalizari ale comenzilor filtru
+ in care in loc de un lant com1 | ... | comn avem un graf. 	       
+
+                                                       DRAGULICI DANIEL
+						        

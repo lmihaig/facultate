@@ -1,0 +1,172 @@
+Continutul seminarului de Arhitectura calculatoarelor, anul I, 2006-2007
+ (curs tinut de prof. Gh. Stefanescu):
+
+Seminar 1: Baze de enumeratie
+----------
+
+Tematica:
+ - Conversia din baza 10 intr-o baza b (pentru numere intregi, numere reale).
+ - Conversia dintr-o baza b in baza 10 (pentru numere intregi, numere reale).
+ - Conversia dintr-o baza b1 intr-o baza b2;
+   conversia dintr-o baza b in baza b^k;
+   conversia dintr-o baza b^k in baza b.
+ - Operatii cu numere scrise intr-o baza b (adunare, scadere, inmultire,
+     impartire).
+
+Exercitii:
+1 - Sa se converteasca din baza 10 in baza 16 numarul 4235;
+    sa se converteasca din baza 10 in baza 2 numarul 105.
+2 - Sa se converteasca din baza 10 in baza 2 numarul 7.8;
+    sa se converteasca din baza 10 in baza 5 numarul 7.8.
+3 - Sa se converteasca din baza 2 in baza 10 numarul 1101;
+    sa se converteasca din baza 16 in baza 10 numarul A2C;
+    sa se converteasca din baza 5 in baza 10 numarul 12.4;
+    sa se converteasca din baza 2 in baza 10 numarul 10.1(011).
+4 - Sa se converteasca din baza 16 in baza 2 numarul 1A.B;
+    sa se converteasca din baza 2 in baza 16 numarul 11011.101.
+5 - Sa se efectueze urmatoarele calcule in baza specificata:
+     in baza 2:  1011 + 110
+     in baza 16: BA - 9B
+     in baza 2:  110.11 * 1.001
+     in baza 2:  10000.01 / 11
+
+Seminar 2: Performanta calculatoarelor
+----------
+
+Tematica:
+ - Notiuni: Performanta, timp de raspuns, timp CPU, perioada si frecventa de
+  ceas, nr. de cicluri pentru program, nr. mediu de cicli pe instructiune
+  (CPI), frecventa de executare a instructiunilor (mips), etc;
+ - Formule de calcul pentru: performanta, compararea si raportul
+  performantelor, frecventa de ceas, timpul CPU, nr.de cicli pentru program,
+  mips; ecuatia elementara a performantei.
+
+Exercitii:
+1 - Un program dureaza 10 secunde pe un calculator A avand frecventa 400 Mhz.
+   Dorim un calculator B unde sa dureze 6 secunde.
+   Proiectantul spune ca poate creste frecventa, dar programul va necesita
+    de 1.2 ori mai multi cicli.
+   Care va fi frecventa noului calculator ?
+2 - Pe o masina data avem urmatoarele clase de instructiuni si CPI-ul
+    corespunzator:  clasa    CPI
+                      A       1
+                      B       2
+                      C       3
+   Avem doua programe, 1 si 2, cu urmatoarea compozitie de instructiuni:
+     program          Numarul de instructiuni din fiecare clasa
+                           A            B           C
+        1                  2            1           2
+        2                  4            1           1
+   a) Care program are mai multe instructiuni ?
+   b) Care program este mai rapid ?
+   c) Care este CPI pentru fiecare program ?
+3 - Pe o masina avand frecventa de 500 Mhz avem urmatoarele clase de
+    instructiuni si CPI-ul corespunzator:
+                    clasa    CPI
+                      A       1
+                      B       2
+                      C       3
+   Avem doua programe, 1 si 2, cu urmatoarea compozitie de instructiuni:
+     program          Numarul de instructiuni din fiecare clasa
+                           A            B           C
+        1                  5            1           1
+        2                 10            1           1
+   a) Care sunt timpii de executie ai celor doua programe ?
+   b) Care sunt frecventele de executare a instructiunilor (mips) ale celor
+       doua programe ?
+4 - Fie doua masini M1, M2 si doua programe P1, P2.
+   M1 are frecventa 200 Mhz, M2 are frecventa 300 Mhz.
+   P1 pe M1 dureaza 10 secunde si executa 200*10^6 instructiuni, iar
+      pe M2 dureaza 5 secunde si executa 160*10^6 instructiuni.
+   P2 pe M1 dureaza 3 secunde, iar pe M2 4 secunde.
+   a) Ce masina este mai rapida pentru fiecare program si cu cat (raprotul
+     performantelor) ?
+   b) Care sunt frecventele de executare a instructiunilor lui P1 pe fiecare
+     masina ?
+   c) Care este CPI-ul lui P1 pe fircare masina ?
+   d) Daca vrem sa rulam P1 ocazional, pe o masina individuala, care dintre
+     P1 si P2 e mai avantajos de achizitionat (avand in vedera ca M2 fiind
+     mai rapida este mai scumpa) ?
+      Dar daca vrem sa rulam P1 in mod repetat, pe mai multe masini simultan,
+     in cadrul unui centru de calcul ?
+
+Seminar 3: Circuite logice
+----------
+
+Tematica:
+ - Algebre booleene (definitie, proprietati de calcul).
+ - Functii booleene, reprezentarea in forma normala conjunctiva (FNC) si in
+  forma normala disjunctiva (FND).
+ - Porti.
+ - Decodificatoare, codificatoare, demultiplexoare, multiplexoare;
+  definirea recursiva a multiplexoarelor, multiplexoare elementare.
+
+Exercitii (conventii de notare: ~ = not, + = or, * = and, (+) = xor):
+1 - Calculati: ~ (a (+) b).
+2 - Aduceti la FND, FNC functia f : B2^3 -> B2, f(x,y,z)=x*~y+y*~z, folosind
+  tabelul de valori.
+3 - La fel ca exercitiul 3, dar folosind calcule.
+4 - Construiti circuitul ce implementeaza functia booleana f : B2^3 -> B2
+  data prin tabelul:
+                 x y z f
+                 0 0 0 0
+                 0 0 1 0
+                 0 1 0 0
+                 0 1 1 1
+                 1 0 0 0
+                 1 0 1 0
+                 1 1 0 1
+                 1 1 1 1
+  Reduceti la maximum numarul de porti.
+5 - Implementati functia de la exercitiul 4 folosind un (2^3,1)-codificator.
+6 - Implementati functia de la exercitiul 4 folosind un multiplexor.
+7 - Implementati functia de la exercitiul 4 folosind multiplexoare
+  elementare, apoi reduceti pe cat posibil numarul acestora.
+
+Seminar 4: Algoritmi hardware de inmultire si impartire.
+----------
+
+Tematica:
+ - algoritmi de inmultire: metodele 1,2,3, algoritmul Booth.
+ - algoritmi de impartire: metodele 1,2,3.
+
+Exercitii:
+1 - Inmultiti prin metoda 1 pe 4 biti: 110 * 101.
+2 - Inmultiti prin metoda 2 pe 4 biti: 110 * 101.
+3 - Inmultiti prin metoda 3 pe 4 biti: 110 * 101.
+4 - Inmultiti folosind algoritmul Booth pe 4 biti: 101 * 110.
+5 - Impartiti prin metoda 1 pe 4 biti: 111 / 11.
+6 - Impartiti prin metoda 3 pe 4 biti: 111 / 11.
+
+Seminar 5: Structura procesorului - implementarea cu un ciclu pe instructiune
+----------
+
+Tematica:
+ - Formatul intern al instructiunilor.
+ - Structura procesorului in implementarea cu un ciclu pe instructiune
+  (fisierul "opi.pdf").
+
+Exercitii:
+1 - Aratati cum se executa instructiunile marcate cu "#" din programul
+  dat in fisierul "opi.pdf".
+2 - Adaugati la procesor suportul pentru executarea instructiunii
+     addi rt, rs, imm
+  care efectueaza: rt := rs + imm
+  si are formatul intern: 8(6 biti)/rs(5 biti)/rt(5 biti)/imm(16 biti).
+
+Seminar 6: Structura procesorului - implementarea cu cicluri multiple
+----------
+
+Tematica:
+ - Structura procesorului in implementarea cu cicluri multiple.
+  (fisierele "opi.pdf" si "iccm_mic.pdf").
+
+Exercitii:
+1 - Aratati cum se executa instructiunile marcate cu "#" din programul
+  dat in fisierul "opi.pdf".
+
+Seminar 7: Test de evaluare a cunostintelor.
+----------
+
+DANIEL DRAGULICI
+decembrie, 2006

@@ -1,0 +1,47 @@
+FERROR(3)		   Linux Programmer's Manual		     FERROR(3)
+
+
+
+NAME
+       clearerr, feof, ferror, fileno - check and reset stream status
+
+SYNOPSIS
+       #include <stdio.h>
+
+       void clearerr(FILE *stream);
+       int feof(FILE *stream);
+       int ferror(FILE *stream);
+       int fileno(FILE *stream);
+
+DESCRIPTION
+       The  function  clearerr clears the end-of-file and error indicators for
+       the stream pointed to by stream.
+
+       The function feof  tests	 the  end-of-file  indicator  for  the	stream
+       pointed to by stream, returning non-zero if it is set.  The end-of-file
+       indicator can only be cleared by the function clearerr.
+
+       The function ferror tests the error indicator for the stream pointed to
+       by  stream,  returning  non-zero if it is set.  The error indicator can
+       only be reset by the clearerr function.
+
+       The function fileno examines the argument stream and returns its	 inte-
+       ger descriptor.
+
+       For non-locking counterparts, see unlocked_stdio(3).
+
+ERRORS
+       These  functions	 should	 not fail and do not set the external variable
+       errno.  (However, in case fileno detects that its  argument  is	not  a
+       valid stream, it must return -1 and set errno to EBADF.)
+
+CONFORMING TO
+       The functions clearerr, feof, and ferror conform to X3.159-1989 (``ANSI
+       C'').
+
+SEE ALSO
+       open(2), unlocked_stdio(3), stdio(3)
+
+
+
+				  2001-10-16			     FERROR(3)

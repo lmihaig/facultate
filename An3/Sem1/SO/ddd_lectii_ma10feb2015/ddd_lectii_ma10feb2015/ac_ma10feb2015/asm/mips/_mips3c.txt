@@ -1,0 +1,3932 @@
+Limbajul MIPS - Lectia 3 - Proceduri si Macro-uri:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+0. Recapitulare:
+================
+
+Registrii de uz general sunt:
+
+Nume                Numar             Rol
+-----               -----             --------------------
+$zero               $0                are mereu valoarea 0
+$at                 $1                rezervat pentru asamblor
+$v0, $v1            $2,$3             val. prod. de o expr.sau ret. de o fct.
+$a0 - $a3           $4 - $7           parametri actuali
+$t0 - $t7,$t8,$t9   $8 - $15,$24,$25  val.temporare (nerestaurate de apeluri)
+$s0 - $s7           $16 - $23         val.temporare (restaurate de apeluri)
+$k0, $k1            $26, $27          rezervat pentru kernel
+$gp                 $28               pointer global
+$sp                 $29               pointeaza varful stivei
+$fp                 $30               pointeaza cadrul curent in stiva
+$ra                 $31               contine adresa de intoarcere din
+                                        apelul de subrutina curent
+
+ In implementarea si utilizarea subrutinelor sunt folositi mai ales registrii
+$a0 - $a3 (pentru transmiterea parametrilor actuali), $v0, $v1 (pentru
+transmiterea valorii returnate, in cazul functiilor), $sp (pentru gestionarea
+stivei - pointeaza in permanenta varful stivei), $fp (pointeaza in stiva
+cadrul apelului curent de subrutina), $ra (contine adresa de intoarcere din
+apelul curent de subrutina).
+
+ Registrul PC contine mereu adresa instructiunii care urmeaza sa se execute;
+el este consultat/modificat indirect de instr. ca "jal", "jr", etc.
+
+ Stiva este o zona de memorie folosita pentru stocarea de valori temporare;
+in particular ea este folosita la gestionarea apelurilor de subrutina (pentru
+stocarea temporara a unor valori legate de aceste apeluri).
+ Stiva este gestionata in maniera FIFO, datele fiind incarcate/descarcate
+la un acelasi capat, numit varful stivei.
+ Stiva creste spre adrese mici si scade spre adrese mari, iar registrul $sp
+are drept rol sa retina in permanenta adresa varfului stivei (a octetului din
+varful stivei).
+ Astfel, putem incarca (push) un word din $t0 in stiva cu secventa:
+
+ subu $sp,4
+ sw $t0,0($sp)
+
+si putem descarca (pop) word-ul din varful stivei in $t0 cu secventa:
+
+ lw $t0,0($sp)
+ addu $sp,4
+
+ Putem incarca/descarca mai multe date in/din stiva, dar trebuie sa
+scadem/crestem corespunzator $sp si, evident, sa descarcam datele in
+ordinea inversa in care le-am incarcat (altfel nu vom recupera valorile
+corecte).
+
+ In implementarea si utilizarea subrutinelor sunt folosite urmatoarele
+instructiuni (care au corespondent direct in limbaj masina, pe un word, nu
+sunt pseudoinstructiuni:
+
+bltzal/bgezal rs, eticheta
+
+## ramificare si legatura la mai mic strict / mai mare sau egal ca 0;
+## efectueaza: daca rs < / >= 0 
+#              atunci $ra <- adr. instr. urm. si apoi salt la eticheta;
+#  adica: daca rs < / >= 0 
+#         atunci {$ra <- PC + 4; PC <- eticheta;}
+
+jal eticheta
+
+## salt si legatura;
+## efectueaza: $ra <- adr. instr. urm. si apoi salt la eticheta;
+#  adica: $ra <- PC + 4; PC <- eticheta;
+
+jalr rd, rs
+
+## salt si legatura in registru;
+## efectueaza: rd <- adr. instr. urm. si apoi salt la adr. din rs;
+#  adica: rd <- PC + 4; PC <- eticheta;
+## rd poate lipsi si atunci se considera $ra ($31);
+
+jr rs
+
+## salt la registru;
+## efectueaza: salt la adresa din rs;
+#  adica: PC <- rs;
+
+1. Proceduri:
+=============
+
+ Daca o prelucrare trebuie facuta de mai multe ori in acelasi fel (eventual
+cu alte date), in loc sa rescriem grupul respectiv de instructiuni de mai 
+multe ori in program putem sa-l incapsulam intr-o subrutina si de fiecare
+data cand avem nevoie de el sa apelam subrutina (eventual cu noile date 
+transmise ca parametri).
+ Practic, se incarca eventualii parametri intr-un loc accesibil subrutinei
+(registri, memorie, stiva), se transfera executia la prima instructiune a
+subrutinei (apel), se executa subrutina, ocazie cu care aceasta poate
+plasa o valoare rezultata (valoare de retur) intr-un loc accesibil codului
+apelant (registri, memorie, stiva), se transfera executia la instructiunea 
+urmatoare celei care a provocat apelul (revenire sau return) si se continua 
+executarea codului apelant.
+ Incapsularea prelucrarilor in subrutine permite atat micsorarea dimensiunii
+codului rezultat cat si o implem. mai usoara a unor alg.complicati - odata ce 
+am creat o subrutina ce rezolva corect o anumita problema putem sa o apelam
+de cate ori vrem fara a ne mai aminti exact ce prelucrari se fac in ea - e
+suficient sa stim doar cum se apeleaza si ce problema rezolva. De asemenea,
+intr-un program impartit in subrutine putem localiza/remedia mai usor erorile
+de programare.
+ In limbalele de programare uzuale subrutinele pot fi proceduri (la care sunt
+importante efectele laterale rezultate, cum ar fi modificarea unor variabile
+globale) si functii (la care este importanta valoarea returnata) - ele se
+scriu si se apeleaza diferit. In MIPS exista doar proceduri (deci un singur
+mod de scriere si apelare a subrutinelor), dar acestea pot simula si 
+comportamentul de procedura si pe cel functie.
+
+1a) Definire, apelare, revenire:
+--------------------------------
+
+ In MIPS procedurile nu au un mod specific de definire. Ele sunt simple
+blocuri de cod apelate insa intr-o maniera specifica - deci caracterul de
+procedura il da modul de utilizare a blocului, implementat explicit de
+programator.
+ Practic, utilizarea in maniera procedurala a unui bloc se face astfel:
+ - intr-un context apelant se transfera executia la prima instructiune a
+  blocului folosind o instructiune de tip "bltzal", "bgezal", "jal", "jalr";
+   in felul acesta inainte de salt se va salva intr-un registru, de regula
+  $ra, adresa instructiunii urmatoare celei care a provocat transferul - este
+  adresa de retur (sau de revenire), de la care trebuie sa se continue
+  executia dupa terminarea procedurii;
+ - in blocul apelat ca procedura trebuie sa se execute la un moment dat o
+  instructiune de forma "jr reg", unde "reg" este registrul in care s-a
+  salvat adresa de retur (de regula $ra) - in felul acesta se revine in
+  contextul apelant si se continua executia cu instructiunea urmatoare celei
+  care a provocat apelul.
+ Constatam ca un bloc de cod poate fi apelat in maniera procedurala daca
+indeplineste urmatoarele conditii:
+ - prima sa instructiune este etichetata (ca sa putem specifica tinta
+  saltului la "bltzal", "bgezal", "jal", "jalr"); aceasta eticheta va fi
+  considerata numele procedurii (deci numele procedurilor, asemeni numelor
+  variabilelor, vor fi simple etichete, carora compilatorul le asociaza ca
+  semnificatie adrese de memorie);
+ - in bloc exista instructiuni de forma "jr reg", unde "reg" este registrul
+  in care se salveaza adresa de retur (de regula $ra), puse a.i. indiferent
+  care ar fi traseul executiei prin bloc pana la urma sa se execute una din
+  ele (ca sa putem reveni din orice apel).
+
+Exemplu: procedura care afisaza un cap de linie (trece la linie noua) - este
+~~~~~~~~  utila a se apela dupa afisarea altor date (de ex. numere) deoarece
+          nu se trece automat la linie noua.
+.data
+x: .word 1
+y: .float 2.0
+nl: .asciiz "\n"
+.text
+main:
+  # afisam x si trecem la linie noua (printf("%d\n",x))
+li $v0, 1   # print int
+lw $a0, x   # intregul de afisat
+syscall     # afisaza: 1
+jal newline # apelul procedurii "newline" de trecere la linie noua
+  # afisam y si trecem la linie noua (printf("%d\n",y))
+li $v0, 2   # print float
+l.s $f12, y # single-ul de afisat
+syscall     # afisaza: 2.00000000
+jal newline # apelul procedurii "newline" de trecere la linie noua
+  # incheiem programul
+li $v0,10
+syscall
+  # procedura "newline"
+newline:
+li $v0, 4  # print string
+la $a0, nl # adresa stringului de afisat (asciiz)
+syscall    # afisaza '\n', adica trece la linie noua
+jr $ra     # revenire din apel
+##########
+
+Comentarii:
+
+- La rulare programul va afisa:
+
+1
+2.00000000
+
+- Instructiunile din program se executa in ordinea urmatoare:
+
+ li $v0, 1
+ lw $a0, x
+ syscall
+ jal newline # adica $ra <- adr.instr."li $v0,2" si salt la instr."li $v0,4"
+ li $v0, 4
+ la $a0, nl
+ syscall
+ jr $ra     # adica salt la instr. "li $v0,2"
+ li $v0, 2
+ l.s $f12, y
+ syscall
+ jal newline # adica $ra <- adr.instr."li $v0,10" si salt la instr."li $v0,4"
+ li $v0, 4
+ la $a0, nl
+ syscall
+ jr $ra     # adica salt la instr. "li $v0,10"
+ li $v0,10
+ syscall
+
+- Avand in vedere ca stringul "nl" este folosit doar in procedura "newline",
+ puteam scrie programul mai sugestiv astfel:
+
+ .data
+ x: .word 1
+ y: .float 2.0
+ .text
+ main:
+  ...
+ li $v0,10
+ syscall
+   # procedura "newline"
+ newline:
+ li $v0, 4
+ la $a0, nl
+ syscall
+ jr $ra
+ .data
+ nl: .asciiz "\n"
+
+atentie insa ca stringul "nl" se va aloca tot in zona de date statice a
+programului, ca in primul caz.
+
+- In program nu a fost nevoie sa folosim stiva (deci unele proceduri pot
+ fi implementate si fara a folosi stiva).
+
+ Corpul unei proceduri poate fi pus oriunde in program (binenteles intr-o
+zona aflata sub incidenta lui ".text").
+ Putem sa il punem in interiorul blocului care este programul principal, dar
+atunci cand se vor executa normal instructiunile din program se vor executa
+instructiunile de dinaintea corpului procedurii, apoi cele din corpul ei,
+apoi eventual cele de dupa corpul ei - deci corpul se va executa si fara sa
+fi facut vreum "jal", "jalr", etc. De aceea, daca dorim ca corpul procedurii
+sa fie executat doar ca urmare a unui apel (de tip "jal", "jalr", etc.),
+trebuie sa-l includem intre un "j eticheta" si acea "eticheta", pentru ca la
+executia normala sa fie sarit. De exemplu:
+
+.text
+main:
+  li $t0,1
+  j et
+    proc:
+    li $t0,2
+    jr $ra
+  et:
+  li $t0,3
+  jal proc
+  li $t0,4
+li $v0,10
+syscall
+
+la executie $t0 va primi succesiv valorile 1, 3, 2, 4; daca nu am pune
+liniile "j et", "et:" iar in corpul procedurii nu ar exista "jr $ra":
+
+.text
+main:
+  li $t0,1
+    proc:
+    li $t0,2
+  li $t0,3
+  jal proc
+  li $t0,4
+li $v0,10
+syscall
+
+atunci la executie $t0 ar primi succesiv valorile 1, 2, 3, 2, 3, 2, 3, ...;
+daca in plus in corpul procedurii ar exista "jr $ra", atunci la prima
+executare a blocului s-ar face salt la o adresa necontrolata (valoarea
+initiala a lui $ra) iar efectul ar fi imprevizibil.
+ Mai natural, putem pune corpurile procedurilor inainte de eticheta "main"
+sau dupa secventa "li $v0,10", "syscall", care incheie programul - astfel
+ele nu vor mai fi executate la executia obisnuita a programului ci doar ca
+urmare a unui apel (de tip "jal", "jalr", etc.). De exemplu:
+
+.text                             .text
+  proc:                           main:
+  li $t0,2                          li $t0,1
+  jr $ra                            li $t0,3
+main:                               jal proc
+  li $t0,1       respectiv:         li $t0,4
+  li $t0,3                        li $v0,10
+  jal proc                        syscall
+  li $t0,4                          proc:
+li $v0,10                           li $t0,2
+syscall                             jr $ra
+
+ Revenim la procedura "newline" din primul exemplu; ea a folosit registrii
+$v0 si $a0 pentru a transmite parametri actuali lui syscall; la revenirea in
+codul apelant acesti registri nu vor mai avea valorile de dinaintea apelului;
+astfel, daca apelantul ar fi salvat in vreunul din ei o valoare de care ar fi
+avut nevoie mai tarziu, dupa apel nu ar mai fi gasit-o; de aceea, pentru a
+face procedura utilizabila in orice context e bine ca ea sa salveze temporar
+undeva - si cel mai bine este pe stiva (stiva este menita sa stocheze valori
+temporare) - valorile initiale ale registrilor pe care ii modifica, iar
+inainte de revenire sa restaureze valorile lor vechi. Cu aceste modificari
+procedura se scrie:
+
+newline:
+subu $sp,8
+sw $v0,4($sp) # salvam regsitrii
+sw $a0,0($sp) #   alterati de procedura
+li $v0, 4  # print string
+la $a0, nl # adresa stringului de afisat (asciiz)
+syscall    # afisaza '\n', adica trece la linie noua
+lw $a0,0($sp) # restauram registrii
+lw $v0,4($sp) #   salvati
+addu $sp,8
+jr $ra     # revenire din apel
+
+si astfel ea poate fi apelata si de catre coduri care isi salveaza inainte
+in $v0 sau $a0 valori pe care doresc sa le regaseasca dupa apel. Remarcam ca
+procedura modifica si $sp, dar la sfarsit,prin descarcarea valorilor salvate,
+$sp are iar valoarea de la intrarea in apel; acesta este un alt aspect de
+care trebuie sa avem grija - daca procedura foloseste stiva, la iesirea din
+apel ea nu trebuie sa lase in ea valori reziduale (si $sp deplasat), altfel
+exista riscul ca apelantul sa nu regaseasca corect valori salvate de el in
+stiva inaintea apelului (ele vor avea alte deplasamente fata de $sp);
+subliniem din nou ca valorile incarcate in stiva trebuie descarcate in ordine
+inversa, altfel nu se vor recupera valorile corecte; in acest sens in loc de
+"lw $a0,0($sp)","lw $v0,4($sp)" puteam scrie "lw $v0,4($sp)","lw $a0,0($sp)",
+dar nu "lw $a0,4($sp)","lw $v0,0($sp)".
+
+ Salvarea si restaurarea registrilor modificati de o procedura la inceputul,
+respectiv sfarsitul, apelului consuma timp de calcul si spatiu pe stiva si de
+aceea s-au impus conventii ce ingaduie programatorilor sa foloseasca doar
+anumiti registri pentru a stoca valori pe care spera sa le regaseasca mai
+tarziu; astfel procedurile sunt obligate sa salveze/restaureze doar acesti
+registri.
+ Mai exact, conventiile MIPS cer ca procedurile sa salveze/restaureze doar
+registrii $s0 - $s7, $fp si $ra (evident, doar pe cei pe care ii modifica).
+ De aici rezulta diferenta dintre registrii $s0 - $s7 si $t0 - $t9. Toti
+sunt folositi pentru a stoca valori temporare, dar numai $s0 - $s7 trebuie
+conservati de codurile (procedurile) apelate.
+ Presupunem acum ca ne aflam intr-un moment in care o procedura a apelat
+alta procedura, care a apelat alta procedura, etc., si ne aflam in contextul
+executarii apelului de la un anumit nivel (ce poate fi si cel al programului
+principal). Atunci:
+- daca in apelul curent salvam o valoare intr-unul din reg. $s0 - $s7, se
+ garanteaza conservarea valorii pana o vom schimba tot in acelasi apel, chiar
+ daca intre timp facem apeluri imbricate la nivel superior (reg. $s0 - $s7
+ sunt "preserved across call");
+  aceasta se datoreaza faptului ca procedurile apelate salveaza (de ex. in
+ stiva) la intrarea in apel reg. $s0 - $s7 folositi si ii restureaza la
+ iesire; de aceea reg. $s0 - $s7 s.n. registri temporari salvati de apelat;
+  astfel apelul curent poate stoca in $s0 - $s7 valori cu viata lunga, cum ar
+ fi variabilele sale locale (ca variabilele "register" in limbajul C);
+- daca in apelul curent salvam o valoare intr-unul din reg. $t0 - $t9, se
+ garanteaza conservarea valorii doar daca nu facem apeluri imbricate (reg.
+ $t0 - $t9 sunt "not preserved across call");
+  de aceea,daca dorim conservarea valorii chiar daca facem apeluri imbricate,
+ apelul curent trebuie sa-i salveze (de ex. in stiva) inainte de fiecare apel
+ imbricat si sa-i restaureze dupa; de aceea $t0 - $t9 s.n. registri temporari
+ salvati de apelant;
+  de regula in $t0 - $t9 se stocheaza doar valori cu viata scurta, care
+ sunt folosite (si apoi se pot pierde) la scurt timp dupa ce au fost produse,
+ cum ar fi rezultatele partiale obtinute in procesul evaluarii expresiilor.
+Mai general:
+- o valoare stocata intr-unul din reg. $s0 - $s7, $fp si $ra se va conserva
+ in urma apelurilor imbricate, deoarece acestea trebuie sa salveze/restaureze
+ reg. respectivi pe care ii modifica - ei s.n. registri conservati de apelat
+ (callee-saved registers);
+- o valoare stocata intr-unul din reg. $a0 - $a3, $t0 - $t9 nu se va conserva
+ in urma apelurilor imbricate decat daca apelantul ii salveaza inaintea
+ apelului si ii restaureaza dupa apel - ei s.n.registri conservati de apelant
+ (caller-saved registers);
+- in general un apel imbricat trebuie sa lase la sfarsit in $sp aceeasi
+ valoare pe care a avut-o la inceput, dar aceasta nu se realizeaza prin
+ salvare/restaurare ca in cazul celorlalti registri ci rezulta din modul de
+ administrare a stivei (apelul trebuie sa descarce din stiva toate valorile
+ temporare incarcate de el); daca nu respectam regula asta, la revenire
+ apelantul nu va regasi valorile salvate de el in stiva (ele vor avea alte
+ deplasamente fata de $sp) decat daca foloseste alt instrument pentru a le
+ referi (de exemplu $fp - a se vedea mai jos);
+  ceilalti registri ori nu trebuie modificati ($zero, $at, $k0, $k1, $gp),
+ ori nu sunt folositi pentru a stoca valori temporare - de ex. $v0, $v1 se
+ folosesc doar pentru a recupera valoarea finala a unei expresii sau pentru
+ a furniza valoarea returnata de o functie; in caz contrar si ei trebuie
+ salvati de apelant.
+Ilustram printr-un desen momentele cand trebuie salvat/restaurat un registru
+ caller-saved - de ex. $t0 - si un registru callee-saved, de ex.$s0:
+
+ apelant (caller)
+ ----------------
+ |  .               apelat (callee)
+ |  .               ---------------
+ |  .               |salvam $s0
+ |salvam $t0        |  .
+ |apel ------------>|  .
+ |restauram $t0     |  .
+ |  .               |restauram $s0
+ |  .               ---------------
+ ----------------
+
+Subliniem ca regulile de mai sus sunt doar conventii de scriere a programelor
+si nu restrictii hardware; ele pot fi incalcate, dar codul nostru risca sa nu
+fie compatibil cu altele; in orice caz conventiile trebuie respectate daca
+ceea ce scriem nu este un program complet ci doar un fragment care va fi
+combinat cu fragmente scrise de altii.
+
+Exemplu: folosirea registrilor temporari salvati de apelant si apelat;
+~~~~~~~~
+
+Consideram programul C:
+
+#include<stdio.h>
+
+int s1=1,s2=1;         /* variabile globale */
+
+void linie_s1(){
+  register int i;  /* variabila locala lui "linie_s1", alocata register */
+  for(i=0; i<s1; ++i) printf("*");
+  printf("\n");
+}
+
+void linie_s2(){
+  register int i;  /* variabila locala lui "linie_s2", alocata register */
+  for(i=0; i<s2; ++i) printf("-");
+  printf("\n");
+}
+
+void main(){
+  register int i;  /* variabila locala lui "main", alocata register */
+  for(i=0; i<3; ++i){
+    s1=s1+i*i;
+    linie_s1();
+    s2=s2+i*i*i;
+    linie_s2();
+  }
+}
+
+la rulare acesta afisaza:
+
+*
+-
+**
+--
+******
+----------
+
+O translatare a acestui program este:
+
+.data
+  s1: .word 1
+  s2: .word 1
+.text
+main:
+  li $s0,0  # alocam i din "main" in $s0
+  inceput:
+  li $t0,3
+  bge $s0,$t0 sfarsit
+    move $t0,$s0      # in $t0 calculam i*i, apoi i*i*i
+    mulo $t0,$t0,$s0  # acum, $t0 = i*i
+    lw $t1,s1
+    add $t1,$t1,$t0
+    sw $t1,s1
+    subu $sp,4     # $t0 ne trebuie si mai tarziu si nu e salvat de apelat,
+    sw $t0,0($sp)  #  deci il salvam in apelant; acum stiva este: $sp:($t0 v)
+    jal linie_s1
+    lw $t0,0($sp)  # dupa revenire stiva este tot: $sp:($t0 v)
+    addu $sp,4     #  si restauram $t0 la revenirea in apelant
+    mulo $t0,$t0,$s0  # acum, $t0 = i*i*i
+    lw $t1,s2
+    add $t1,$t1,$t0
+    sw $t1,s2
+    jal linie_s2   # acum nu ne mai trebuie in apelant $t0 si nu-l mai salvam
+    add $s0,1
+    b inceput
+  sfarsit:
+li $v0,10
+syscall
+.data
+  stea:  .asciiz "*"
+  linie: .asciiz "-"
+  nl:    .asciiz "\n"
+.text
+linie_s1:       # stiva primita la inceput este:  $sp:($t0 v)
+  subu $sp,4    # salvam $s0 in apelat, deoarece il va modifica
+  sw $s0,0($sp) #        acum stiva este:  $sp:($s0 v)($t0 v)
+  li $s0,0  # alocam i din "linie_s1" in $s0
+  inceput1:
+  lw $t0,s1
+  bge $s0,$t0,sfarsit1
+    li $v0,4  # print string
+    la $a0,stea
+    syscall
+    add $s0,1
+    b inceput1
+  sfarsit1:
+  li $v0,4
+  la $a0,nl
+  syscall
+  lw $s0,0($sp) # restauram valoarea veche a lui $s0;
+  addu $sp,4    #  acum stiva este ca la inceput: $sp:($t0 v)
+jr $ra
+linie_s2:       # stiva primita la inceput este vida
+  subu $sp,4    # salvam $s0 in apelat, deoarece il va modifica
+  sw $s0,0($sp) #        acum stiva este:  $sp:($s0 v)
+  li $s0,0  # alocam i din "linie_s2" in $s0
+  inceput2:
+  lw $t0,s2
+  bge $s0,$t0,sfarsit2
+    li $v0,4  # print string
+    la $a0,linie
+    syscall
+    add $s0,1
+    b inceput2
+  sfarsit2:
+  li $v0,4
+  la $a0,nl
+  syscall
+  lw $s0,0($sp) # restauram valoarea veche a lui $s0;
+  addu $sp,4    #  acum stiva este ca la inceput, vida
+jr $ra
+##########
+
+Comentarii:
+- registrii $s0 si $t0 au fost folositi si in programul principal (apelant)
+ si in procedurile "linie_s1" si "linie_s2" (apelate) pentru a stoca valori;
+ in apelant, valoarea din $s0 trebuie sa supravietuiasca ambelor apeluri
+ imbricate, iar cea din $t0 doar primului apel; conform conventiilor MIPS,
+ $s0 a fost salvat/restaurat in ambii apelati, iar $t0 in apelant (dar doar
+ pentru a supravietui primului apel imbricat);
+  procedurile "linie_s1" si "linie_s2" modifica de asemenea si $v0, $a0, dar
+ apelantul nu doreste sa conserve valorile lor peste apelurile imbricate,
+ deci nu le salveaza/restaureaza;
+- chiar daca $s0 n-ar trebui sa supravietuiasca ambelor apeluri imbricate,
+ acestea tot ar trebui sa il salveze/restaureze daca respectam conventiile
+ MIPS, intrucat codul procedurilor respective il modifica;
+  de asemenea, putem gasi o alta transcriere a programului C, in care
+ procedurile sa foloseasca alt registru $s (de ex. $s1) pentru a-si aloca
+ variabila i si alt registru $t (de ex. $t7) decat cei folositi in programul
+ principal; atunci nu va mai fi nevoie sa salvam/restauram niciunul dintre
+ $s0 si $t0, dar daca vrem sa aplicam strict conventiile MIPS (mai ales daca
+ procedurile si programul principal sunt scrise de programatori diferiti si
+ nu stie unui daca celalalt chiar foloseste registrii respectivi) tot trebuie
+ sa o facem;
+
+In final formulam pe scurt si retinem urmatoarea
+
+CONVENTIE MIPS:
+ - registrii $s0 - $s7, $fp si $ra s.n. registri conservati de apelat
+ (callee-saved registers);
+ - registrii $a0 - $a3, $t0 - $t9 s.n. registri conservati de apelant
+ (caller-saved registers);
+ -  un cod apelant trebuie sa salveze/restaureze cu ocazia fiecarui apel
+ imbricat doar acei registri caller-saved pe care doreste sa-i conserve peste
+ apel, iar un cod apelat trebuie sa salveze/restaureze toti registrii
+ callee-saved pe care ii modifica (indiferent cine o apeleaza).
+
+In comentariile incluse in exemplul de mai sus am folosit un anumit mod de a
+ descrie continutul stivei pe care il vom folosi si in continuare. De exemplu
+ o scriere de forma:
+
+   $sp:(1)($t1)($t0 v)$fp:($a0 v)
+
+ inseamna ca:
+ - in stiva se afla succesiv, de la varf spre baza: 1, apoi valoarea lui $t1,
+  apoi valoarea veche a lui $t0, apoi valoarea veche a lui $a0 (deci ultimul
+  introdus este 1);
+ - registrul $sp pointeaza locatia ce contine pe 1 (deci varful stivei), iar
+  registrul $fp pointeaza locatia ce contine valoarea veche a lui $a0 (deci
+  nu am intercalat valorile lui $sp si $fp printre valorile din stiva, ci ei
+  contin adresele unde am stocat in stiva pe 1 si pe $a0 vechi).
+
+ Notam ca instructiunile de apelare "bltzal", "bgezal", "jal", "jalr" si cea
+de revenire "jal" controleaza doar pe unde o va lua firul executiei, nu si
+pasarea parametrilor, preluarea valorilor returnate (in cazul functiilor),
+etc. - acestea mecanisme trebuie implementate separat in mod explicit, prin
+alte instructiuni.
+
+1b) Variabile locale automatice, cadrul de apel:
+------------------------------------------------
+
+ O procedura poate avea variabile locale automatice (alocate temporar in
+stiva pe perioada apelului). Urmatorul exemplu arata un mod simplu de a
+lucra cu variabile locale automatice:
+
+Exemplu: translatam urmatorul program C:
+~~~~~~~~
+
+#include<stdio.h>
+
+void proc(){
+  int p, q;       // variabile locale alocate automatic (pe stiva)
+  register int i; // variabila locala alocata register
+  p=0; q=0;
+  for(i=0; i<3; ++i){
+    ++p;
+    q=(q+i)*(q-i)-p*i;
+    printf("%d\n",q);
+  }
+}
+
+void main(){
+  proc();
+}
+
+La rulare afisaza:
+
+0
+-3
+-1
+
+Translatarea este:
+
+.text
+main:
+  jal proc
+li $v0,10
+syscall
+.data
+  nl: .asciiz "\n"
+.text
+proc:           # la intrarea in procedura stiva este vida
+  subu $sp,4
+  sw $s0,0($sp) # salvam reg. callee-saved $s0, deoarece il vom modifica
+  subu $sp,8    # rezervam spatiu pe stiva pentru locatiile lui p, q
+    # convin ca p sa fie la 4($sp) si q la 0($sp);se poate conveni si invers;
+    # acum stiva este $sp:(q)(p)($s0 v)
+  sw $zero,4($sp)  # p=0;
+  sw $zero,0($sp)  # q=0;
+  li $s0,0         # aloc i in $s0; acum fac i=0;
+  li $t0,3         # fixez $t0 la valoarea 3
+  inceput:
+  bge $s0,$t0,sfarsit
+    lw $t1,4($sp)
+    add $t1,1
+    sw $t1,4($sp)     # ++p
+      # evaluez (q+i)*(q-i)-p*i cu stiva
+      # reamintim ca acum stiva este $sp:(q)(p)($s0 v)
+    lw $t1,4($sp)     # evaluez p*i si incarc in stiva
+    mulo $t1,$t1,$s0  #
+    subu $sp,4        #
+    sw $t1,0($sp)
+      # acum stiva este $sp:(p*i)(q)(p)($s0 v)
+      # deci acum p este la 8($sp) iar q este la 4($sp)
+    lw $t1,4($sp)     # evaluez q-i si incarc in stiva
+    sub $t1,$t1,$s0   #
+    subu $sp,4        #
+    sw $t1,0($sp)     #
+      # acum stiva este $sp:(q-i)(p*i)(q)(p)($s0 v)
+      # deci acum p este la 12($sp) iar q este la 8($sp)
+    lw $t1,8($sp)     # evaluez $t1=q+i
+    add $t1,$t1,$s0   #
+    lw $t2,0($sp)     # descarc din stiva q-i si evaluez $t1=(q+i)*(q-i)
+    addu $sp,4        #
+    mulo $t1,$t1,$t2  #
+      # acum stiva este $sp:(p*i)(q)(p)($s0 v)
+    lw $t2,0($sp)     # descarc din stiva p*i si evaluez $t1=(q+i)*(q-i)-p*i
+    addu $sp,4        #
+    sub $t1,$t1,$t2   #
+      # acum stiva este $sp:(q)(p)($s0 v)
+      # deci acum iar p este la 4($sp) iar q este la 0($sp)
+    sw $t1,0($sp)     # atribui q=(q+i)*(q-i)-p*i
+      # afisez q
+    li $v0,1      # print int
+    lw $a0,0($sp) # $a0=q
+    syscall
+    li $v0,4      # print string
+    la $a0,nl
+    syscall
+    add $s0,1     # ++i
+    b inceput
+  sfarsit:
+    # acum stiva este $sp:(q)(p)($s0 v)
+  addu $sp,8    # dezaloc din stiva variabilele automatice p, q
+    # acum stiva este $sp:($s0 v)
+  lw $s0,0($sp) # restauram $s0
+  addu $sp,4
+    # inaintea iesirii din procedura stiva este iar vida, ca la inceput
+jr $ra
+##########
+
+Comentarii:
+- variabila register i a fost alocata intr-un registru "preserved across
+ call", deoarece asa este recomandabil (sa folosim un registru destinat
+ valorilor cu viata lunga);
+  salvarea/restaurarea valorii vechi a lui $s0 de catre procedura nu este
+ necesara, dar asa respectam conventiile MIPS (este un registru callee-saved
+ pe care procedura il modifica);
+- variabilele locale automatice p si q au fost alocate pe stiva la inceputul
+ apelului (scazand $sp) si dezalocate la sfarsitul apelului (pentru a lasa
+ stiva ca la inceput);
+- pe parcursul apelului stiva a fluctuat (prin incarcarea/descarcarea
+ rezultatelor partiale temporare in procesul evaluarii expresiei
+ (q+i)*(q-i)-p*i); de aceea, desi locatiile lui p si q exista in acelasi loc
+ pe stiva pe toata durata apelului, offset-urile lor fata de $sp au variat
+ (de exemplu p a fost la 4($sp), 8($sp), 12($sp));
+  acest fenomen al variatiei offset-urilor variabilelor locale automatice
+ in raport cu $sp pe perioada apelului face dificila accesarea lor cu $sp,
+ mai ales daca ea se face intr-un ciclu in care stiva fluctueaza de la o
+ iteratie la alta - atunci nu putem indica offsetul printr-o valoare imediata
+ (deci constanta) si astfel scrierea codului este mai dificila;
+  solutia este folosirea altui registru pentru accesarea entitatilor
+ temporare din stiva specifice unui apel si care isi pastreaza semnificatia
+ si locatia pe toata perioada apelului - cum ar fi variabilele locale
+ automatice, registrii callee-saved salvati si, vom vedea mai tarziu,
+ parametrii actuali primiti prin stiva; conform conventiilor MIPS acest
+ registru este $fp;
+  practic, la inceputul apelului (inainte de a accesa entitatile din stiva)
+ se plaseaza $fp sa pointeze intr-un anumit loc si va fi mentinut acolo pe
+ toata perioada apelului; in acest fel, indiferent cum va fluctua stiva pe
+ perioada apelului, entitatile cu locatie fixa pe perioada apelului
+ (variabile locale automatice, registri callee-saved salvati, parametri
+ actuali) vor avea offset-uri fixe fata de $fp, care se pot determina in faza
+ de elaborare a programului si indica in cod prin valori imediate;
+  per total $fp va fi folosit pentru a accesa entitatile din stiva specifice
+ apelului (cu locatie fixa pe perioada apelului) iar $sp va fi folosit doar
+ pentru a controla stiva (pentru a pointa varful stivei) si eventual a accesa
+ celelalte valori incarcate temporar (cu viata scurta);
+  intrucat daca programam dupa o anumita disciplina se presupune ca fiecare
+ procedura foloseste probabil $fp (si doreste conservarea valorii acestuia pe
+ toata perioada apelului ei, chiar daca face apeluri imbricate), acest
+ registru este si el din categoria callee-saved - trebuie salvat/restaurat de
+ apelat daca acesta il modifica.
+
+Exemplu: alta translatare a programului din exemplul anterior, folosind $fp:
+~~~~~~~~
+
+.text
+main:
+  jal proc
+li $v0,10
+syscall
+.data
+  nl: .asciiz "\n"
+.text
+proc:           # la intrarea in procedura stiva este vida
+    # rezervam spatiu pe stiva pentru entitatile cu locatie fixa pe perioada
+    #  apelului - acest spatiu se va numi cadru de apel (vom vedea)
+  subu $sp,16
+    # salvam registrii callee-saved pe care ii modificam, in cadrul de apel
+  sw $fp,12($sp)
+  sw $s0,8($sp)
+    # convenind ca sub cei doi registri salvati sa avem q, p,
+    #  acum stiva este $sp:(q)(p)($s0 v)($fp v)
+  addiu $fp,$sp,12  # plasam $fp sa pointeze primul word din cadru
+    # acum stiva este $sp:(q)(p)($s0 v)$fp:($fp v)
+    #  deci p este la -8($fp) iar q la -12($fp) (offset-uri fixe)
+    # puteam alege orice pozitie pentru a plasa sa pointeze $fp, dar am
+    #  ales-o pe aceasta (primul word din cadru) pentru a ne conforma unor
+    #  conventii MIPS (a se vedea mai jos)
+  sw $zero,-8($fp)   # p=0;
+  sw $zero,-12($fp)  # q=0;
+  li $s0,0           # aloc i in $s0; acum fac i=0;
+  li $t0,3           # fixez $t0 la valoarea 3
+  inceput:
+  bge $s0,$t0,sfarsit
+    lw $t1,-8($fp)
+    add $t1,1
+    sw $t1,-8($fp)     # ++p
+      # evaluez (q+i)*(q-i)-p*i cu stiva
+      # reamintim ca acum stiva este $sp:(q)(p)($s0 v)$fp:($fp v)
+    lw $t1,-8($fp)     # evaluez p*i si incarc in stiva
+    mulo $t1,$t1,$s0   #
+    subu $sp,4         #
+    sw $t1,0($sp)
+      # acum stiva este $sp:(p*i)(q)(p)($s0 v)$fp:($fp v)
+      # desi acum p, q sunt la alte offset-uri fata de $sp, ele sunt la
+      #  aceleasi offset-uri (-8, respectiv -12) fata de $fp
+    lw $t1,-12($fp)    # evaluez q-i si incarc in stiva
+    sub $t1,$t1,$s0    #
+    subu $sp,4         #
+    sw $t1,0($sp)      #
+      # acum stiva este $sp:(q-i)(p*i)(q)(p)($s0 v)$fp:($fp v)
+    lw $t1,-12($fp)    # evaluez $t1=q+i
+    add $t1,$t1,$s0    #
+    lw $t2,0($sp)     # descarc din stiva q-i si evaluez $t1=(q+i)*(q-i)
+    addu $sp,4        #
+    mulo $t1,$t1,$t2  #
+      # acum stiva este $sp:(p*i)(q)(p)($s0 v)$fp:($fp v)
+    lw $t2,0($sp)     # descarc din stiva p*i si evaluez $t1=(q+i)*(q-i)-p*i
+    addu $sp,4        #
+    sub $t1,$t1,$t2   #
+      # acum stiva este $sp:(q)(p)($s0 v)$fp:($fp v)
+    sw $t1,-12($fp)   # atribui q=(q+i)*(q-i)-p*i
+      # afisez q
+    li $v0,1        # print int
+    lw $a0,-12($fp) # $a0=q
+    syscall
+    li $v0,4        # print string
+    la $a0,nl
+    syscall
+    add $s0,1     # ++i
+    b inceput
+  sfarsit:
+    # acum stiva este $sp:(q)(p)($s0 v)$fp:($fp v)
+    # restauram registrii callee-saved salvati la inceput, $s0 si $fp
+  lw $s0,-4($fp)
+  lw $fp,0($fp)   # acum nu mai pot accesa cadrul cu $fp caci are alta val.
+  addu $sp,16     # descarc cadrul de apel
+    # inaintea iesirii din procedura stiva este iar vida, ca la inceput
+jr $ra
+##########
+
+Comentarii:
+- acest exemplu evidentiaza urmatorul aspect: orice apel aloca pe stiva pe
+ perioada executiei sale niste entitati temporare pe care pana in final le 
+ va dezaloca complet; unele entitati isi conserva locatia pe toata perioada
+ apelului (ca variabilele locale automatice si registrii callee-saved
+ salvati), altele apar si dispar in diverse momente ale executiei apelului,
+ alocandu-se in diverse locuri in stiva (ca rezultatele partiale obtinute in
+ procesul evaluarii expresiilor);
+  entitatile care isi conserva locatia in acelasi loc pe toata perioada
+ apelului (le vom numi entitati din prima categorie) pot fi anticipate in
+ faza de elaborare a programului, inclusiv dimensiunea lor totala; celelalte
+ (le vom numi entitati din a doua categorie) nu pot fi anticipate mereu in
+ aceasta faza - de exemplu daca avem de evaluat cu stiva o expresie avand un
+ numar de subexpresii ce depinde de o valoare citita de la consola, numarul
+ de rezultate partiale incarcate/descarcate in stiva pentru evaluarea ei
+ difera de la o executie la alta;
+  atunci putem organiza apelul astfel:
+ * la inceput rezervam spatiu pe stiva pentru toate entitatile din prima
+  categorie  (scazand din $sp dimensiunea lor totala, cunoscuta in faza
+  elaborarii programului); aceasta locatie se numeste cadru de apel (al
+  apelului respectiv); alte denumiri: cadru de stiva, procedure call frame
+  (in engleza);
+ * apoi initializam parti ale cadrului de apel cu anumite valori, daca e
+  cazul (de exemplu salvam aici registrii callee-saved pe care urmeaza sa-i
+  modificam); in aceasta faza $sp ramane fixat si putem accesa parti ale
+  cadrului de apel cu offset-uri fixe fata de $sp, care se pot determina in
+  faza de elaborare a programului (si specifica in program prin valori
+  imediate) deoarece dimensiunea cadrului de apel si entitatile ce trebuie
+  salvate acum in el se cunosc;
+ * apoi plasam $fp intr-o pozitie convenabila in raport cu cadrul de apel
+  (la un offset ales si cunoscut, de asemenea, in faza de elaborare a
+  programului); din acest moment putem accesa entitatile din prima categorie
+  aflate in cadrul de apel folosind offset-uri constante fata de $fp (care
+  sunt si ele cunoscute in faza de elaborare a programului si pot fi indicate
+  in cod prin valori imediate);
+   de notat ca $fp este callee-saved deci, pentru ca il modificam, el trebuie
+  salvat inainte in cadrul de apel;
+ * apoi efectuam prelucrarea specifica apelului, ocazie cu care in stiva se
+  vor mai incarca/descarca entitati din a doua categorie iar stiva va fluctua
+  in continuarea cadrului de apel (la adrese inferioare), neafectand in vreun
+  fel entitatile din prima categorie salvate in el;
+   cand terminam prelucrarea specifica apelului si vrem sa iesim, trebuie sa
+  avem grija ca $sp sa pointeze din nou cadrul de apel (sa nu ramana
+  incarcate in stiva valori in plus);
+ * inainte de a iesi din apel restauram registrii callee-saved salvati
+  (inclusiv $fp) si apoi descarcam cadrul de apel din stiva adunand la $sp
+  dimensiunea lui (cunoscuta in faza elaborarii programului); de notat
+  ca pana la restaurarea lui $fp putem acceasa valorile din cadrul de apel
+  cu offset-uri fata de $fp; dupa aceea nu se mai poate, deoarece $fp are
+  alta valoare; de aceea descarcarea cadrului din stiva (care se face dupa
+  restaurarea lui $fp) se face adunand o valoare imediata (cunoscuta in faza
+  elaborarii programului) la $sp si nu folosind $fp;
+- in programul de mai sus am aplicat pasii de mai sus, stiind ca dimensiunea
+ cadrului de apel trebuie sa fie 16 octeti (pentru a incapea $s0,$fp,p,q).
+
+ Cadrul de apel poate fi organizat oricum; de exemplu intai registrii callee-
+saved salvati si apoi variabilele locale automatice (ca in exemplul de mai
+sus) sau invers.
+ La fel, $fp poate fi plasat oriunde in raport cu cadrul de apel; de exemplu
+il putem plasa in extremitatea sa superioara, sau la un word distanta de ea
+(ca in exemplul de mai sus), sau in extremitatea sa inferioara - atunci toate
+entitatile din cadrul de apel vor avea offset-uri pozitive fata de $fp.
+ Si aici insa exista conventii; mai exact avem urmatoarele
+
+CONVENTII MIPS:
+ - Cadrul de apel are cel putin 24 octeti;
+ - Partea cadrului aflata la adrese mari stocheaza registrii callee-saved
+  salvati; partea aflata la adrese mici contine locatiile variabilelor locale
+  automatice;
+ - $fp pointeaza primul word din cadru (aflat la adresa cea mai mare);
+ - crearea/distrugerea cadrului de apel se face urmand pasii "*" de mai sus
+  (vom formula mai precis in sectiunea 1j).
+
+ Asadar, conform conventiilor de mai sus, initial $fp pointeaza primul word
+din cadru, $sp ultimul word din cadru (care coincide cu varful stivei) iar
+distanta dintre $fp si $sp este dimensiunea cadrului minus 4; practic cadrul
+este zona de stiva dintre adresele $sp si $fp+4.
+ Asa cum vom vedea mai tarziu, conventiile MIPS cer ca primii 4 parametri
+actuali sa fie transmisi prin registrii $a0 - $a3 iar urmatorii prin stiva;
+ei vor aparea in ordine deasupra cadrului de apel si vor putea fi accesati
+tot cu offset-uri constante fata de $fp (cunoscute in faza elaborarii
+programului). Desenul este:
+
+                                  | ...
+                                  -------------------------
+                                  | argument 6
+                                  -------------------------
+                                  | argument 5
+                                  -------------------------
+                                 ||                       |
+                        1 word ->||                       |
+                                 ||                       |
+                                 ||      registri         |
+                           $fp -> |                       |  cadru
+                       |          |    callee-saved       |
+  stiva creste in jos  |          |                       |   de
+   (spre adrese mici)  |          |      salvati          |
+                       |          |                       |   apel
+                      \/          ------------------------|
+                                  |                       |
+                                  | variabile locale      |
+                                  |   automatice          |
+                                  |                       |
+                           $sp -> -------------------------
+                         (varful stivei)
+
+Observatie: Cartea [1], prin anumite exemple si comentarii cam neclare, pare
+ ca sugereaza si alte conventii MIPS, cum ar fi o anumita ordine a salvarii
+ registrilor callee-saved in cadrul de apel si faptul ca $sp trebuie sa fie
+ aliniat mereu la cuvant dublu (adresa multiplu de 8). Alte exemple sugereaza
+ ca si parametrii actuali transmisi prin stiva se considera ca fac parte din
+ cadrul de apel (?). In fine, cartea [1] mentioneaza ca compilatorul gcc
+ genereaza cod ce foloseste $fp conform convetiilor de mai sus, in timp ce
+ compilatorul MIPS de obicei nu foloseste $fp si genereaza cod care acceseaza
+ cadrul de apel cu $sp (deci generarea codului este mai complicata, deoarece
+ offset-urile entitatilor din cadrul de apel fata de $sp pot fluctua).
+
+  In cele ce urmeaza nu vom respecta decat partial conventiile enuntate; de
+ exemplu vom dimensiona cadrul de apel cat e necesar (nu de minim 24 octeti).
+
+1c) Transmiterea de parametri:
+------------------------------
+
+ O procedura poate comunica cu restul programului folosind parametri (prin
+valoare sau referinta); acestia pot fi transmisi (pasati) prin registri,
+memorie sau stiva. In urmatoarele trei exemple ilustram aceste modalitati in
+cazul unei proceduri ce aduna doua word-uri (parametri prin valoare) si pune
+suma intr-o variabila word (parametru prin referinta);practic se translateaza
+urmatorul program C:
+
+void aduna(int *r, int p, int q){
+  *r=p+q;
+}
+
+int x=1, y=2, z=10, rez1, rez2;
+
+void main(){
+ aduna(&rez1,x,y);  /* rez1 devine 3 */
+ aduna(&rez2,z,20); /* rez2 devine 30 */
+}
+
+Exemplu: transmiterea parametrilor prin registri - incarc parametrii actuali
+~~~~~~~~  in registri si apelez procedura; ea si-i va lua de acolo; 
+  codul este simplu si rapid, executabilul este mic, dar parametrii nu pot fi 
+ multi si/sau mari deoarece in general avem putini reg. liberi disponibili;
+  conform conventiilor MIPS reg. folositi pentru transmiterea parametrilor
+ sunt $a0 - $a3;
+
+.data
+  x: .word 1
+  y: .word 2
+  z: .word 10
+  rez1: .space 4
+  rez2: .space 4
+.text
+main:
+  la $a0,rez1
+  lw $a1,x
+  lw $a2,y
+  jal aduna
+    # acum rez1 = 3
+  la $a0,rez2
+  lw $a1,z
+  li $a2,20
+  jal aduna
+    # acum rez2 = 30
+li $v0,10
+syscall
+aduna:
+  add $a1,$a1,$a2
+  sw $a1,0($a0)
+jr $ra
+##########
+
+Exemplu: transmiterea prin memorie - parametrii actuali se incarca in niste 
+~~~~~~~~  variabile din memorie (variabile statice) iar procedura si-i ia de
+          acolo;
+ codul este mai lung si mai lent(memoria se acceseaza mai lent ca registrii):
+
+.data
+  x: .word 1
+  y: .word 2
+  z: .word 10
+  rez1: .space 4
+  rez2: .space 4
+.text
+main:
+  la $t0,rez1
+  sw $t0,r
+  lw $t0,x
+  sw $t0,p
+  lw $t0,y
+  sw $t0,q
+  jal aduna
+    # acum rez1 = 3
+  la $t0,rez2
+  sw $t0,r
+  lw $t0,z
+  sw $t0,p
+  li $t0,20
+  sw $t0,q
+  jal aduna
+    # acum rez2 = 30
+li $v0,10
+syscall
+.data
+  r: .space 4 # primul parametru al procedurii
+  p: .space 4 # al doilea parametru al procedurii
+  q: .space 4 # al treilea parametru al procedurii
+.text
+aduna:
+  lw $t0,p
+  lw $t1,q
+  add $t0,$t0,$t1
+  lw $t1,r
+  sw $t0,0($t1)
+jr $ra
+##########
+
+Comentariu: am scris de doua ori ".data" si ".text" pentru sugestivitate
+ (pentru a fi clar ca p, q, r sunt introduse in program pentru uzul
+ procedurii); alocarea entitatilor in memorie se face insa la fel ca si cand
+ le-am fi scris in continuare in aceleasi sectiuni ".data", respectiv ".text"
+ (in memorie programul are o singura zona de date statice si o singura zona
+ de cod):
+
+ .data
+   x: .word 1
+   y: .word 2
+   z: .word 10
+   rez1: .space 4
+   rez2: .space 4
+   r: .space 4
+   p: .space 4
+   q: .space 4
+ .text
+ main:
+   ...
+ li $v0,10
+ syscall
+ aduna:
+   ...
+ jr $ra
+
+ in particular p, q, r se aloca in aceeasi zona (de date statice) ca si x, y,
+ z, rez1, rez2. Notam ca $t0, $t1 nu sunt callee-saved, deci nu a fost nevoie
+ sa-i salvam/restauram in procedura.
+
+Exemplu: transmiterea prin stiva - parametrii actuali se incarca in stiva
+~~~~~~~~  iar procedura si-i ia de acolo (parametrii trebuie incarcati in
+          stiva in aceeasi ordine in care ii cauta procedura);
+  este cel mai puternic si mai flexibil mod de a pasa parametrii;
+  dimensiunea si viteza codului sunt de obicei intermediare intre cele 
+ obtinute in cazul transmiterii prin registri si prin memorie; structura
+ codului este insa mai complicata:
+
+.data
+  x: .word 1
+  y: .word 2
+  z: .word 10
+  rez1: .space 4
+  rez2: .space 4
+.text
+main:
+    # push y, x, adr. rez1
+  subu $sp,12
+  la $t0,rez1
+  sw $t0,0($sp)
+  lw $t0,x
+  sw $t0,4($sp)
+  lw $t0,y
+  sw $t0,8($sp)
+    # acum stiva contine $sp:(adr.rez1)(x)(y)
+  jal aduna
+    # acum rez1 = 3
+    # stiva insa contine (ca la inceput) $sp:(adr.rez1)(x)(y) si o descarc
+  addu $sp,12
+    # acum stiva este vida
+    # push 20, z, adr. rez2
+  subu $sp,12
+  la $t0,rez2
+  sw $t0,0($sp)
+  lw $t0,z
+  sw $t0,4($sp)
+  li $t0,20
+  sw $t0,8($sp)
+    # acum stiva contine $sp:(adr.rez2)(z)(20)
+  jal aduna
+    # acum rez2 = 30
+    # stiva insa contine (ca la inceput) $sp:(adr.rez2)(z)(20) si o descarc
+  addu $sp,12
+    # acum stiva este vida
+li $v0,10
+syscall
+aduna:  # la intrarea in apel stiva este $sp:(r)(p)(q)
+  subu $sp,4
+  sw $fp,0($sp)    # salvam $fp
+  addiu $fp,$sp,0  # acum stiva este $sp:$fp:($fp v)(r)(p)(q)
+  lw $t0,8($fp)
+  lw $t1,12($fp)
+  add $t0,$t0,$t1
+  lw $t1,4($fp)
+  sw $t0,0($t1)
+  lw $fp,0($fp) # restauram $fp
+  addu $sp,4    # descarc cadrul de apel; acum stiva este iar $sp:(r)(p)(q)
+jr $ra
+##########
+
+Comentarii:
+- putem introduce in stiva parametrii actuali in alta ordine, dar atunci si
+ in procedura trebuie sa-i accesam conform noii ordini; descarcarea lor din
+ stiva la sfarsit poate fi facuta de apelant (dupa revenirea din apelul
+ imbricat) sau de apelat (inainte de revenire); in exemplul nostru am ales
+ prima varianta (conform conventiei C - a se vedea in sectiunea 1e);
+- intrucat parametrii actuali sunt entitati care isi conserva locatia pe
+ toata perioada apelului (asemeni variabilelor locale automatice si
+ registrior callee-saved salvati), este de preferat sa-i accesam si pe ei cu
+ $fp; de aceea, chiar daca nu avem variabile locale automatice si registri
+ callee-saved salvati, am creat un cadru de apel (conform conventiilor MIPS
+ descrise mai inainte), care contine insa doar $fp vechi (salvat/restaurat).
+
+CONVENTIE MIPS: la apelarea unei proceduri primii patru parametri actuali
+ trebuie transmisi prin registrii $a0 - $a3, iar urmatorii prin stiva
+(in felul acesta programele simple (cu putini parametri) se executa repede).
+
+ In exemplele care urmeaza, din considerente didactice, toti parametrii
+actuali vor fi transmisi prin stiva (pentru a ne obisnui cu acest mod general
+si flexibil de lucru).
+
+1d) Returnarea valorilor (functii):
+-----------------------------------
+
+ In limbajele de nivel inalt intalnim atat subrutine de tip procedura (cum 
+sunt cele tratate pana acum) cat si de tip functie, care nu isi propun sa 
+produca efecte laterale ci doar sa calculeze o anumita valoare (de ex. pe 
+baza parametrilor) pe care s-o furnizeze la sfarsit (s-o returneze) codului
+apelant. In MIPS functiile se vor defini tot ca niste proceduri (avem un 
+singur concept de subrutina), dar in care vom implementa un comportament de
+tip functie.
+ La fel ca transmiterea parametrilor, returnarea unei valori se poate face
+prin registri, memorie sau stiva. In continuare ilustram cele trei modalitati
+in cazul unei functii "f" ce primeste ca parametri doua worduri si returneaza
+suma patratelor lor (ignorand depasirile). Asa cum am anuntat mai inainte,
+toti parametrii vor fi transmisi prin stiva.
+
+Exemplu: returnarea prin registri - este cel mai des folosita, codul este
+~~~~~~~~  scurt si rapid, dar nu se pot returna valori de dimensiuni mari
+          (vectori, stringuri, etc.);
+  conform conventiilor MIPS reg. folositi pentru returnarea valorilor sunt
+  $v0 si $v1.
+
+Translatam urmatorul program C:
+
+int f(int p, int q){
+  return p*p+q*q;
+}
+
+int x;
+
+void main(){
+  x=f(1,2);  /* x devine 5 */
+}
+
+Translatarea este:
+
+.data
+  x: .space 4
+.text
+main:
+  subu $sp,8      # incarc parametrii actuali
+  li $t0,1
+  sw $t0,0($sp)
+  li $t0,2
+  sw $t0,4($sp)  # acum stiva este $sp:(1)(2)
+  jal f
+  addu $sp,8     # descarc parametrii actuali
+  sw $v0,x       # recuperez valoarea returnata
+    # acum x = 5
+li $v0,10
+syscall
+f:              # la intrarea in apel stiva este $sp:(p)(q)
+  subu $sp,4
+  sw $fp,0($sp)    # salvam $fp
+  addiu $fp,$sp,0  # acum stiva este $sp:$fp:($fp v)(p)(q)
+  lw $t0,4($fp)    # $t0 = p
+  mul $t0,$t0,$t0  # $t0 = p*p
+  subu $sp,4
+  sw $t0,0($sp)    # acum stiva este $sp:(p*p)$fp:($fp v)(p)(q)
+  lw $t0,8($fp)    # $t0 = q
+  mul $t0,$t0,$t0  # $t0 = q*q
+  lw $t1,0($sp)    # $t1 = p*p
+  addu $sp,4       # acum stiva este $sp:$fp:($fp v)(p)(q)
+  add $v0,$t1,$t0  # $v0 = p*p + q*q
+  lw $fp,0($fp)    # restauram $fp
+  addu $sp,4       # descarc cadrul de apel; acum stiva este iar $sp:(p)(q)
+jr $ra
+##########
+
+Comentarii:
+- functia returneaza valoarea in $v0; intrucat la revenirea in codul apelant
+ conteaza noua valoare pusa de "f" in $v0, nici codul apelant nici functia nu
+ trebuie sa salveze/restaureze acest registru;
+- intrucat am avut parametri transmisi prin stiva, am folosit $fp pentru a-i
+ accesa; aici el chiar a fost util, deoarece pe parcursul apelului stiva (si
+ deci $sp) a mai fluctuat (prin incarcarea/descarcarea lui p*p).
+
+Exemplu: returnarea prin memorie - anume prin parametri de iesire sau
+~~~~~~~~  variabile statice asociate functiei special in acest scop;
+ tehnica nu este recomandata ca model de programare structurata, dar permite
+ (si se foloseste la) returnarea unor valori de dimensiuni. mari (vectori, 
+ stringuri, etc.);
+  varianta cu parametri de iesirea fost deja descrisa in ex. anterioare si
+ implementeaza de fapt un comportament de procedura (nu de functie) - trebuie
+ sa dam noi explicit ca par. actual adresa locatiei unde se va ret. valoarea;
+  in urmatorul program ilustram ambele variante; practic, vom translata
+ urmatorul program C:
+
+void f1(int *r, int p, int q){
+  *r=p*p+q*q;
+}
+
+int f2r;  /* variabila statica asociata functiei f2 */
+
+void f2(int p, int q){
+  f2r=p*p+q*q;
+}
+
+int x,y;
+
+void main(){
+  f1(&x,1,2);        /* x devine 5 */
+  f2(10,20); y=f2r;  /* y devine 500 */
+}
+
+Translatarea este:
+
+.data
+  x: .space 4
+  y: .space 4
+.text
+main:
+    # incarc parametrii actuali pentru f1
+  subu $sp,12
+  la $t0,x
+  sw $t0,0($sp)
+  li $t0,1
+  sw $t0,4($sp)
+  li $t0,2
+  sw $t0,8($sp)  # acum stiva este $sp:(adr.x)(1)(2)
+  jal f1
+  addu $sp,12    # descarc parametrii actuali ai lui f1
+    # acum x = 5
+    # incarc parametrii actuali pentru f2
+  subu $sp,8
+  li $t0,10
+  sw $t0,0($sp)
+  li $t0,20
+  sw $t0,4($sp)  # acum stiva este $sp:(10)(20)
+  jal f2
+  addu $sp,8     # descarc parametrii actuali ai lui f2
+  lw $t0,f2r     # recuperez
+  sw $t0,y       #   valoarea returnata
+    # acum y = 500
+li $v0,10
+syscall
+f1:              # la intrarea in apel stiva este $sp:(r)(p)(q)
+  subu $sp,4
+  sw $fp,0($sp)    # salvam $fp
+  addiu $fp,$sp,0  # acum stiva este $sp:$fp:($fp v)(r)(p)(q)
+  lw $t0,8($fp)    # $t0 = p
+  mul $t0,$t0,$t0  # $t0 = p*p
+  subu $sp,4
+  sw $t0,0($sp)    # acum stiva este $sp:(p*p)$fp:($fp v)(r)(p)(q)
+  lw $t0,12($fp)   # $t0 = q
+  mul $t0,$t0,$t0  # $t0 = q*q
+  lw $t1,0($sp)    # $t1 = p*p
+  addu $sp,4       # acum stiva este $sp:$fp:($fp v)(r)(p)(q)
+  add $t1,$t1,$t0  # $t1 = p*p + q*q
+  lw $t0,4($fp)    # $t0 = r
+  sw $t1,0($t0)    # *r = p*p + q*q
+  lw $fp,0($fp)    # restauram $fp
+  addu $sp,4       # descarc cadrul de apel;acum stiva este iar $sp:(r)(p)(q)
+jr $ra
+.data
+  f2r: .space 4
+    # variabila statica asociata functiei f2;
+    # reamintim ca se aloca in continuarea lui y
+.text
+f2:              # la intrarea in apel stiva este $sp:(p)(q)
+  subu $sp,4
+  sw $fp,0($sp)    # salvam $fp
+  addiu $fp,$sp,0  # acum stiva este $sp:$fp:($fp v)(p)(q)
+  lw $t0,4($fp)    # $t0 = p
+  mul $t0,$t0,$t0  # $t0 = p*p
+  subu $sp,4
+  sw $t0,0($sp)    # acum stiva este $sp:(p*p)$fp:($fp v)(p)(q)
+  lw $t0,8($fp)    # $t0 = q
+  mul $t0,$t0,$t0  # $t0 = q*q
+  lw $t1,0($sp)    # $t1 = p*p
+  addu $sp,4       # acum stiva este $sp:$fp:($fp v)(p)(q)
+  add $t1,$t1,$t0  # $t1 = p*p + q*q
+  la $t0,f2r       # $t0 = &f2r
+  sw $t1,0($t0)    # f2r = p*p + q*q
+  lw $fp,0($fp)    # restauram $fp
+  addu $sp,4       # descarc cadrul de apel; acum stiva este iar $sp:(p)(q)
+jr $ra
+##########
+
+Exemplu: returnarea prin stiva  - valoarea returnata este plasata in stiva 
+~~~~~~~~  acolo de unde codul apelant a inceput incarcarea datelor pt.
+ apelul respectiv (suprascriind deci o parte din parametrii actuali),
+ iar acolo se pune varful stivei; astfel codul apelant incarca parametrii,
+ apeleaza functia, apoi descarca pur si simplu valoarea returnata;
+  metoda este nestandard, se foloseste mai rar si este mai complicat de
+ programat; translatam urmatorul program C:
+
+int f(int p, int q){
+  return p*p+q*q;
+}
+
+int x;
+
+void main(){
+  x=f(1,2);  /* x devine 5 */
+}
+
+Translatarea este:
+
+.data
+  x: .space 4
+.text
+main:
+  subu $sp,8      # incarc parametrii actuali
+  li $t0,1
+  sw $t0,0($sp)
+  li $t0,2
+  sw $t0,4($sp)
+    # acum stiva este $sp:(1)(2)
+  jal f
+    # acum stiva este $sp:(5)  (are in locul parametrilor valoarea returnata)
+  lw $t0,0($sp)  # descarc valoarea
+  addu $sp,4     #  returnata
+  sw $t0,x       # si o recuperez (in x)
+    # acum x = 5
+li $v0,10
+syscall
+f:              # la intrarea in apel stiva este $sp:(p)(q)
+  subu $sp,4
+  sw $fp,0($sp)    # salvam $fp
+  addiu $fp,$sp,0  # acum stiva este $sp:$fp:($fp v)(p)(q)
+  lw $t0,4($fp)    # $t0 = p
+  mul $t0,$t0,$t0  # $t0 = p*p
+  subu $sp,4
+  sw $t0,0($sp)    # acum stiva este $sp:(p*p)$fp:($fp v)(p)(q)
+  lw $t0,8($fp)    # $t0 = q
+  mul $t0,$t0,$t0  # $t0 = q*q
+  lw $t1,0($sp)    # $t1 = p*p
+  addu $sp,4       # acum stiva este $sp:$fp:($fp v)(p)(q)
+  add $t1,$t1,$t0  # $t1 = p*p + q*q (rezultatul)
+    # incepand de acum pregatesc stiva pentru retur
+  sw $t1,8($fp)    # acum stiva este $sp:$fp:($fp v)(p)(rezultat)
+  lw $fp,0($fp)    # restauram $fp; stiva este $sp:($fp v)(p)(rezultat)
+  addu $sp,8       # descarc cadrul de apel si gloesc stiva pana la rezultat
+    # acum stiva este $sp:(rezultat)
+jr $ra
+##########
+
+ Uneori valoarea returnata prin stiva este atat de mare incat suprascrie toti
+parametrii actuali si chiar cadrul de apel (care contine printre altele reg.
+callee-saved salvati si care trebuie restaurati); in acest caz intai deplasam
+spre stanga (spre adrese mici) parametrii actuali si cadrul de apel (sau
+macar partea de care avem nevoie mai tarziu, de ex. registrii callee-saved
+salvati), apoi plasam in stiva valoarea returnata, si apoi restauram
+registrii callee-saved salvati.
+
+Exemplu: implementam o functie care primeste ca parametri doua worduri p si n
+~~~~~~~~   si returneaza un vector ce contine de n ori wordul p;
+         nu avem echivalent in limbajul C, deoarece in C o functie nu poate
+          returna vectori (decat "imbracati" intr-un struct, dar si atunci
+          dimensiunea lor este limitata superior);
+.data
+  s: .space 40  # buffer sufucient cat sa incapa un vector de 10 word-uri
+.text
+main:
+    # incarc parametrii actuali p=7, n=8
+  subu $sp,8
+  li $t0,7
+  sw $t0,0($sp)
+  li $t0,8
+  sw $t0,4($sp)
+    # acum stiva este $sp:(7)(8)  (contine parametrii actuali)
+  jal f
+    # acum stiva este $sp:(7)(7)(7)(7)(7)(7)(7)(7)  (contine val. returnata)
+    # descarc valoarea returnata si o recuperez in bufferul s
+  la $t0,s
+  li $s0,8
+  et1:
+    beqz $s0,et2
+    lw $t1,0($sp)
+    addu $sp,4
+    sw $t1,0($t0)
+    addu $t0,4
+    subu $s0,1
+    b et1
+  et2:
+    # acum de la adr.lui s s-au stocat 8 worduri egale cu 7, iar stiva e vida
+li $v0,10
+syscall
+f:  # la intrarea in apel stiva este $sp:(p)(n)
+    # aloc un cadru de apel in care salvez $s0, $fp
+  subu $sp,8
+  sw $s0,0($sp)
+  sw $fp,4($sp)
+  addiu $fp,$sp,4
+    # acum stiva este $sp:($s0 v)$fp:($fp v)(p)(n)
+    # acum deplasez cadrul de apel si parametrii actuali(in total 4 word-uri)
+    #   cu n-2 word-uri la stanga; translatez corespunzator si $sp, $fp
+  lw $t0,8($fp)    # $t0 = n
+  subu $t0,2       # $t0 = n-2
+  sll $t0,$t0,2    # $t0 = 4*(n-2)  (distanta in octeti a deplasarii)
+  subu $fp,$fp,$t0 # actualizam $fp
+  move $t1,$sp     # indice sursa
+  subu $sp,$sp,$t0 # actualizam $sp
+  move $t0,$sp     # indice destinatie
+  li $s0,4         # nr. de word-uri ce trebuie deplasate
+  f_et1:
+    lw $t2,0($t1)
+    sw $t2,0($t0)
+    addu $t1,4
+    addu $t0,4
+    subu $s0,1
+    bgtz $s0,f_et1
+   # acum stiva este $sp:($s0 v)$fp:($fp v)(p)(n)()()()()()()
+   # construim valoarea returnata:
+  lw $t0,8($fp)    # $t0 = n
+  sll $t0,$t0,2    # $t0 = 4*n
+  addu $t0,$fp,$t0 # stiva este $sp:($s0 v)$fp:($fp v)(p)(n)()()()()()$t0:()
+  lw $s0,8($fp)    # $s0 = n
+  lw $t1,4($fp)    # $t1 = p
+  f_et2:
+    sw $t1,0($t0)
+    subu $t0,4
+    subu $s0,1
+    bgtz $s0,f_et2
+   # acum stiva este $sp:($s0 v)$fp:$t0:($fp v)(7)(7)(7)(7)(7)(7)(7)(7)
+   # restauram $s0, $fp
+  lw $s0,-4($fp)
+  lw $fp,0($fp)
+  addu $sp,8
+   # acum stiva este $sp:(7)(7)(7)(7)(7)(7)(7)(7)
+jr $ra
+##########
+
+Comentarii:
+- am deplasat la stanga cu n-2 si nu cu n word-uri deoarece dupa construirea
+ valorii returnate in stiva ne mai trebuie doar $s0 vechi si $fp vechi, nu si
+ p si n;
+- puteam construi de la bun inceput cadrul de apel in pozitia translatata,
+ dar asa respectam conventiile MIPS de a construi cadrul de apel la inceputul
+ apelului; dealtfel, inainte de a construi valoarea returnata e posibil sa
+ avem de efectuat si alte prelucrari (ocazie cu care stiva ar putea fluctua)
+ si atunci e bine sa avem cadrul de apel in pozitia uzuala;
+- dupa deplasare entitatile din cadrul de apel si parametrii actuali au
+ aceleasi offset-uri (fixe) fata de $fp (anticipabile in faza dezvoltarii
+ programului) ca si inaintea deplasarii; deci putem face prelucrari si dupa
+ deplasarea cadrului de apel, iar majoritatea instructiunilor se scriu la fel
+ ca in cazul in cadrul n-ar fi fost deplasat (si deci sunt usor de generat
+ dintr-un compilator ce translateaza alt limbaj in MIPS);
+- in faza elaborarii programului se poate anticipa dimensiunea blocului
+ translatat (aici 4 word-uri) si adresa de unde incepe scrierea in stiva a
+ valorii returnate (aici $fp+4*n sau $sp + 4*(n+1)).
+
+CONVENTIE MIPS: Functiile vor returna valori doar prin $v0 si $v1.
+
+ In exemplele care urmeaza, din considerente didactice (pentru a ne obisnui
+cu stiva), ne luam libertatea de a returna valori si prin stiva daca vom
+considera ca este util/interesant.
+
+1e) Conventiile Pascal/C:
+-------------------------
+
+ Am spus ca exista mai multe reguli posibile in ceea ce priveste ordinea
+incarcarii parametrilor actuali in stiva, ordinea alocarii variabilelor
+locale automatice in stiva, modul de returnare a valorii sau cine descarca
+stiva la sfarsitul apelului (codul apelant sau rutina apelata). Dintre
+acestea importante sunt ordinea de incarcare a parametrilor actuali si cine
+descarca stiva la sfarsit - aceste reguli precizeaza modul in care comunica
+rutina apelata si codul apelant (ambele trebuie sa respecte aceleasi
+conventii pentru a putea comunica corect). 
+ In practica se folosesc urmatoarele doua conventii:
+- conventia Pascal: parametrii sunt push-ati in ordinea in care apar in
+ declaratia procedurii (deci langa $fp este parametrul declarat cel mai la
+ dreapta), iar stiva este descarcata de rutina apelata;
+- conventia C: parametrii sunt push-ati in ordinea inversa celei in care apar
+ in declaratia procedurii (deci langa $fp este parametrul declarat cel mai la
+ stanga), iar stiva este descarcata de codul apelant; aceasta conventie a
+ fost folosita in exemplele de pana acum.
+In plus, functiile Pascal rezerva o locatie automatica pentru stocarea
+valorii returnate (pentru a putea propune de mai multe ori pe perioada
+apelului o valoare de returnat, fara sa se iasa din apel, prin instructiuni
+de forma nume_functie := expresie) - la revenire valoarea se ia de acolo (si
+de exempu se copiaza in $v0).
+ Urmatorul exemplu ilustreaza aceste conventii:
+
+Exemplu: functie ce primeste ca parametri un word "a" prin referinta/adresa
+~~~~~~~~  si un word "b" prin valoare si returneaza maximul dintre cele doua
+          worduri;
+ prezentam codul Pascal/C si cate un echivalent MIPS neoptimizat (deci nu asa
+ cum il genereaza compilatoarele acestor limbaje):
+
+varianta Pascal:
+  
+  function max(var a:int; b:int):int;
+    begin
+     if a>b then max:=a else max:=b
+    end;
+  var x,y:int;
+  begin
+  x:=10;
+  y:=max(x,5)
+  end.
+
+ echivalent MIPS:
+
+.data
+  x: .space 4
+  y: .space 4
+.text
+main:
+  li $t0,10
+  sw $t0,x       # x=10
+  subu $sp,8     # incarc parametrii in ordinea
+  la $t0,x       #   in care apar in declaratia functiei:
+  sw $t0,4($sp)  #   intai a, apoi b
+  li $t0,5       # deci ultimul incarcat (si aflat in varful stivei)
+  sw $t0,0($sp)  #   va fi b
+    # acum stiva este $sp:(b)(a)
+  jal max
+    # acum stiva este vida (stiva e descarcata de "max"),
+    # iar val. ret. este in $v0
+  sw $v0,y       
+li $v0,10
+syscall
+max:  # la intrarea in apel stiva este $sp:(b)(a)
+    # rezerv loc pentru salvarea $fp si pentru valoarea de retur (folosita in
+    #  instructiunile "max:=...")
+  subu $sp,8
+  sw $fp,4($sp)
+  addiu $fp,$sp,4
+    # acum stiva este $sp:(loc.val.ret)$fp:($fp v)(b)(a)
+  lw $t0,8($fp)
+  lw $t0,0($t0)  # $t0 = valoarea de la adresa a
+  lw $t1,4($fp)  # $t1 = b
+  bgt $t0,$t1,max_et1
+    sw $t1,-4($fp)  # max := b
+    b max_et2
+  max_et1:
+    sw $t0,-4($fp)  # max := val. de la adr. a
+  max_et2:
+  lw $v0,-4($fp)    # initializez registrul de retur $v0 cu val. ret.
+  lw $fp,0($fp)     # restaurez $fp
+  addu $sp,16       # descarc cadrul de apel si parametrii actuali
+    # acum stiva este vida
+jr $ra
+##########
+
+varianta C:
+
+  int max(int *a, int b){
+    if(*a>b) return *a; else return b;
+  }
+  int x,y;
+  void main(){
+    x=10;
+    y=max(&x,5);
+  }
+
+ echivalent MIPS:
+
+.data
+  x: .space 4
+  y: .space 4
+.text
+main:
+  li $t0,10
+  sw $t0,x       # x=10
+  subu $sp,8     # incarc parametrii in ordinea
+  li $t0,5       #   inversa celei din declaratia functiei:
+  sw $t0,4($sp)  #   intai b, apoi a
+  la $t0,x       # deci ultimul incarcat (si aflat in varful stivei)
+  sw $t0,0($sp)  #   va fi a
+    # acum stiva este $sp:(a)(b)
+  jal max
+    # acum stiva este $sp:(a)(b)
+  addu $sp,8     # stiva e descarcata de codul apelant
+  sw $v0,y       # val. ret. este in $v0
+li $v0,10
+syscall
+max:  # la intrarea in apel stiva este $sp:(a)(b)
+    # rezerv loc doar pentru salvarea $fp
+  subu $sp,4
+  sw $fp,0($sp)
+  addiu $fp,$sp,0 
+    # mergea si "move $fp,$sp" dar "addiu $fp,$sp,0" e mai rapid (are
+    #  corespondent direct in cod masina, in timp ce "move" e
+    #  pseudoinstructiune)
+    # acum stiva este $sp:$fp:($fp v)(a)(b)
+  lw $t0,4($fp)
+  lw $v0,0($t0)  # $v0 = *a
+  lw $t0,8($fp)  # $t0 = b
+  bgt $v0,$t0,max_et
+    lw $v0,8($fp)
+  max_et:
+    # acum $v0 contine val. ret. (*a sau b)
+  lw $fp,0($fp)     # restaurez $fp
+  addu $sp,4        # descarc cadrul de apel
+    # acum stiva este ca la intrarea in apel $sp:(a)(b)
+jr $ra
+##########
+
+1f) Proceduri cu numar variabil de parametri:
+---------------------------------------------
+
+ In limbajul C (nu si in Pascal) exista functii cu numar variabil de
+parametri; la declarare se precizeaza lista fixa si lista variabila de
+parametri formali; lista fixa este neaparat in stanga, iar cea variabila
+este desemnata de "..." si apare in dreapta.
+ De exemplu un program cu o functie ce returneaza suma unui numar oarecare
+de intregi este:
+
+  #include<stdarg.h>
+  int aduna(int n, ...){
+    int i,s;
+    va_list l;
+    va_start(l,n);
+    s=0;
+    for(i=0;i<n;++i) s+=va_arg(l,int);
+    va_end(l);
+    return s;
+  }
+  int s;
+  void main(){
+    s=aduna(3,1,2,3);  /* 3=nr. numerelor, 1,2,3=numerele; obtinem s=6 */
+    s=aduna(2,10,20);  /* obtinem s=30 */
+  }
+
+comentarii:
+- "va_list", "va_start", "va_end", "va_arg" sunt descrise in "stdarg.h":
+ "va_list" este un tip de date gen pointer (implementat a.i. sa poata pointa 
+    par. actuali din stiva); BC++ 3.1 il implementeaza ca pointer la void;
+ "va_start(l,n)" e un macro ce face ca "l" sa pointeze dupa parametrul actual
+    "n" (octetul urmator locatiei lui n din stiva);
+ "va_arg(l,int)" avanseaza pointerul "l" pana dupa urmatorul parametru
+    actual (presupunand ca acesta este de tip int), apoi returneaza valoarea
+    parametrului peste care a trecut convertita la tipul indicat (int);
+    practic, o invocare "va_arg(l,tip)" returneaza ceva de forma:
+
+         *(tip *)  ( ((*(char **)&l) += sizeof(tip)) - sizeof(tip) )
+
+ "va_end(l)" elibereaza resursele folosite de "l" (dupa "va_end(l)" nu mai 
+    pot face "va_arg(l,ceva)" decat daca incep iar cu "va_start");
+- compilatorul de C nu implementeaza un mecanism de autodetectare in functie
+ a listei de par. actuali incarcati - programatorul trebuie sa comunice 
+ functiei explicit informatiile necesare; aceasta se poate face de ex. prin
+ intermediul par. din lista fixa - noi am transmis nr. numerelor prin n;
+  daca in functie incercam sa procesam mai multi/mai putini parametri decat
+ am dat, nu se genereaza eroare la compilare, dar la executie stiva va fi 
+ exploatata fie prea mult, fie prea putin (de ex. daca dupa "for" mai fac un 
+ "va_arg(l,int)" se iau urmatorii sizeof(int) octeti din stiva de dupa
+ ultimul par. actual, se priveste informatia din ei ca "int" si se
+ proceseaza); ceva asemanator se intampla si daca procesam par.actuali cu alt
+ tip decat i-am incarcat (de ex. am incarcat valori "int" iar in functie ii
+ procesez cu "va_arg(l,double)") - octetii din stiva se vor procesa grupati
+ si interpretati altfel decat i-am incarcat; deci e sarcina programatorului
+ sa apeleze functia cu exact atatia par. actuali cati proceseaza ea, iar in
+ apel sa-i proceseze cu tipul corect;
+- in ceea ce priveste codul MIPS/masina generat de compilator, faptul ca
+ parametrii din lista fixa trebuie declarati intotdeauna primii face ca, in
+ baza conventiei C, ei sa fie incarcati in stiva mereu ultimii (adica langa 
+ $fp) si astfel vor avea offset-uri constante fata de $fp, indiferent de
+ nr. par. actuali incarcati in total - astfel este posibila generarea unui
+ cod MIPS/masina unic, care sa functioneze corect indiferent de nr. par.
+ actuali;
+- daca compilatorul ar folosi conventia Pascal ca stiva sa fie descarcata de 
+ par. actuali in functie, ar fi imposibil sa deduca cu cat trebuie descarcata
+ fara a consulta textul codului apelant (acolo e scris cati par. actuali se 
+ incarca) si astfel functia nu ar putea fi dezvoltata intr-o biblioteca 
+ independenta care sa fie ulterior linkeditata cu acest program (sau cu 
+ altele); intrucat in C codul care incarca stiva este si cel care o descarca,
+ compilatorul gaseste in el toate informatiile necesare si astfel atat 
+ functia cat si restul programului pot fi dezvoltate/compilate separat si 
+ linkeditate impreuna;
+  acelasi motiv (anume ca din textul functiei nu rezulta cati par. actuali
+ s-au incarcat) face imposibila implementarea returnarii valorii prin stiva -
+ intr-adevar, val. returnata ar trebui plasata acolo de unde a inceput
+ incarcarea par. actuali, iar compilatorul nu poate determina acest loc 
+ doar din textul (C al) functiei.
+
+Exemplu: Prezentam un cod MIPS echivalent cu programul C de mai inainte:
+~~~~~~~~ 
+
+.data
+  s: .space 4
+.text
+main:
+  subu $sp,16   # incarcam parametrii, conform conventiei C
+  li $t0,3
+  sw $t0,12($sp)
+  li $t0,2
+  sw $t0,8($sp)
+  li $t0,1
+  sw $t0,4($sp)
+  li $t0,3
+  sw $t0,0($sp)
+  jal aduna      # functia returneaza in $v0
+  addu $sp,16    # descarcam atatia par. cati am incarcat (adica 4 parametri)
+  sw $v0,s       # val. ret. este in $v0
+    # acum s contine 6
+  subu $sp,12
+  li $t0,20
+  sw $t0,8($sp)
+  li $t0,10
+  sw $t0,4($sp)
+  li $t0,2
+  sw $t0,0($sp)
+  jal aduna
+  addu $sp,12     # acum am incarcat doar 3 par., deci descarc doar 3 par.
+  sw $v0,s
+    # acum s contine 30
+li $v0,10
+syscall
+aduna:   # primeste o stiva de forma $sp:(n)()()()...
+  subu $sp,16      # rezerv loc pt. salvat $fp si pentru i,s,l din functie
+  sw $fp,12($sp)
+  addiu $fp,$sp,12
+    # acum stiva este $sp:(l)(s)(i)$fp:($fp v)(n)()()()...
+  addu $t0,$fp,8
+  sw $t0,-12($fp)  # va_start(l,n); avem $sp:(l)(s)(i)$fp:($fp v)(n)l:()()...
+  sw $zero,-8($fp) # s=0
+  sw $zero,-4($fp) # i=0
+  aduna_et1:
+  lw $t0,-4($fp)
+  lw $t1,4($fp)
+  bge $t0,$t1,aduna_et2  # daca i>=n iesim
+    lw $t0,-12($fp)
+    addu $t0,4           # 4 este sizeof(int)
+    sw $t0,-12($fp)
+    lw $t0,-4($t0)       # 4 este sizeof(int)
+    lw $t1,-8($fp)
+    add $t1,$t1,$t0
+    sw $t1,-8($fp)       # s+=va_arg(i,int)
+    lw $t0,-4($fp)
+    add $t0,1
+    sw $t0,-4($fp)       # ++i
+    b aduna_et1
+  aduna_et2:
+    # in aceasta implementare nu avem ce executa pentru va_end(l)
+  lw $v0,-8($fp)
+  lw $fp,0($fp)
+  addu $sp,16
+jr $ra
+##########
+
+O implementare mai eficienta a functiei "aduna" dar care nu traduce la fel de
+fidel programul C este urmatoarea:
+
+aduna:   # primeste o stiva de forma $sp:(n)()()()...
+  subu $sp,12      # salvez $fp,$s0,$s1
+  sw $fp,8($sp)
+  sw $s0,4($sp)
+  sw $s1,0($sp)
+  addiu $fp,$sp,8
+   # stiva este $sp:($s1 v)($s0 v)$fp:($fp v)(n)()()()...
+   # convin sa aloc s in $v0, i in $s0, l in $s1
+  addu $s1,$fp,8    # va_start(l,n)
+   # avem $sp:($s1 v)($s0 v)$fp:($fp v)(n)$s1:()()()...
+  li $v0,0          # s=0
+  li $s0,0          # i=0
+  lw $t0,4($fp)     # $t0=n
+  aduna_et1:
+  bge $s0,$t0,aduna_et2
+    addu $s1,4      # 4 este sizeof(int)
+    lw $t1,-4($s1)
+    add $v0,$v0,$t1 # s+=va_arg(i,int)
+  addu $s0,1      # ++i
+  b aduna_et1  
+  aduna_et2:
+    # nici in aceasta implementare nu avem ce executa pentru va_end(l)
+  lw $s0,-4($fp)    # restaurez $s0,$s1,$fp
+  lw $s1,-8($fp)
+  lw $fp,0($fp)
+  addu $sp,12       # elimin cadrul de apel
+jr $ra              # $v0 contine deja valoarea ce trebuie returnata
+##########
+
+Comentarii:
+- obs. ca par. din lista fixa (adica "n") a fost accesat cu un deplasament
+ constant (anume 4) fata de $fp, indiferent de nr. par. actuali incarcati;
+- daca vrem sa scriem direct in MIPS programul cu functia cu nr. variabil de
+ parametri putem implementa manual orice comportament - de exemplu consultand
+ in functie par. "n" putem deduce cati par. actuali s-au incarcat si putem
+ scrie codul a.i. sa descarcam stiva in functie (sau sa returnam valoarea
+ prin stiva); 
+  un compilator de C nu poate sa faca asta automat pt. ca nu stie ca "n" va
+ purta in el informatia referitoare la numarul par. actuali si e foarte greu
+ sa deduca acest lucru din modul cum e folosit "n" in functie (de ex. sa
+ vada ca se fac in total "n" invocari "va_arg") - asta tine de gandirea 
+ programatorului, compilatorul ar trebui sa analizeze algoritmul implementat
+ pt. a o descoperi, ceea ce e f. greu, asa ca pt. el "n" este doar un par. ca
+ toti ceilalti;
+  modul de implementare manuala a comportamentului dorit va fi facut de 
+ programator in mod diferit de la o procedura/functie la alta, in functie de
+ maniera de transmitere a informatiei privind nr. par. actuali (prin ce par.
+ s-a transmis aceasta inf., etc.) - deci in fct. de algoritmul implementat
+ in procedura/functie.
+
+1g) Proceduri apelate din alte proceduri; proceduri recursive:
+--------------------------------------------------------------
+
+ In exemplele de pana acum am salvat pe perioada unui apel vechea valoare a
+lui $fp desi nu a fost necesar - la revenirea din apel codul apelant nu a
+avut nevoie de vechea valoare a lui $fp; am vrut doar sa ilustram un mod
+general de lucru - $fp este callee-saved iar apelatul l-a folosit pentru a-si
+accesa entitatile din stiva. In schimb nu am salvat $ra, desi si el este
+callee-saved.
+ Salvarea/restaurarea lui $fp de catre apelat este necesara atunci cand
+apelantul este si el o procedura (care a folosit si el $fp pentru a-si accesa
+parametrii actuali si cadrul de apel iar dupa revenire va dori sa o poata
+face din nou). Salvarea/restaurarea lui $ra de catre apelat este necesara
+atunci cand si acesta apeleaza alte proceduri (deci este apelant pentru ele,
+iar apelarea modifica $ra) iar dupa revenirea din apelurile imbricate va avea
+nevoie de vechea valoare a lui $ra pentru a putea face si el revenirea in
+apelantul sau.
+ Avand in vedere conventiile MIPS si faptul ca $fp si $ra sunt callee-saved,
+deci trebuie salvati/restaurati de apelat (doar) daca acesta ii modifica,
+rezulta ca:
+- o procedura va salva/restaura $fp daca primeste parametri prin stiva sau
+ isi aloca un cadru de apel in stiva si atunci conform uzantelor foloseste
+ $fp pentru a accesa aceste entitati;
+- o procedura va salva/restaura $ra daca apeleaza alte proceduri.
+Un caz cand apar ambele situatii este cel al procedurilor/functiilor
+recursive.
+ Notam ca folosirea stivei in implementarea apelurilor de proceduri/functii
+este indispensabila doar in cazul recursiei. Daca in limbajul nostru nu
+admitem recursii (directe sau indirecte) stiva nu este necesara, parametrii
+si cadrele de apel se pot aloca static - pentru fiecare procedura/functie
+rezervam in zona de date statice cate o zona ce va contine atat variabilele
+locale cat si parametrii (neavand recursii, nu apare necesitatea ca acestea
+sa aibe mai multe instante la un moment dat - cate una pentru fiecare apel
+inceput si inca neterminat al procedurii/functiei respective - deoarece in
+orice moment este activ cel mult un apel al ei). De exemplu versiunile vechi
+de Fortran nu admiteau recursivitatea, deoarece cadrele alocate static
+produceau pe unele masini mai vechi coduri mai rapide.
+
+ Urmatorul exemplu ilustreaza apelarea unei proceduri din alta procedura:
+
+Exemplu: calculul celui de-al n-lea termen al sirului Fibonacci, folosind
+~~~~~~~~  o functie care aduna doi termeni si o procedure care translateaza
+          termenii; functia returneaza prin stiva;
+ mai exact vom translata urmatorul cod C:
+
+  int aduna(int a, int b){
+    return a+b;
+  }
+  void iteratie(int *a, int *b){
+    int c;
+    c=aduna(*a, *b);
+    (*a)=(*b); (*b)=c;
+  }
+  void main(){
+    int n=5,x=1,y=1,z;
+    register int i;
+    for(i=2;i<n;++i)iteratie(&x,&y);
+    z=y;
+  }
+
+Translatarea este:
+
+.data
+  n: .word 5
+  x: .word 1
+  y: .word 1
+  z: .space 4
+.text
+main:
+  li $s0,2 # alocam i in $s0
+  inceput:
+  lw $t0,n
+  bge $s0,$t0,sfarsit
+    subu $sp,8    # incarcam parametrii pt. "iteratie", conform conventiei C
+    la $t0,y
+    sw $t0,4($sp)
+    la $t0,x
+    sw $t0,0($sp) # $sp:(&x)(&y)
+    jal iteratie
+    addu $sp,8    # descarcam stiva de par. actuali ai lui "iteratie"
+  add $s0,$s0,1
+  b inceput
+  sfarsit:
+  lw $t0,y
+  sw $t0,z  # acum z contine 5
+li $v0,10
+syscall
+iteratie: # primeste parametri adrese $sp:(a)(b)
+    # alocam un cadru de apel in care vom salva $ra, $fp, si vom aloca c
+  subu $sp,12
+  sw $ra,8($sp)
+  sw $fp,4($sp)
+  addiu $fp,$sp,8  # acum $sp:(c)($fp v)$fp:($ra v)(a)(b)
+    # incarc parametrii actuali pentru "aduna"
+  subu $sp,8
+  lw $t0,8($fp)
+  lw $t0,0($t0)
+  sw $t0,4($sp)  # push *b
+  lw $t0,4($fp)
+  lw $t0,0($t0)
+  sw $t0,0($sp)  # push *a
+    # acum $sp:(*a=x)(*b=y)(c)($fp v)$fp:($ra v)(a=&x)(b=&y)
+  jal aduna
+    # am convenit ca "aduna" sa returneze prin stiva, deci acum:
+    # $sp:(x+y)(c)($fp v)$fp:($ra v)(a=&x)(b=&y)
+  lw $t0,0($sp)
+  addu $sp,4      # pop valoarea returnata de "aduna"
+    # acum $sp:(c)($fp v)$fp:($ra v)(a=&x)(b=&y)
+  sw $t0,-8($fp)  # c=aduna(*a,*b)
+  lw $t0,8($fp)
+  lw $t0,0($t0)
+  lw $t1,4($fp)
+  sw $t0,0($t1)   # (*a)=(*b), adica x=y
+  lw $t0,-8($fp)
+  lw $t1,8($fp)
+  sw $t0,0($t1)   # (*b)=c, adica y=c
+    # restauram registrii calee-saved, descarcam cadrul de apel si revenim
+  lw $ra,0($fp)
+  lw $fp,-4($fp)
+  addu $sp,12
+jr $ra
+aduna: # primeste parametri intregi $sp:(a)(b)
+    # alocam un cadru de apel in care salvam $fp
+  subu $sp,4
+  sw $fp,0($sp)
+  addiu $fp,$sp,0
+    # acum stiva (desenata vertical) este:
+    #   $sp:$fp:($fp vechi salvat de "aduna" si care pointeaza |)
+    #           (a al lui "aduna" = x)                         |
+    #           (b al lui "aduna" = y)                         |
+    #           (loc c al lui "iteratie")                      |
+    #           ($fp vechi salvat de "iteratie")               |
+    #           ($ra vechi salvat de "iteratie")  <------------|
+    #           (a al lui "iteratie" = &x)
+    #           (b al lui "iteratie" = &y)
+  lw $t0,4($fp)
+  lw $t1,8($fp)
+  add $t0,$t0,$t1  # $t0=a+b
+    # pregatim stiva cu valoarea returnata
+  sw $t0,8($fp)
+  lw $fp,0($fp)
+  addu $sp,8
+jr $ra
+##########
+
+Comentarii:
+- "iteratie" a fost obligat sa salveze/restaureze $ra, deoarece "jal aduna"
+ il modifica iar dupa revenirea din "aduna" procedura "iteratie" are nevoie
+ de $ra-ul sau pentru a face revenirea in "main";
+- "aduna" a fost obligata sa salveze/restaureze $fp, deoarece dupa revenire
+ "iteratie" are nevoie de $fp-ul sau pentru a-si accesa variabila c (cu
+  deplasamentul cunoscut de el, -8).
+
+Observatie: exemplele din [1] par a sugera (desi nu este clar daca este
+ vorba de o conventie MIPS) urmatoarea ordine de salvare a registrilor
+ callee-saved: $sp:...($fp)($ra) iar daca vreunul din ei e absent, word-ul
+ respectiv e lasat gol.
+
+ Prezentam si doua exemple de proceduri recursive:
+
+Exemplu: problema turnurilor din Hanoi, folosind o procedura recursiva;
+~~~~~~~~ 
+* enuntul problemei:
+  avem 3 pari (numerotati 1,2,3); pe parul 1 avem o stiva de n discuri, cu
+ diametrele descrescatoare de la baza spre varf; putem face mutari - o mutare
+ consta in mutarea discului de sus de pe un par pe altul, cu conditia sa nu-l
+ punem peste un disc mai mic decat el; vrem o succesiune de mutari prin care
+ tot teancul de discuri sa fie mutat de pe parul 1 pe parul 3;
+* solutie (de complexitate exponentiala):
+  notam h(k,a,b,c) = succesiunea de mutari necesare mutarii unei stive de pe
+ parul a pe parul b, folosind parul c ca auxiliar; atunci:
+  daca k=1, h(1,a,b,c)=ab;
+  daca k>1, h(k,a,b,c)=h(k-1,a,c,b) ab h(k-1,c,b,a)
+ (intr-adevar, cand deplasam primele k-1 discuri il putem ignora pe cel de-al
+ k-lea, care este cel mai mare si este jos de tot - deci putem pune orice 
+ peste el);
+* implementare:
+ mutarile succesive vor fi scrise intr-un vector "m" de word ca perechi de 
+  numere (1,2 sau 1,3 sau 2,3);
+ vom folosi o procedura h(k,a,b,c) cu 4 parametri word (primul e nr. de
+  discuri ce trebuie mutate, ultimii sunt parii folositi in ordinea descrisa
+  mai sus); ea va lucra astfel:
+    daca k=1, atunci scrie in "m" (de la pozitia curenta): a,b;
+    altfel, apeleaza (recursiv) h(k-1,a,c,b), apoi scrie in "m" (de la
+      pozitia curenta) a,b, apoi apeleaza recursiv h(k-1,c,b,a);
+ pozitia curenta in "m" va fi urmarita global cu $s0;
+ in programul principal vom apela h(n,1,3,2);
+programul este:
+
+.data
+  m: .space 400
+  n: .word 3
+.text
+main:
+  la $s0,m     # $s0 va contine mereu adresa word-ului curent din m
+  subu $sp,16  # incarcam parametrii pentru h(n,1,3,2), conform conventiei C
+  li $t0,2
+  sw $t0,12($sp)
+  li $t0,3
+  sw $t0,8($sp)
+  li $t0,1
+  sw $t0,4($sp)
+  lw $t0,n
+  sw $t0,0($sp)
+  jal h         # h(n,1,3,2)
+  addu $sp,16   # descarcam stiva de parametrii actuali
+    # acum m contine 1,3,1,2,3,2,1,3,2,1,2,3,1,3
+li $v0,10
+syscall
+h:
+  subu $sp,8
+  sw $ra,4($sp)
+  sw $fp,0($sp)
+  addiu $fp,$sp,4
+    # $sp:($fp v)$fp:($ra v)(k)(a)(b)(c)...
+  lw $t0,4($fp)
+  li $t1,1
+  beq $t0,$t1,et1
+    # daca k>1 fac h(k-1,a,c,b)
+    subu $sp,16
+    lw $t0,12($fp)
+    sw $t0,12($sp)
+    lw $t0,16($fp)
+    sw $t0,8($sp)
+    lw $t0,8($fp)
+    sw $t0,4($sp)
+    lw $t0,4($fp)
+    subu $t0,1
+    sw $t0,0($sp)
+    jal h
+    addu $sp,16
+  et1: # scriu a,b
+    lw $t0,8($fp)
+    sw $t0,0($s0)
+    lw $t0,12($fp)
+    sw $t0,4($s0)
+    addu $s0,8
+  lw $t0,4($fp)
+  li $t1,1
+  beq $t0,$t1,et2
+    # daca k>1 fac h(k-1,c,b,a)
+    subu $sp,16
+    lw $t0,8($fp)
+    sw $t0,12($sp)
+    lw $t0,12($fp)
+    sw $t0,8($sp)
+    lw $t0,16($fp)
+    sw $t0,4($sp)
+    lw $t0,4($fp)
+    subu $t0,1
+    sw $t0,0($sp)
+    jal h
+    addu $sp,16
+  et2:
+  lw $ra,0($fp)
+  lw $fp,-4($fp)
+  addu $sp,8
+jr $ra
+##########
+
+Comentarii:
+- pentru a testa a doua oara daca k>1 (inainte de a face h(k-1,c,b,a)) a
+ trebuit sa reincarcam $t0, $t1 cu aceleasi valori, deoarece i-am alterat de
+ exemplu la scrierea lui a,b si oricum ei nu s-au pastrat in urma apelului
+ h(k-1,a,c,b);
+- evolutia stivei este (am notat ram = adresa de retur din program, adica
+ $ra salvat la primul nivel de apel al lui h, rah = adresa de retur din
+ procedura, adica $ra salvat la nivelele superioare de apel al lui h, fpi =
+ diverse valori ale lui $fp salvate de apeluri (am desenat deasupra si unde
+ pointeaza ele):
+
+h(3,1,3,2):
+|(fp0)(ram)(3)(1)(3)(2)
+|h(2,1,2,3):                fp1
+||                           V
+||(fp1)(rah)(2)(1)(2)(3)(fp0)(ram)(3)(1)(3)(2)
+||
+||h(1,1,3,2):                fp2                   fp1
+|||                           V                     V
+|||(fp2)(rah)(1)(1)(3)(2)(fp1)(rah)(2)(1)(2)(3)(fp0)(ram)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 13
+|||_
+||
+||==> se scrie: 12          fp1
+||                           V
+||(fp1)(rah)(2)(1)(2)(3)(fp0)(ram)(3)(1)(3)(2)
+||
+||h(1,3,2,1):                fp2                   fp1
+|||                           V                     V
+|||(fp2)(rah)(1)(3)(2)(1)(fp1)(rah)(2)(1)(2)(3)(fp0)(ram)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 32
+|||_
+||_
+|
+|==> se scrie: 13
+|
+|(fp0)(ram)(3)(1)(3)(2)
+|
+|h(2,2,3,1):                fp1
+||                           V
+||(fp1)(rah)(2)(2)(3)(1)(fp0)(ram)(3)(1)(3)(2)
+||
+||h(1,2,1,3):                fp2                   fp1
+|||                           V                     V
+|||(fp2)(rah)(1)(2)(1)(3)(fp1)(rah)(2)(2)(3)(1)(fp0)(ram)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 21
+|||_
+||
+||==> se scrie: 23          fp1
+||                           V
+||(fp1)(rah)(2)(2)(3)(1)(fp0)(ram)(3)(1)(3)(2)
+||
+||h(1,1,3,2):                fp2                   fp1
+|||                           V                     V
+|||(fp2)(rah)(1)(1)(3)(2)(fp1)(rah)(2)(2)(3)(1)(fp0)(ram)(3)(1)(3)(2)
+|||
+||| ==> se scrie: 13
+|||_
+||_
+|_
+
+Exercitiu: modificati programul de mai sus a.i. mutarile sa fie afisate pe
+ consola, sub forma unor linii de forma "a -> b" (unde a,b sunt parii sursa,
+ respectiv destinatie).
+
+Exemplu: calculul lui n! folosind o functie recursiva (pe baza metodei:
+~~~~~~~~  daca n<=1 atunci n!=1, altfel n!=n*(n-1)!, iar pt. (n-1)! se
+  apeleaza recursiv aceeasi functie); parametrii si valoarea returnata se 
+  transmit prin stiva:
+
+.data
+  n: .word 3
+  x: .space 4
+.text
+main:
+  subu $sp,4 # incarcam in stiva parametrul actual
+  lw $t0,n
+  sw $t0,0($sp)
+  jal fact
+  lw $t0,0($sp)
+  addu $sp,4 # am convenit ca fct. sa ret. prin stiva si descarcam val. ret.
+  sw $t0,x   # acum x contine 6
+li $v0,10
+syscall
+fact:
+  subu $sp,8
+  sw $ra,4($sp)
+  sw $fp,0($sp)
+  addiu $fp,$sp,4 # $sp:($fp v)$fp:($ra v)(n)...
+  lw $t0,4($fp)
+  li $t1,1
+  bgt $t0,$t1,et  # test n>1
+    sw $t1,4($fp) # daca n<=1 plasez val. ret. 1 (din $t1) in stiva si inchei
+    b sf
+  et:
+    subu $t0,1    # $t0 inca contine n
+    subu $sp,4
+    sw $t0,0($sp) 
+      # $sp:(n-1)($fp v)$fp:($ra v)(n)...
+    jal fact
+      # $sp:((n-1)!)($fp v)$fp:($ra v)(n)...
+    lw $t0,0($sp)
+    addu $sp,4      # $t0=(n-1)!, $sp:($fp v)$fp:($ra v)(n)...
+    lw $t1,4($fp)   # $t1=n
+    mul $t1,$t1,$t0 # $t1=n!
+    sw $t1,4($fp)   # plasez val. ret. in stiva
+  sf: # indiferent cum ajung aici avem $sp:($fp v)$fp:($ra v)(n!)...
+  lw $ra,0($fp)
+  lw $fp,-4($fp)
+  addu $sp,8
+jr $ra
+##########
+
+Comentariu: la adancimea maxima, stiva ajunge (ca mai inainte, am notat
+ ram = adresa de retur din program, adica $ra salvat la primul nivel de apel
+ al lui fact, raf = adresa de retur din functie, adica $ra salvat la nivelele
+ superioare de apel al lui fact, fpi = diverse valori ale lui $fp salvate de
+ apeluri (am desenat deasupra si unde pointeaza ele):
+
+                      fp2          fp1
+                       V            V
+ $sp:(fp2)(raf)(1)(fp1)(raf)(2)(fp0)(ram)(3)
+
+ Notam ca daca intram de multe ori in apeluri fara sa mai si iesim sau daca
+incarcam parametri multi si/sau mari, la un moment dat spatiul stiva se va
+umple iar stiva va invada alte zone (de cod, date, etc.) ceea ce se soldeaza
+de obicei cu blocarea sau terminarea anormala a programului (de exemplu o 
+recursie infinita va produce la un moment dat stack overflow).
+
+1h) Metoda salturilor indirecte:
+--------------------------------
+
+ Este o metoda de a face salturi (de tip "goto") folosind mecanisme de
+revenire din proceduri (de tip "return"); in MIPS nu exista instructiuni
+specifice procedurilor (comportamentul de procedura este implementat explicit
+de programator folosind instructiunile uzuale) si de aceea aceasta metoda nu
+reprezinta un mecanism nou fata de cel care foloseste instructiunile de
+ramificare si salt (prezentate in lectia 2); prezentarea formei adaptate la
+MIPS a acestei metode este insa interesanta, deoarece ofera un exemplu de
+implementare a structurii "switch" din limbajul C si de cum putem apela
+proceduri pe baza unui indice selector.
+
+ Concret, este vorba de implementarea unor cicluri "while" ce itereaza 
+structuri "switch" (in limbajul C) in care pe fiecare ramura trebuie apelata 
+o procedura.
+ Mai exact, sa presupunem ca vrem sa implementam ceva de forma:
+
+  while(c=get_comanda())
+    switch(c){
+      case valoare0: p0(); break;
+      case valoare1: p1(); break;
+      ...
+    }
+
+ O modalitate de implementare MIPS ar fi de forma:
+
+  et:
+  jal get_comanda   # presupunem ca returneaza in $v0
+   li $t0,valoare0
+   bne $v0,$t0,et0
+   jal p0
+   b et
+  et0:
+   li $t0,valoare1
+   bne $v0,$t0,et1
+   jal p1
+   b et
+  et1:
+   .....
+  etn:   # cazul "default"
+  b et
+
+ Aceasta modalitate are dezavantajul ca poate face multe comparatii inainte 
+de a decide care procedura trebuie apelata. Putem elimina compararile 
+succesive daca cream un "tabel de salt" "t" care pe pozitia i contine adresa
+procedurii "pi", "get_comanda" sa returneze in loc de "valoare0", "valoare1",
+..., numere succesive 0, 1, ..., iar ciclul de mai sus sa se reduca la:
+
+  et:
+  jal get_comanda   # presupunem ca returneaza in $v0
+  move $t0,$v0
+  sll $t0,$t0,2     # acum $t0 contine offset-ul comp. de indice $v0 din t
+                    #   fata de inceputul vectorului (vector de worduri)
+  add $t0,t         # acum $t0 contine adr.de mem. a comp.de indice $v0 din t
+  jalr $ra,$t0
+  b et
+
+ O solutie care presupune tot un tabel de salt dar care in plus evita instr.
+"jal", "jalr" si "b" realizeaza transferul executiei de la o adresa la alta
+cu ajutorul unor instructiuni de tip "jr"(cu care se implementeaza mecanismul
+de "return") si s.n. metoda salturilor indirecte. Ea consta in efectuarea
+urmatorilor pasi:
+ 1. incarca in $ra adresa "get_comanda" (procedura care presupunem ca
+  furnizeaza in $v0 o valoare de retur dintr-un interval 0...n)
+ 2. incarca intr-un registru, de ex. $t0, adresa din tabelul de salt "t"
+  continuta in componenta de indice $v0 (in exemplul de mai sus este adresa
+  procedurii "pi")
+ 3. jr $t0
+Instructiunea "jr $t0" de la pasul 3 transfera executia la procedura "pi";
+la incheierea executarii acestei proceduri, "jr $ra"-ul ei va provoca
+reexecutarea lui "get_comanda" si reluarea de la pasul 1. Practic, codul va 
+fi de forma:
+
+  get_comanda:
+   ... # cod ce pune in $v0 o valoare 0,...,n
+  la $ra,get_comanda
+  move $t0,$v0
+  sll $t0,$t0,2
+  add $t0,t
+  jr $t0
+
+(in codul de mai sus "get_comanda" nici nu mai este o procedura propriuzisa
+ci doar o eticheta de la care incepe un cod care calculeaza o valoare in $v0
+si apoi efectueaza pasii 1-3 descrisi mai inainte).
+
+ Metoda salturilor indirecte este folosita in programele de tip interpretor
+(Basic-Sinclair, GW-Basic, etc.).
+
+Exemplu: Emularea unui interpretor de comenzi de tip "command.com" foarte
+~~~~~~~~   restrans: accepta de la intrare doar comenzi de un caracter, 
+ in fiecare caz efectul fiind scrierea la iesire a cate unui alt caracter; 
+ comenzile suportate si caracterul scris la exec. fiecareia din ele sunt:
+  comanda 'a' --> caracterul '+' (adunare)
+  comanda 's' --> caracterul '-' (scadere)
+  comanda 'n' --> caracterul '!' (negare)
+ pe langa aceste comenzi mai accepta si:
+  comanda 't' --> produce terminarea programului
+ daca la intrare vine alt caracter decat 'a', 's', 'n', se va scrie 'e' 
+ (eroare) - acest lucru se va realiza cu o comanda suplimentara (care se va
+ executa automat in asemenea cazuri);
+  fluxul de intrare va fi simulat printr-un string ce contine o succesiune de
+ caractere (nume de comenzi sau alte caractere, care vor genera erori); 
+  fluxul de iesire va fi simluat printr-un string ce va contine caracterele
+ scrise la executarea fiecarei comenzi;
+  de exemplu daca stringul de intrare contine: "assaxnyyt"
+         atunci stringul de iesire va contine: "+--+e!ee"
+
+ programul este urmatorul:
+
+.data
+  comenzi: .ascii "asnte"           
+   # vector de byte cu numele comenzilor (doar primele 4 sunt accesibile
+   #  utilizatorului);
+   # pozitia in vector da codul de identificare 0...4 al comenzii
+  t: .word aduna, scade, neaga, termina, eroare 
+   # tabel de salt (pe pozitia i (0...4) este adresa procedurii ce realizeaza
+   #  comanda cu codul i)
+  intrare: .ascii "assaxnyyt" # fluxul de intrare
+  iesire: .space 100          # fluxul de iesire
+.text
+main:
+  la $s0,intrare # cu $s0 parcurg sirul "intrare"
+  la $s1,iesire  # cu $s1 parcurg sirul "iesire"
+  get_comanda:
+    lb $t0,0($s0)   # $t0=caracterul curent din fluxul de intrare
+    addu $s0,1
+    la $t1,comenzi  # $t1 va parcurge stringul "comenzi" de la poz. lui "a"
+    addiu $t2,$t1,4 #  la cea a lui "e" (stocata in $t2)
+   et1:
+    lb $t3,0($t1)   # caut $t0 in "comenzi" (pana il gasesc sau pana $t1
+    beq $t0,$t3,et2 #  indica comanda de eroare)
+    addu $t1,1      #
+    bne $t1,$t2,et1 #
+   et2:
+   sub $t1,$t1,$t2
+   addu $t1,4       # acum $t1 este poz. (idf. numeric al) comenzii (4=err)
+   sll $t1,$t1,2
+   la $t2,t
+   addu $t2,$t2,$t1
+   lw $t2,0($t2)    # acum $t2 este adr. de mem. a proc. corespunzatoare
+   la $ra,get_comanda
+   jr $t2
+##### proceduri de implementare a comenzilor: #####
+aduna:          # la intrare $ra contine adr. lui "get_comanda"
+  li $t0,'+'
+  sb $t0,0($s1)
+  addu $s1,1
+  jr $ra        # transfera executia la "get_comanda"
+scade:
+  li $t0,'-'
+  sb $t0,0($s1)
+  addu $s1,1
+  jr $ra
+neaga:
+  li $t0,'!'
+  sb $t0,0($s1)
+  addu $s1,1
+  jr $ra
+termina:
+   # adaos penrtu a afisa sirul "iesire"
+  sb $zero,0($s1)
+  li $v0,4
+  la $a0,iesire
+  syscall
+   # terminarea programului
+  li $v0,10
+  syscall
+eroare:
+  li $t0,'e'
+  sb $t0,0($s1)
+  addu $s1,1
+  jr $ra
+#####
+
+Comentarii:
+- vectorul de byte "comenzi" este ".ascii" si nu ".asciiz" deoarece logica
+ programului garanteaza ca intotdeauna ne vom opri cel tarziu la a 5-a
+ componenta, deci nu e nevoie sa marcam sfarsitul cu un terminator nul;
+ vectorul de byte "intrare" este tot ".ascii" (si nu ".asciiz") deoarece
+ logica programului face ca parcurgerea acestuia sa se termine la intalnirea
+ lui "t", deci iarasi n-avem nevoie de terminatorul nul;
+- am parcurs sirurile "intrare", "iesire" cu doi registri $s ($s0, resp. $s1)
+ deoarece ei trebuie sa-si conserve valoarea curenta peste apelurile
+ declansate cu "", iar acest lucru este asigurat de faptul ca registrii $s
+ sunt callee-saved;
+- observam ca programul apeleaza proceduri si revine din ele fara sa
+ foloseasca instructiuni de tip "jal" (adica apel), ci doar "jr" (adica
+ return);
+- desi scopul comenzii "termina" este doar terminarea programului, in
+ implementarea ei am adaugat si o parte pentru afisarea pe consola a sirului
+ "iesire" rezultat, deoarece in fereastra "Data Segment" a lui PCSpim vedem
+ doar codurile hexa ale caracterelor;
+- putem realiza in acelasi mod un interpretor care sa execute comenzi avand
+ nume mai lungi de un caracter si avand parametri (vezi exercitiile de la
+ sfarsit).
+
+ Un alt exemplu de folosire a metodei salturilor indirecte ar putea fi un
+joc in care iterativ se citeste cate o tasta directionala si in functie de
+ea se deplaseaza pe ecran (cu ajutorul unor proceduri de desenare) un 
+personaj in sus, jos, dreapta, stanga; in PCSpim este insa greu deoarece
+consola virtuala nu poate fi gestionata asa de flexibil; eventual vom simula
+miscarea pe ecran prin (re)pozitionarea unui caracter-personaj intr-o matrice
+de caractere-pozitii si afisarea de fiecare data a intregii matrici, iar
+tasta directionala va fi inlocuita cu o tasta obisnuita citita cu syscall
+(tema !).
+
+1i) Corutine: - TODO
+-------------
+
+1j) Conventia MIPS a apelului de procedura:
+-------------------------------------------
+
+ In aceasta sectiune sintetizam toate conventiile MIPS legate de apelarea
+procedurilor pe care le-am descris pana acum - ele formeaza asa-numita
+conventie MIPS a apelului de procedura si sunt descrise in cartea [1],
+anexa A:
+
+Apelantul, inainte de a face apelul imbricat, efectueaza urmatoarele:
+1 - incarca parametrii pentru apelat; primii patru parametri se incarca in
+ registrii $a0 - $a3 iar urmatorii in stiva (ei vor aparea imediat deasupra
+ cadrului de apel al apelatului);
+2 - salveaza registrii caller-saved ($a0 - $a3, $t0 - $t9) pe care doreste
+ sa-i conserve peste apelul imbricat (adica la revenirea din apelul imbricat
+ sa regaseasca aceleasi valori in ei);
+3 - executa apelul (de ex. cu "jal").
+
+Apelatul, la intrarea in apel, efectueaza urmatoarele:
+1 - aloca cadrul de apel in stiva, scazand din $sp dimensiunea cadrului
+ (care e constanta si este cunoscuta in faza de elaborare a programului,
+ deci se poate specifica in cod printr-o valoare imediata); cadrul de apel va
+ contine atat registrii callee-saved salvati de apelat cat si variabilele
+ sale locale automatice (la adrese mari reg. callee-saved, la adrese mici
+ variabilele locale automatice); cadrul trebuie sa aibe cel putin 24 octeti;
+2 - salveaza (in cadrul de apel) registrii callee-saved ($s0 - $s7, $fp, $ra)
+ pe care ii modifica; exemplele din cartea [1] sugereaza si o anumita ordine
+ a lor in cadrul de apel; in general $fp trebuie salvat mereu (daca vrem sa
+ accesam cu el parametrii primiti si informatiile din cadrul de apel) iar $ra
+ doar daca din apelat facem apeluri imbricate;
+3 - plaseaza $fp pe primul word din cadrul de apel, adunand la $sp
+ "dimensiunea cadrului de apel minus patru" (valoare cunoscuta un faza de
+ elaborare a programului).
+
+Apelatul, la iesirea din apel, se asigura ca $sp este in acelasi loc ca dupa
+pasul 3 de mai sus (deci s-au eliminat din stiva toate valorile temporare
+incarcate de-a lungul apelului in continuarea cadrului de apel) apoi
+efectueaza urmatoarele:
+1 - daca e functie, pune valoarea ce trebuie returnata in $v0 si eventual
+ $v1;
+2 - restaureaza registrii callee-saved pe care i-a salvat la intrare;
+3 - elimina cadrul de apel adunand la $sp dimensiunea cadrului (cunoscuta in
+ faza de elaborare a programului);
+4 - revine in apelant (executand de ex. "jr $ra").
+
+ In exemplele care urmeaza vom respecta toate aceste conventii, cu
+urmatoarele exceptii:
+- toti parametrii vor fi transmisi prin stiva;
+- in apelant vom salva registrii caller-saved INAINTE de incarcarea
+ parametrilor pentru apelat; intr-adevar, daca am respecta ordinea pasilor
+ din cartea [1], intre parametrii primiti de apelat prin stiva si cadrul de
+ apel pe care acesta il aloca s-ar interpune diverse valori salvate de
+ apelant, astfel incat offset-urile parametrilor fata de $fp-ul apelatului
+ vor fi dificil de stabilit, mai ales daca apelul este facut de mai multe ori
+ in contexte diferite in care numarul valorilor care se interpun variaza; in
+ plus, $a0 - $a3 sunt caller-saved iar daca apelantul doreste sa conserve
+ valorile lor peste apelul imbricat trebuie sa-i salveze inainte de a-i
+ folosi pentru a transmite parametri apelatului;
+- cadrul de apel nu va avea cel putin 24 octeti ci strict cat e nevoie;
+- uneori valoarea returnata de functii va fi transmisa prin stiva.
+
+ Exista situatii (mai rare) cand cadrul de apel are dimensiune variabila
+(deci nu poate fi anticipata in faza de elaborare a programului si scrie in
+cod printr-o valoare imediata) - de exemplu cand procedura are o variabila
+locala automatica care este vector de o lungime data ca parametru (situatie
+permisa si deci tratata de anumite compilatoare de C, ca de ex. "gcc").
+
+Exemplu: program care afisaza valorile distincte dintr-un vector de intregi:
+~~~~~~~~
+
+Translatam urmatorul program C:
+
+  #include<stdio.h>
+  void distinct(int *v, int n){
+    int d[n]; /* var. loc. auto, se aloca pe stiva de dim. n (dat ca par.) */
+    register int i,j,k;
+    k=0;
+    for(i=0;i<n;++i){
+      for(j=0;j<k;++j) if(v[i]==d[j]) break;
+      if(j==k) {d[k]=v[i]; ++k;}
+    }
+    for(i=0;i<k;++i) printf("%d ",d[i]);
+    printf("\n");
+  }
+
+  int w[]={1,2,5,2,5,1,2,4};
+
+  void main(){
+    distinct(w,8); /* afisaza: 1 2 5 4 */
+  }
+
+Translatarea este:
+
+.data
+  w: .word 1,2,5,2,5,1,2,4
+.text
+main:
+  subu $sp,8
+  li $t0,8
+  sw $t0,4($sp)
+  la $t0,w
+  sw $t0,0($sp)  # $sp:(adr.w)(8)
+  jal distinct
+  addu $sp,8
+li $v0,10
+syscall
+distinct: # primeste: $sp:(v)(n)
+    # calculam dimensiunea cadrului de apel
+    # pt. asta, accesam par. cu $sp si nu folosim registri callee-saved
+  lw $t0,4($sp) # $t0=n
+  sll $t0,$t0,2 # $t0=4*n
+  addu $t0,20   # $t0=4*n+20 (dim. cadrului de apel)
+    # construim cadrul si salvam in el si dimensiunea lui
+  sw $t0,-20($sp)   # (dim.cadru)()()()()$sp:(v)(n)
+  sw $fp,-4($sp)    # (dim.cadru)()()()($fp v)$sp:(v)(n)
+  subu $fp,$sp,4    # (dim.cadru)()()()$fp:($fp v)$sp:(v)(n)
+  subu $sp,$sp,$t0  # $sp:()...()(dim.cadru)()()()$fp:($fp v)(v)(n)
+  sw $s0,-4($fp)
+  sw $s1,-8($fp)
+  sw $s2,-12($fp)   
+    # restul cadrului de apel este d[0] ... d[n-1], deci avem:
+    # $sp:(d[0])...(d[n-1])(dim.cadru)($s2 v)($s1 v)($s0 v)$fp:($fp v)(v)(n)
+    # convenim sa alocam i in $s0, j in $s1, k in $s2
+  li $s2,0      # k=0
+  li $s0,0      # i=0
+  distinct_ciclu1_inceput:
+  lw $t0,8($fp) # $t0=n
+  bge $s0,$t0,distinct_ciclu1_sfarsit
+    li $s1,0      # j=0
+    distinct_ciclu2_inceput:
+    bge $s1,$s2,distinct_ciclu2_sfarsit
+      lw $t0,4($fp)    # $t0=v
+      move $t2,$s0     # $t2=i
+      sll $t2,$t2,2    # $t2=i*4
+      add $t0,$t0,$t2  # $t0=(unsigned char *)v+i*4=v+i
+      lw $t0,0($t0)    # $t0=*(v+i)=v[i]
+      lw $t1,-16($fp)  # $t1=dim.cadru
+      subu $t1,4
+      subu $t1,$fp,$t1 # $t1=d
+      move $t2,$s1     # $t2=j
+      sll $t2,$t2,2    # $t2=j*4
+      add $t1,$t1,$t2  # $t1=(unsigned char *)d+j*4=d+j
+      lw $t1,0($t1)    # $t1=*(d+j)=d[j]
+      beq $t0,$t1,distinct_ciclu2_sfarsit # if(v[i]==d[j]) break;
+    add $s1,1     # ++j
+    b distinct_ciclu2_inceput
+    distinct_ciclu2_sfarsit:
+    beq $s1,$s2,distinct_et1 # if(j==k)...
+    b distinct_et2
+    distinct_et1:            # ...then
+      lw $t0,4($fp)    # $t0=v
+      move $t2,$s0     # $t2=i
+      sll $t2,$t2,2    # $t2=i*4
+      add $t0,$t0,$t2  # $t0=(unsigned char *)v+i*4=v+i
+      lw $t0,0($t0)    # $t0=*(v+i)=v[i]
+      lw $t1,-16($fp)  # $t1=dim.cadru
+      subu $t1,4
+      subu $t1,$fp,$t1 # $t1=d
+      move $t2,$s2     # $t2=k
+      sll $t2,$t2,2    # $t2=k*4
+      add $t1,$t1,$t2  # $t1=(unsigned char *)d+k*4=d+k
+      sw $t0,0($t1)    # *(d+k)=v[i], adica d[k]=v[i];
+      add $s2,1        # ++k
+    distinct_et2:
+  add $s0,1     # ++i
+  b distinct_ciclu1_inceput
+  distinct_ciclu1_sfarsit:
+    # afisare
+  li $s0,0      # i=0
+  distinct_ciclu3_inceput:
+  bge $s0,$s2,distinct_ciclu3_sfarsit
+    li $v0,1  # print int
+    lw $t0,-16($fp)  # $t0=dim.cadru
+    subu $t0,4
+    subu $t0,$fp,$t0 # $t0=d
+    move $t2,$s0     # $t2=i
+    sll $t2,$t2,2    # $t2=i*4
+    add $t0,$t0,$t2  # $t1=(unsigned char *)d+i*4=d+i
+    lw $a0,0($t0)    # $t0=*(d+i)=d[i]
+    syscall
+    li $v0,4  # print string
+    la $a0,distinct_blank
+    syscall
+  add $s0,1     # ++i
+  b distinct_ciclu3_inceput
+  distinct_ciclu3_sfarsit:
+    li $v0,4  # print string
+    la $a0,distinct_newline
+    syscall
+    # iesirea din apel
+  lw $s0,-4($fp)   # restauram $s0
+  lw $s1,-8($fp)   # restauram $s1
+  lw $s2,-12($fp)  # restauram $s2
+  lw $t0,-16($fp)  # $t0=dim.cadru
+  lw $fp,0($fp)    # restauram $fp
+  addu $sp,$sp,$t0 # eliminam cadrul de apel
+jr $ra
+.data
+  distinct_blank: .asciiz " "
+  distinct_newline: .asciiz "\n"
+##########
+
+ Constatam ca in implementarea de mai sus fiecare accesare a lui "d" necesita
+un calcul prealabil al adresei de inceput a acestuia; in acest scop a trebuit
+sa salvam in stiva dimensiunea cadrului de apel (aceasta ne-a folosit si la
+sfarsit, ca sa eliminam cadrul de apel).
+ Putem lucra mai eficient daca salvam in stiva direct adresa de inceput a
+lui "d"; mai general, daca avem de alocat in cadrul de apel mai multe
+entitati automatice de dimensiune variabila (asemeni lui "d") vom calcula o
+singura data la inceputul apelului adresele lor si le vom stoca in cadru
+imediat sub entitatile de dimensiune constanta - ele vor putea fi gasite
+folosind offset-uri constante fata de $fp, cunoscute in faza de elaborare a
+programului; dimensiunea cadrului de apel nu este necesar sa o salvam in
+stiva, deoarece daca stim ca $fp pointeaza primul word din cadru putem
+elimina cadrul atribuind lui $sp valoarea $fp+4.
+ Cu aceste modificari procedura devine:
+
+distinct: # primeste: $sp:(v)(n)
+    # construim partea de dimensiune fixa a cadrului de apel
+    #  continand $fp, $s0, $s1, $s2 salvati si locatia de salvare a adr. "d"
+  subu $sp,20
+  sw $fp,16($sp)
+  sw $s0,12($sp)
+  sw $s1,8($sp)
+  sw $s2,4($sp)
+  addiu $fp,$sp,16
+    # acum $sp:()($s2 v)($s1 v)($s0 v)$fp($fp v)(v)(n)
+    # calculam adr. de inceput a lui "d" si o salvam in cadru la -16($fp),
+    #  apoi alocam "d" mutand $sp la adr. respectiva
+  lw $t0,8($fp)    # $t0=n
+  sll $t0,$t0,2    # $t0=4*n
+  addiu $t0,$t0,16 # $t0=4*n+16
+  subu $t0,$fp,$t0 # $t0=$fp-4*n-16=adr.lui "d"
+  sw $t0,-16($fp)  # salvam adr. lui "d" in cadru
+  move $sp,$t0     # alocam "d"
+    # acum $sp:(d[0])...(d[n-1])(adr.d)($s2 v)($s1 v)($s0 v)$fp($fp v)(v)(n)
+    # ca inainte, convenim sa alocam i in $s0, j in $s1, k in $s2
+  li $s2,0      # k=0
+  li $s0,0      # i=0
+  distinct_ciclu1_inceput:
+  lw $t0,8($fp) # $t0=n
+  bge $s0,$t0,distinct_ciclu1_sfarsit
+    li $s1,0      # j=0
+    distinct_ciclu2_inceput:
+    bge $s1,$s2,distinct_ciclu2_sfarsit
+      lw $t0,4($fp)    # $t0=v
+      move $t2,$s0     # $t2=i
+      sll $t2,$t2,2    # $t2=i*4
+      add $t0,$t0,$t2  # $t0=(unsigned char *)v+i*4=v+i
+      lw $t0,0($t0)    # $t0=*(v+i)=v[i]
+      lw $t1,-16($fp)  # $t1=d
+      move $t2,$s1     # $t2=j
+      sll $t2,$t2,2    # $t2=j*4
+      add $t1,$t1,$t2  # $t1=(unsigned char *)d+j*4=d+j
+      lw $t1,0($t1)    # $t1=*(d+j)=d[j]
+      beq $t0,$t1,distinct_ciclu2_sfarsit # if(v[i]==d[j]) break;
+    add $s1,1     # ++j
+    b distinct_ciclu2_inceput
+    distinct_ciclu2_sfarsit:
+    beq $s1,$s2,distinct_et1 # if(j==k)...
+    b distinct_et2
+    distinct_et1:            # ...then
+      lw $t0,4($fp)    # $t0=v
+      move $t2,$s0     # $t2=i
+      sll $t2,$t2,2    # $t2=i*4
+      add $t0,$t0,$t2  # $t0=(unsigned char *)v+i*4=v+i
+      lw $t0,0($t0)    # $t0=*(v+i)=v[i]
+      lw $t1,-16($fp)  # $t1=d
+      move $t2,$s2     # $t2=k
+      sll $t2,$t2,2    # $t2=k*4
+      add $t1,$t1,$t2  # $t1=(unsigned char *)d+k*4=d+k
+      sw $t0,0($t1)    # *(d+k)=v[i], adica d[k]=v[i];
+      add $s2,1        # ++k
+    distinct_et2:
+  add $s0,1     # ++i
+  b distinct_ciclu1_inceput
+  distinct_ciclu1_sfarsit:
+    # afisare
+  li $s0,0      # i=0
+  distinct_ciclu3_inceput:
+  bge $s0,$s2,distinct_ciclu3_sfarsit
+    li $v0,1  # print int
+    lw $t0,-16($fp)  # $t0=d
+    move $t2,$s0     # $t2=i
+    sll $t2,$t2,2    # $t2=i*4
+    add $t0,$t0,$t2  # $t1=(unsigned char *)d+i*4=d+i
+    lw $a0,0($t0)    # $t0=*(d+i)=d[i]
+    syscall
+    li $v0,4  # print string
+    la $a0,distinct_blank
+    syscall
+  add $s0,1     # ++i
+  b distinct_ciclu3_inceput
+  distinct_ciclu3_sfarsit:
+    li $v0,4  # print string
+    la $a0,distinct_newline
+    syscall
+    # iesirea din apel
+  lw $s0,-4($fp)   # restauram $s0
+  lw $s1,-8($fp)   # restauram $s1
+  lw $s2,-12($fp)  # restauram $s2
+  addiu $sp,$fp,4  # plasam $sp (practic eliminam cadrul)
+  lw $fp,0($fp)    # restauram $fp ($fp vechi inca se poate accesa cu 0($fp))
+jr $ra
+.data
+  distinct_blank: .asciiz " "
+  distinct_newline: .asciiz "\n"
+##########
+
+ Unele exemple din cartea [1] sugereaza (fara a fi clar daca este o conventie
+MIPS) faptul ca programul principal poate fi privit tot ca o procedura "main"
+(apelata din kernel cu "jal main") si astfel el trebuie sa respecte
+conventiile scrise mai sus: sa aloce un cadru de apel (pe care sa-l dezaloce
+la sfarsit),sa salveze/restaureze registrii callee-saved pe care ii modifica,
+sa foloseasca $fp pentru a accesa informatiile din cadrul sau de apel, sa se
+termine cu "jr $ra" (revenind astfel la kernel), nu cu "li $v0,10" si
+"syscall" - aceasta varianta fiind folosita doar pentru terminari fortate
+(in genul functiei "abort" din limbajul C).
+ Urmatorul exemplu ilustreaza acest stil de lucru (pe care insa nu il vom
+folosi in celelalte exemple):
+
+Exemplu: citirea unui vector de intregi, intregii fiind introdusi de la
+~~~~~~~~   consola in format hexa. Functiile vor returna prin registrii.
+
+Translatam urmatorul program C:
+
+#include<stdio.h>
+
+int getinthexa(){
+  char buf[11];      /* vector local automatic de dim. fixa */
+  register int i,n;  /* variabile locale register */
+  scanf("%s",buf);   /* sau: fflush(stdin); gets(buf); */
+  n=0;
+  for(i=2;i<10;++i){
+    n=n*16+buf[i]-'0';
+    if(buf[i]>='a')n=n-39; /* 39=('a'-'0')-10 */
+  }
+  return n;
+}
+
+int v[10];           /* vector global */
+
+int main(){
+  int n;             /* variabila locala automatica */
+  register int i;    /* variabila locala register */
+  scanf("%d",&n);
+  for(i=0;i<n;++i){
+    v[i]=getinthexa();
+  }
+  for(i=0;i<n;++i) printf("%d ",v[i]);
+  printf("\n");
+  return 0;
+}
+
+/* daca tastam:
+     2
+     0x0000001a
+     0x00000102
+   atunci se va afisa:
+     26 258
+*/
+
+Translatarea este:
+
+.data
+  v: .space 40
+  blank: .asciiz " "
+  nl: .asciiz "\n"
+.text
+main:
+    # "main" e o functie ce necesita un cadru de apel
+    #   in care alocam "n" si salvam $s0 (va fi "i"), $fp;
+    # functia "main" returneaza 0 prin $v0
+  subu $sp,12
+  sw $fp,8($sp)
+  sw $s0,4($sp)
+  addiu $fp,$sp,8
+    # $sp:(n)($s0 v)$fp:($fp v)
+  li $v0,5       # read int
+  syscall
+  sw $v0,-8($fp) # scanf("%d",&n)
+  li $s0,0       # i=0
+  main_ciclu1_inceput:
+  lw $t0,-8($fp) # $t0=n
+  bge $s0,$t0,main_ciclu1_sfarsit
+    jal getinthexa  # functie fara parametri, cu retur prin $v0
+    la $t0,v        # $t0=v
+    move $t1,$s0    # $t1=i
+    sll $t1,$t1,2   # $t1=4*i
+    add $t0,$t0,$t1 # $t0=(unsigned char *)v+4*i=v+i
+    sw $v0,0($t0)   # v[i]=getinthexa();
+  add $s0,1  # ++i
+  b main_ciclu1_inceput
+  main_ciclu1_sfarsit:
+  li $s0,0       # i=0
+  main_ciclu2_inceput:
+  lw $t0,-8($fp) # $t0=n
+  bge $s0,$t0,main_ciclu2_sfarsit
+    li $v0,1        # print int
+    move $t0,$s0    # $t0=i
+    sll $t0,$t0,2   # $t0=4*i
+    la $a0,v
+    add $a0,$a0,$t0 # $a0=(unsigned char *)v+4*i=v+i
+    lw $a0,0($a0)   # $a0=v[i]
+    syscall
+    li $v0,4        # print string
+    la $a0,blank
+    syscall
+  add $s0,1  # ++i
+  b main_ciclu2_inceput
+  main_ciclu2_sfarsit:
+  li $v0,4        # print string
+  la $a0,nl
+  syscall
+    # iesirea din "main"
+  li $v0,0       # "main" returneaza 0
+  lw $s0,-4($fp) # restauram $s0
+  lw $fp,0($fp)  # restauram $fp
+  addu $sp,12    # eliminam cadrul de apel
+jr $ra           # revenim la kernel (care a lansat programul cu "jal main")
+getinthexa:
+    # "getinthexa" e o functie ce necesita un cadru de apel
+    #   in care alocam "buf" si salvam $fp, $s0 (va fi "i"), $s1 (va fi "n");
+    # "buf" are dim. constanta (11 bytes pe care il vom aproxima prin 12
+    #   bytes ca sa avem adrese aliniate), deci cadrul are dim. constanta
+    #   (anume 4+4+4+12=24 bytes), nu ca in exemplul anterior
+  subu $sp,24
+  sw $fp,20($sp)
+  sw $s0,16($sp)
+  sw $s1,12($sp)
+  addiu $fp,$sp,20
+    # $sp:(buf[0]...buf[3])(buf[4]...buf[7])(buf[8]...buf[10],.)
+    #        ($s1 v)($s0 v)$fp:($fp v)
+  li $v0,8        # read string
+  subu $a0,$fp,20 # $a0=buf
+  li $a1,11       # lungimea maxima a sirului citit
+  syscall         # gets(buf)
+  li $s1,0        # n=0;
+  li $s0,2        # i=2
+  getinthexa_ciclu_inceput:
+  li $t0,10
+  bge $s0,$t0,getinthexa_ciclu_sfarsit
+    subu $t0,$fp,20 # $t0=buf
+    add $t0,$t0,$s0 # $t0=buf+i ("buf" are componente de 1 byte, nu 1 word)
+    lb $t0,0($t0)   # $t0=buf[i] (byte)
+    sub $t1,$t0,'0' # $t1=buf[i]-'0'
+    li $t2,'a'
+    blt $t0,$t2,getinthexa_et
+      sub $t1,39    # if(buf[i]>='a') $t1=(buf[i]-'0')-39
+    getinthexa_et:
+    sll $s1,$s1,4   # n=n*16
+    add $s1,$s1,$t1 # n=n*16+buf[i]-'0' sau n=n*16+(buf[i]-'0')-39
+  add $s0,1       # ++i
+  b getinthexa_ciclu_inceput
+  getinthexa_ciclu_sfarsit:
+    # iesirea din "getinthexa"
+  move $v0,$s1    # valoarea returnata "n"
+  lw $s0,-4($fp)
+  lw $s1,-8($fp)
+  lw $fp,0($fp)
+  addu $sp,24
+jr $ra
+##########
+
+Comentarii:
+- programul MIPS de mai sus nu ruleaza corect pe PCSpim din cauza unor
+ probleme legate de citirea de la consola; cel mai bine se poate urmari
+ ruland pas cu pas (cu F10);
+- intrucat vectorul local automatic "buf" are dimensiune fixa (anume 10
+ bytes) alocarea lui se face obisnuit iar cadrul de apel are dimensiune fixa
+ 24 bytes (cunoscuta in faza de elaborare a programului), nu ca in exemplul
+ anterior; pentru asemenea vectori, calculul adresei unei componente se poate
+ face mai usor; nu s-a putut vedea asta in programul nostru deoarece "buf"
+ era vector de byte, dar daca era vector de word operatia "$t0=buf[i]" se
+ putea transcrie:
+
+   move $t0,$s0    # $t0=i
+   sll $t0,$t0,2   # $t0=4*i
+   add $t0,$t0,$fp
+   sub $t0,$t0,20  # $t0=4*i+$fp-20=(unsigned char *)buf+4*i=buf+i
+   lw $t0,0($t0)   # $t0=buf[i]
+
+ spre deosebire de operatia "$a0=v[i]" (unde se acceseaza un vector global)
+ din "main" care necestia doi registri (nu putem folosi doar $a0):
+
+   move $t0,$s0      # $t0=i
+   sll $t0,$t0,2   # $t0=4*i
+   la $a0,v
+   add $a0,$a0,$t0 # $a0=(unsigned char *)v+4*i=v+i
+   lw $a0,0($a0)   # $a0=v[i]
+
+1k) Alte exemple: - TODO
+-----------------
+
+ In exemplele care urmeaza vom respecta in general conventiile MIPS date in
+sectiunea 1j, cu exceptiile mentionate tot acolo. In particular, nu vom
+implementa "main" ca o procedura iar variabilele declarate local automatic in
+"main" vor fi alocate global (deci static). De asemenea, translatarea
+programelor C in MIPS nu va fi facuta intotdeauna fidel ci cu anumite
+optimizari.
+
+Exemplu: Backtracking recursiv folosind un vector local static;
+~~~~~~~~  programul genereaza permutarile de ordin n.
+
+Translatam urmatorul program C:
+
+#include<stdio.h>
+
+void gen(int n){
+ static int v[10],k=0;
+ register int i,j;
+ if(k==n){
+   for(i=0;i<n;++i)printf("%d ",v[i]);
+   printf("\n");
+ }
+ for(i=1;i<=n;++i){
+   for(j=0;j<k;++j)if(v[j]==i)break;
+   if(j==k){v[k]=i; ++k; gen(n); --k;}
+ }
+}
+
+void main(){
+  int n;
+  scanf("%d",&n);
+  gen(n);
+}
+
+/* pe consola vedem (primul 3 e tastat de noi):
+   3
+   1 2 3
+   1 3 2
+   2 1 3
+   2 3 1
+   3 1 2
+   3 2 1
+*/
+
+Translatarea este:
+
+.data
+  n: .space 4
+.text
+main:
+    # citire "n"
+  li $v0,5
+  syscall
+  sw $v0,n
+    # apel "gen(n)"
+  subu $sp,4
+  lw $t0,n
+  sw $t0,0($sp)
+  jal gen
+  addu $sp,4
+li $v0,10
+syscall
+.data
+  v: .space 40 # "v" desi local, se aloca static
+  k: .word 0   # "k" e local static si se init. o data, inaintea apelurilor
+  blank: .asciiz " "
+  nl: .asciiz "\n"
+.text
+gen:
+  subu $sp,16
+  sw $ra,12($sp)
+  sw $fp,8($sp)
+  sw $s0,4($sp)
+  sw $s1,0($sp)
+  addiu $fp,$sp,12    
+    # $sp:($s1 v)($s0 v)($fp v)$fp:($ra v)(n)
+    # convin ca $s0=i, $s1=j
+  lw $t0,k
+  lw $t1,4($fp)       # $t1=n
+  bne $t0,$t1,gen_et1 # test k!=n
+    li $s0,0            # i=0
+    gen_et2:
+    lw $t1,4($fp)       # $t1=n
+    bge $s0,$t1,gen_et3 # test i>=n
+      li $v0,1          # print int
+      la $a0,v
+      move $t0,$s0
+      sll $t0,$t0,2
+      add $a0,$a0,$t0
+      lw $a0,0($a0)     # $a0=v[i]
+      syscall
+      li $v0,4          # print string
+      la $a0,blank
+      syscall
+    add $s0,1           # ++i
+    b gen_et2
+    gen_et3:
+    li $v0,4  # print string
+    la $a0,nl
+    syscall
+  gen_et1:
+  li $s0,1             # i=1
+  gen_et4:
+  lw $t1,4($fp)        # $t1=n
+  bgt $s0,$t1,gen_et5  # test i>n
+    li $s1,0             # j=0
+    lw $t2,k             # $t2=k
+    la $t3,v             # $t3=adr.lui v
+    gen_et6:
+    bge $s1,$t2,gen_et7  # test j>=k
+      move $t0,$s1
+      sll $t0,$t0,2
+      add $t0,$t0,$t3
+      lw $t0,0($t0)        # $t0=v[j]
+      beq $t0,$s0,gen_et7  # if(v[j]==i)break;
+    add $s1,1            # ++j
+    b gen_et6
+    gen_et7:
+    bne $s1,$t2,gen_et8  # test j!=k ($t2 inca contine k)
+      move $t0,$t2    # $t0=k
+      sll $t0,$t0,2   # $t0=4*k
+      add $t0,$t0,$t3 # $t0=(unsigned char*)v+4*k=v+k ($t3 inca contine v)
+      sw $s0,0($t0)   # v[k]=i
+      add $t2,1
+      sw $t2,k        # ++k
+      subu $sp,4
+      lw $t0,4($fp)
+      sw $t0,0($sp)   # push n
+      jal gen         # gen(n) (apelul imbricat)
+      addu $sp,4
+      lw $t2,k
+      sub $t2,1
+      sw $t2,k        # --k
+      lw $t3,v        # acum $t2, $t3 iar contin k, resp. v
+    gen_et8:
+  add $s0,1            # ++i
+  b gen_et4
+  gen_et5:
+  lw $s1,-12($fp)
+  lw $s0,-8($fp)
+  lw $ra,0($fp)
+  lw $fp,-4($fp)
+  addu $sp,16
+jr $ra
+##########
+
+Comentarii:
+- "v" si "k" sunt locale lui "gen" (pot fi accesate doar din "gen") dar sunt
+ statice (deci se aloca in zona de date statice si isi pastreaza locatia pe
+ toata perioada executarii programului); astfel o valoare lasata de un apel
+ al lui "gen" in "v" sau "k" va fi regasita de apelul urmator (deci
+ variabilele locale statice sunt un mijloc de comunicare intre apelurile
+ succesive ale procedurii); in plus initializarea "k=0" are loc o singura
+ data, inaintea primului apel al lui "gen" (nu la fiecare nou apel);
+- desi la prima intalnire a lui "gen_et2:" $t1 contine deja "n", l-am
+ reincarcat cu "lw $t1,4($fp)" deoarece aici ajungem si dupa ce s-au facut
+ iteratii, iar in iteratii facem "syscall" care ar putea altera $t1 (nu e
+ callee-saved); la fel am procedat si la "gen_et4:"; de asemenea, $t2 si $t3
+ incarcate inainte de "gen_et6:" cu "k", respectiv adresa lui "v" isi
+ pastreaza valoare (deoarece nu facem apeluri imbricate sau "syscall") pana
+ la apelul imbricat "gen(n)", deci nu mai trebuie reincarcati la fiecare
+ calcul "v[i]" sau "v[k]"; cand facem "++k" sau "--k" in preajma apelului
+ imbricat "gen(n)" ei trebuie reincarcati, inclusiv "k" trebuie salvat in
+ memorie, deoarece $t2, $t3 nu sunt callee-saved.
+
+Exemplu: Parametri (pointeri la) functii;
+~~~~~~~~   programul reprezinta grafic (in mod text) niste functii reale de
+           variabila reala, folosind o procedura care primeste adresele lor
+           ca parametri.
+
+Translatam urmatorul program C:
+
+#include<stdio.h>
+
+void reprezinta(double (*f)(double),double a,double b,double dx,double dy){
+  char linie[42];
+  register int i,k; register char c; register double x,y;
+  for(x=a;x<=b;x+=dx){
+    y=(*f)(x); k=(int)(y/dy)+20;
+    if(0<=x && x<dx)c='-'; else c=' ';
+    for(i=0;i<=40;++i)linie[i]=c;
+    linie[20]='|';
+    if(0<=k && k<=40)linie[k]='*';
+    linie[41]='\0';
+    printf("%s\n",linie);
+  }
+}
+
+double sin(double x) /* aproximeaza sin(x) */
+ {return x-x*x*x/6+x*x*x*x*x/120-x*x*x*x*x*x*x/5040;}
+
+double parabola(double x) /* o parabola */
+ {return 0.3*x*x-0.3*x-0.7;}
+
+double dreapta(double x) /* o dreapta */
+ {return x-1;}
+
+double (*vect_f[])(double)= {sin, parabola, dreapta};
+double vect_a[]= {  -3,  -2,  -1};
+double vect_b[]= {   3,   3,   2};
+double vect_dx[]={ 0.3, 0.3, 0.3};
+double vect_dy[]={ 0.1, 0.1, 0.1};
+int n=3;
+
+void main(){
+  register int i;
+  for(i=0;i<n;++i){
+    reprezinta(vect_f[i],vect_a[i],vect_b[i],vect_dx[i],vect_dy[i]);
+    printf("\n");
+  }
+}
+
+/* afisaza:
+                    *                    
+                *   |                    
+              *     |                    
+            *       |                    
+           *        |                    
+           *        |                    
+           *        |                    
+             *      |                    
+               *    |                    
+                  * |                    
+                    *                    
+--------------------|-*------------------
+                    |    *               
+                    |      *             
+                    |        *           
+                    |        *           
+                    |        *           
+                    |       *            
+                    |     *              
+                    |   *                
+                    *                    
+
+                    |          *         
+                    |     *              
+                    |  *                 
+                    *                    
+                  * |                    
+                *   |                    
+              *     |                    
+-------------*------|--------------------
+             *      |                    
+             *      |                    
+              *     |                    
+               *    |                    
+                *   |                    
+                   *|                    
+                    *                    
+                    |   *                
+                    |       *            
+
+ *                  |                    
+    *               |                    
+       *            |                    
+         *          |                    
+------------*-------|--------------------
+                *   |                    
+                   *|                    
+                    |*                   
+                    |   *                
+                    |      *             
+                    |        *           
+*/
+
+Translatarea este:
+
+.data
+  vect_f: .word sin, parabola, dreapta
+  vect_a: .double -3.0, -2.0, -1.0
+  vect_b: .double  3.0,  3.0,  2.0
+  vect_dx:.double  0.3,  0.3,  0.3
+  vect_dy:.double  0.1,  0.1,  0.1
+  n: .word 3
+  nl: .asciiz "\n"
+.text
+##### programul principal
+main:
+  li $s0,0             # i=0
+  main_et1:
+  lw $t0,n
+  bge $s0,$t0,main_et2 # test i>=n
+    sll $t0,$s0,2  # $t0=4*i
+    sll $t1,$s0,3  # $t1=8*i
+    subu $sp,40
+    la $t2,vect_dy
+    add $t2,$t2,$t1
+    l.d $f0,0($t2) # $f0=vect_dy[i]
+    s.d $f0,32($sp)# push vect_dy[i]
+    la $t2,vect_dx
+    add $t2,$t2,$t1
+    l.d $f0,0($t2) # $f0=vect_dx[i]
+    s.d $f0,24($sp)# push vect_dx[i]
+    la $t2,vect_b
+    add $t2,$t2,$t1
+    l.d $f0,0($t2) # $f0=vect_b[i]
+    s.d $f0,16($sp)# push vect_b[i]
+    la $t2,vect_a
+    add $t2,$t2,$t1
+    l.d $f0,0($t2) # $f0=vect_a[i]
+    s.d $f0,8($sp) # push vect_a[i]
+    la $t2,vect_f
+    add $t2,$t2,$t0
+    lw $t3,0($t2) # $f0=vect_f[i]
+    sw $t3,0($sp) # push vect_f[i]
+    jal reprezinta
+    addu $sp,40
+    li $v0,4  # print string
+    la $a0,nl
+    syscall   # printf("\n");
+  add $s0,1            # ++i
+  b main_et1
+  main_et2:
+li $v0,10
+syscall
+##### procedura "reprezinta"
+reprezinta: 
+# primeste: $sp:(f (pointer))()[a][b][dx][dy]
+# unde () inseamna un word iar [] inseamna un dublu word
+  subu $sp,88
+  sw $ra,84($sp)
+  sw $fp,80($sp)
+  s.d $f0,72($sp) # $f0 va fi x (adresa este multiplu de 8)
+  s.d $f2,64($sp) # $f2 va fi un reg. auxiliar (adresa este multiplu de 8)
+  s.d $f4,56($sp) # $f4 va fi un reg. auxiliar (adresa este multiplu de 8)
+  sw $s2,52($sp)  # $s2 va fi c
+  sw $s1,48($sp)  # $s1 va fi k
+  sw $s0,44($sp)  # $s0 va fi i
+  addiu $fp,$sp,84
+    # $sp:(linie[0]...linie[3])...(linie[40],linie[41],.,.)
+    #        ($s0 v)($s1 v)($s2 v)[$f4 v][$f2 v][$f0 v]($fp v)$fp:($ra v)
+    #        (f)()[a][b][dx][dy] 
+  l.d $f0,12($fp)     # x=a
+  reprezinta_et1:
+  l.d $f2,20($fp)     # $f2=b
+  c.lt.d $f2,$f0      # daca x>b, flag-ul 0 al coprocesorului 1 devine 1
+  bc1t reprezinta_et2 # daca flag-ul 0 al coprocesorului 1 este 1, salt
+    subu $sp,8
+    s.d $f0,0($sp)     # push x
+    lw $t0,4($fp)      # $t0=f
+    jalr $ra,$t0       # apel (*f)(x) (returneaza un double prin stiva)
+    l.d $f2,0($sp)     # $f2=(*f)(x)=y
+    addu $sp,8
+    l.d $f4,36($fp)    # $f4=dy
+    div.d $f2,$f2,$f4  # $f2=y/dy
+    cvt.w.d $f4,$f2    # $f4=(int)(y/dy), codificat ca int (!)
+    mfc1.d $t0,$f4     # copiaza config. din ($f4,$f5) in ($t0,$t1)
+    move $s1,$t0       # k=(int)(y/dy) (eventual trunchiat)
+    li $t0,20
+    add $s1,$s1,20     # k=(int)(y/dy)+20
+    li $t0,0           # $t0=false
+    li $t2,1           # $t2=true
+    li.d $f2,0.0       # $f2=0
+    c.le.d $f2,$f0     # flag-ul 0 al cop. 1 devine 1 daca 0<=x, si 0 altfel
+    mtc1.d $t0,$f2     # $f2=false
+    mtc1.d $t2,$f4     # $f4=true
+    movt.d $f2,$f4,0   # daca flag-ul 0 e 1, $f2 ia val. $f4, adica true
+    mfc1.d $t4,$f2     # $t4=val. de adevar a lui "0<=x"
+    l.d $f2,28($fp)    # $f2=dx
+    c.le.d $f0,$f2     # flag-ul 0 al cop. 1 devine 1 daca x<=dx,si 0 altfel
+    mtc1.d $t0,$f2     # $f2=false
+    mtc1.d $t2,$f4     # $f4=true
+    movt.d $f2,$f4,0   # daca flag-ul 0 e 1, $f2 ia val. $f4, adica true
+    mfc1.d $t6,$f2     # $t6=val. de adevar a lui "x<=dx"
+    and $t4,$t4,$t6    # $t4=val. de adevar a lui "0<=x && x<=dx"
+    li $s2,'-'         # c='-'
+    bnez $t4,reprezinta_et3 # daca "0<=x && x<=dx" e adev. "c" ramane '-'
+    li $s2,' '         
+    reprezinta_et3:
+    li $s0,0                    # i=0
+    reprezinta_et4:
+    li $t0,40
+    bgt $s0,$t0,reprezinta_et5  # test i>40
+      addiu $t0,$fp,-84  # $t0=adr.lui "linie"
+      add $t0,$t0,$s0    # $t0=adr.lui "linie[i]" (e byte, nu trebuie *4)
+      sb $s2,0($t0)      # linie[i]=c
+    add $s0,1
+    b reprezinta_et4
+    reprezinta_et5:
+    addiu $t0,$fp,-84  # $t0=adr.lui "linie"
+    addiu $t0,$t0,20   # $t0=adr.lui "linie[20]"
+    li $t1,'|'
+    sb $t1,0($t0)      # linie[20]='|'
+    sle $t0,$zero,$s1  # $t0 = (0<=k)
+    li $t1,40
+    sle $t1,$s1,$t1    # $t1 = (k<=40)
+    and $t0,$t0,$t1    # $t0 = (0<=k && k<=40)
+    beqz $t0,reprezinta_et6 # daca 0<=k && k<=40 e fals, nu pun "*"
+      li $t1,'*'
+      addiu $t0,$fp,-84  # $t0=adr.lui "linie"
+      add $t0,$t0,$s1    # $t0=adr.lui "linie[k]"
+      sb $t1,0($t0)      # linie[k]='*'
+    reprezinta_et6:
+    addiu $t0,$fp,-84  # $t0=adr.lui "linie"
+    addiu $t0,$t0,41   # $t0=adr.lui "linie[41]"
+    sb $zero,0($t0)    # linie[41]='\0'
+    li $v0,4           # print string
+    addiu $a0,$fp,-84  # $a0=adr.lui "linie"
+    syscall
+    li $v0,4
+    la $a0,nl
+    syscall
+  l.d $f2,28($fp)     # $f2=dx
+  add.d $f0,$f0,$f2   # x+=dx
+  b reprezinta_et1
+  reprezinta_et2:
+  l.d $f0,-12($fp)
+  l.d $f2,-20($fp)
+  l.d $f4,-28($fp)
+  lw $s2,-32($fp)
+  lw $s1,-36($fp)
+  lw $s0,-40($fp)
+  lw $ra,0($fp)
+  lw $fp,-4($fp)
+  addu $sp,88
+jr $ra
+##### functia "sin"
+sin: # primeste $sp:[x] si returneaza prin stiva
+  subu $sp,40
+  sw $fp,32($sp)
+  s.d $f6,24($sp)
+  s.d $f4,16($sp)
+  s.d $f2,8($sp)
+  s.d $f0,0($sp)
+  addiu $fp,$sp,36 # $sp:[$f0 v][$f2 v][$f4 v][$f6 v]($fp v)$fp:()[x]
+  l.d $f0,4($fp)     # $f0=x
+  mov.d $f6,$f0      # $f6=x
+  mul.d $f2,$f0,$f0  # $f2=x*x
+  mul.d $f2,$f2,$f0  # $f2=x*x*x
+  li.d $f4,6.0
+  div.d $f4,$f2,$f4  # $f4=x*x*x/6
+  sub.d $f6,$f6,$f4  # $f6=x-x*x*x/6
+  mul.d $f2,$f2,$f0  # $f2=x*x*x*x
+  mul.d $f2,$f2,$f0  # $f2=x*x*x*x*x
+  li.d $f4,120.0
+  div.d $f4,$f2,$f4  # $f4=x*x*x*x*x/120
+  add.d $f6,$f6,$f4  # $f6=x-x*x*x/6+x*x*x*x*x/120
+  mul.d $f2,$f2,$f0  # $f2=x*x*x*x*x*x
+  mul.d $f2,$f2,$f0  # $f2=x*x*x*x*x*x*x
+  li.d $f4,5040.0
+  div.d $f4,$f2,$f4  # $f4=x*x*x*x*x*x*x/5040
+  sub.d $f6,$f6,$f4  # $f6=x-x*x*x/6+x*x*x*x*x/120+x*x*x*x*x*x*x/5040
+  s.d $f6,4($fp)   # $sp:[$f0 v][$f2 v][$f4 v][$f6 v]($fp v)$fp:()[rezultat]
+  l.d $f6,-12($fp)
+  l.d $f4,-20($fp)
+  l.d $f2,-28($fp)
+  l.d $f0,-36($fp)
+  lw $fp,-4($fp)
+  addu $sp,40
+jr $ra
+##### functia "parabola"
+parabola: # primeste $sp:[x] si returneaza prin stiva
+  subu $sp,40
+  sw $fp,32($sp)
+  s.d $f6,24($sp)
+  s.d $f4,16($sp)
+  s.d $f2,8($sp)
+  s.d $f0,0($sp)
+  addiu $fp,$sp,36 # $sp:[$f0 v][$f2 v][$f4 v][$f6 v]($fp v)$fp:()[x]
+  l.d $f0,4($fp)     # $f0=x
+  mul.d $f2,$f0,$f0  # $f2=x*x
+  li.d $f4,0.3       # $f4=0.3
+  mul.d $f6,$f4,$f2  # $f6=0.3*x*x
+  mul.d $f2,$f4,$f0  # $f2=0.3*x
+  sub.d $f6,$f6,$f2  # $f6=0.3*x*x-0.3*x
+  li.d $f2,0.7
+  sub.d $f6,$f6,$f2  # $f6=0.3*x*x-0.3*x-0.7
+  s.d $f6,4($fp)   # $sp:[$f0 v][$f2 v][$f4 v][$f6 v]($fp v)$fp:()[rezultat]
+  l.d $f6,-12($fp)
+  l.d $f4,-20($fp)
+  l.d $f2,-28($fp)
+  l.d $f0,-36($fp)
+  lw $fp,-4($fp)
+  addu $sp,40
+jr $ra
+##### functia "dreapta"
+dreapta: # primeste $sp:[x] si returneaza prin stiva
+  subu $sp,24
+  sw $fp,16($sp)
+  s.d $f2,8($sp)
+  s.d $f0,0($sp)
+  addiu $fp,$sp,20 # $sp:[$f0 v][$f2 v]($fp v)$fp:()[x]
+  l.d $f0,4($fp)     # $f0=x
+  li.d $f2,1.0
+  sub.d $f2,$f0,$f2
+  s.d $f2,4($fp)   # $sp:[$f0 v][$f2 v]($fp v)$fp:()[rezultat]
+  l.d $f2,-12($fp)
+  l.d $f0,-20($fp)
+  lw $fp,-4($fp)
+  addu $sp,24
+jr $ra
+##########
+
+Comentarii:
+- procedura "reprezinta" reprezinta grafic in mod text, sub forma unui sir
+ de "*" pe verticala, desenand si axele de coordonate (Ox pe verticala, Oy
+ pe orizontala), o functie reala de variabila reala a carei adresa este
+ primita ca parametru; semnificatia parametrilor lui "reprezinta" este:
+ "f": adresa functiei reale de variabila reala ce trebuie reprezentata;
+ "a", "b": capetele intervalului de definitie a functiei;
+ "dx", "dy": scara de reprezentare; practic "dx", "dy" inseamna lungimea
+   segmentului pe Ox, resp. Oy, care pe ecran se reprezinta printr-un
+   singur caracter;
+ procedura construieste graficul linie cu linie in stringul "linie" si
+ fiecare linie construita este imediat afisata; fiecare asemenea linie este
+ o linie verticala corespunzatoare cate unei valori a lui "x" in intervalul
+ ["a","b"]; acest interval este parcurs in pasi de lungime "dx" (ei
+ corespund unui salt de un caracter pe ecran); intrucat graficul este
+ desenat pe verticala, liniile verticale construite succesiv sunt afisate
+ orizontal (cu "printf("%s\n",linie)");
+  "y" este imaginea lui "x" in multimea numerelor reale iar "k"
+ corespondentul lui "y" pe ecran, in numar de caractere fata de caracterul
+ origine;
+  cel mult una din liniile afisate poate contine axa Oy; acest lucru este
+ detectat cu conditia "0<=x && x<dx"; la jumatatea fiecarei linii trebuie
+ desenata intersectia cu Ox, sub forma unui '|';
+- in programul C, pe langa procedura "reprezinta", am definit un vector de
+ pointeri la functii (ce primesc un parametru double si returneaza double)
+ "vect_f" si niste vectori de double "vect_a","vect_b","vect_dx","vect_dy",
+ pe care i-am initializat cu adresele unor functii "sin", "parabola",
+ "dreapta" si niste valori a, b, dx, dy potrivite pentru fiecare; in "main"
+ am aplicat "reprezinta" pentru fiecare asemenea sistem;
+- in programul MIPS am tinut cont ca pointerii sunt pe 4 octeti iar valorile
+ double pe 8 octeti - asta a influentat de ex. regula de calculare a
+ offset-urilor componentelor vectorilor de pointeri si double si spatiul
+ alocat in stiva pentru ele;
+  de asemenea, intrucat in stiva se salveaza si valori double (parametri,
+ registrii $f0, $f2 salvati/restaurati) iar acestea nu se pot scrie/citi
+ decat la adrese multiplu de 8 (dimensiunea tipului double), am avut grija
+ ca $sp sa ia doar valori multiplu de 8; de aceea in "main" am push-at
+ parametrul "vect_f[i]" tot pe 8 octeti, desi valoarea lui are doar 4
+ octeti; puteam sa nu constrang $sp sa varieze din 8 in 8, dar atunci
+ trebuia sa calculez si sa aloc spatii suplimentare la scrierea in stiva
+ a fiecarui double;
+- functiile "sin", "parabola", "dreapta" au fost implementate sa returneze
+ prin stiva;
+- pentru instructiunile in virgula mobila a se (re)vedea lectia 2;
+ notam ca flag-ul 0 al coprocesorului 1 setat cu "c.lt.d", "c.le.d",etc. isi
+ pastreaza valoarea pana se executa o alta instructiune de acest tip (adica
+ despre care am specificat in lectia 2 ca modifica flag-ul);
+- pentru evaluarea expresiei "0<=x && x<=dx" am fi avut nevoie, pentru a
+ evita multiplele ramificari, de instructiuni de tip "sle" care sa accepte
+ operanzi in virgula mobila; intrucat asemenea instructiuni nu au fost
+ gasite in cartea [1], am simulat efectul lor cu niste artificii; de ex.
+ pentru a evalua "$t4 = 0<=x", adica "$t4 = 0<=$f0" am efectuat:
+
+    li $t0,0           # $t0=false
+    li $t2,1           # $t2=true
+    li.d $f2,0.0       # $f2=0
+    c.le.d $f2,$f0     # flag-ul 0 al cop. 1 devine 1 daca 0<=x, si 0 altfel
+    mtc1.d $t0,$f2     # $f2=false
+    mtc1.d $t2,$f4     # $f4=true
+    movt.d $f2,$f4,0   # daca flag-ul 0 e 1, $f2 ia val. $f4, adica true
+    mfc1.d $t4,$f2     # $t4=val. de adevar a lui "0<=x"
+
+ echivalent, in locul ultimelor doua instructiuni am fi putut efectua:
+
+    movf.d $f4,$f2,0   # daca flag-ul 0 e 0, $f4 ia val. $f2, adica false
+    mfc1.d $t4,$f4     # $t4=val. de adevar a lui "0<=x"
+
+ ne-am bazat pe faptul ca "mtc1.d" si "mfc1.d" copiaza configuratiile, nu
+ schimba modul de reprezentare a valorilor (deci din $t-uri se copiaza in
+ $f-uri 1 si 0 ca intregi, apoi inapoi in $t4 tot ca intregi);
+  mentionam ca "mtc1.d" si "mfc1.d" afecteaza de fapt perechile ($t0,$t1),
+ ($t2,$t3), resp. ($t4,$t5) pe de-o parte si ($f2,$f3), resp. ($f4,$f5) pe
+ de alta parte; dar, indiferent ce contin sau vor contine $t1, $t3, $t5,
+ $f3, $f4 tot ce ne intereseaza se transfera doar intre $t0, $t2, $t4, $f2,
+ $f4; de aceea de ex. nu a trebuit sa initializam si $t1, $t3;
+- in cartea [1] nu am gasit conventii MIPS referitoare la salvarea/
+ restaurarea registrilor coprocesorului 1 cu ocazia apelurilor de proceduri;
+ in absenta unor asemenea conventii i-am considerat callee-saved;
+- in procedura "reprezinta" trebuie salvat/restaurat $ra, deoarece face
+ apeluri imbricate (prin acel "(*f)(x)"); in "sin", "parabola" si "dreapta"
+ nu e necesar, dar am rezervat un word in plus in cadru pentru a pastra
+ alinierea adreselor la multipli de 8.
+
+2. Macro-uri: - TODO
+=============
+
+3. Exercitii: - TODO
+=============
+
+ In toate cazurile, in afara celor mentionate explicit, parametrii 
+procedurilor se vor pasa prin stiva, valoarea returnata (in cazul functiilor)
+se va intoarce tot prin stiva,iar macro-urile nu se vor rescrie in proceduri.
+ Programele marcate cu (*) se vor realiza in clasa.
+
+III.1) (puncte - vezi in text) (*)
+a) (1 punct) 
+  Functie "sign" ce primeste un parametru word x si returneaza (prin $v0)
+   valoarea 1 daca x>0, 0 daca x=0, -1 daca x<0. Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru ca la (a) dar cu retur prin stiva.
+c) (1 punct)
+  Acelasi lucru ca la (a) dar cu un macro.
+
+III.2) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie MIPS ce implementeaza functia C "memcpy":
+
+     void *memcpy(void *dest, const void *src, size_t n);
+
+ care copiaza a "n" octeti de la adresa "src" la adresa "dest" si returneaza
+ "dest" (putem considera "src" si "dest" adrese obisnuite si "n" word).
+ Program ilustrativ care copiaza continutul unui vect. de word-uri in altul.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.3) (2 puncte) (*)
+
+ Translatati in MIPS urmatorul program C (el contine o procedura ce afisaza
+  frecventa valorilor dintr-un vector de numere de o cifra):
+
+  #include<stdio.h>
+
+  void frecv(int *v, int n){
+    int f[10], k;     /* var. k si vect. f se vor aloca automatic pe stiva */
+    register int i,j; /* i si j se vor aloca in registri */
+    for(i=0;i<10;++i) f[i]=0;
+    for(i=0;i<n;++i) if(0<=v[i] && v[i]<10) ++f[v[i]];
+    k=0; for(i=0;i<10;++i) if(f[i]!=0)++k;
+    for(i=0;i<10;++i){
+      printf("%d",f[i]);    /* se va folosi syscall, functia print int */
+      printf(" ");          /* se va folosi syscall, functia print string */
+    }
+    printf("%d",k);         /* se va folosi syscall, functia print int */
+    printf("\n");           /* se va folosi syscall, functia print string */
+  }
+
+  int x[7]={1,2,3,3,3,1,5};
+
+  void main(){
+    frecv(x,7);
+  }
+
+  /* se va afisa: 0, 2, 1, 3, 0, 1, 0, 0, 0, 0, 4
+     deoarece 0 apare de 0 ori, 1 de 2 ori, 2 o data, 3 de 3 ori, ...,
+     9 de 0 ori si sunt 4 frecvente nenule */
+
+III.4) (puncte - vezi in text) (*)
+a) (3.5 puncte)
+  Functie C(n,k) recursiva ce calculeaza combinari de n luate cate k dupa 
+   formula: C(0,0) = C(1,0) = 0, C(n,k) = C(n,k-1) + C(n-1,k-1). Program 
+   ilustrativ.
+b) (3.5 puncte)
+  Acelasi lucru cu un macro recursiv (si retur prin $v0).
+
+III.5) (3.5 puncte)
+ Functie ce primeste ca parametru un numar natural n si un caracter c si 
+returneaza un string (construit in stiva) ce contine de n ori caracterul c 
+si un caracter nul la sfarsit.
+ Program ilustrativ in care n si c sunt date prin variabile initializate, iar
+in programul principal se apeleaza functia, apoi stringul returnat este
+extras din stiva si copiat intr-o variabila statica de tip .space (inclusiv
+caracterul nul de la sfarsit), apoi este afisat la consola.
+
+III.6) (1.5 puncte)
+ Translatati in MIPS urmatorul program C (respectand conventiile C):
+
+  #include<stdarg.h>
+  void aduna(int *a, int n, ...){
+    register int i;
+    va_list l;
+    va_start(l,n);
+    *a=0;
+    for(i=0;i<n;++i) *a+=va_arg(l, int);
+    va_end(l);
+  }
+  int s, s1;
+  void main(){
+    aduna(&s,3,1,2,3);    /* obtinem s=6 */
+    aduna(&s1,2,10,20);   /* obtinem s1=30 */
+  }
+
+ (i nu va fi alocat automatic ci pentru el se va folosi un registru).
+
+III.7) (1.5 puncte)
+ Scrieti o functie pentru adunarea unui sir de numere, cu numar variabil de 
+parametri (parametrii sunt numarul numerelor si apoi numerele) si retur prin
+stiva. Program ilustrativ. Indicatie: adaptam programul de la III.6.
+
+III.8) (3 puncte) (*)
+ Translatati in MIPS urmatorul program C:
+
+  int aplica(int (*f)(int), int x){
+    return (*f)(x);
+  }
+
+  int f1(int y){return y+y;}
+  int f2(int y){return y*y;}
+  int f3(int y){return -y;}
+  
+  int (*vf[])={f1, f2, f3}, v[3];
+
+  void main(){
+    register int i;
+    for(i=0;i<3;++i) v[i]=aplica(vf[i],1+i);
+  }  
+
+  /* in final v[0]=2, v[1]=4, v[2]=-3 */
+
+III.9) (1.5 puncte) (*)
+ Translatati in MIPS urmatorul program C (ce contine o procedura care pune
+  bitii dintr-un intreg intr-un string sub forma de caractere '1' sau '0'):
+
+  #include<stdio.h>
+
+  void bts(int n, char *s){
+    register int i;
+    for(i=0;i<8*sizeof(int);++i) if(n & (1<<i)) s[i]='1'; else s[i]='0';
+    s[8*sizeof(int)]='\0';
+     /* in MIPS in loc de 8*sizeof(int) vom pune 32 */
+  }
+
+  void main(){
+    int x=259;
+    char y[100];      /* in MIPS vom pune .space 100 */
+    bts(x,y);
+    printf("%s\n",y); /* se va folosi syscall, functia print string */
+  }
+
+  /* in MIPS se va afisa: 11000000100000000000000000000000 */
+
+III.10) (puncte - vezi in text) (*)
+a) (3.5 puncte)
+  Functie MIPS ce implementeaza functia C "atoi" (cu retur prin $v0):
+
+    int atoi(const char *s);
+
+ care returneaza intregul a carui reprezentare externa zecimala este
+ continuta in stringul "s" (putem considera "s" o adresa obisnuita);
+ presupunem stringul "s" corect construit (si terminat prin caracterul nul);
+ de exemplu atoi("12") returneaza int-ul 12. Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.11) (puncte - vezi in text) (*)
+a) (3 puncte) 
+  Procedura pentru sortarea unui vector de word prin metoda Bubble sort;
+   procedura primeste ca parametri adresa de inceput a vectorului si numarul 
+   elementelor sale. Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.12) (1.5 puncte) (*)
+ Functie recursiva ce returneaza (in $v0) suma cifrelor in baza 10 ale unui
+word dat ca parametru.
+ Ideea recursiei: s(0) = 0, altfel s(n) = n mod 10 + s(n div 10).
+ Program ilustrativ.
+
+III.13) (puncte - vezi in text) (*)
+a) (1 punct)
+  Functie MIPS ce implementeaza functia C "strlen" (cu retur prin $v0):
+
+    size_t strlen(const char *s);
+
+ care returneaza lungimea stringului pointat de "s", fara a numara
+ terminatorul nul (putem considera "s" adresa obisnuita iar valoarea
+ returnata int). 
+  Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.14) (puncte - vezi in text) (*)
+a) (2.5 puncte)
+  Functie MIPS ce implementeaza functia C "strcmp" (cu retur prin $v0):
+
+    int strcmp(const char *s1, const char *s2);
+
+ care compara lexicografic doua stringuri (pointate de "s1" si "s2") si
+ returneaza o valoare <0 daca primul string este < al doilea, ==0 daca
+ primul string este == al doilea si >0 daca primul string este > al doilea
+ (putem considera "s1" si "s2" adrese obisnuite).
+  Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.15) (puncte - vezi in text) (*)
+a) (2 puncte)
+  Functie MIPS ce implementeaza functia C "strrev" (fara retur):
+
+    char *strrev(char *s);
+
+ care inverseaza ordinea caracterelor din stringul pointat de "s", in afara
+ de terminatorul nul  (putem considera "s" adresa obisnuita iar valoarea
+ returnata void).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.16) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Procedura ce primeste ca parametri adresele de inceput a doua stringuri
+   si il copiaza pe primul in al doilea inlocuind toate literele mici cu mari
+   (restul caracterelor se copiaza neschimbate); stringul sursa se considera
+   terminat cu 0. Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru ca la (a) dar cu un macro.
+c) (3 puncte)
+  Acelasi lucru ca la (a) dar procedura are doar un parametru, pt. stringul
+   sursa, stringul destinatie este returnat prin stiva.
+
+III.17) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie (nerecursiva) ce primeste ca parametri adresa de inceput si nr. 
+   elementelor unui vector de word si returneaza max. elementelor sale. 
+   Program ilustrativ.
+b) (3 puncte)
+  Acelasi lucru ca la (a) dar cu o functie recursiva; ideea recursiei: 
+   * daca vectorul are un element, el este max.;
+   * daca vectorul are mai multe elemente, se imparte in doua, se afla max.
+      din fiecare jumatate (apeland recursiv functia) si se ret. max. celor
+      doua max.;
+   functia primeste ca par. adresa de inceput a bucatii analizate si lungimea
+   ei si ret. max. elementelor din bucata respectiva.
+c) (1 punct)
+  Acelasi lucru ca la (a) dar cu un macro.
+
+III.18) (puncte - vezi in text) (*)
+a) (2 puncte )
+  Procedura recursiva ce transforma un vector de word a.i. la inceput sa 
+   apara elem. sale impare in aceeasi ordine ca in vecorul initial, apoi 
+   elem. sale pare in ordinea inversa fata de vectorul initial. Parametri: 
+   adr. de inceput a vect. sursa, adr. vect. destinatie, nr. de elem. ale
+   vect. sursa. Ideea recursiei: se foloseste o var. locala automatica; la
+   fiecare apel se ia cate un word din vectorul sursa si: 
+    - daca e impar se scrie in vectorul destinatie, apoi se apeleaza recursiv
+       pt. restul vectorului sursa;
+    - daca e par se retine in var. locala apelului, se apeleaza recursiv pt.
+       restul vectorului sursa, apoi (la revenirea din recursie) se scrie in 
+       vect. destinatie valoarea salvata.
+   Ex: 1, 2, 7, 8, 2, 5, 6, 1, 5, 4, 3  --> 1, 7, 5, 1, 5, 3, 4, 6, 2, 8, 2
+b) (2 puncte)
+  Acelasi lucru cu un macro recursiv.
+
+III.19) (8 puncte) (*)
+  Procedura ce transforma o expresie din forma infixata in forma sufixata
+   (forma poloneza inversa); expresia poate contine operanzi litera mica, 
+   operatori aditivi '+', '-', operatori multiplicativi '*', '/' si paranteze
+   '(', ')'; toti operatorii sunt binari, cei aditivi avand prioritate mai 
+   mica decat cei multiplicativi; exemplu de transformare:
+
+    sursa: '(a+b)*(a-c)+a' -> 'ab+ac-*a+'
+
+   expresia sursa se considera data intr-un string declarat cu initializare, 
+   cea destinatie intr-un string declarat fara initializare (.space);
+   expresia sursa se considera scrisa corect; procedura va opera asupra celor
+   doua stringuri ca date globale si va primi ca parametru nivelul
+   prioritatii (adica daca la apelul curent se trateaza o operatie aditiva,
+   multiplicativa, etc.).
+  Ideea recursiei urmareste definitia recursiva a unei expresii infixate:
+
+   <expresie> ::= <termen> | <termen> <op_aditiva> <expresie>
+   <termen>   ::= <factor> | <factor> <op_multiplicativa> <termen>
+   <factor>   ::= <litera> | (<expresie>)
+
+   in functie de parametrul - nivel procedura va urmari cate una din cele 
+   trei definitii.
+  Indicatie: sirul sursa se citeste liniar, caracter cu caracter, folosind o
+   variabila globala "c"; la fiecare apel se va procesa cate un car. "c" din
+   sirul sursa; acest caracter este "citit" in codul apelant (deci primul 
+   caracter este citit in programul principal); la sfarsitul unui apel se va
+   citi caracterul care se va procesa dupa revenire; de exemplu un apel de 
+   nivel 1 (expresie) va proceda astfel:
+   - apel recursiv cu nivel 2 (caracterul curent "c", citit deja, se transm.
+      apelului imbricat - intr-adevar, primul caracter dintr-o expresie este 
+      primul caracter din primlul termen al expresiei); conform conventiei,
+      la iesirea din apelul imbricat este deja citit noul "c";
+   - daca "c" este '+' sau '-', se salveaza intr-o var. locala automatica "k"
+      (fiecare apel are deci propria instanta a lui "k"), se mai citeste un 
+      "c",  se apeleaza recursiv cu acelasi nivel 1, la revenire se scrie "k"
+      in sirul destinatie (apelul imbricat va furniza si un nou car. "c"),
+      apoi se iese;
+   - daca nu, se iese (si "c" va fi prelucrat in alta parte).
+   In loc de o variabila globala "c" se poate parcurge sirul sursa cu un
+   registru; sirul destinatie se poate parcurge de asemenea cu un registru
+   (el este construit tot liniar).
+  Program ilustrativ.
+
+III.20) (8 puncte)
+ Program pentru sortarea unui vector de word (declarat cu initializare in 
+program) prin metoda Qsort, folosind o procedura recursiva; interactiunea 
+dintre procedura si program se va face doar prin parametri/valoare returnata
+(nu prin variabile globale).
+
+III.21) (1.5 puncte)
+ Procedura de interclasare a doi vectori sortati de word; parametri: adresele
+de inceput ale celur doi vectori sursa si a vectorului destinatie si nr.
+elementelor celor doi vectori sursa (deci 5 parametri); functia returneaza
+(prin $v0) nr. elementelor vectorului destinatie. Program ilustrativ.
+
+III.22) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie MIPS ce implementeaza functia C "strset" (cu retur prin $v0):
+
+    char *strset(char *s, int ch);
+
+ care seteaza toate caracterele din stringul pointat de "s", in afara
+ de terminatorul nul, la valoarea "ch", apoi returneaza "s" (putem considera
+ "s" si returul ca fiind adrese obisnuite).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.23) (puncte - vezi in text) (*)
+a) (1.5 puncte)
+  Functie MIPS ce implementeaza functia C "strcat" (cu retur prin $v0):
+
+    char *strcat(char *dest, const char *src);
+
+ care concateneaza o copie a stringului pointat de "src" la sfarsitul
+ stringului pointat de "dest" (suprascriind caracterul nul de la sfarsitul
+ stringului pointat de "dest", a.i. in final sa rezulte un string mai lung)
+ si returneaza "dest" (putem considera "dest", "src" si returul ca fiind
+ adrese obisnuite).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.24) (puncte - vezi in text) (*)
+a) (3.5 puncte)
+  Functie MIPS ce implementeaza functia C "strstr" (cu retur prin $v0):
+
+    char *strstr(const char *s1, const char *s2);
+
+ care cauta in stringul pointat de "s1" prima aparitie ca substring a
+ stringului pointat de "s2" si returneaza adresa de unde incepe aceasta
+ aparitie sau NULL (0) daca nu exista nici o aparitie (putem considera "s1",
+ "s2" si returul ca fiind adrese obisnuite).
+   Program ilustrativ.
+b) (1 punct)
+  Acelasi lucru cu un macro.
+
+III.25) (5 puncte)
+  Functie MIPS ce implementeaza functia C "sscanf" (doar cu formatele "%d" si
+   "%s" si fara alte caractere in stringul de format). Program ilustrativ.
+
+III.26) (20 puncte)
+ Implementati un alocator de memorie astfel:
+- declarati in zona ".data":
+ * o zona mare "mem" (.space) din care ulterior se vor aloca diverse bucati;
+ * un vector "log" (declarat initial tot cu .space, dar folosit ulterior ca
+   vector de word), in care se vor inregistra adresele bucatilor alocate si
+   lungimile lor;
+ * alte variabile necesare gestionarii vectorilor de mai sus (de ex. pt. a
+   retine dimensiunile lor si pana unde s-au ocupat);
+- scrieti doua functii:
+   "malloc" - primeste ca parametru un word "d", gaseste in "mem" o zona
+     nerezervata de "d" octeti, o rezerva (adaugand la "log" doua worduri - 
+     offsetul zonei fata de inceputul vectorului si dimensiunea ei "d"), si
+     returneaza (prin $v0) adresa ei de memorie; daca nu exista o zona libera
+     de dimensiunea ceruta nu rezerva nimic si ret. 0;
+   "free" - primeste ca parametru un word, desemnand o adresa de memorie
+     (care se doreste a fi din zona de date statice, unde se afla "mem"),
+     cauta in "log" inregistrarea ce corespunde acestei adrese, o elimina,
+     apoi translateaza celelalte inregistrari (sau o pune pe ultima in locul
+     celei eliminate); daca nu exista o asemenea inregistrare, nu face nimic;
+   eventual (pentru inca 10 puncte) "compact" - translateaza zonele alocate
+     in "mem" si modifica inregistrarile corespunzatoare in "log" a.i. zonele
+     alocate sa fie adiacente.
+Program ilustrativ.
+
+III.27) (12 puncte)
+  Folosind metoda salturilor indirecte emulati un interpretor de comenzi de 
+ tip "command.com" ca in exemplul de la sectiunea 1h, dar care sa accepte 
+ si comenzi cu argumente. Mai exact, comenzile acceptate la intrare si 
+ rezultatul scris la iesire in fiecare caz sunt:
+
+  "a nr1 nr2 ... nrn" (adunare, n>=1) --> scrie suma nr1+...+nrn
+  "s nr1 nr2" --> scrie diferenta nr1-nr2
+  "n nr" --> scrie opusul -nr
+
+ in cele de mai sus, "nr", "nri" sunt intregi byte, iar intre componentele
+ comenzilor (nume, nr-uri) sunt caractere blank; fiecare comanda va fi
+ implementata printr-o procedura cu parametri (adunarea are numar variabil
+ de parametri);
+  vor fi implementate doua comenzi suplimentare, care nu vor putea aparea
+ in fluxul de intrare si care se vor executa automat atunci cand vor fi 
+ intrunite anumite conditii: o comanda de eroare, care scrie la iesire un
+ caracter "e", si o comanda de terminare, a carei efect este terminarea 
+ programului.
+  Fluxul de intrare va fi un string ce contine comenzi separate prin 
+ caractere <LF> (cod ASCII zecimal 10) iar la sfarsit un caracter <EOF> 
+ (cod ASCII zecimal 26); fluxul de iesire va fi un string ce va contine 
+ rezultatele scrise de comenzi, separate prin caractere <LF>.
+  Programul va parcurge liniar fluxul (stringul) de intrare procesand 
+ succesiv comenzile; pentru fiecare comanda corecta va executa procedura
+ care o implementeaza si care va scrie la iesire rezultatul comenzii si un 
+ <LF>; pentru fiecare comanda eronata va executa automat comanda (procedura)
+ de eroare, care va scrie la iesire un "e"; la intalnirea lui <EOF> va 
+ executa automat comanda (procedura) de terminare a programului.
+  De exemplu daca stringul de intrare contine:
+
+  "a 1 2 3<LF>s 30 10<LF>a 100 200<LF>s 20<LF>n 1<LF><EOF>"
+
+ atunci stringul de iesire va contine:
+
+  "6<LF>20<LF>300<LF>e<LF>ff<LF>"
+
+III.28) (6 puncte daca s-a facut problema III.27 sau 14 puncte daca nu)
+  Ca la problema III.27, dar comenzile se citesc de la consola interactiv,
+   iar rezultatele se afisaza tot la consola, dupa fiecare comanda (ca la
+   "command.com").
+
+
+Bibliografie:
+~~~~~~~~~~~~~
+1."Organizarea si proiectarea calculatoarelor - interfata hardware/software",
+  John L. Hennessy, David A. Patterson, ed. All, 2002,
+  anexa A
+2. "Programare in limbaj de asamblare"
+  Gheorghe Musca, ed. Teora, 1997
+3. "Limbaje si calculator"
+  Vlad Bazon, ed. Petrion
+4. "Initiere in C++ Programare orientata pe obiecte"
+  Ionut Muslea, ed. Microinformatica, Cluj-Napoca, 1992
+
+
+DANIEL DRAGULICI
+noiembrie-decembrie, 2006
+actualizat: 20 decembrie 2006

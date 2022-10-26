@@ -1,0 +1,320 @@
+ATOI(3)			   Linux Programmer's Manual		       ATOI(3)
+
+
+
+NAME
+       atoi, atol, atoll, atoq - convert a string to an integer.
+
+SYNOPSIS
+       #include <stdlib.h>
+
+       int atoi(const char *nptr);
+       long atol(const char *nptr);
+       long long atoll(const char *nptr);
+       long long atoq(const char *nptr);
+
+DESCRIPTION
+       The  atoi() function converts the initial portion of the string pointed
+       to by nptr to int.  The behaviour is the same as
+
+	      strtol(nptr, (char **)NULL, 10);
+
+       except that atoi() does not detect errors.
+
+       The atol() and atoll() functions behave the same as atoi(), except that
+       they  convert the initial portion of the string to their return type of
+       long or long long.  atoq() is an obsolete name for atoll().
+
+RETURN VALUE
+       The converted value.
+
+CONFORMING TO
+       SVID 3, POSIX.1, BSD 4.3, ISO/IEC 9899.	ISO/IEC	 9899:1990  (C89)  and
+       POSIX.1	(1996  edition)	 include the functions atoi() and atol() only;
+       C99 adds the function atoll().
+
+NOTES
+       The non-standard atoq() function is not present in libc 4.6.27 or glibc
+       2, but is present in libc5 and libc 4.7 (though only as an inline func-
+       tion in <stdlib.h> until libc 5.4.44).  The atoll() function is present
+       in glibc 2 since version 2.0.2, but not in libc4 or libc5.
+
+SEE ALSO
+       atof(3), strtod(3), strtol(3), strtoul(3)
+
+
+
+GNU				  2000-12-17			       ATOI(3)
+ATOF(3)			   Linux Programmer's Manual		       ATOF(3)
+
+
+
+NAME
+       atof - convert a string to a double.
+
+SYNOPSIS
+       #include <stdlib.h>
+
+       double atof(const char *nptr);
+
+DESCRIPTION
+       The  atof() function converts the initial portion of the string pointed
+       to by nptr to double.  The behaviour is the same as
+
+	      strtod(nptr, (char **)NULL);
+
+       except that atof() does not detect errors.
+
+RETURN VALUE
+       The converted value.
+
+CONFORMING TO
+       SVID 3, POSIX, BSD 4.3, ISO 9899
+
+SEE ALSO
+       atoi(3), atol(3), strtod(3), strtol(3), strtoul(3)
+
+
+
+GNU				  1993-03-29			       ATOF(3)
+STRTOL(3)		   Linux Programmer's Manual		     STRTOL(3)
+
+
+
+NAME
+       strtol, strtoll, strtoq - convert a string to a long integer.
+
+SYNOPSIS
+       #include <stdlib.h>
+
+       long int
+       strtol(const char *nptr, char **endptr, int base);
+
+       long long int
+       strtoll(const char *nptr, char **endptr, int base);
+
+DESCRIPTION
+       The  strtol()  function converts the initial part of the string in nptr
+       to a long integer value according to the	 given	base,  which  must  be
+       between 2 and 36 inclusive, or be the special value 0.
+
+       The  string  must  begin	 with  an  arbitrary amount of white space (as
+       determined by isspace(3)) followed by a	single	optional  `+'  or  `-'
+       sign.   If  base is zero or 16, the string may then include a `0x' pre-
+       fix, and the number will be read in base 16; otherwise, a zero base  is
+       taken  as  10 (decimal) unless the next character is `0', in which case
+       it is taken as 8 (octal).
+
+       The remainder of the string is converted to a long  int	value  in  the
+       obvious	manner,	 stopping  at the first character which is not a valid
+       digit in the given base.	 (In bases above 10, the letter `A' in	either
+       upper  or  lower	 case  represents 10, `B' represents 11, and so forth,
+       with `Z' representing 35.)
+
+       If endptr is not NULL, strtol() stores the address of the first invalid
+       character  in *endptr.  If there were no digits at all, strtol() stores
+       the original value of nptr in *endptr (and returns 0).  In  particular,
+       if  *nptr is not `\0' but **endptr is `\0' on return, the entire string
+       is valid.
+
+       The strtoll() function  works  just  like  the  strtol()	 function  but
+       returns a long long integer value.
+
+RETURN VALUE
+       The  strtol() function returns the result of the conversion, unless the
+       value would underflow or overflow.  If an  underflow  occurs,  strtol()
+       returns	LONG_MIN.   If	an overflow occurs, strtol() returns LONG_MAX.
+       In both cases, errno is set to ERANGE.  Precisely the  same  holds  for
+       strtoll()  (with	 LLONG_MIN  and	 LLONG_MAX  instead  of	 LONG_MIN  and
+       LONG_MAX).
+
+ERRORS
+       ERANGE The resulting value was out of range.
+
+       EINVAL (not in C99) The given base contains an unsupported value.
+
+       The implementation may also set errno to EINVAL in case	no  conversion
+       was performed (no digits seen, and 0 returned).
+
+NOTES
+       In  locales  other  than	 the  "C"  locale,  also  other strings may be
+       accepted.  (For example, the thousands separator of the current	locale
+       may be supported.)
+
+       BSD also has
+
+	   quad_t
+	   strtoq(const char *nptr, char **endptr, int base);
+
+       with completely analogous definition.  Depending on the wordsize of the
+       current architecture, this may be equivalent to strtoll()  or  to  str-
+       tol().
+
+CONFORMING TO
+       strtol()	 conforms  to  SVID  3, BSD 4.3, ISO 9899 (C99) and POSIX, and
+       strtoll() to ISO 9899 (C99) and POSIX-2001.
+
+SEE ALSO
+       atof(3), atoi(3), atol(3), strtod(3), strtoul(3)
+
+
+
+GNU				  2002-05-30			     STRTOL(3)
+STRTOUL(3)		   Linux Programmer's Manual		    STRTOUL(3)
+
+
+
+NAME
+       strtoul, strtoull, strtouq - convert a string to an unsigned long inte-
+       ger
+
+SYNOPSIS
+       #include <stdlib.h>
+
+       unsigned long int
+       strtoul(const char *nptr, char **endptr, int base);
+
+       unsigned long long int
+       strtoull(const char *nptr, char **endptr, int base);
+
+DESCRIPTION
+       The strtoul() function converts the initial part of the string in  nptr
+       to  an  unsigned	 long integer value according to the given base, which
+       must be between 2 and 36 inclusive, or be the special value 0.
+
+       The string must begin with an  arbitrary	 amount	 of  white  space  (as
+       determined  by  isspace(3))  followed  by  a single optional `+' or `-'
+       sign.  If base is zero or 16, the string may then include a  `0x'  pre-
+       fix,  and the number will be read in base 16; otherwise, a zero base is
+       taken as 10 (decimal) unless the next character is `0', in  which  case
+       it is taken as 8 (octal).
+
+       The  remainder of the string is converted to an unsigned long int value
+       in the obvious manner, stopping at the first character which is	not  a
+       valid  digit  in the given base.	 (In bases above 10, the letter `A' in
+       either upper or lower case represents 10, `B'  represents  11,  and  so
+       forth, with `Z' representing 35.)
+
+       If  endptr  is  not  NULL,  strtoul()  stores  the address of the first
+       invalid character in *endptr.  If there were no	digits	at  all,  str-
+       toul()  stores  the  original value of nptr in *endptr (and returns 0).
+       In particular, if *nptr is not `\0' but **endptr is `\0' on return, the
+       entire string is valid.
+
+       The  strtoull()	function  works	 just  like the strtoul() function but
+       returns an unsigned long long integer value.
+
+RETURN VALUE
+       The strtoul() function returns either the result of the conversion  or,
+       if  there  was  a leading minus sign, the negation of the result of the
+       conversion, unless the original (non-negated) value would overflow;  in
+       the  latter case, strtoul() returns ULONG_MAX and sets the global vari-
+       able errno to ERANGE.  Precisely the same holds	for  strtoull()	 (with
+       ULLONG_MAX instead of ULONG_MAX).
+
+ERRORS
+       ERANGE The resulting value was out of range.
+
+       EINVAL (not in C99) The given base contains an unsupported value.
+
+       The  implementation  may also set errno to EINVAL in case no conversion
+       was performed (no digits seen, and 0 returned).
+
+NOTES
+       In locales other than  the  "C"	locale,	 also  other  strings  may  be
+       accepted.   (For example, the thousands separator of the current locale
+       may be supported.)
+
+       BSD also has
+
+	   u_quad_t
+	   strtouq(const char *nptr, char **endptr, int base);
+
+       with completely analogous definition.  Depending on the wordsize of the
+       current	architecture,  this may be equivalent to strtoull() or to str-
+       toul().
+
+CONFORMING TO
+       strtoul() conforms to SVID 3, BSD 4.3, ISO 9899 (C99)  and  POSIX,  and
+       strtoull() to ISO 9899 (C99) and POSIX-2001.
+
+SEE ALSO
+       atof(3), atoi(3), atol(3), strtod(3), strtol(3)
+
+
+
+GNU				  2002-05-30			    STRTOUL(3)
+STRTOD(3)		       Library functions		     STRTOD(3)
+
+
+
+NAME
+       strtod, strtof, strtold - convert ASCII string to floating point number
+
+SYNOPSIS
+       #include <stdlib.h>
+
+       double strtod(const char *nptr, char **endptr);
+       float strtof(const char *nptr, char **endptr);
+       long double strtold(const char *nptr, char **endptr);
+
+DESCRIPTION
+       The strtod, strtof, and strtold functions convert the  initial  portion
+       of the string pointed to by nptr to double, float, and long double rep-
+       resentation, respectively.
+
+       The expected form of the (initial portion of the)  string  is  optional
+       leading	white  space  as  recognized  by  isspace(3), an optional plus
+       (``+'') or minus sign (``-'') and then either (i) a decimal number,  or
+       (ii)  a hexadecimal number, or (iii) an infinity, or (iv) a NAN (not-a-
+       number).
+
+       A decimal number consists of a nonempty sequence of decimal digits pos-
+       sibly  containing  a  radix character (decimal point, locale dependent,
+       usually ``.''), optionally followed by a decimal exponent.   A  decimal
+       exponent consists of an ``E'' or ``e'', followed by an optional plus or
+       minus sign, followed by a non-empty sequence  of	 decimal  digits,  and
+       indicates multiplication by a power of 10.
+
+       A  hexadecimal  number  consists	 of  a	``0x'' or ``0X'' followed by a
+       nonempty sequence of hexadecimal digits	possibly  containing  a	 radix
+       character,  optionally followed by a binary exponent. A binary exponent
+       consists of a ``P'' or ``p'', followed by an  optional  plus  or	 minus
+       sign, followed by a non-empty sequence of decimal digits, and indicates
+       multiplication by a power of 2.	At least one of	 radix	character  and
+       binary exponent must be present.
+
+       An infinity is either ``INF'' or ``INFINITY'', disregarding case.
+
+       A  NAN  is  ``NAN''  (disregarding  case) optionally followed by `(', a
+       sequence of characters, followed by ')'.	 The character	string	speci-
+       fies in an implementation-dependent way the type of NAN.
+
+
+RETURN VALUE
+       These functions return the converted value, if any.
+
+       If  endptr is not NULL, a pointer to the character after the last char-
+       acter used in the conversion is stored in the  location	referenced  by
+       endptr.
+
+       If  no  conversion is performed, zero is returned and the value of nptr
+       is stored in the location referenced by endptr.
+
+       If the correct value would  cause  overflow,  plus  or  minus  HUGE_VAL
+       (HUGE_VALF,  HUGE_VALL)	is  returned  (according  to  the  sign of the
+       value), and ERANGE is stored in errno.	If  the	 correct  value	 would
+       cause underflow, zero is returned and ERANGE is stored in errno.
+
+ERRORS
+       ERANGE Overflow or underflow occurred.
+
+CONFORMING TO
+       ANSI C describes strtod, C99 describes the other two functions.
+
+SEE ALSO
+       atof(3), atoi(3), atol(3), strtol(3), strtoul(3)
+
+
+
+Linux				  2001-06-07			     STRTOD(3)

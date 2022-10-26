@@ -1,0 +1,2550 @@
+
+Teme pentru laboratorul de "Metode de dezvoltare software":
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Fiecare student va participa in cadrul unei echipe la realizarea unui
+proiect din lista de mai jos (numarul de membri ai echipei este indicat la
+fiecare proiect in parte).
+ Echipa trebuie sa produca:
+- un document continand specificarea cerintelor, avand structura urmatoare:
+   * descrierea in limbaj natural a intregului sistem
+      (functionalitati, date, interfete);
+   * descrierea structurii sistemului folosind reprezentari UML;
+   * descrierea a doua componente functionale folosind un limbaj structurat
+      si limbajul Z;
+- un document continand proiectul software, cu descrierea functiilor si a
+   datelor pentru limbajul/limbajele de programare alese;
+- programul propriuzis;
+- un o documentatie de testare, referind tehnicile black box si white box;
+
+Lista de proiecte:
+------------------
+
+1. (echipa de 2-3)
+Program de reprezentare grafica a unor functii : RxR --> R, sub forma unei
+ suprafete hasurate. Programul va implementa facilitatile:
+ - introducerea interactiva a formulei functiei, domeniului de definitie
+    (dreptunghi), scara de afisare, desimea hasurarii;
+ - maparea pe ecran prin proiectie paralele sau centrala;
+ - setarea afisarii/nonafisarii axelor de coordonate, culorii axelor si a
+    graficului, afisarea/nonafisarea unui punct curent care poate fi miscat
+    interactiv (punctul va fi afisat imprauna cu proiectiile sale pe axe si
+    cu valorile acestor proiectii), comutarea intre proiectia paralela si
+    centrala;
+ - interactiv: deplasarea orizontal-vertical (in cazul proiectiei paralel),
+    respectiv in 3 directii (de fapt deplasarea punctului din care se
+    priveste, in cazul proiectiei centrale), rotire pe 3 axe, zoom in/out;
+ - salvarea imaginii curente intr-un fisier bmp, jpg (numele fisierului se va
+    cere interactiv).
+
+2. (echipa de 3-5)
+Editor de diagrame de tip schema logica, circuit boolean, etc.
+Programul va implementa facilitatile:
+ - diagrama poate fi definita atat printr-o specificare sursa text (intr-un
+    limbaj specific), cat si grafic (culegand cu mouse-ul simboluri din
+    meniuri si plasandu-le pe ecran - in acest caz programul va genera
+    automat specificatia sursa corespunzatoare);
+ - o diagrama odata creata poate fi adaugata in lista de elemente grafice
+    existente si i se va asocia o comanda noua in limbajul de specificare,
+    a.i. va putea fi folosita ca element in constructia altor diagrame;
+ - elementele grafice pot contine segmente de dreapta, sageti simple sau
+    duble, arce de cerc simple sau cu sageati, text, cercuri, discuri
+    (si, evident, combinatii ale acestora); la fiecare se vor putea seta
+    (si specifica ca parametrii ai comenzilor in limbajul de specificare)
+    grosimea si culoarea liniilor, daca liniile sunt continue, intrerupte
+    (si cu ce pas) sau punctate;
+ - diagramele construite se vor putea salva in format grafic (bmp, pdf)
+    sau text (spacificatie sursa); lista elementelor grafice definite
+    se va putea salva separat si reincarca pentru a fi folosita la alte
+    diagrame; se va putea incarca o diagrama salvata ca text sursa pentru a
+    se putea modifica; operatiile save/load vor cere numele fisierului.
+ 
+3. (echipa de 3-5)
+Mediu integrat de dezvoltare (IDE) a programelor, universal si deschis.
+Programul va implementa facilitatile:
+ - editor de texte cu sintax highlight, compilare, rulare, depanare, help
+    arborescent (bazat pe link-uri);
+ - se va putea specifica prin meniuri fisierul cu reguli de sintaxa (pentru
+    sintax highlight), compilatorul, depanatorul, comenzi specifice pentru
+    acestea; in general IDE-ul va functiona ca un front-end ce va traduce
+    comenzile date prin combinatii de taste, mouse, meniuri in linii de
+    comanda pentru programul de compilare si depanare;
+ - help-ul sa fie editabil (sa poate fi construit chiar cu editorul IDE-lui);
+ - fragmente de cod scrise si compilate cu IDE-ul sa poate fi integrate (din
+    mers, prin comenzi din meniuri) in acesta ca plugin-uri, pentru a-i
+    spori functionalitatea; in acest scop programul-IDE va oferi un set de
+    variabile si functii/metode publice ce intervin in functionarea sa
+    interna, iar plugin-ul se va constru ca un DLL care le foloseste; in urma
+    unei comenzi date dintr-un meniu programul IDE se va link-a de acest DLL
+    din mers si-l va folosi; cu asemenea plugin-uri se vor putea adauga
+    IDE-lui noi meniuri, noi taste si comenzi de editare, etc.; in general
+    programul IDE de baza va fi cat mai restrans, restul functionalitatilor
+    se vor programa cu el insusi, ca plugin-uri; lista plugin-urilor curent
+    folosite se va puta salva (printr-o comanda dintr-un meniu) pentru a fi
+    folosita la urmatoarele sesiuni de lucru.
+
+4. (echipa de 3-5)
+Editor grafic, cu urmatoarele facilitati:
+ - lucrul cu mai multe ferestre simultan;
+ - meniu cu New, Open, Save, Save as, Close, Exit; imaginile pot fi salvate/
+  incarcate ca bmp, jpg; la crearea/incarcarea unei imagini sa se poata
+  specifica/modifica dimensiunea, numarul de culori, sa se poata adauga/
+  elimina/edita culorile (specificand proportia de culori fundamentale); la
+  salvarea jpg sa se poata specifica nivelul de compresie;
+ - scroll si zoom intr-o fereastra;
+ - desenare punct/linie/guma cu mouse-ul, folosind o culoare si grosime
+  curente selectate dintr-un meniu; linia se obtine prin deplasare cu click
+  stanga apasat, guma prin deplasare cu clic dreapta apasat;
+ - in permanenta se afisaza undeva proportia de culori fundamentale in
+  culoarea pixelului unde este mouse-ul pe imaginea curenta; la apasarea
+  unei taste/buton mouse ea devine culoare curenta de desenare si se adauga
+  la meniul de culori;
+ - cu mouse-ul se poate defini o suprafata poligonala iar la apsarea unui
+  buton sau clic ea devine solidara cu mouseul si se deplaseaza odata cu el;
+  in acest caz, la apsarea altor butoane/taste/clic ea se poate roti sau
+  zoom-a; daca mouse-ul intra in alta fereastra, zona decupata il insoteste;
+  la apasarea unui buton/tasta/clic ea este drop-ata peste imaginea de
+  dedesubt la pozitia curenta;
+ - bucata decupata cu mouse-ul sa se poata salva in clipboard si de aici
+  intr-o fereastra noua;
+ - bucata decupata cu mouse-ul sa se poata edita separat (apoi sa redevina
+  solidara cu mouse-ul) in sensul de a-i putea defini pixeli transparenti
+  (anume toti pixelii care au aceeasi culoare cu cel indicat de mouse sa
+  devina transparentei) si atunci cand va fi drop-ata ei sa nu se deseneze;
+ - cateva nivele de undo (macar posibilitatea de a pune la loc asa cum era
+  bucata decupata cu mouse-ul).
+
+5. (echipa de 3-5)
+Editor si player de partituri muzicale de tip pian.
+Programul va implementa facilitatile:
+ - va fi afisata claviatura sau parti din ea (setabile din meniu);
+  clapele se pot apasa cu mouse sau taste;
+ - melodia se poate edita cantand efectiv, sau editand un portativ;
+ - cand melodia este editata, notele vor aparea (prin tastare sau
+  culegere cu mouse-ul) pe un portativ; se pot folosi note intregi,
+  doimi, patrimi, optimi, saisprezecimi, legari, bara verticala ce
+  delimiteaza masurile, diez, bemol, chei, specificare masuri; masura
+  si durata fizica a ei se pot specifica printr-un meniu si editorul nu va
+  permite ca durata notelor dintr-o masura sa depaseasca durata masurii;
+ - cand se canta, se va afisa o animatie care permite urmarirea ritmului
+  parcurgand masura (tipul masurii si durata ei sunt setabile); nota
+  cantata va fi retinuta sub forma unei perechi de numere reprezentand
+  nota si durata ei si va fi desenata pe un portativ; durata notei (patrime,
+  doime, ...) se va calcula impartind durata fizica a apasarii clapei la
+  durata fizica a masurii; daca durata nu incape in masura curenta, se trece
+  automat in masura urmatoare, cu legarea notei;
+ - melodia editata/cantata se poate memora si reda/relua/reda invers/opri
+  prin comenzi dintr-un toolbar (play, stop, pause, etc.); ea se poate salva
+  in fisiere in format midi, wav, pdf ce contine partitura; ea se poate
+  incarca (si canta, modifica, etc.) din fisiere midi; se poate sterge
+  melodia curenta din memorie si crea alta;
+ - timbrul sunetului emis de o clapa sa poata fi editat (intr-o fereastra
+  unde se deseneaza curba acustica) si salvat/incarcat in fisiere - astfel
+  vom putea canta o melodie cu un timbru de instrument ales dintr-o colectie.
+
+6. (echipa de 5)
+Joc de tip "probots" sau "crobots".
+In acest joc, pe un camp de lupta se bat mai multe tancuri; tancurile nu
+ sunt controlate direct de jucatori, ci actioneaza pe baza unor programe de
+ inteligenta artificiala scrise in prealabil de jucatori; practic, in
+ prealabil, fiecare jucator scrie un program de inteligenta artificiala
+ (sub forma unui fisier sursa text scris intr-un limbaj definit special in
+ acest scop), apoi din meniul jocului se incarca aceste fisiere si se
+ asociaza fiecare cate unui tanc, apoi se declansaza lupta; lupta
+ propriuzisa poate fi urmarita pe ecran, dar jucatorii nu mai pot interveni
+ asupra tancurilor - ele actioneaza autonom, pe baza programului asociat;
+ evident, va castiga (supravietui) tancul cu programul cel mai bun.
+Jocul va implementa facilitatile:
+ - limbajul in care vor fi programate tancurile va contine cel putin:
+  * structuri de control de tip if, while, sau macar instructiuni de salt
+     conditionat (if) si neconditionat (goto) la etichete;
+  * instructiuni de calcul aritmetic cu numere reale;
+  * instructiuni specifice de actionat facilitatile tancurilor (tun,
+     deplasare, etc.) si de consultat tabla (pentru a detecta obstacole,
+     tancuri inamice, etc.);
+  * posibilitatea de a defini variabile reale proprii (eventual vectori si
+     matrici de reali);
+ - rularea programelor asociate tancurilor se va face in paralel
+  (intretesut), a.i. un tanc poate pierde nu numai daca algoritmul sau
+  este mai slab ci si daca operatiile pe care le face sunt prea complexe si
+  necesita timp de calcul mai lung - pana se va "gandi" ce trebuie sa faca
+  inamicul va pleca din pozitia in care a fost detectat sau il va distruge;
+ - tancurile vor putea fi configurabile - jucatorul va putea specifica
+  (din meniul jocului) ce facilitati sa aibe tancurile (tun, mitraliera,
+  rachete, radar, etc.) iar limbajul de programare va permite utilizarea
+  acestora (prin instructiuni specifice); fiecare facilitate va avea un
+  cost si avantaje/dezavantaje, a.i. jucatorii sa nu poata sau sa nu fie
+  interesati sa opteze mereu pentru toate facilitatile la un loc;
+ - fiecare tip de arma va avea puteri distructive diferite, iar tancurile
+  vor avea un nivel de "sanatate" care se va diminua cu fiecare lovitura
+  primita; cand ajunge la 0 tancul explodeaza si este distrus;
+ - se va putea juca pe echipe: din meniul jocului se va putea specifica
+  numarul de echipe si numarul de tancuri din fiecare echipa; limbajul de
+  programare va permite recunoasterea si distingerea tancurilor din aceeasi
+  echipa de cele adverse; fiecare tanc insa va avea programul lui;
+ - grafica jocului va fi cat mai frumoasa, permitand cel putin:
+  * afisarea tancurilor si a unor elemente de decor - unele distructibile,
+     altele nu;
+  * distingerea grafica a facilitatilor (tun, mitraliera, etc.) cu care
+     este inzestrat fiecare tanc;
+  * culori diferite pentru fiecare echipa; fiecare tanc va fi insotit de un
+     text care permite identificarea jucatorului care l-a programat (textul
+     va fi scris in programul asociat si luat de joc de acolo) si de un
+     numar sau bara care indica nivelul curent de "sanatate";
+  * proiectilele trase vor fi desenate in deplasarea lor; proiectilele trase
+     de arme diferite (tun, racheta, etc.) vor fi desenate diferit;
+  * explozii animate.
+Indicatie: pe Internet exista programe similare, inclusiv sursa lor, si
+ pot fi preluate parti din aceste surse.
+
+7. (echipa de 3-5)
+Joc multiplayer, in care mai multe vehicole de lupta, controlate de jucatori
+ diferiti, se dueleaza pe un acelasi camp de lupta.
+Jocul va implementa facilitatile:
+ - cel putin 3 tipuri diferite de vehicole; ele vor diferi ca viteza,
+  manevrabilitate, armura;
+ - vehicole configurabile - fiecare jucator va putea selecta din meniul
+  jocului facilitatile (tun, rachete, mitraliera, etc.) cu care este
+  inzestrat vehicolul sau; fiecare facilitate va avea un cost si
+  avantaje/dezavantaje, a.i. jucatorii sa nu poata sau sa nu fie
+  interesati sa opteze mereu pentru toate facilitatile la un loc;
+ - fiecare tip de arma va avea puteri distructive diferite, iar vehicolele
+  vor avea un nivel de "sanatate" care se va diminua cu fiecare lovitura
+  primita; cand ajunge la 0 vehicolul explodeaza si este distrus;
+ - grafica bidimensionala, cat mai frumoasa; in campul de lupta vor fi
+  prezente si vehicolele si elemente de decor, unele distructibile, altele
+  nu; la fiecare vehicol se vor distinge grafic facilitatile (tun, rachete,
+  etc.) cu care este inzestrat, va fi insotit de un text ce permite
+  identificarea jucatorului si de o bara de "sanatate"; proiectilele trase
+  vor fi desenate in deplasarea lor iar proiectilele trase de arme diferite
+  (tun, racheta, etc.) vor fi desenate diferit; explozii animate; diverse
+  actiuni: deplasari, foc, explozii, vor avea sunete specifice;
+ - se poate juca in retea si prin Internet; numarul maxim de jucatori sa fie
+  cel putin 3;
+ - campul de lupta este mai mare decat un ecran, fiecare jucator vazand pe
+  ecranul lui doar o parte (nu neaparat aceeasi) din acesta; jucatorul va
+  vedea toate vehicolele din zona mapata pe ecranul lui, cu actiunile lor,
+  dar nu va putea manevra decat vehicolul sau; fiecare jucator isi va putea
+  seta din meniu daca ecranul va defila automat cand vehicolul lui paraseste
+  zona curent afisata sau explicit prin taste/mouse;
+ - un sistem de punctaj si un fisier cu cele mai mari scoruri.
+
+8. (echipa de 5)
+Calculator virtual inzestrat cu procesor MIPS (gen "pcspim").
+Programul va implementa facilitatile:
+ - procesorul va implementa toate instructiunile, cu exceptia celor in
+ virgula mobila;
+ - compilatorul va recunoaste instructiunile implementate in procesor,
+ pseudoinstructiunile conexe si macro-urile - referinta:
+ "Organizarea si proiectarea calculatoarelor - interfata hardware/software",
+ John L. Hennessy, David A. Patterson, ed. All, 2002, anexa A;
+ - masina virtuala va oferi un terminal virtual (fereastra) ce poate fi
+ gestionat in mod text (inclusiv functii de tip "conio" din Borland C) sau
+ grafic; el va functiona pe baza unor standarde de tip vt100 (pentru modul
+ text) sau tectronix (pentru modul grafic) - referinta: Internet;
+ - nucleul sistemului de operare (kernel) incarcat va contine rutine
+ (accesibile prin "syscall") ce pot exploata facilitatile text si grafic
+ ale consolei virtuale; in acest scop se vor inventa niste coduri de functii
+ (de incarcat in $v0) suplimentare; rutinele vor implementa functii
+ analoage celor din bibliotecile "conio" si "graphics" al Borland C.
+ - masina virtuala va permite incarcarea unui program, compilarea lui,
+ rularea lui normala si pas cu pas (cu posibilitatea vizualizarii memoriei
+ si registrilor intr-o fereastra separata si cu posibilitatea modificarii
+ valorilor din registri si memorie intre pasi), salvarea programului pe disc
+ in forma compilata; la incarcare se va putea incarca atat un program sursa
+ cat si unul compilat.
+Indicatie: pe Internet exista programe similare (de exemplu "pcspim"),
+ inclusiv sursa lor, si pot fi preluate parti din aceste surse.
+
+9. (echipa de 3-5)
+Program de desfasurare a unor lectii interactive, gen videoconferinta.
+Programul va implementa facilitatile:
+ - participare "multiplayer", in retea si Internet; unul dintre participanti
+  are un rol de "profesor", restul de "elevi"; numarul maxim de elevi
+  posibili sa fie de cel putin 50;
+ - programul poate afisa mai multe tipuri de ferestre, avand diverse roluri
+  de comunicare; din fiecare tip de fereastra pot fi deschise simultam mai
+  multe instante, fiecare conectata in alta parte; vor exista cel putin
+  urmatoarele tipuri de ferestre:
+  * conversatie in mod text cu mai multi interlocutori (gen chat);
+  * conversatie in mod grafic cu mai multi interlocutori (gen
+   blackboard); mai exact in fereastra putem desena cu mouse-ul sau cu o
+   tableta grafica desene sau text scris de mana, iar acestea vor fi vazute
+   in acelasi tip de mai multi interlocutori;
+  * afisare text sau imagine trimisa de cineva;
+  * afisare animatie flash sau similara, trimisa de cineva;
+  * optional: imagine video si sunet de la webcam;
+ - elevii pot cere prin comenzi dialogul cu profesorul iar in urma
+  acceptului se vor deschide ferestrele de comunicare necesare; in plus
+  profesorul va dispune de o harta a elevilor conectati, pe care va decide
+  prin comenzi comunicatiile posibile si tipul lor; inclusiv va putea decide
+  daca raspunsul dat unui elev sau un anumit material predat va fi vizionat
+  doar de un elev sau de toti;
+ - profesorul si elevii vor putea incarca/salva in fisiere materialele
+  text/grafice/animatii transmise/primite; inclusiv vor putea salva
+  (in format bmp sau jpg) continutul curent al unei ferestre blackboard.
+
+10. (echipa de 3-5)
+Compilator sau interpretor pentru un limbaj de programare imperativ in care
+ programele isi pot modifica codul in timpul rularii.
+Limbajul definit va oferi cel putin urmatoarele facilitati:
+ - tipuri predefinite numeric, string, pointer, code, void;
+  valorile de orice tip pot semnifica si valori de adevar in functie de cum
+  se reprezinta pe biti, ca in C/C++ (cu toti bitii 0 = false, altfel true);
+  variabilele pointer vor putea lua ca valori adresele unor variabile simple
+  (nu masive); tipul void este compatibil cu orice alt tip si are o singura
+  valoare "empty"; variabilele code vor putea lua ca valori instructiuni
+  (simple sau structurate, care pot fi in particular expresii);
+ - posibilitatea de a defini masive (vectori, matrici, etc.);
+ - toate entitatile definite de utilizator (variabile, etichete, etc.) vor fi
+  globale;
+ - operatori de atribuire, aritmetici, concatenarea stringurilor,relationali,
+  logici, adresare, deferentiere, indexare (pentru stringuri si masive);
+  operatorii relationali si logici produc 1/0;
+ - pentru tipul code se vor defini in plus operatorii:
+  ` = aplicat unei instructiuni/expresii furnizeaza codul ei (nu o executa);
+  ! = executarea valorii (care este o instructiune/expresie) datei de tip
+    code si returnerea valorii acesteia; in cazul expresiilor este valoarea
+    produsa de expresie, in cazul instructiunilor obisnuite este empty;
+  + = concatenarea valorilor (instructiunilor/expresiilor);
+  de exemplu (sintaxa nu trebuie neaparat sa arate ca mai jos):
+   number a,b; code x,y;
+   a=0; b=1;           /* a ia valoarea 0, b ia valoarea 1 */
+   x=`{a=a+10;b=b*a};  /* x ia ca val. instr. compusa {a=a+10;b=b*a}, fara a
+                          se executa aceasta instr. */
+   y=x+x;              /* y ia ca val. instr. {a=a+10;b=b*a}{a=a+10;b=b*a},
+                          fara a se executa aceasta instr. */
+   !y;                 /* se executa {a=a+10;b=b*a}{a=a+10;b=b*a}, deci in
+                          final a are val. 20, iar b are val. 200 */
+   !`{a=0; b=1};       /* se exec. {a=0; b=1}, deci a devine 0, b devine 1 */
+   x=`(a+10);          /* x ia ca val. expresia a+10, fara sa o evalueze */
+   b=b+!x;             /* se evalueaza a+10 iar b primeste valoarea 11 */
+ - expresiile si instructiunile se vor implementa unitar - toate vor fi
+  expresii, care produc diverse valori; de exemplu:
+   if(a>10){a=a-1; b+3}
+  are semnificatia: expresia a-1 produce un numar, care e operand in
+  expresia a=a-1; expresia a=a-1 produce empty, iar expresia b+3 produce un
+  numar - acestia sunt operanzi in expresia {a=a-1; b+3}, in care li se
+  aplica operatorul {.;.}, a carui semnificatie este: se evalueaza in ordine
+  operanzii ignorandu-se valorile furnizate; apoi expresiile a>10 (care
+  produce 1/0) si {a=a-1; b+3} (care produce empty) sunt operanzi ai
+  operatorului if(.).; etc.; notam ca operanzii lui {.;.} si al doilea
+  operand al lui if(.). sunt void, dar am spus ca void e compatibil cu orice;
+ - atribuirea produce empty;
+ - apeluri simple de citire/scriere cu format, de la intrarea/iesirea
+  standard; de exemplu read(x,y,z) (se citesc variabilele x,y,z, care pot fi
+  numerice sau string), write(x,y,z) (se sfisaza valorile expresiilor x,y,z,
+  care pot fi numerice sau string), writeln (se trece la linie noua);
+ - atribuirile sunt permise pentru orice tipuri; in cazul cand tipurile
+  difera se vor face conversii implicite astfel:
+   numeric <-> string: conversie baza 10 <-> string de cifre;
+   string -> code: se transforma stringul ce se presupune a contine o
+      instructiune/expresie in codul acesteia;
+   code -> string: instructiunea/expresia se converteste in sursa ei(string);
+  de exemplu:
+   number a,b,c; string s; code x,y,z;
+   a=3; b=10;
+   x=`(a+!y);
+   read(s);    /* se introduce stringul b+2 */
+   y=s;        /* y va contine expresia b+2 (convertita deci) */
+   c=!x;       /* c primeste val. 15 */
+   write(c)    /* se afisaza 15 */
+ - instructiuni if-then, if-then-else, while, for, goto, instructiunea
+  compusa, instructiunea vida, break (iesire din cel mai interior ciclu),
+  halt (termina programul) - toate, privite ca operatori, produc empty;
+ - exista o variabila predefinita "main", de tip code, avand implicit ca
+  valoare codul intregului program; rularea programului consta deci in
+  a executa !main; cu main se pot insa face operatii ca si cu orice variabila
+  code; de exemplu:
+   number a; string s; code c;
+   read(s);     /* introducem stringul write(1) */
+   c=s;
+   main=main+c; /* acum programul este: read(s);c=s;main=main+c;write(1)
+                   si am ajuns cu rularea la write(1) */
+    /* in continuare se afisaza 1, desi nu am scris asta in codul initial */
+ - eventual suport proceduri/functii cu parametri prin valoare si referinta.
+Varianta de implementare:
+ - vor fi doar tipurile predefinite numeric, string, code, void;
+ - posibilitatea de a defini masive si pointeri plecand de la orice tip de
+  baza, inclusiv combinatii gen vector de pointeri.
+
+11. (echipa de 3-5)
+Joc de tip "railroad tycoon" jucabil multiplayer in real time.
+In cadrul lui, fiecare jucator are rolul unui patron de companie de cai
+ ferate si urmareste sa-si intinda reteaua feroviara cat mai mult pe un
+ anumit teritoriu, acumuland cat mai mult profit in defavoarea adversarilor.
+Trasaturile jocului:
+ - exista o harta pe care actioneaza toti jucatorii;
+ - harta este impartita in regiuni (state), fiecare avand urmatoarele
+  caracteristici (care se pot afla prin click dreapta pe stat):
+  * un debit de producere/consum a unei anumite resurse (daca este > 0 el
+   produce resursa, daca este < 0 o consuma, cu o anumita viteza);
+  * un stoc al cantitatii de resursa curent acumulate/consumate (poate fi
+   pozitiv sau negativ);
+  dupa fiecare unitate de timp la stocul statului se adauga o cantitate
+  egala cu debitul; deci in timp stocul creste/scade dupa cum debitul este
+  >0, <0;
+ - fiecare jucator dispune de o suma initiala si poate efectua urmatoarele
+  operatii (fiecare avand un anumit cost):
+  * creat o gara pe harta, intr-un stat; gara va avea drept caracteristici
+   (consultabile/setabile dintr-o caseta contextuala accesibila prin click
+   dreapta pe gara) un pret de vanzare si unul de cumparare al unitatii de
+   resursa;
+  * unit doua gari printr-o linie ferata; linia poate avea un traseu
+   poligonal iar costul ei depinde de lungimea sa; pe harta pot exista
+   munti, care trebuie ocoliti; de asemenea, o linie nu poate trece printr-o
+   alta gara (proprie sau adversa) decat capete sale;
+  * creat un tren pe o linie (deja creata); trenul va avea niste atribute
+   (setabile/consultabile dintr-o caseta contextuala accesibila prin click
+   dreapta pe tren):
+   ** o capacitate maxima (aceeasi pentru toate trenurile);
+   ** traseu: succesiunea garilor de pe acea linie unde face escale (lista
+     lor se va parcurge circular);
+   odata creat, trenul va incepe sa circule pe traseul sau (se va desena in
+   miscarea lui), va face escale in garile respective si de fiecare data
+   va vinde/cumpara resursa, cu urmatoarele precizari:
+   ** daca stocul din statul in care se afla gara este >0, trenul cumpara,
+     altfel vinde;
+      daca cumpara, cumpara pana cand se umple trenul, sau stocul statului
+     devine <=0, sau suma totala a jucatorului ajunge la 0;
+      daca vinde, vinde pana cand trenul devine gol sau stocul statului
+     devine >=0;
+   ** in urma vanzarii/cumpararii suma totala a jucatorului variaza
+     proportional cu cantitatea vanduta/cumparata si cu pretul pe unitate
+     specificat in gara respectiva;
+   toate trenurile au acceasi viteza; ele nu se pot suprapune - daca se
+   intalnesc pe o aceeasi linie, se asteapta unul pe altul, dupa o anumita
+   disciplina;
+ - daca intr-un stat se afla simultan trenuri in gari diferite, trenurile
+  respective vor fi rezolvate (vanzari/cumparari) in ordinea descrescatoare
+  a castigului pentru statul respectiv - de exemplu intai se va vinde
+  trenului din gara care ofera pretul cel mai mare;
+ - fiecare obiect (gara, linie, tren) construite de un jucator au un cost
+  de intretinere pe unitatea de timp (la linii este proportional cu lungimea
+  acestora); cand suma unui jucator ajunge <=0, acestea dispar pe masura ce
+  nu mai pot fi intretinute, in ordinea: trenuri, linii, gari;
+ - un jucator isi incheie participarea atunci cand nu mai are nici un obiect
+  sau renunta explicit; atunci suma la care a ajuns reprezinta scorul lui.
+Alte facilitati ale programului:
+ - harta sa se poata edita/salva/incarca;
+ - pastrarea unui clasament cu cele mai mari scoruri;
+ - sa se poata juca in retea si prin Internet, in timp real - jucatorii sa
+  poata concomitent desena trasee, aloca trenuri, etc.; fiecare va vadea pe
+  ecranul sau harta cu toate traseele, trenurile, etc. dar nu va putea
+  manevra decat obiectele lui;
+ - grafica 2d, care sa permita distingerea garilor, liniilor ferate,
+  trenurilor (ele vor fi desenate in miscarea lor), statele si
+  caracteristicile lor (in functie de debit si stoc, ele se vor afisa
+  diferit); la click dreapta pe un stat/gara/linie/tren se afisaza o caseta
+  ce permite consultarea/modificarea caracteristicilor; un jucator poate
+  modifica doar caracteristicile obiectelor sale (gari, linii, trenuri), pe
+  celelalte doar le poate consulta; grafica va permite distingerea (prin
+  culori si texte) cui apartine fiecare obiect.
+
+12. (echipa de 3-5)
+Sistem de calcul distribuit. Programul poate rula in mai multe instante,
+ pe masini diferite, interconectate. Oricare dintre instante poate primi o
+ problema de calcul de la utilizator (sub forma unui program scris intr-un
+ limbaj specific) si distribuie altor instante cu care este interconectata
+ parti din ea spre a fi rezolvate in paralel; apoi asteapta rezultatele, le
+ combina si afisaza rezultatele.
+Programul (instanta care ruleaza pe o masina) va oferi cel putin urmatoarele
+ facilitati:
+ - incarcarea dintr-un meniu a fisierului cu programul de calcul,
+  introducerea intr-o fereastra a datelor de intrare pentru ea, afisarea
+  intr-o fereastra a rezultatelor acesteia;
+ - un anumit numar de fire de executie (thread) paralele, in cadrul carora
+  va executa o parte din programul incarcat si posibile parti din programele
+  incarcate in instantele (de pe alte masini) cu care este interconectat (si
+  care i-au trimis aceste parti spre a fi executate);
+ - la executarea programului de calcul va detecta automat (verificand
+  periodic) daca mai are vreun thread liber, care instante cu care este
+  interconectat mai au thread-uri libere si le va aloca adecvat, distribuind
+  cat mai eficient problema de calcul;
+ - interconectarea se poate face prin retea si Internet.
+Limbajul in care sunt descrise problemele de calcul va fi un limbaj
+ imperativ, structurat si procedural; programele vor fi segmentate si
+ distribuite la nivel de proceduri. Limbajul va oferi cel putin urmatoarele
+ facilitati:
+ - tipuri predefinite numeric si string; posibilitatea de a defini masive
+  (vectori, matrici, etc.);
+ - operatori aritmetici, concatenarea stringurilor, relationali, logici,
+  indexare (pentru masive si stringuri);
+ - instructiuni de atribuire, instructiunea compusa, if, while, for, goto,
+  break (iesire din cel mai interior ciclu), exit (iesire din procedura
+  curenta), instr. vida; datele nu se citesc/afisaza interactiv ci sunt
+  furnizate/preluate din sistemul gazda (instanta care ruleaza programul);
+ - procedurile vor avea o sintaxa similara cu a unui program (toate vor fi
+  proceduri); procedurile (in particular programul) vor avea parametrii de
+  intrare si iesire; toti parametrii sunt prin referinta, dar, daca o
+  procedura este trimisa unei alte instante a sistemului spre a fi
+  executata, se vor face copii ale parametrilor de intrare pe masina
+  respectiva, iar la sfarsit se vor copia parametrii de iesire de acolo in
+  cei de pe masina initiala;
+ - o instructiune "parallel" care are ca argumente apeluri de procedura si
+  le executa in paralel, asteptand pana se termina toate; dintre aceste
+  apeluri cel mult unul se executa intr-un thread pe masina curenta (daca
+  mai e vreunul liber), restul in cate un thread pe cate o masina distincta
+  (deci maxim un apel per masina);
+Exemplu de program de calcul (sintaxa nu trebuie sa fie neaparat la fel):
+ procedure sort     // sorteaza un vector prin interclasare
+ input:
+   number ns;       // parametrii de intrare; la primul apel sunt setati
+   number vs[100];  // dintr-o fereastra a sistemului; la celelalte apeluri
+                    // vor fi primiti de la instanta/thrad-ul apelant
+ output:
+   number nd;       // parametri de iesire; la primul apel vor fi afisati
+   number vd[100];  // intr-o fereastra a asistemului; la celelalte apeluri
+                    // vor fi returnati instantei/thrad-ului apelant
+ code:
+ declarations:
+   procedure merge  // interclaseaza doi vectori in al treilea
+   input:
+     number ns1; number vs1[100]; number ns2; number vs2[100];
+   output:
+     number nd; number vd[100];
+   code:
+   declarations:
+     ...
+   instructions:
+     ...
+   end;
+   number n,n1,n2,n3,p1,p2,
+          v[100],v1[100],v2[100],v3[100],w1[100],w2[100],
+          h,i;
+ instructions:
+   h=ns/2;
+   n1=h; for(i=0;i<n1;++i)v1[i]=vs[i];
+   n2=ns-h; for(i=0;i<n2;++i)v2[i]=vs[i+h];
+   parallel{                                   // executa in paralel cele 3
+     sort(input: n1,v1; output: p1, w1);       // apeluri, in thred-uri
+     sort(input: n2,v2; output: p2, w2);       // distincte, din care max. 1
+     merge(input: p1,w1,p2,w2; output: n3, v3);// este pe masina curenta
+   }
+   nd=n3; for(i=0;i<n3;++i)vd[i]=v3[i]
+ end;
+
+13. (echipa de 3-4)
+Joc de fotbal multiplayer. Se poate juca in retea si prin Internet. Fiecare
+ participant va controla cate un jucator de teren.
+Programul se poate rula in mod server sau client.
+In mod server el efectueaza urmatoarele:
+ - permite setarea caracteristicilor partidei, numarul de jucatori in echipa
+  (poate fi diferit de 11) si asteapta contactare din partea participantilor
+  (instante in mod client ale programului care ruleaza pe alte masini); in
+  momentul cand este contactat el informeaza participantul asupra posturilor
+  ramase neocupate, asteapta alegerea acestuia si il inscrie in acel post;
+ - in momentul cand toate posturile sunt ocupate cere confirmarea tuturor
+  participantilor pentru inceperea partidei si cand a primit toate
+  confirmarile porneste meciul;
+ - organizeaza jocul - efectueaza toate calculele legate de interactiunea
+  jucatorilor intre ei si cu mingea, cronometreaza partida, etc.;
+In mod client el efectueaza urmatoarele:
+ - se conecteaza la un joc (instanta in mod server); primeste de la server
+  informatii despre posturile neocupate in echipe si permite alegerea unuia;
+  cand serverul informeaza ca toate posturile sunt ocupate si cere acordul
+  pentru inceperea partidei permite efectuarea confirmarii;
+ - in timpul jocului instanta client functioneaza doar ca o interfata - ea
+  trimite comenzile jucatorului uman la server si afisaza situatia de pe
+  teren furnizata de server, toate calculele privind evolutia acestei
+  situatii fiind facute pe server;
+   situatia livrata de server nu va fi furnizata sub forma unei imagini
+  brute a intregului teren ci doar prin cateva elemente pozitionale ale
+  fiecarui element (jucator, minge, etc.) a.i. clientul sa-si poate
+  reconstitui singur situatia partidei; in felul acesta fluxul de informatii
+  schimbat intre server si clienti va fi redus;
+ - grafica va fi izometrica, permitand distingerea jucatorilor, mingiei,
+  miscarile acestora, afisarea timpului si a scorului;
+ - in general clientul vede tot terenul, cu jucatori, minge, etc. si
+  miscarea lor, dar nu poate manevra decat jucatorul lui.
+
+14. (echipa de 3-5)
+Scrieti o masina virtuala, sub forma unei biblioteci cu legare dinamica (gen
+ dll) la care se pot lega la momentul rularii alte programe si care ofera
+ urmatoarele facilitati:
+ - gestionarea terminalului fizic al masinii gazda in mod grafic, oferind
+  un set minimal de functii de baza (gen schimbat paleta, putpixel, etc.),
+  corespunzator unui anumit standard de terminal grafic - gen tectronix;
+ - posibilitatea de a rula rutine scrise intr-un limbaj binar specific si
+  stocate intr-o biblioteca (fisier) separata;
+ - o functie "load" care se poate apela din programele legate la masina
+  virtuala, si prin care masina va incarca o biblioteca cu rutine scrise
+  in limbajul binar specific;
+ - o functie "execute" care se poate apela din programele legate la masina
+  virtuala, si prin care se poate apela o rutina dintr-o biblioteca
+  incarcata in prealabil (cu "load"), specificandu-se parametrii; functia
+  "execute" va avea un parametru suplimentar (ce poate fi de orice tip) prin
+  care se va culege valoarea returnata de rutina apelata;
+  exemplu:
+   masina.load("biblioteca.bin");
+     // se incarca biblioteca "biblioteca.bin"
+   masina.execute(f,x,a,b,c);
+     // se apeleaza rutina (functia) "f" din biblioteca "biblioteca.bin", cu
+     //  parametrii actuali "a","b","c", iar valoarea returnata de "f" va fi
+     //  furnizata in parametrul de iesire (deci prin referinta) "x";
+  (functia "execute" se poate implementa usor in C/C++ cu numar variabil de
+  parametri).
+Limbajul sursa in care poate fi programata masina virtuala va fi un limbaj
+ structurat (avand structuri de control de tip if, while, for, etc.),
+ procedural (cu parametri) si va fi independent de sistemul gazda (va folosi
+ doar facilitatile masinii virtuale). Pentru el se va scrie un compilator
+ care traduce sursele in codul binar inteles de masina virtuala (aceasta
+ va intelege doar codul binar, nu cel sursa); compilatorul va organiza
+ fisierul binar produs ca o biblioteca (incarcabila cu "load" de catre
+ masina virtuala).
+In limbajul definit se va scrie o biblioteca de instrumente de interfete
+ grafice: ferestre, butoane, casete de input, etc.
+Apoi se va scrie intr-un limbaj compilabil separat (gen C/C++) un program
+ demonstrativ, care se va lega la momentul executiei de masina virtuala, va
+ incarca biblioteca (cu "load") si-i va apela rutinele (cu "exec"), pentru a
+ realiza o aplicatie de tip calculator de buzunar, cu display, butoane
+ pentru cifre, cativa operatori, egal, anulare.
+Varianta de implementare: pentru limbajul in care se programeaza masina
+ virtuala nu se va scrie compilator, ci masina virtuala va incarca
+ biblioteca sub forma sursei, isi va face niste setari a.i. rutinele din
+ biblioteca sa se poata apela usor din programele legate la masina, iar
+ apelurile acestor rutine se vor executa prin interpretare.
+
+15. (echipa de 3-5)
+Realizati un motor general de jocuri strategice pe ture cu un API de scris
+ jocuri (ca plugin-uri dll). Programul va oferi cel putin urmatoarele
+ facilitati:
+ - se poate lansa in doua moduri:
+   ** ca server: atunci el initiaza un joc, asteapta conectare din partea
+     unor instante client, apoi arbitreaza jocul (de exemplu stabileste
+     ordinea clientilor la mutare);
+   ** ca client: atunci el permite conectarea la jocul initiat de o instanta
+     server;
+   in ambele cazuri instanta (server sau client) gazduieste un jucator si
+   efectueaza procesarile declansate de mutarea jucatorului; apoi informeaza
+   serverul asupra schimbarilor, iar acesta informeaza ceilalti clienti,
+   pentru a-si actualiza situatia afisata;
+ - conectarea la instanta server se poate face prin retea si Internet;
+ - fiecare instanta ofera un terminal virtual (fereastra) in care se afisaza
+  tabla jocului (grafica 2d) si prin care se preia de la jucator input de la
+  tastatura si mouse;
+ - ofera un set de functii de baza apelabile din coduri linkeditate la
+  momentul executiei de programul motor, cu ajutorul carora se poate programa
+  grafica afisata in terminalul virtual, culegerea input-ului si in general
+  desfasurarea unui joc;
+Scrieti un API cu ajutorul caruia se pot scrie programe ce folosesc functiile
+ de baza oferite de motorul general; aceste programe se vor compila sub forma
+ de biblioteci cu legare la momentul executiei (gen dll) si vor defini
+ fiecare cate un joc.
+Practic, un joc se va desfasura astfel:
+ - fiecare jucator lanseaza o instanta a motorului general, unul in mod
+  server, ceilalti in mod client;
+ - apoi fiecare jucator va incarca dintr-un meniu o aceeasi biblioteca cu
+  legare dinamica (scrisa si compilata in prealabil) care defineste un
+  joc; automat instanta se va lega la biblioteca (asemeni unui plugin) si va
+  putea executa functiile de acolo;
+ - apoi fiecare jucator client se conecteaza la server;
+ - apoi instantele incep jocul lansand o anumita functie din biblioteca
+  legata;
+Folosind API-ul definit scrieti un joc de dame (el va implementa atat grafica
+ cat si regulile jocului - o mutare nu va putea fi efectuata decat daca
+ respecta regulile).
+
+16. (echipa de 3-5)
+Realizati un motor general de jocuri de carti (pe ture) cu un limbaj propriu
+ de programare in care se pot scrie jocurile. Un joc se va desfasura astfel:
+ - fiecare jucator lanseaza cate o instanta a motorului; unul initiaza un joc
+  iar ceilalti se conecteaza la el; conectarea se poate face prin retea si
+  internet iar numarul jucatorilor poate fi mai mare de doi;
+ - fiecare instanta incarca (dintr-un meniu) un acelasi fisier sursa scris
+  in limbajul specific si care defineste un acelasi joc;
+ - apoi se lanseaza jocul, fiecare instanta executand programul incarcat;
+  executarea programului se va face prin interpretare.
+Motorul general va oferi un terminal virtual (fereastra) in care se afisaza
+ tabla jocului (grafica 2d) si prin care se preia de la jucator input de la
+ tastatura si mouse; de asemenea el va oferi functii lansabile din programul
+ incarcat pentru a gestiona toate aspectele unui joc de carti: afisarea
+ fiecarui tip de carte pe fata/verso (se va implementa un set complet de
+ imagini de carti), pozitionarea cartilor pe tabla, mutarea acestora,
+ contabilizarea punctelor, ordonarea la mutare si informarea jucatorilor in
+ acest sens, verificarea respectarii unor reguli specifice de mutare, etc.
+ (subliniem ca motorul este destinat doar jocurilor de carti, deci trebuie
+ avute in vedere doar aspectele grafice si functionale ale jocurilor de
+ carti).
+In limbajul special definit se va scrie un joc de carti de tip poker,
+ tabinet, etc., jucabil in n jucatori, unde n este citit sau dat ca
+ parametru; jocul va implementa nu numai grafica aferenta ci si setul de
+ reguli specifice a.i. o mutare nu va fi permisa decat daca respecta
+ regulile.
+
+17. (echipa de 3)
+Joc strategic pe ture de tip sah, jucabil in patru.
+Regulile jocului:
+ - exista o tabla caroiata cu campuri alternative alb/negre de forma
+  (x = camp negru, 0 = camp alb):
+                          0x0x0x0x
+                          x0x0x0x0
+                        0x0x0x0x0x0x
+                        x0x0x0x0x0x0
+                        0x0x0x0x0x0x
+                        x0x0x0x0x0x0
+                        0x0x0x0x0x0x
+                        x0x0x0x0x0x0
+                        0x0x0x0x0x0x
+                        x0x0x0x0x0x0
+                          0x0x0x0x
+                          x0x0x0x0
+ - fiecare jucator are initial un sistem de piese ca la sah, dispuse
+  pe cele doua randuri exterioare ale uneia din laturi;
+ - jucatorii muta pe rand, conform regulilor de la sah (turnul merge pe
+  linii/coloane, calul in L, etc.);
+ - fiecare jucator este inamic al tuturor (si le poate ataca/lua piesele);
+ - cand un jucator este mat (are regele atacat si nu poate anula atacul)
+  ceilalti jucatori sunt anuntati iar piesele lui devin ale celui care l-a
+  dat mat, mai putin regele, care dispare; in final castiga cel care a
+  ramas nebatut.
+Jocul se va putea juca prin retea si Internet, iar fiecarui jucator i se
+ va afisa tabla rotita a.i. piesele lui sa porneasca de jos.
+
+18. (echipa de 3-5)
+Server de sah si client de conectare si joc la acesta.
+Programul server va oferi cel putin urmatoarele facilitati:
+ - retine o baza de date (interactionand cu un server Oracle, MySQL, etc.)
+  cu profilul fiecarui jucator inscris (nume, parola, poza, e-mail, punctaj
+  curent);
+ - permite conectarea clientilor (prin retea si Internet);
+ - tine evidenta jucatorilor logati si a partidelor desfasurate, actualizand
+  scorurile in baza de date;
+ - gestioneaza partidele, masurand timpul scurs, ordonand la mutare,
+  verificand corectitudinea mutarilor (o mutare va fi permisa doar daca
+  respecta regulile), detectand mat-ul, etc.;
+ - gestioneaza celelalte interactiuni intre jucatori (talk, etc.);
+ - partidele pot fi private (partida va fi urmarita doar de cei doi
+  participanti la ea) sau publice (pot fi urmarite neinteractiv si de altii);
+Programul client va oferi cel putin urmatoarele facilitati:
+ - conectare la programul server, prin retea si Internet; crearea acolo
+  a unui cont sau logarea intr-un cont existent;
+ - permite informarea jucatorului asupra celorlalti jucatori liberi logati
+  (si punctajele lor) si asupra partidelor publice in desfasurare;
+ - permite vizionarea neinteractiva a unei partide publice; se va afisa
+  tabla si mutarile pieselor, cine e la mutare, ceasul, istoricul text al
+  mutarilor - la sfarsitul partidei el se poate salva intr-un fisier;
+ - permite provocarea unui jucator liber si desfasurarea unei partide
+  (publice sau private); in acest sens afisaza tabla, preia input de la
+  utilizator, afisaza ceasul si istoricul text al mutarilor, iar la sfarsit
+  permite salvarea istoricului intr-un fisier; in cursul partidei se poate
+  propune remiza, anularea unei mutari si se poate realiza talk intre cei doi
+  jucatori intr-o fereastra/caseta separata;
+ - in toate cazurile permite trimiterea istoricului prin e-mail la adresa
+  jucatorului;
+ - poate rula neconectat la server, caz in care permite incarcarea unui
+  istoric de joc salvat in prealabil si derularea automata a jocului.
+Varianta de implementare: clientul va avea o interfata web/html.
+
+19. (echipa de 3)
+Joc de vaporase in retea si Internet. Regulile jocului:
+ - Sunt n participanti; fiecare dispune de o tabla carioata, pe care isi
+  deseneaza nista vapoare sub forma unor grupuri conexe de patratele; numarul
+  de vapoare si dimensiunea lor (numarul de patratele) este fixat de la
+  inceput;
+ - fiecare jucator efectueaza pe rand cate o mutare, in cadrul careia
+  bombardeaza cate o patratica de pe tabla fiecaruia din ceilalti jucatori;
+  in acest scop comunica adversarului respectiv coordonatele (linie, coloana)
+  patratelei bombardate; adversarul ii comunica daca a lovit un vapor si ce
+  dimensiune are, sau daca nu a lovit nimic; tinand cont ca vapoarele sunt
+  grupuri conexe de patratele iar dimensiunile sunt comunicate, jucatorii pot
+  anticipa/planifica actiunile ulterioare; in acest scop ei isi reconstituie
+  treptat tablele adversarilor;
+ - cand toate vapoarele unui jucator au toate patratelele bombardate, acesta
+  pierde; castiga ultimul ramas.
+Programul va implementa cel putin urmatoarele facilitati:
+ - se poate juca multiplayer (pe ture), prin retea si Internet; fiecare
+  jucator ruleaza o instanta a programului; una din instante are si rol de
+  server (el initiaza un joc si il gestioneaza, ordonand jucatorii la
+  mutare), restul sunt doar clienti (se leaga la instanta server);
+ - instanta server permite definirea numarului de jucatori, numarul si
+  dimensiunea fiecarui vapor;
+ - interfata afisata fiecarui jucator va contine:
+  * o caseta cu vapoarele proprii; aceasta este editabila la inceputul
+   jocului; practic jucatorul se conecteaza la server, este informat asupra
+   caracteristicilor jocului (numarul de jucatori, numarul de vapoare ale
+   unui jucator si dimensiunile acestora - ele sunt setate de cel care a
+   initiat jocul), isi editeaza flota, informeaza serverul ca e gata, iar
+   cand serverul primeste toate confirmarile porneste automat partida (si
+   informeaza fiecare jucator cand este randul lui);
+  * cate o caseta cu flota fiecarui adversar; initial aceste casete sunt
+   goale (contin doar caroiajul); cand ii vine randul, un jucator va bombarda
+   prin click cate o patratica din fiecare caseta adversa; patratica se va
+   colora diferit daca a nimerit in apa sau intr-un vapor - in acest caz in
+   patratica se va scrie si un numar cu dimensiunea vaporului lovit; cand a
+   fost ultima patratica a unui vapor, tot vaporul bombardat isi va schimba
+   culoarea; patratica lovita se va colora diferit si in caseta jucatorului
+   caruia ii apartine vaporul (pentru a-l informa ca a fost bombardata);
+  * indicatii privind cine e la mutare, cand a pierdut cineva, cine mai joaca
+   inca, etc; cand un jucator a pierdut (nu mai are vapoare) el este scos din
+   circuit - caseta cu flota lui nu mai apare pe ecranul adversarilor, nu-i
+   mai vine randul la mutare, etc.; castigatorul final va fi anuntat ca
+   atare;
+  * bombardarea/nimerirea/pierderea/castigul, etc. vor fi anuntate si prin
+   efecte sonore (diferite).
+
+20. (echipa de 3)
+Portal web cu site de shopping online (magazin virtual). El va contine:
+ - o baza de date pe un server MySQL sau Oracle, cu produsele disponibile,
+  utilizatorii inregistrati, etc.;
+   pentru fiecare produs se va retine cel putin: numele, producatorul,
+  garantia, numarul de exemplare disponibile, pretul;
+   pentru fiecare utilizator se va retine cel putin: numele contului si
+  parola, numele real, CNP, adresa, e-mail, categoria (administrator, sef,
+  furnizor, cumparator), produse cumparate pana acum si suma totala cheltuita
+  in timp, cosul curent;
+ - o interfata web, care dupa logare ofera perspective diferite:
+  * unui administrator ii permite sa faca toate operatiile de administrare;
+  * unui furnizor ii permite sa propuna oferte in cadrul unor formulare
+   (care vor cere suficiente informatii pentru a permite actualizarea tuturor
+   aspectelor tranzactiei in baza de date/contul magazinului si ale
+   furnizorului);
+  * un sef poate consulta propunerile furnizorilor si poate decide acceptarea
+   unei oferte si efectuarea tranzactiei; tranzactia se va face automat,
+   actualizandu-se baza de date/contul propriu si ale furnizorului, conform
+   informatiilor din formularul completat de acesta; de asemenea seful poate
+   modifica preturile de vanzare, poate retrage de la vanzare un produs,
+   poate marca anumite produse ca promotii (ele vor fi afisate ca atare in
+   interfata cumparatorilor), poate afla informatii despre toti furnizorii si
+   cumparatorii inregistrati, sortate dupa diverse criterii;
+  * un cumparator poate efectua urmatoarele:
+   ** creat cont (cu furnizarea unor date proprii)/logare in cont ;
+   ** browse printre produse, organizate pe categorii;
+   ** search produse cu filtrare dupa producator, tip, etc.;
+   ** cos de cumparaturi curent;
+   ** posibilitate comanda prin e-mail;
+   ** e-mail pentru asistenta;
+   ** forum de discutii;
+   ** talk (intr-o fereastra text) cu unul/mai multi dintre cumparatorii/
+       tehnicienii curent conectati (ei vor fi afisati organizat pentru a fi
+       selectati usor).
+
+21. (echipa de 3-5)
+Portal web cu anunturi/evenimente. El va contine cel putin urmatoarele:
+ - o baza de date pe un server MySQL sau Oracle, cu anunturile postate,
+  utilizatorii inregistrati, etc.;
+   pentru fiecare anunt se va retine cel putin: titlul, autorul (el trebuie
+  sa aibe cont), data, perioada de existenta (dupa care se va sterge automat
+  din baza de date si care poate fi si infinit), categoria, link la o pagina
+  home;
+   pentru fiecare utilizator se va retine cel putin: numele contului si
+  parola, numele real, telefon, e-mail, pagina web, categoria (administrator
+  sau utilizator obisnuit);
+ - o interfata web care ofera cel putin urmatoarele:
+  * motor de cautare in baza de anunturi, cu categorii si search (cu
+   filtrare pe categorii/subcategorii);
+  * creare cont/logare in cont;
+ - odata logat, interfata ofera utilizatorului informatii suplimentare
+  diferite, in functie de categoria acestuia:
+  * unui utilizator obisnuit i se permite:
+   ** browse utilizatori existenti (la fiecare se va afisa link-ul de
+     e-mail);
+   ** accesul la un forum;
+   ** talk (text) cu alti utilizatori logati in acel moment;
+   ** definirea unei noi categorii/subcategorii de anunturi, cu conditia sa
+     inscrie acolo macar un anunt nou (in caz contrar, dupa delogare
+     categoriile/subcategoriile respective se vor sterge automat - de
+     exemplu in baza de date se va face un rollback);
+   ** postarea de noi anunturi; in acest scop i se va afisa un chestionar
+     ce trebuie completat; chestionarul va cere toate informatiile necesare
+     pentru a permite instalarea/dezinstalarea automata a anuntului in
+     structura logica a site-ului; dupa completarea chestionarului
+     utilizatorul va apasa pe un buton iar anuntul se va instala automat in
+     sistem (in categoria lui);
+   ** eliminarea unor categorii/subcategorii/anunturi postate de el (nu
+     neaparat in aceeasi sesiune de lucru); eliminarea se face printr-o
+     comanda atomica (de exemplu apasarea unui buton), iar sistemul se va
+     ocupa automat de detalii;
+   ** editarea (modificarea) unui anunt al sau, mutarea sa in alta
+     categorie/subcategorie;
+   ** eliminarea tuturor entitatilor proprii (catogorii/subcategorii/
+     anunturi) sau a contului propriu (atunci se vor elimina automat si
+     entitatile proprii) printr-o comanda atomica (sistemul se va ocupa cu
+     detaliile);
+   ** in general, modificarile facute de un utilizator devin accesibile
+     celorlalti dupa delogare sau apasarea unui buton de tip commit (iar
+     sistemul va permanentiza modificarile doar dupa ce va verifica automat
+     ca respecta regulile);
+  * unui administrator i se permite:
+   ** tot ce i se permite unui utilizator obisnuit, dar in raport cu toate
+     entitatile categorie/subcategorie/anunt ale tuturor utilizatorilor;
+      in caz ca modifica/elimina ceva al altui utilizator, acesta va primi
+     un e-mail generat automat de sistem in care este informat asupra
+     continutului modificarii - el va contine si un text optional adaugat de
+     administrator (cand administratorul da comanda, sistemul ii cere intr-o
+     caseta un asemenea text);
+   ** editare/eliminare/delogare utilizatori; cand elimina un utilizator,
+     sistemul elimina automat toate entitatile(categorie/subcategorie/anunt)
+     create de acesta;
+      restrictionare temporara (pe o perioada precizata) a unui utilizator
+     de la talk; eliminarea tuturor mesajelor unui utilizator de pe forum
+     printr-o comanda atomica (sistemul se ocupa de detalii).
+
+22. (echipa de 3-5)
+Biblioteca virtuala cu portal web de accesare.
+Cartile vor fi stocate in una sau mai multe baze de date, gestionate de
+ servere MySql sau Oracle, ce pot fi pe aceeasi masina sau pe mai multe
+ (conectate prin internet); despre fiecare carte se va retine cel putin
+ un cod unic (cheie primara), titlul, autorii, editura, data, numarul de
+ pagini, continutul propriuzis (in format electronic).
+Portalul va contine cel putin urmatoarele:
+ - o baza de date proprie, pe un server MySQL sau Oracle, cu utilizatorii
+  inregistrati, adresele serverelor (MySQL sau Oracle) ce contin bazele
+  de date cu carti, si detalii despre aceste carti relevante pentru
+  biblioteca - de exemplu categoria/subcategoria cartii (acestea sunt
+  definite in biblioteca curenta, nu in bazele de date distante unde sunt
+  cartile, si trebuie retinut pentru fiecare carte de acolo (cod de carte,
+  care acum e cheie externa) ce categorie/subcategorie are aici);
+   pentru fiecare utilizator se va retine cel putin: numele contului si
+  parola, numele real, CNP, adresa, telefon, e-mail, categoria
+  (administrator sau utilizator obisnuit), soldul in bani curent (o suma
+  platita anticipat bibliotecii pentru accesul la carti);
+   pentru fiecare server (MySQL sau Oracle) cu baze de date cu carti se vor
+  retine suficiente informatii care sa permita conectarea si cautarea
+  eficienta a informatiilor - de exemplu adresa IP a masinii pe care se afla
+  serverul;
+   de notat ca continutul cartilor (in format electronic) se afla doar in
+  bazele de date distante, nu in baza de date a bibliotecii (aici sunt
+  retinute doar (sub)categoriile si adresele cartilor);
+ - o interfata web care ofera cel putin urmatoarele:
+  * motor de cautare carti, cu categorii si search (cu filtrare pe categorii
+   /subcategorii); sa se poata cauta inclusiv dupa fiecare autor sau dupa
+   diverse cuvinte din titlu;
+  * creare cont/logare in cont;
+ - odata logat, interfata ofera utilizatorului informatii suplimentare
+  diferite, in functie de categoria acestuia:
+  * unui utilizator obisnuit i se permite:
+   ** browse utilizatori curent logati;
+   ** talk (text) cu alti utilizatori curent logati;
+   ** accesul la un forum;
+   ** eliminare cont propriu;
+   ** consultarea unei carti alese (folosind motorul de cautare) intr-o
+     fereastra speciala, in care se poate rasfoi cartea, sari la o anumita
+     pagina, efectua search text in carte, plasa semne de carte la care se
+     poate reveni;
+   ** de fiecare data cand un utilizator va incerca sa consulte o carte, se
+     va calcula un cost, care se va scadea din soldul sau curent daca este
+     posibil; altfel se cere intr-o caseta speciala efectuarea platii (se
+     cere numarul cartii de credit, etc.); in acest caz utilizatorul poate
+     plati si mai mult, iar restul ii ramane in sold;
+  * unui administrator i se permite:
+   ** ca si la utilizatorii obisnuiti: browse utilizatori logati, talk,
+       acces la forum;
+   ** definirea/eliminarea unei noi categorii/subcategorii de carti;
+       cand se elimina o (sub)categorie dispare tot arborele de subcategorii
+       subordonat;
+      editarea arborelui de categorii/subcategorii - de exemplu mutarea unui
+       subarbore ca fiu al unui alt nod din arbore;
+      toate aceasta vor afecta automat mecanismul de search si filtrarile pe
+       (sub)categorii;
+   ** montarea/demontarea unui (alt) server distant cu baze de date cu
+       carti;
+      la montare, automat sistemul va lua la rand toate cartile aflate acolo
+       si va testa daca figureaza (in diverse categorii/subcategorii) in
+       baza de date a bibliotecii; daca da, va adauga aici si noua adresa
+       unde se afla cartea; daca nu, va cere automat administratorului, sub
+       forma unui chestionar, unde trebuie inclusa cartea si o va include
+       automat acolo;
+      la demontare, automat sistemul va elimina din baza de date a
+       bibliotecii (din diversele categorii/categorii) adresele cartilor de
+       acolo;
+   ** adaugarea/eliminarea unei carti intr-una din bazele de date distante
+       montate; mutarea unei carti dintr-o baza de date in alta;
+     la adaugare va completa un chestionar cu adresa bazei, date despre
+       carte, si locatia de unde se va face upload-ul continutului cartii;
+     la eliminare se va indica codul cartii si adresa bazei distante unde se
+       afla iar sistemul o va sterge automat de acolo si din biblioteca (din
+       categorii/subcategorii);
+     la mutare se va indica codul cartii, adresa bazei distante sursa si a
+       celei destinatie, iar sistemul o va muta automat dintr-o baza in alta
+       si va actualiza informatiile din biblioteca (adresele din categorii/
+       subcategorii);  
+   ** de fiecare data cand o operatie efectuata de administrator este de
+     natura sa adauge/elimine carti in evidentele bibliotecii, sistemul va
+     genera automat cate un e-mail catre fiecare utilizator inregistrat, cu
+     lista cartilor adaugate/eliminate si categoriile/subcategoriile lor.
+   ** editare/eliminare/delogare utilizatori; restrictionare temporara (pe o
+     perioada precizata) a unui utilizator de la talk; eliminarea tuturor
+     mesajelor unui utilizator de pe forum printr-o comanda atomica, de
+     exemplu apasarea unui buton (sistemul se ocupa de detalii);
+      in toate aceste cazuri sistemul genereaza automat un e-mail de
+     notificare catre utilizatorul respectiv, care contine informatii 
+     despre continutul modificarii si un text optional adaugat de
+     administrator (cand administratorul da comanda, sistemul ii cere intr-o
+     caseta un asemenea text).
+Sistemul va initia verificari automate periodice pentru a vedea daca bazele
+ de date distante cu carti au fost modificate (pe alta cale decat din
+ sistemul curent) si daca da va actualiza baza de date a bibliotecii si
+ va genera automat e-mail-uri de notificare catre utilizatorii inregistrati
+ daca modificarile sunt de natura sa adauge/elimine carti din evidenta.
+
+23. (echipa de 5)
+Editor si tester (simularea functionarii) de circuite logice.
+Programul va implementa cel putin urmatoarele facilitati:
+ - editarea unui circuit logic, in mod grafic;
+   in acest scop vor exista primitive pentru principalele porti (AND, NOT,
+  etc.), iar acestea se vor plasa cu mouse-ul in schema;
+   de asemenea, un circuit definit anterior (eventual incarcat dintr-un
+  fisier) va putea fi folosit ca piesa (cip) intr-un alt circuit - in acest
+  scop i se va asocia un simbol standard (de exemplu dreptunghi etichetat, cu
+  intrari si iesiri numerotate) care se va adauga la lista de simblouri
+  disponibile (porti, etc.) si va putea fi plasat cu mouse-ul in circuit;
+ - salvarea/incarcarea circuitului editat in fisiere (fisierul va retine
+  structura circuitului a.i. dupa incarcare sa se poata redesena si sa poata
+  functiona);
+ - salvarea circuitului curent incarcat/editat sub forma grafica in fisiere
+  printabile (postscript, pdf);
+ - sa se poata descrie circuite cu mai multe niveluri de cicluri incuibate -
+  deci si circuite secventiale, memorii, registrii, automate, procesoare,
+  etc., care au o functionare in cicluri succesive; sa se poate defini/folosi
+  la asemenea circuite un ceas ale carui tacturi determina ciclurile
+  functionale;
+ - simularea functionarii circuitului curent incarcat/editat; in acest scop:
+  * fiecare componenta a circuitului (primitiva AND, OR, ... sau circuit
+   definit anterior si incuibat sub forma unui cip) va avea niste date
+   atasate ce descriu informatia curent continuta (valorile 1/0 ale unor
+   intrari/iesiri, etc.);
+    de asemenea, intregui circuit va avea asemenea date atasate; la crearea
+   circuitului se vor defini (in niste casete/meniuri) care sunt acestea si
+   cum depind ele de datele atasate componentelor; daca din acest circuit se
+   va face un cip (ce va fi integrat in ale circuite), ele vor deveni datele
+   atasate cipului in cadrul circuitului in care este integrat;
+    de exemplu datele atasate uni registru sunt bitii din configuratia sa
+   curenta, iar in cazul unei memorii RAM bitii sau octetii aflati la diverse
+   adrese; deci pentru diverse cipuri datele au dimensiuni diferite;
+  * la click dreapta pe orice componenta a unui circuit (primitiva sau cip)
+   va aparea un meniu/caseta contextual in care se pot consulta/modifica
+   valorile curente ale datelor atasate; meniul va oferi si posibilitatea
+   incarcarii/salvarii datelor respective in fisiere (utila mai ales in cazul
+   memoriilor RAM unde datele sunt de dimensiuni mari); 
+  * se va putea simula functionarea pas cu pas (ciclu cu ciclu) sau automat;
+   in primul caz intre pasi se vor putea consulta/modifica informatiile
+   atasate componentelor;
+Folosind acest program se va defini un procesor simplu si se va simula
+ functionarea sa. De exemplu poate fi un procesor MIPS ce efectueaza cate un
+ ciclu pe instructiune si implementeaza doar instructiunile (cu intregi) LW,
+ SW, ADD, SUB, BEQ, J. Cu ajutorul lui se va rula un program simplu incarcat
+ (in forma binara) dintr-un fisier (ca un continut initial al componentei
+ memorie).
+EVENTUAL:
+ programul va oferi un set de functii accesibile din biblioteci legate de
+ acesta la momentul executiei sub forma de plugin-uri; si, de exemplu, se
+ va construi un plugin care afisaza la simularea functionarii circuitului
+ toate informatiile relevante intr-o singura fereastra (in genul ferestrei
+ "Data Segment" din "pcspim").
+
+24. (echipa de 3-5)
+Mediu integrat de dezvoltare (IDE) a programelor, pentru un limbaj de
+ programare grafic de tip schema logica.
+Limbajul va oferi cel putin urmatoarele:
+ - tipuri predefinite numerice (intreg, real) si string (in particular
+  caracter);
+   variabile simple si masive (vectori, matrici, etc.); componentele masivelor
+  pot fi doar de tipuri simple (numeric, string);
+   operatori aritmetici, concatenare stringuri, relationali, logici, indexare
+  (pentru masive si stringuri);
+   literali (constante) numerici si string (in particular caracter);
+ - instructiuni (primitive grafice) de tip:
+  * start, stop -  oval in care se scrie START, respectiv STOP;
+  * citire de la stdin - trapez cu baza mare sus, in care se scriu variabilele
+   ce trebuie citite; ele pot fi simple sau componente de masiv;
+  * scriere la stdout - trapez cu baza mare jos, in care se scriu expresiile
+   ale caror valori se scriu;
+  * atribuire - dreptunghi in care se scrie atribuirea sub forma
+   variabila:=expresie (variabila poate fi simpla, masiv sau componenta de
+   masiv);
+  * test - romb in care se scrie conditia logica, avand ramuri DA si NU;
+  * conectori - cercuri numerotate; conectorii cu acelasi numar marcheaza
+   puncte conectate logic, desi nu s-au trasat efectiv liniile intre ele;
+  primitivele grafice se unesc prin sageti (nu simple segmente), care arata
+  sensul firului de executie;
+ - proceduri cu si fara parametrii;
+   toti parametrii sunt prin referinta, iar parametrii actuali pot fi doar
+    variabile (simple, masiv sau componente de masiv);
+   procedura se scrie ca un program, dar in loc de ovalul START se pune un
+    oval cu antetul procedurii:
+      nume_procedura (tip_1 parametru_1, ..., tip_n parametru_n)
+    iar in loc de ovalul STOP se pune un oval cu RETURN;
+   in procedura pot aparea si ovaluri STOP, pentru a marca puncte de terminare
+    fortata a intregului program;
+   apelul de procedura se face sub forma unui hexagon turtit in care se scrie
+    numele procedurii si parametrii actuali:
+      nume_procedura (parametru_1, ..., parametru_n)
+ - variabilele globale se declara intr-un text insotitor schemei programului
+    principal (si editabil dintr-un meniu/caseta a IDE-lui);
+   in plus, pentru fiecare schema componenta (program principal sau procedura)
+    se pot declara, tot intr-un text insotitor schemei (si editabil dintr-un
+    meniu/caseta a IDE-lui) variabile locale;
+   numele parametrilor formali sunt locali apelului procedurii;
+   daca in programul principal sau procedura avem o entitate locala (variabila
+    sau parametru) cu acelasi nume ca una globala, pana la parasirea
+    contextului respectiv numele va avea semnificatia locala;
+ - sunt posibile recursii directe si indirecte; entitatile locale procedurii
+    (parametri, variabile locale) vor avea cate o instanta pentru fiecare apel
+    in curs; toate se aloca automatic.
+ - varianta: parametrii unei proceduri se pot declara, asemeni variabilelor
+    locale, intr-un text insotitor schemei acesteia (si editabil dintr-un meniu
+    /caseta a IDE-lui); atunci procedura va incepe cu un oval continand doar
+    numele acesteia si numele parametrilor formali:
+      nume_procedura (tip_1 parametru_1, ..., tip_n parametru_n)
+    sau doar numele procedurii.
+IDE-ul va oferi cel putin urmatoarele facilitati:
+ - editarea programului in mod grafic, prin plasarea primitivelor grafice
+  (dreptunghi, romb, etc.) cu mouse-ul in schema si editarea continutului
+  acestora; editorul va permite si selectarea unei componente urmata de
+  modificarea continutului sau stergerea ei; de asemenea va permite undo, redo;
+   fiecare schema componenta a programului (program principal, proceduri) se
+  va edita intr-o ferestra separata; aceasta va oferi meniuri/casete si pentru
+  declararea variabilelor locale; doar fereastra cu programul principal va
+  oferi un meniu/caseta pentru declararea variabilelor globale;
+ - incarcare/salvare program in fisier; in fisier programul va fi stocat sub o
+  forma ce contine si functionalitatea sa, nu numai grafica sa (a.i. dupa
+  incarcare sa poata fi rulat);
+ - salvare/incarcare program in fisier sub forma de sursa Pascal, C, C++, BASIC,
+  Assembler (una din variante);
+ - salvare program sub forma grafica (desenul schemei logice) intr-un fisier
+  printabil (postscript, pdf);
+ - rulare normala si pas cu pas; la rularea pas cu pas instructiunea si
+  sageata curent executate sunt colorate diferit, iar intr-o fereastra se
+  poate urmari continutul curent al variabilelor si stiva.
+EVENTUAL:
+ programul va oferi un set de functii accesibile din biblioteci legate de
+ acesta la momentul executiei sub forma de plugin-uri; si, de exemplu, se
+ va construi sub forma unui plugin modulul care salveaza programul sub forma de
+ sursa Pascal, C, ... (pentru fiecare limbaj destinatie se poate scrie cate un
+ plugin).
+
+25. (echipa de 3-5)
+Program de file sharing.
+Acesta se va putea rula in mai multe instante aflate pe calculatoare distincte,
+ interconectate; pentru fiecare instanta se va defini un director cu fisiere
+ shared; orice utilizator, de la orice instanta, isi va putea copia pe
+ calculatorul sau orice fisier aflat intr-unul din share-urile instantelor cu
+ este conectat. Fiecare instanta va fi recunoscuta in retea printr-un nume
+ (nickname) si IP.
+Programul va oferi cel putin urmatoarele:
+ - o interfata de tip Norton Commander/Total Commander/Midnight Commander;
+   intr-unul din panouri va putea naviga in calculatorul propriu, in celalalt
+  va putea efectua operatii legate de masinile cu care este conectat, si anume:
+  * serach al unui nume de fisier (inclusiv cautari dupa sablon) in toate
+   share-urile masinilor conectate; rezultatul va fi afisat in panou ca o
+   lista, iar la click pe un item in panou se va afisa locatia din share-ul
+   unde se afla fisierul;
+  * navigare prin share-ul unui calculator distant cu care este conectat (de
+   exemplu prin cel unde a ajuns in urma cautarii unui fisier); cu F5 (sau ceva
+   similar) va putea copia orice fisier de acolo pe masina proprie; inclusiv va
+   putea marca/demarca mai multe fisiere si copia fisierele marcate printr-o
+   singura comanda;
+  * afisarea masinilor cu care este conectat (numele instantei si IP-ul), pe
+   nivele de indepartare (cele conectate direct, cele conectate de acestea,
+   etc.); daca o masina se afla pe mai multe nivele, se va afisa pe nivelul cel
+   mai mic;
+    in lista masinilor se poate face scroll si search (se culeg primele litere
+   iar selectorul se duce pe numele respectiv);
+    la click pe o masina, in panou se incepe navigarea in share-ul ei, ca mai
+   inainte;
+    primul nivel din lista masinilor este editabil, in sensul ca putem adauga/
+   elimina masini (pentru o accesare mai rapida, nu prin tranzitivitate); asa
+   se si definesc primele masini cu care instanta este conectata; cand adaugam
+   o masina aici, aceasta primeste automat o comanda de adaugare a masinii
+   (instantei) curente pe primul nivel al listei ei (toate comunicarile sunt
+   bidirectionale); dintr-un meniu se poate interzice acceptarea de noi masini
+   conectate direct (si atunci tentativa lor va esua);
+ - la pornirea instantei se verifica daca toate masinile conectate direct (pe
+  primul nivel) sunt online si au instante functionale acolo, iar ele au in
+  evidenta instanta curenta; masinile invalide vor fi marcate ca atare in
+  lista;
+ - cautarea unui fisier se va face in graful de masini pe nivele, folosind un
+  algoritm care foloseste mai intai conexiunile cele mai rapide si evita
+  cautarile circulare.
+Varianta de implementare:
+ Fiecare instanta va aloca o anumita cota de procesor unor procese lansate de
+ masini cu care este conectata. Cand o masina initiaza o cautare, ea va cauta
+ pe primul nivel de masini conectate, apoi va lansa procese pe acestea care
+ vor continua cautarea pe nivelul doi si vor initia procese pe masinile de
+ nivel trei, etc. (cu grija ca sa nu initiem procese circular). Algortitmul
+ va lansa procesele in ordinea descrescatoare a cotei de procesor alocate sau
+ ramase libere pe masinile respective.
+
+26. (echipa de 3-5)
+Joc de tip MMORPG (RPG multiplayer online) cu interfata web.
+Jocul va contine o cladire virtuala in care vor evolua jucatorii - ea va fi
+ gazduita de un server, care se va ocupa cu toate calculele privind evolutia
+ jocului si interactiunea dintre participanti; fiecare jucator se va conecta
+ la server folosind o aplicatie/interfata web si va participa la joc sub
+ forma unui personaj animat.
+Grafica va fi 3D iar perspectiva fiecarui jucator va fi first person.
+Se vor implementa cel putin urmatoarele facilitati:
+ - jucatorii vor avea posibilitatea sa-si defineasca aspectul personajului;
+  chipul acestuia poate fi definit si pe baza unei fotografii electronice
+  incarcate dintr-un fisier;
+ - personajul va avea caractersitici care evolueaza in timp si in urma
+  indeplinirii unor quest-uri: sanatate, inteligenta, popularitate, bani,
+  hranire (la nivel scazut/ foarte ridicat scade sanatatea), odihna (la nivel
+  scazut scade sanatatea); ele vor fi afisate grafic in timpul jocului
+  (bare de sanatate, etc.);
+ - in cadrul jocului fiecare personaj se poate plimba prin cladire (pe
+  coridoare, scari, lifturi, camere, va deschide/inchide usi), va efectua
+  activitati specifice sau quest-uri in anumite camere si va interactiona cu
+  celelalte personaje intalnite;
+ - exemple de activitati/quest-uri in anumite camere: la biblioteca consuma
+  odihna achizitionand inteligenta, la bufet consuma bani si achizitioneaza
+  hrana, in sala de proiectii vede niste filmulete (eventual platind in
+  prealabil un bilet de intrare) apoi la biblioteca poate raspunde la niste
+  chestionare cu intrebari din filmulete in schimbul carora primeste
+  inteligenta sau puncte de scor, etc.
+ - interactiunea cu un alt personaj se concretizeaza printr-un talk text,
+  eventual si voce, si posibilitatea de a provoca interlocutorul la o
+  disputa; aceasta consta intr-un joc de tip sah, dame, table, etc. - in
+  acest scop se vor implementa cel putin trei asemenea jocuri;
+  caracteristicile personajelor influienteaza puterea lor de joc, de exemplu:
+  o inteligenta mai mare iti ofera piese sau mutari in plus, un grad de
+  odihna mai mare iti ofera timpi de gandire mai lungi; in urma disputei
+  cele doua personaje castiga/pierd unul de la altul bani, inteligenta,
+  puncte de scor, etc.;
+ - personajele vor avea un inventar de obiecte aflate asupra lor;
+  asemenea obiecte se pot gasi in camere, obtine in urma unor quest-uri,
+  castiga in urma disputei cu alt personaj;
+   va exista o camera-magazin virtual unde personajul va putea cumpara/vinde
+  asemenea obiecte contra bani;
+   anumite quest-uri sau dispute intre personaje se vor putea efectua doar
+  daca personajele au in posesie anumite obiecte - de exemplu pot juca
+  sah doar daca au un set complet de piese (ce se pot achizitiona/vinde/
+  pierde separat);
+ - jucatorii pot participa la joc doar daca au un cont pe server si sunt
+  logati; serverul va avea o baza de date ce contine jucatorii inregistrati
+  si caracteristicile curente ale personajului lor; la delogare
+  caracteristicile curente sunt memorate iar la relogare personajul va putea
+  sa-si continuie dezvoltarea de unde a ramas; va exista un cont de
+  administrator din care se pot crea/modifica/elimina alte conturi si
+  personaje, se poate interzice temporar accesul unui utilizator la joc
+  talk sau forum, eliminarea tuturor mesajelor unei persoane din forum
+  (pentru talk si forum a se vedea mai jos), etc.;
+ - jocul ofera meniuri cu top score, instructiuni de joc, help, etc.;
+  scorul unui personaj va depinde de numarul de quest-uri indeplinite si de
+  adversarii invinsi (fiecare va furniza din scorul lor curent un numar de
+  puncte proportional cu acest scor);
+   jocul va oferi o comanda new care reseteaza scorul personajului si il
+  plaseaza in prima camera a cladirii, la usa de la intrare, pentru a relua
+  jocul de la zero;
+ - pe langa participarea la joc interfata permite jucatorului inregistrat
+  accesul la lista celorlalti jucatori inregistrati (lista evidentiaza cine
+  este curent logat), trimis e-mail unui jucator din lista (acolo apare si
+  link-ul de e-mail), talk text cu cei curent logati dar care nu joaca,
+  participare la un forum;
+ - jocul va oferi un editor de nivele cu care se poate defini cladirea in
+  care se desfasoara jocul (folosind inclusiv imagini luate din interiorul
+  unor cladiri reale).
+
+27. (echipa de 3-5)
+Site de concurs de programare si testare automata a programelor.
+Sistemul va oferi cel putin urmatoarele facilitati:
+ - o interfata web;
+ - o baza de date (pe un server MySQL, Oracle, etc.) cu utilizatorii
+  inregistrati si informatii despre ei, problemele propuse, programele
+  trimise, seturile de date pentru testare si solutiile asociate, etc.;
+ - un sistem de testare automata a programelor, verificarea raspunsului
+  si masurarea performantei;
+ - interfate va oferi tuturor informatii despre site, enunturile problemelor
+  organizate pe categorii/subcategorii si seturile de testare si rezultate
+  pentru acestea care sunt publice (unele sunt ascunse si sunt folosite la
+  evaluarea programelor trimise de catre sistemul de testare automata),
+  rezultatele rezolvitorilor si clasarea lor atat pentru fiecare problema pe
+  care au abordat-o (lista celor care au rezolvat problema respectiva si
+  timpul de executie al programului cel mai bun al fiecaruia, in ordinea
+  descrescatoare a timpilor) cat si per total (lista tuturor rezolvitorilor,
+  in ordinea descrescatoare a punctajului, punctajul depinzand de numarul de
+  probleme rezolvate si de timpii de executie ai programelor respective);
+   va exista un motor de search, cu filtrare pe categorii/subcategorii;
+ - vor putea propune/rezolva/judeca probleme doar cei care au cont; pentru
+  fiecare utilizator inregistrat se va retine numele contului si parola,
+  nickname-ul (acesta va aparea in clasamente si trebuie sa fie unic),
+  numele real, e-mail, un camp cu alte informatii (de exemplu ce este in
+  viata reala), categoria: administrator, autor de probleme, rezolvitor,
+  judecator;
+   fiecare utilizator isi va putea schimba parola, nickname-ul, numele real,
+  e-mail-ul, campul cu alte informatii si va putea seta daca numele real sa
+  fie afisat si el alaturi de nickname si nu isi va putea schimba categoria;
+ - daca o persoana isi creaza cont de judecator, acesta nu va deveni
+  functional si vizibil celorlalti decat dupa o comanda de confirmare din
+  partea administratorului; in castea/fereastra de creare a contului de
+  judecator va exista o caseta in care persoana care creaza contul va
+  scrie un text (pe care il va vedea administratorul) in care isi motiveaza
+  actiunea;
+   un judecator poate consulta toate enunturile, seturile de testare si
+  solutiile asociate (inclusiv cele folosite de sistemul de testare si care
+  sunt ascunse), programele trimise, si poate elimina (daca le considera
+  inadecvate) printr-o comanda atomica (de exemplu buton) un enunt (atunci
+  sistemul va elimina automat si seturile de testare si rezultate,
+  programele trimise, clasamentul pentru acel enunt si va actualiza
+  clasamentul general), un set de testare (si atunci sistemul va sterge
+  automat si fisierul cu rezultate asociat si va retesta automat toate
+  programele trimise pentru problema respectiva, actualizand clasamentele),
+  un program (si atunci sistemul va actualiza automat clasamentele); in urma
+  unei asemenea eliminari autorii sau rezolvitorii afectati vor primi un
+  e-mail de notificare generat automat de sistem;
+ - un autor de probleme poate propune enunturi, seturi de date de testare
+  publice (vizibile) sau ascunse (folosite doar de sistemul de testare) si
+  seturile de rezultate asociate si va defini intr-un limbaj de specificare
+  structura fisierului cu date de intrare, respectiv iesire - toate
+  programele trebuie sa-si citeasca datele dintr-un fisier sursa si sa-si
+  scrie toate rezultatele intr-un fisier destinatie, ambele fiind fisiere
+  text a caror structura trebuie sa verifice specificatiile; in momentul
+  incarcarii seturilor de testare si rezultate sistemul va testa automat
+  daca ele satisfac specificatiile si va permite incarcarea lor doar in caz
+  afirmativ;
+   autorul poate adauga/modifca/elimina ulterior seturile de date si
+  rezultate pentru un acelasi enunt si de fiecare data sistemul va verifica
+  automat satisfacerea specificatiilor, apoi va retesta toate programele si
+  va actualiza clasamentele, iar rezolvitorii afectati vor primi un e-mail
+  de notificare generat automat;
+ - un rezolvitor poate incarca un program sursa de rezolvare a unei
+  probleme (specificand limbajul), iar sistemul il va testa automat si va
+  actualiza clasamentele; poate trimite mai multe programe pentru aceeasi
+  problema, iar in clasament va figura cel mai performant; sistemul va
+  raspunde fie imediat fie printr-un e-mail generat rezultatul: program
+  corect si performanta lui, program corect sintactic dar datele de iesire
+  nu respecta formatul cerut (specificatia), program corect sintactic dar
+  gresit semantic (datele de iesire respecta formatul dar nu sunt cele din
+  raspunsul oficial), program gresit sintactic (caz in care i se va comunica
+  si mesajul compilatorului), esec la executie (caz in care i se va comunica
+  si mesajul sistemului de operare);
+ - administratorul poate face printre altele: eliminarea unui utilizator
+  (caz in care sistemul va elimina automat tot ce a postat, va actualiza
+  clasamentele si ii va trimite un e-mail de notificare generat automat),
+  eliminarea printr-o comanda atomica a tuturor mesajelor postate de un
+  utilizator pe forum sau interzicerea temporara a acestuia la talk (a se
+  vedea mai jos);
+ - pentru utilizatorii inregistrati site-ul va oferi forum si talk text
+  (talk doar pentru cei curent logati);
+ - programele trimise de rezolvitori trebuie sa fie sursa, sa-si citeasca
+  datele dintr-un fisier sursa si sa-si scrie toate rezultatele intr-un
+  fisier destinatie, ambele fiind fisiere text; ele pot genera alte fisiere
+  temporare dar nu au voie sa foloseasca alte resurse (terminale, placa de
+  sunet, etc.);
+   sistemul va compila si testa automat programele intr-un mediu controlat
+  (ce ofera un spatiu limitat pe disc si nici o alta resursa) si va
+  actualiza clasamentele, informand rezolvitorul ca mai sus.
+
+28. (echipa de 3)
+Aplicatie client-server pentru gestionarea unui sistem de magazine care se
+ aprovizioneaza de la un acelasi depozit, implementat direct, fara servere
+ web. Aplicatia va contine:
+ - o componenta server, care gestioneaza depozitul; ea va oferi cel putin
+    urmatoarele facilitati:
+  * interactioneaza cu un server de baze de date (MySQL, Oracle, etc.) ce
+   gestioneaza o baza de date proprie cu produsele din depozit; pentru
+   fiecare produs se va retine cel putin: codul, producatorul, tipul,
+   pretul de achizitie, cantitatea, data expirarii; produsele vor fi
+   impartite pe categorii/subcategorii relevante d.p.v. depozitului;
+    de asemenea in aceasta baza de date se va retine un sistem de conturi ce
+   corespund clientilor (magazinelor) inregistrate;
+  * interactioneaza cu instantele componentei client din fiecare magazin;
+  * ofera o interfata ce permite aflarea informatiilor despre magazinele
+   inregistrate (care este conectat, inchis, rating-urile (a se vedea mai
+   jos), etc.), continutul stocului de produse ale acestora, trimiterea de
+   mesaje si talk cu ele, consultarea/modificarea informatiilor din baza de
+   date a depozitului, inclusiv definirea/modificarea/stergerea grafului de
+   categorii/subcategorii;
+  * cand un produs expira, il elimina automat din depozit;
+  * cand cererile din partea clientilor pentru un anumit produs epuizat din
+   depozit depasesc o anumita cantitate, determina automat care clienti mai
+   au in stoc produsul respectiv si genereaza catre ei mesaje (citibile din
+   interfata lor) prin care ii invita sa returneze cantitati din acel
+   produs, daca nu se vinde;
+  * retine (in baza de date proprie) un rating al fiecarui client in raport
+   cu fiecare produs; acesta este proportional cu cantitatea de produs
+   vanduta de client in unitatea de timp; pe masura ce clientii cer/
+   returneaza produse catre depozit rating-ul se actualizeaza; daca mai
+   multi clienti comanda simultan cantitati din acelasi produs ei vor fi
+   onorati in ordinea descrescatoare a rating-ului;
+  * la fiecare modificare a bazei de date a depozitului se vor genera
+   automat niste mesaje de notificare care se vor scrie intr-un log
+   accesibil din interfata serverului;
+ - o componente client, care ruleaza in cate o instanta in fiecare magazin
+    si care va oferi cel putin urmatoarele facilitati:
+  * interactioneaza cu un (alt) server de baze de date (MySQL, Oracle, etc.)
+   ce gestioneaza o baza de date proprie magazinului; aici se vor stoca
+   informatii privind produsele din stocul magazinului (de exemplu
+   cantitatea din stoc si pretul), organizate pe categorii/subcategorii
+   relevante d.p.v. magazinului (altele decat cele de pe server);
+  * interactioneaza cu componenta server, permitand transferuri de produse
+   din depozit in stocul propriu; transferul se poate face atat manual cat
+   si automat, la anumite perioade sau cand stocul dintr-un anumit produs a
+   ajuns la zero; se poate seta ca, daca la momentul unei anumite comenzi
+   in depozit nu exista produsul respectiv, transferul sa se faca automat
+   atunci cand acesta va exista;
+    de asemenea, va fi posibil transferul unor produse nevandute din stocul
+   propriu inapoi in depozit;
+    fiecare transfer reusit/amanat va fi insotit de mesaje generate automat
+   catre server si client (accesibile din interfata acestora);
+  * interactioneaza cu celelalte instante client (de la celelalte magazine
+   conectate), prin intermediul serverului, permitand:
+   ** talk (text) intre clientii conentati si talk cu serverul;
+   ** cautarea unui produs in bazele lor de date, pentru a vedea la ce
+     magazine este disponibil;
+  * interfata permite in plus:
+   ** editarea grafului propriu de categorii/subcategorii;
+   ** navigare si search in stocul de produse propriu, cu filtrare pe
+     categorii/subcategorii; pentru fiecare produs se vor putea afisa toate
+     informatiile disponibile in baza de date proprie sau cea a serverului
+     (pentru acestea serverul va fi contactat automat);
+   ** efectuarea cumpararii/platii de catre cumparatori.
+
+29. (echipa de 3-5)
+Program pentru videoconferinte.
+El va putea rula in mai multe instante, pe calculatoare diferite conectate
+ prin internet, oferind cel putin urmatoarele facilitati:
+ - se poate rula in mod server sau client; detine o lista editabila de
+  adrese unde poate realiza conexiuni in vederea conferintei;
+ - cand este rulat ca server, permite initierea unei videoconferinte;
+   atunci utilizatorul poate selecta cateva adrese din lista proprie si
+  comanda anuntarea masinilor respective; pe orice masina unde este instalat
+  programul se va instala automat si un serviciu activ al sistemului de
+  operare care va receptiona anuntul, va cere o confirmare din partea
+  utilizatorului respectiv si in caz afirmativ va lansa o instanta a
+  programului in mod client; serverul va afisa care dintre conexiunile
+  anuntate a fost functionala, care a acceptat participarea la conferinta,
+  etc.;
+ - cand este rulat ca client, se conecteaza la instanta server de la care a
+  fost invitat; ea poate invita la randul ei participarea la aceeasi
+  conferinta a altor masini din lista proprie, iar acestea, daca confirma,
+  se vor conecta la acelasi server.
+De asemenea, indiferent daca este lansat ca server sau client, detecteaza
+ perifericele hardware disponibile (webcam, microfon, etc.) si va deschide
+ mai multe ferestre in care va afisa informatii specifice:
+ - cate o fereastra cu sunet in care este afisata imaginea si sunetul culese
+  de webcam-ul, respectiv microfonul, fiecarui participant la
+  videoconferinta; parametrii acestor ferestre (dimensiune, rezolutie,
+  framerate, calitatea imaginii si sunetului transmis) pot fi setate de la
+  server a.i. sa nu necesite un trafic prea mare de date si sa se blocheze
+  comunicarea;
+ - o fereastra de talk text;
+ - fiecare participant poate incarca un fisier text pe care doreste sa-l
+  explice celorlalti; atunci la fiecare instanta se va deschide cate o
+  fereastra dedicata fisierului, in care se afisaza continutul (scroll-abil
+  al) acestuia; orice participant va putea scroll-a fisierul, iar
+  scroll-area se va face automat sincron la toate instantele; daca vreunul
+  din participanti plimba mouse-ul in aceasta fereastra, toti participantii
+  vor vedea un indicator care se misca sincron in ferestrele lor;
+ - fiecare participant poate incarca spre expunere o prezentare animata gen
+  power point; atunci la fiecare instanta se va deschide o fereastra
+  dedicata prezentarii in care participantii vor putea urmari sincron dar
+  neinteractiv derularea prezentarii;
+ - o fereastra cu numele/adresa celor ce participa la conferinta, indicand
+  pentru fiecare (in functie de perifericele hardware si dotarea software
+  disponibile) ce tip de ferestre vad la momentul curent (imaginea, sunetul,
+  talk, fisierul text, prezentarea animata); fiecare participant va vedea
+  doar ferestrele posibile la el.
+
+30. (echipa de 3-5)
+Videoteca virtuala cu portal web de accesare.
+Filmele vor fi stocate in una sau mai multe baze de date, gestionate de
+ servere MySql sau Oracle, ce pot fi pe aceeasi masina sau pe mai multe
+ (conectate prin internet); despre fiecare film se va retine cel putin
+ un cod unic (cheie primara), titlul, scenaristi, regizori, actorii
+ principali, studioul, data, durata, continutul propriuzis (fisier video),
+ un trailer (fisier video);
+Portalul va contine cel putin urmatoarele:
+ - o baza de date proprie, pe un server MySQL sau Oracle, cu utilizatorii
+  inregistrati, adresele serverelor (MySQL sau Oracle) ce contin bazele
+  de date cu filme, si detalii despre aceste filme relevante pentru
+  videoteca - de exemplu categoria/subcategoria filmului, varsta minima
+  permisa spectatorilor (acestea sunt definite in baza de date a videotecii,
+  nu in bazele de date distante unde sunt filmele, si trebuie retinut pentru
+  fiecare film de acolo (cod de film, care acum e cheie externa) ce
+  categorie/subcategorie are aici);
+   pentru fiecare utilizator se va retine cel putin: numele contului si
+  parola, numele real, CNP, data nasterii, adresa, telefon, e-mail,
+  categoria (administrator sau utilizator obisnuit), soldul in bani curent
+  (o suma platita anticipat videotecii pentru accesul la filme);
+   pentru fiecare server (MySQL sau Oracle) cu baze de date cu filme se vor
+  retine suficiente informatii care sa permita conectarea si cautarea
+  eficienta a informatiilor - de exemplu adresa IP a masinii pe care se afla
+  serverul;
+   de notat ca continutul filmelor (in format electronic) se afla doar in
+  bazele de date distante, nu in baza de date a videotecii (aici sunt
+  retinute doar (sub)categoriile si adresele filmelor);
+ - o interfata web care ofera cel putin urmatoarele:
+  * motor de cautare filme, cu categorii si search (cu filtrare pe categorii
+   /subcategorii); sa se poata cauta inclusiv dupa fiecare scenarist, actor,
+   sau dupa diverse cuvinte din titlu;
+  * vizionare trailer (gratis); maniera va fi cea folosita in cazul filmelor
+   (a se vedea mai jos); trailer-ele pot fi insa si download-ate ca fisiere
+   video;
+  * creare cont/logare in cont;
+ - odata logat, interfata ofera utilizatorului informatii suplimentare
+  diferite, in functie de categoria acestuia:
+  * unui utilizator obisnuit i se permite:
+   ** browse utilizatori curent logati;
+   ** talk (text) cu alti utilizatori curent logati;
+   ** accesul la un forum;
+   ** eliminare cont propriu;
+   ** vizionarea unui film ales (folosind motorul de cautare) folosind un
+     player video oarecare instalat pe masina proprie si care poate fi
+     specificat dintr-un meniu/caseta (player-ul va fi lansat automat si
+     va reda stream-ul video pe masura ce se descarca);
+      eventual se va implemanta un player video propriu, care ofera cel
+     putin imagine si sunet, pause/continue;
+      lucrurile se vor implementa a.i. sa nu fie posibila download-area/
+     salvarea filmului ca fisier pe masina utilizatorului;
+   ** de fiecare data cand un utilizator va incerca sa vizioneze un film, se
+     va calcula un cost, care se va scadea din soldul sau curent daca este
+     posibil; altfel se cere intr-o caseta speciala efectuarea platii (se
+     cere numarul cartii de credit, etc.); in acest caz utilizatorul poate
+     plati si mai mult, iar restul ii ramane in sold;
+  * unui administrator i se permite:
+   ** ca si la utilizatorii obisnuiti: browse utilizatori logati, talk,
+       acces la forum;
+   ** definirea/eliminarea unei noi categorii/subcategorii de filme;
+       cand se elimina o (sub)categorie dispare tot arborele de subcategorii
+       subordonat;
+      editarea arborelui de categorii/subcategorii - de exemplu mutarea unui
+       subarbore ca fiu al unui alt nod din arbore;
+      toate aceasta vor afecta automat mecanismul de search si filtrarile pe
+       (sub)categorii;
+   ** montarea/demontarea unui (alt) server distant cu baze de date cu
+       filme;
+      la montare, automat sistemul va lua la rand toate filmele aflate acolo
+       si va testa daca figureaza (in diverse categorii/subcategorii) in
+       baza de date a videotecii; daca da, va adauga aici si noua adresa
+       unde se afla filmul; daca nu, va cere automat administratorului, sub
+       forma unui chestionar, unde trebuie inclus filmul si il va include
+       automat acolo;
+      la demontare, automat sistemul va elimina din baza de date a
+       videotecii (din diversele categorii/categorii) adresele filmelor de
+       acolo;
+   ** adaugarea/eliminarea unui film intr-una din bazele de date distante
+       montate; mutarea unui film dintr-o baza de date in alta;
+     la adaugare va completa un chestionar cu adresa bazei, date despre
+       film, si locatia de unde se va face upload-ul continutului filmului;
+     la eliminare se va indica codul filmului si adresa bazei distante unde
+       se afla iar sistemul il va sterge automat de acolo si din videoteca
+       (din categorii/subcategorii);
+     la mutare se va indica codul filmului, adresa bazei distante sursa si a
+       celei destinatie, iar sistemul il va muta automat dintr-o baza in
+       alta si va actualiza informatiile din videoteca (adresele din
+       categorii/subcategorii);  
+   ** de fiecare data cand o operatie efectuata de administrator este de
+     natura sa adauge/elimine filme in evidentele videotecii, sistemul va
+     genera automat cate un e-mail catre fiecare utilizator inregistrat, cu
+     lista filmelor adaugate/eliminate si categoriile/subcategoriile lor.
+   ** editare/eliminare/delogare utilizatori; restrictionare temporara (pe o
+     perioada precizata) a unui utilizator de la talk; eliminarea tuturor
+     mesajelor unui utilizator de pe forum printr-o comanda atomica, de
+     exemplu apasarea unui buton (sistemul se ocupa de detalii);
+      in toate aceste cazuri sistemul genereaza automat un e-mail de
+     notificare catre utilizatorul respectiv, care contine informatii 
+     despre continutul modificarii si un text optional adaugat de
+     administrator (cand administratorul da comanda, sistemul ii cere intr-o
+     caseta un asemenea text).
+Sistemul va initia verificari automate periodice pentru a vedea daca bazele
+ de date distante cu filme au fost modificate (pe alta cale decat din
+ sistemul curent) si daca da va actualiza baza de date a videotecii si
+ va genera automat e-mail-uri de notificare catre utilizatorii inregistrati
+ daca modificarile sunt de natura sa adauge/elimine filme din evidenta.
+
+31. (echipa de 3-5)
+Generator de stereograme (detalii despre ce sunt, cum se construiesc si cum
+ se privesc stereogramele se pot afla de pe Internet - a se cauta cuvantul
+ "stereograms"). Programul va oferi cel putin urmatoarele facilitati:
+ - un editor grafic cu ajutorul caruia se poate edita harta pe inaltimi a
+    formei 3D; ea se poate salva/incarca intr-un fisier grafic (bmp, jpg)
+    cu nuante de gri (reprezentand inaltimi) in tag-ul caruia se va memora
+    scara inaltime/nuanta gri;
+   editorul permite desenarea/modificarea/stergerea formei 3D si dilatarea/
+    comprimarea ei pe verticala;
+   eventual editorul va permite incarcarea unei imagini in nuante de gri
+    luminata din fata (fotografiata in prealabil) si transformarea ei in
+    harta pe inaltimi;
+ - generarea stereogramei pe baza unui fisier grafic (care va fi multiplicat
+    in benzi) sau folosind puncte generate aleator; se va putea seta latimea
+    si inaltimea benzilor;
+ - se vor putea genera atat stereograme pentru privire paralela cat si
+    sterograme pentru privire incrucisata;
+ - salvarea stereogramei intr-un fisier grafic (bmp, jpg);
+ - se vor putea genera stereograme text (harta este impartita in celule de
+    diverse inaltimi, banda care se multiplica este un text editat sau
+    incarcat dintr-un fisier text, stereograma se va salva intr-un fisier
+    text).
+Eventual se va implementa generarea de stereograme animate, bazate pe o
+ secventa video in nuante de gri (reprezentand inaltimi) pentru care se va
+ genera stereograma la fiecare frame (folosind acelasi fundal si latime a
+ benzilor).
+
+32. (echipa de 3)
+Generator de fractali definiti intr-un limbaj specific.
+Programul va implementa cel putin urmatoarele facilitati:
+ - descrierea formulei fractalului intr-un limbaj specific, care va fi
+  suficient de puternic pentru a putea specifica principalele tipuri
+  cunoscute de fractali;
+ - generarea fractalului;
+ - zoom in/out dinamic (la apasarea continua a unui buton se va recalcula si
+  reafisa in mod repetat fractalul suficient de repede a.i. animatia sa fie
+  fluida);
+ - salvarea imaginii curent generate intr-un fisier grafic (bmp, jpg);
+ - in cazul fractalilor a caror generare necesita mult timp, sa se poata
+  intrerupe generarea si salva intr-un fisier starea curenta, a.i. ulterior
+  acestea sa poata fi reincarcate si generarea sa poata continua.
+
+33. (echipa de 3)
+Program de tip Instant Messenger. El va avea o arhitectura client/server.
+Componenta server va avea o baza de date gestionata de un server Microsoft
+ SQL Server, Oracle, etc., in care va stoca informatiile despre utilizatorii
+ inregistrati, fisierele shared intre clienti, etc.
+Componenta client va oferi cel putin urmatoarele functionalitati:
+ - o fereastra principala, din care sunt accesate functionalitatile; printre
+    acestea mentionam:
+    * creare cont/logare in cont; pentru fiecare user inregistrat se vor
+       retine cel putin: nume cont, parola, nume real, nickname (apare in
+       listele de contacte si in ferestrele de talk), e-mail, adresa fizica
+       (IP, etc.); va exista un cont de administrator care permite orice
+       modificari in baza de date;
+    * lista editabila organizata pe categorii a contactelor existente;
+      editarea consta in posibilitatea de a crea/sterge/redenumi/muta (in
+       alt subarbore) categorii si a adauga/sterge/ignora/muta in alta
+       categorie contacte;
+      lista va evidentia (de exemplu printr-un simbol atasat) utilizatorii
+       aflati online;
+      lista va permite setarea setarea modalitatilor in care ceilalti useri
+       ne pot vedea cand suntem online;
+    * initiere sesiune talk intre un grup de contacte selectate din lista
+       proprie; fiecare utilizator din grup este contactat automat si i se
+       cere confirmarea participarii (caseta ii afisaza numele userilor din
+       grup); apoi initiatorului si fiecarui utilizator care a confirmat
+       participarea i se deschide cate o fereastra de talk asociata sesiunii
+       (daca un user participa la mai multe sesiuni, pentru fiecare sesiune
+       desfasurata concomitent va exista cate o fereastra separata);
+ - fereastra de talk asociata unei sesiuni de talk va permite cel putin:
+    * talk text;
+    * afisarea listei participantilor la sesiune;
+    * posibilitatea de a invita un nou grup de participanti la aceeasi
+     sesiune; invitatia poate fi facuta de catre oricare din participanti,
+     selectand un grup din lista proprie de contacte; odata invitatia facuta,
+     mai intai fiecarui user care participa deja i se cere confirmarea, iar
+     daca toti confirma, se lanseaza (ca mai inainte) invitatia de
+     participare userilor din noul grup (iar unuii pot confirma, altii nu);
+     fiecarui nou participant i se va deschide o fereastra de talk pentru
+     aceeasi sesiune; dupa adaugarea noului grup, ferestrele de talk vor
+     afisa listele actualizate de participanti;
+    * inchiderea de catre un participant a ferestrei de talk determina
+     automat deconectarea lui de la sesiunea respectiva;
+    * din fereastra de talk se poate deschide o fereastra de photo sharing
+     si o fereastra de fisiere shared intre participantii la sesiunea
+     respectiva;
+ - fereastra de photo sharing si cea de fisiere shared vor permite adaugarea/
+    eliminarea de imagini, respectiv link-uri catre fisiere, care vor fi
+    accesibile imediat spre vizualizare/download tuturor participantilor la
+    sesiune.
+Varianta de implementare: fereastra principala ofera si o lista a tuturor
+ sesiunilor de talk aflate in desfasurare intre useri din lista proprie de
+ contacte; daca la unele sesiuni participa si useri din afara listei, acestea
+ sunt afisate diferit. Utilizatorul curent poate initia o noua sesiune sau
+ poate cere sa fie primit intr-una existenta (caz in care tuturor
+ participantilor la ea li se cere confirmarea, iar alaturarea noului
+ participant este posibila doar daca au confirmat toti). Facilitatile
+ oferite de fereastra de talk a unei sesiuni sunt ca mai sus - inclusiv
+ posibilitatea de a invita grupuri noi de participanti.
+
+34. (echipa de 3-5)
+Fonoteca virtuala cu portal web de accesare.
+Piesele muzicale si albumele vor fi stocate in una sau mai multe baze de
+ date, gestionate de servere MySql sau Oracle, ce pot fi pe aceeasi masina
+ sau pe mai multe (conectate prin internet); despre fiecare album se va
+ retine cel putin un cod unic (cheie primara), titlul, autorul, data, numarul
+ de piese, piesele componente (chei externe); despre fiecare piesa se va
+ retine cel putin cod unic (cheie primara), titlul, autorul, data, albumul
+ din care face parte (cheie externa) sau daca este piesa izolata, compozitor/
+ textier/componenta orchestrei/numele interpretilor pe instrumente, durata,
+ continutul propriuzis (fisier audio), un trailer (fisier audio).
+Portalul va contine cel putin urmatoarele:
+ - o baza de date proprie, pe un server MySQL sau Oracle, cu utilizatorii
+  inregistrati, adresele serverelor (MySQL sau Oracle) ce contin bazele
+  de date cu piese/albume, si detalii despre aceste piese/albume relevante
+  pentru fonoteca - de exemplu categoria/subcategoria piesei/albumului,
+  genul (jazz, rock, etc.) (acestea sunt definite in baza de date a
+  fonotecii, nu in bazele de date distante unde sunt piesele/albumele, si
+  trebuie retinut pentru fiecare piesa/album de acolo (cod de piesa/album,
+  care acum e cheie externa) ce categorie/subcategorie are aici);
+   pentru fiecare utilizator se va retine cel putin: numele contului si
+  parola, numele real, CNP, data nasterii, adresa, telefon, e-mail,
+  categoria (administrator sau utilizator obisnuit), soldul in bani curent
+  (o suma platita anticipat fonotecii pentru accesul la piese/albume);
+   pentru fiecare server (MySQL sau Oracle) cu baze de date cu piese/albume
+  se vor retine suficiente informatii care sa permita conectarea si cautarea
+  eficienta a informatiilor - de exemplu adresa IP a masinii pe care se afla
+  serverul;
+   de notat ca continutul pieselor/albumelor (in format electronic) se afla
+  doar in bazele de date distante, nu in baza de date a fonotecii (aici sunt
+  retinute doar (sub)categoriile si adresele pieselor/albumelor);
+ - o interfata web care ofera cel putin urmatoarele:
+  * motor de cautare piese/albume, cu categorii si search (cu filtrare pe
+   categorii/subcategorii); sa se poata cauta inclusiv dupa gen, cuvinte din
+   titlu sau din text, fiecare membru al orchestrei (si instrumentul sau);
+  * ascultare trailer (gratis); maniera va fi cea folosita in cazul pieselor
+   (a se vedea mai jos); trailer-ele pot fi insa si download-ate ca fisiere
+   audio;
+  * creare cont/logare in cont;
+ - odata logat, interfata ofera utilizatorului informatii suplimentare
+  diferite, in functie de categoria acestuia:
+  * unui utilizator obisnuit i se permite:
+   ** browse utilizatori curent logati;
+   ** talk (text) cu alti utilizatori curent logati;
+   ** accesul la un forum;
+   ** eliminare cont propriu;
+   ** ascultarea unei piese/album ales (folosind motorul de cautare) folosind
+     un player audio oarecare instalat pe masina proprie si care poate fi
+     specificat dintr-un meniu/caseta (player-ul va fi lansat automat si
+     va reda stream-ul audio pe masura ce se descarca); se va putea specifica
+     bitrate-ul si calitatea redarii, in functie de conexiune si resursele
+     hardware/software locale;
+      eventual se va implemanta un player audio propriu, care ofera cel putin
+     redare, pause/continue, avans rapid inainte/inapoi;
+      lucrurile se vor implementa a.i. sa nu fie posibila download-area/
+     salvarea pieselor ca fisiere pe masina utilizatorului;
+   ** de fiecare data cand un utilizator va incerca sa asculte o piesa/album,
+     se va calcula un cost, care se va scadea din soldul sau curent daca este
+     posibil; altfel se cere intr-o caseta speciala efectuarea platii (se
+     cere numarul cartii de credit, etc.); in acest caz utilizatorul poate
+     plati si mai mult, iar restul ii ramane in sold;
+      reascultarea costa mai putin decat prima ascultare;
+   ** definirea/editarea/stergerea mai multor playlist-uri; se va putea cere
+     spre (re)ascultare un playlist; de asemenea, costul la reascultare va fi
+     mai mic decat la prima ascultare;
+  * unui administrator i se permite:
+   ** ca si la utilizatorii obisnuiti: browse utilizatori logati, talk,
+       acces la forum;
+   ** definirea/eliminarea unei noi categorii/subcategorii de piese/albume;
+       cand se elimina o (sub)categorie dispare tot arborele de subcategorii
+       subordonat;
+      editarea arborelui de categorii/subcategorii - de exemplu mutarea unui
+       subarbore ca fiu al unui alt nod din arbore;
+      toate aceasta vor afecta automat mecanismul de search si filtrarile pe
+       (sub)categorii;
+   ** montarea/demontarea unui (alt) server distant cu baze de date cu
+       piese/albume;
+      la montare, automat sistemul va lua la rand toate piesele/albumele
+       aflate acolo si va testa daca figureaza (in diverse categorii/
+       subcategorii) in baza de date a fonotecii; daca da, va adauga aici si
+       noua adresa unde se afla piesa/albumul; daca nu, va cere automat
+       administratorului, sub forma unui chestionar, unde trebuie inclusa
+       piesa/albumul si o va include automat acolo;
+      la demontare, automat sistemul va elimina din baza de date a fonotecii
+       (din diversele categorii/categorii) adresele pieselor/albumelor de
+       acolo;
+   ** adaugarea/eliminarea unei piese/album intr-una din bazele de date
+       distante montate; mutarea unei piese/album dintr-o baza de date in
+       alta;
+     la adaugare va completa un chestionar cu adresa bazei, date despre
+       piesa/album, si locatia de unde se va face upload-ul continutului
+       piesei/albumului;
+     la eliminare se va indica codul piesei/albumului si adresa bazei
+       distante unde se afla iar sistemul o va sterge automat de acolo si
+       din fonoteca (din categorii/subcategorii);
+     la mutare se va indica codul piesei/albumului, adresa bazei distante
+       sursa si a celei destinatie, iar sistemul o va muta automat dintr-o
+       baza in alta si va actualiza informatiile din fonoteca (adresele din
+       categorii/subcategorii);  
+   ** de fiecare data cand o operatie efectuata de administrator este de
+     natura sa adauge/elimine piese/albume in evidentele fonotecii, sistemul
+     va genera automat cate un e-mail catre fiecare utilizator inregistrat,
+     cu lista pieselor/albumelor adaugate/eliminate si categoriile/
+     subcategoriile lor.
+   ** editare/eliminare/delogare utilizatori; restrictionare temporara (pe o
+     perioada precizata) a unui utilizator de la talk; eliminarea tuturor
+     mesajelor unui utilizator de pe forum printr-o comanda atomica, de
+     exemplu apasarea unui buton (sistemul se ocupa de detalii);
+      in toate aceste cazuri sistemul genereaza automat un e-mail de
+     notificare catre utilizatorul respectiv, care contine informatii 
+     despre continutul modificarii si un text optional adaugat de
+     administrator (cand administratorul da comanda, sistemul ii cere intr-o
+     caseta un asemenea text).
+Sistemul va initia verificari automate periodice pentru a vedea daca bazele
+ de date distante cu piese/albume au fost modificate (pe alta cale decat din
+ sistemul curent) si daca da va actualiza baza de date a fonotecii si
+ va genera automat e-mail-uri de notificare catre utilizatorii inregistrati
+ daca modificarile sunt de natura sa adauge/elimine piese/albume din
+ evidenta.
+
+35. (echipa de 3)
+Portal web cu site de tip "marketplace" (piata) pentru software (in cele ce
+ urmeaza un obiect software va fi numit generic "program"). El va contine
+ cel putin urmatoarele:
+ - o baza de date pe un server MySQL, PostgreSQL, MSSQL sau Oracle, cu
+ programele cerute spre realizare, utilizatorii inregistrati, etc.;
+   pentru fiecare program se vor retine cel putin: numele, cumparatorul,
+ realizatorii, specificatiile, tipul de licenta (BSD, GPL, CDDL, etc.),
+ pretul licitat;
+   utilizatorii pot fi de mai multe categorii: administrator, cumparator,
+ analist (realizeaza specificarea cerintelor), proiectant (realizeaza
+ design-ul software), programator (realizeaza codul), tester (testeaza
+ programul si raporteaza bug-uri, efectueaza recenzii); pentru fiecare
+ utilizator se va retine cel putin: numele contului si parola, numele real,
+ CNP, adresa, e-mail, pagina web (doar in cazul analistilor, proiectantilor,
+ programatorilor, testerilor), programe cumparate/realizate pana acum,
+ suma totala cheltuita/castigata pana in prezent, rating (cu exceptia
+ administratorului);
+ - o interfata web care ofera cel putin urmatoarele:
+  * motor de cautare pentru programe, cu categorii si search (cu filtrare pe
+   categorii/subcategorii); sa se poata cauta dupa mai multe criterii:
+   limbaj de programare, cuvinte-cheie, pret/dificultate, rating, etc.;
+  * creare cont (cu furnizarea unor date proprii)/logare in cont;
+  * pentru alte facilitati - a se vedea mai jos;
+ - dupa logare utilizatorul isi poate accesa contul si in functie de
+   categorie poate efectua in plus anumite operatii:
+  * un administrator poate face toate operatiile de administrare;
+  * un cumparator poate solicita programe folosind niste formulare (care vor
+     cere suficiente informatii pentru a permite actualizarea tuturor
+     aspectelor legate de program in baza de date);
+    programele sunt supuse licitatiei (bid) in care se va decide cine va
+     realiza specificarea cerintelor, proiectul software, dezvoltarea
+     (codarea), testarea, in functie de preferintele cumparatorului;
+  * un analist creaza documentul cu specificarea exacta a cerintelor, pe
+     baza descrierilor facute de cumparator; documentul descrie CE trebuie
+     sa faca programul;
+    un proiectant creaza proiectul software, pe baza specificatiilor
+     analistului; el descrie CUM este construit si functioneaza programul;
+    un programator creaza codul propriuzis pe baza specificatiilor
+     proiectantului;
+    testerul testeaza si/sau analizeaza programul gata dezvoltat furnizand
+     rapoarte cu bug-uri programatorului si/sau recenzia programului
+     cumparatorului;
+    fiecare completeaza un formular si atasaza fisierele necesare;
+  * un analist/proiectatant/programator/tester poate sa liciteze pentru un
+     anumit program, cerand un anumit pret;
+    din moment ce cumparatorul a acceptat pretul cerut, programul intra
+     in faza de specificare/proiectare/dezvoltare/testare/analiza si nu
+     poate fi modificat la capitolul cerinte, iar cumparatorul va efectua
+     plata pentru program site-ului, urmand ca banii sa ajunga la
+     realizatori cand programul este gata si operational;
+    cumparatorul nu are voie sa liciteze sub conturi de analist/proiectatant
+     /programator/tester la propriile programe; de asemenea cei care vor
+     avea clone vor fi BAN-ati (inclusiv BAN la IP daca este nevoie);
+    in functie de anumiti factori se calculeaza un rating pentru fiecare
+     program care poate sa mareasca sau sa scada ratingul cumparatorului si
+     realizatorilor; alternativa: la finalul realizarii unui program
+     cumparatorul are posibilitatea sa evalueze realizatorii implicati iar
+     realizatorii pe cumparator, iar aceste evaluari vor afecta rating-ul
+     fiecaruia;
+  * orice utilizator inregistrat (indiferent de categorie) poate efectua
+     urmatoarele:
+    ** actualizare informatii personale din cont;
+    ** eliminarea propriului cont; aceast lucru este posibil doar daca nu
+        are proiecte in derulare;
+    ** browse printre licitatii/programe/utilizatori;
+    ** search (folosind motorul de cautare - a se vedea mai sus) pentru
+        licitatii/programe/analisti/proiectanti/programatori/testeri, cu
+        filtrare dupa categorii/subcategorii, specificatii, etc.; sa se
+        poata cauta dupa mai multe criterii;
+    ** view activitatea curenta (ce proiecte are in derulare, liciteaza);
+    ** posibilitate de comanda prin e-mail;
+    ** e-mail pentru asistenta;
+    ** forum de discutii;
+    ** talk (intr-o fereastra text) cu unul/mai multi dintre utilizatorii
+        curent logati (ei vor fi afisati organizat pentru a fi selectati
+        usor).
+Eventual, portalul va permite si vanzarea prin licitatie a unor programe
+ complet realizate.
+
+36. (echipa de 3-5)
+Server de jocuri gen curse de masini si client de conectare/joc la acesta.
+La o cursa pot participa mai multi jucatori, fiecare conducand cate o
+ masina. Fiecare poate vedea pe ecran pista si masinile aflate langa el,
+ dar poate manevra doar masina sa. Grafica va fi 2D, cu vedere din spate,
+ gen Lotus 3.
+Jucatorii isi pot alege/modifica masina, in functie de anumite reguli si
+ contra unui anumit cost (banii se pot castiga in urma rezultatelor obtinute
+ la curse). Cursele pot fi de antrenament, cursa singulara, cursa in doi,
+ campionat. 
+Serverul va oferi cel putin urmatoarele facilitati:
+ - retine o baza de date (interactionand cu un server Oracle, MySQL, etc.)
+  cu profilul fiecarui jucator inscris (nume, parola, nickname, e-mail, scor
+  curent, suma curenta) si participarile sale curente (campionatele la care
+  participa, cu ce masini si dotari, etc.) - jucatorul sa se poata deloga/
+  reloga intre cursele unui campionat, iar serverul sa retina datele
+  necesare;
+ - permite conectarea clientilor (prin retea si Internet);
+ - gestioneaza cursele si campionatele rezolvand interactiunile dintre
+  concurenti, masurand timpul, actualizand scorurile si sumele fiecaruia;
+  practic toate calculele legate de joc se fac pe server, iar clientii sunt
+  doar interfete care afisaza pe masina clientului starea acestuia;
+  comunicarea client-server va fi implementata a.i. sa se transfere cat mai
+  putine informatii, pentru a nu bloca conexiunea - de exemplu serverul nu
+  va transmite clientului exact frame-urile grafice ce trebuie afisate ci
+  doar pozitiile logice ale masinilor (fata de inceputul traseului si fata de
+  axa drumului), iar clientul isi va calcula/genera singur imaginile afisate;
+ - gestioneaza celelalte actiuni/interactiuni ale jucatorilor (talk,
+  modificari vehicole, etc.);
+Clientul va oferi cel putin urmatoarele facilitati:
+ - conectare la server, prin retea si Internet; creare cont, logare/delogare,
+  modificare profil personal, eliminare cont propriu;
+ - ofera informatii despre ceilalti jucatori inregistrati (scorurile lor,
+  cine este curent logat, adrese e-mail, etc.), cursele si campionatele
+  aflate in desfasurare, etc.;
+ - editarea unui traseu, folosind un editor propriu capabil sa defineasca
+  logic geometria acestuia (curbele, denivelarile - unghiurile lor),
+  materialul pistei, conditiile meteo; grafica propriuzisa nu va fi realizata
+  cu acest editor ci va fi una standard folosita in toate cazurile;
+   se vor putea defini campionate, specificand traseele curselor, numarul de
+  participanti, planificarea curselor (perioada in care trebuie sa fie logati
+  jucatorii pentru a participa la curse, data/ora inceperii curselor, etc.);
+   cursele/campionatele se poat uploada pe server si oferi spre participare;
+  odata uploadat, serverul va asigura automat desfasurarea conform orarului,
+  iar atunci cand nu sunt indeplinite toate conditiile (de exemplu nu sunt
+  logati toti participantii necesari) ia masurile necesare (descalifica din
+  acel campionat de cei absenti, anuleaza cursa/campionatul, etc.);
+ - inscrierea la o cursa/campionat, conform programului acestuia;
+ - modificarea masinii proprii intre curse, in functie de suma disponibila,
+  conform regulilor adoptate;
+ - participarea la curse; reamintim: jucatorul poate vedea pe ecran pista si
+  masinile aflate langa el dar poate manevra doar masina sa; grafica va fi 2D
+  cu vedere din spate, gen Lotus 3; calculele legate de joc se fac pe server,
+  clientii sunt doar interfete care afisaza starea curenta; comunicarea
+  client-server va fi implementata a.i. sa se transfere cat mai putine
+  informatii (de exemplu serverul nu va transmite exact frame-urile grafice
+  ci doar pozitiile logice ale masinilor, iar clientul isi va calcula/genera
+  singur imaginile afisate);
+   grafica va permite identificarea jucatorilor (de exemplu in dreptul
+  masinilor va aparea mereu nickname-ul jucatorului respectiv);
+ - talk text si e-mail intre jucatori.
+Eventual: sa se poata participa la o cursa in calitate de spectator - atunci
+ se va putea urmari cursa din perspectiva top-down, vazand pe ecran tot
+ traseul si toate masinile, desenate schitat, dar cu nickname-ul jucatorilor
+ in dreptul lor.
+
+37. (echipa de 3-5)
+ Simulator de control de trafic aerian, sub forma unui sistem client-server
+alcatuit astfel:
+ - aplicatia server afisaza o interfata-radar, pe care afisaza pozitiile
+  avioanelor si cateva coordonate in dreptul fiecaruia;
+   imaginea de pe radar se actualizeaza in timp real, pe masura ce avioanele
+  se deplaseaza;
+ - clientii reprezinta avioane; fiecare se poate rula pe un calculator
+  separat, afisaza un bord cu indicatoare de altitudine, viteza, inclinatie,
+  etc. si "parbrizul" prin care pilotul vede pistele (desenate sumar, ca
+  niste poligoane, dar care se modifica in timp real in functie de miscarea
+  avionului);
+   aplicatia client poate prelua de la utilizator comenzi pentru pilotarea
+  avionului: accelerare, frana, stanga, dreapta, sus, jos, iar avionul
+  asculta progresiv de aceste comenzi in functie de niste caracteristici
+  proprii;
+   cand un client se conecteaza la server, acesta il vede undeva la marginea
+  radarului (si il dirijaza pentru a putea ateriza); daca un avion va iesi
+  din raza radarului, el va fi deconectat automat de la server;
+ - intre server si clienti se va putea purta un dialog de tip chat in mod
+  text; prin acest dialog utilizatorul care controleaza serverul da indicatii
+  utilizatorilor ce controleaza avioanele, pentru ca acestia sa poata ateriza
+  si ulterior decola fara a se ciocni de alte avioane sau a se prabusi;
+  sistemul va detecta ciocnirile/prabusirile si le va semnala serverului si
+  clientilor implicati, care se vor comporta adecvat;
+ - scopul clientilor este aterizarea/decolarea; scopul serverului este
+  monitorizarea si coordonarea avioanelor sa nu se ciocneasca, prabusasca,
+  etc. (coordonarea se va face prin dialogul text);
+ - optional, avioanele client vor vedea prin "parbriz" si celelalte avioane
+  aflate in raza lor vizuala (desenate schitat, dar de marime proportionala
+  cu distanta, orientate in directia deplasarii avioanelor si modificandu-se
+  in timp real pe masura ce avioanele se deplaseaza).
+
+38. (echipa de 3)
+ Sistem pentru administrarea unei baze de date cu clienti/servicii pentru o
+companie de telefonie mobila, cu interfata web. El va contine cel putin
+urmatoarele:
+ - o baza de date pe un server MySQL, Oracle, etc., cu utilizatorii
+  inregistrati, abonamente, servicii, extraoptiuni, etc., organizate pe
+  categorii/subcategorii;
+   pentru fiecare utilizator se va retine cel putin: nume cont si parola,
+  numele real, CNP, telefon, e-mail, IP, categoria (administrator, vanzator,
+  cumparator);
+   pentru fiecare abonament se va retine cel putin: cumparatorul (cheie
+  externa), tip/optiuni/extraoptiuni, data cumpararii, minute si caractere
+  SMS consumate; pe masura ce cumparatorul vorbeste sau scrie SMS-uri,
+  acestea se decrementeaza automat; cand vreunul ajunge la 0 sau perioada
+  abonamentului expira (fapte verificate automat de sistem), serviciul
+  respectiv se blocheaza iar cumparatorul nu-l mai poate folosi; totodata
+  sistemul genereaza automat un e-mail catre cumparator, prin care il
+  informeaza asupra blocajului;
+ - o interfata web care ofera cel putin urmatoarele:
+  * o prezentare a ofertelor companiei, cu evidentierea promotiilor,
+   si un motor de cautare cu posibilitati de filtrare pe categorii/
+   subcategorii;
+  * logare in cont;
+ - odata logat, interfata permite utilizatorului actiuni suplimentare
+  diferite, in functie de categoria acestuia:
+  * unui cumparator i se permite:
+   ** browse cumparatori existenti;
+   ** accesul la un forum;
+   ** simulare convorbire astfel:
+     se selecteaza un alt cumparator din lista sau se formeaza un numar de
+    telefon; 
+     interlocutorul este informat despre intentia de a se vorbi cu el si
+    trebuie sa confirme initierea convorbirii; aceasta se poate implementa
+    in mai multe feluri (preferabila fiind prima varianta):
+     - fie toti cumparatorii au instalat pe calculatorul lor un program ce
+      ruleaza in background ca un serviciu Windows iar acest program
+      primeste apelul, accepta confirmarea si initiaza convorbirea;
+     - fie interlocutorul trebuie sa fie de asemenea logat si ii va aparea
+      automat o fereastra popup prin care i se cere confirmarea, apoi se
+      initiaza convorbirea; daca interlocutorul nu este logat, cel care a
+      facut apelul primeste un mesaj adecvat (de asemenea, il vede in lista
+      cumparatorilor pe interlocutor colorat altfel);
+    odata initiata, convorbirea se desfasoara sub forma unui talk text, iar
+    sistemul o cronometreaza automat si scade minutele respective din
+    abonamentul celui care a initiat-o;
+   ** simulare SMS astfel:
+     se selecteaza un alt cumparator din lista sau se formeaza un numar de
+    telefon;
+     intr-o fereastra se va scrie textul, iar la comanda de trimitere el va
+    fi trimis destinatarului prin e-mail; totodata sistemul va scadea din
+    abonamentul expeditorului numarul de caractere ale textului;
+  * unui vanzator i se permite:
+   ** browse cumparatori existenti;
+   ** accesul la forum;
+   ** creare/stergere/modificare/activare/dezactivare cont cumparator,
+     abonamente, etc.;
+      toate acestea se vor face pe baza unor formulare pe care le va completa
+     vanzatorul si care vor cere toata informatia necesara, iar sistemul va
+     actualiza baza de date si informatia afisata automat;
+  * unui administrator i se permite:
+   ** diverse operatii de administrare;
+   ** browse cumparatori/vanzatori/administratori existenti;
+   ** accesul la forum;
+   ** creare/stergere/modificare oferte, promotii, etc.; creare/stergere/
+     modificare categorii si subcategorii; mutarea unor oferte dintr-o
+     (sub)categorie in alta;
+      toate acestea se vor face pe baza unor formulare pe care le va completa
+     administratorul si care vor cere toata informatia necesara, iar
+     sistemul va actualiza baza de date si informatia afisata automat
+     (inclusiv va modifica automat formularele pe care trebuie sa le
+     completeze vanzatorii); la mutarea unei categorii/subcategorii dintr-un
+     loc in altul se va muta automat tot subarborele de categorii si oferte
+     cu originea in acea categorie/subcategorie.
+
+39. (echipa de 3-5)
+Editor de obiecte 3D, cu urmatoarele facilitati:
+ - Lucrul cu mai multe ferestre simultan.
+ - Constructia dintr-o fereastra sa se poata salva/incarca (din meniul
+  ferestrei); constructia sa se poata salva/incarca intr-o forma care
+  sa contina si structura/functionalitatea ei (a.i. dupa incarcare sa
+  fie recunoscute componentele ei si sa se poata continua editarea
+  acesteia, inclusiv efectuarea pasilor de undo); de asemenea, constructia
+  sa se poata salva sub forma unei imagini 2D (bmp, jpg, etc.), asa cum se
+  vede ea la momentul curent de catre camera (punctul din care se priveste
+  imaginea afisata in fereastra).
+ - Constructia dintr-o fereastra poate fi realizata din primitive (obiecte
+  3D elementare) alese dintr-un meniu si din parti de constructie luate prin
+  copy/cut/paste din alte ferestre; odata terminata, constructia poate fi
+  adaugata ca primitiva la meniu; lista primitivelor poate fi salvata/
+  incarcata pentru folosiri ulterioare.
+ - O primitiva consta din:
+  * o multime de puncte in spatiu unite prin segmente, care formeaza
+   suprafete triunghiulare peste care pot fi adaugate texturi importate (cu
+   extensia ".bmp");
+  * o harta a suprafetelor care se aplica peste imaginea ".bmp"; punctele
+   de pe harta si segmentele corespund punctelor si segmentelor din
+   spatiu;
+  * un centru de referinta (in raport cu care se fac rotirile in spatiu);
+  * o textura.
+  Atunci cand o constructie facuta intr-o fereastra va fi adaugata in
+  meniul de primitive, trebuie sa i se defineasca harta plecand de la
+  hartile primitivelor componente (se va folosi o fereastra de editare 2D
+  specializata, in care hartile componente se misca cu mouse-ul), centrul
+  si textura. Atunci constructia devine un tot unitar (nu se mai disting
+  primitivele componente), cu un singur schelet si o singura harta (mare).
+ - O primitiva se poate modifica intr-o fereastra speciala, prin mutarea/
+  redimensionarea/adaugarea/stergerea suprafetelor triunghiulare.
+   De asemenea punctele de pe harta pot fi mutate; astfel putem importa o
+  textura pe obiectul 3D in diferite forme (cu distoriuni: i.e. un cerc
+  desenat in ".bmp" poate avea forma de oval pe un obiect 3d).
+ - Cand se realizeaza constructia dintr-o fereastra din primitive, acestea
+  pot fi in prealabil deplasate si rotite in cele 3 directii, pot fi marite/
+  micsorate si li se poate schimba textura; de asemenea, fiecarei texturi i
+  se poate schimba inaintea aplicarii luminozitatea. Totodata, se poate
+  misca camera (punctul din care se priveste) si se poate alege daca imginea
+  din fereastra (privita din punctul respectiv) este obtinuta prin proiectie
+  centrala sau paralela; daca in urma efectului de zoom constructia nu
+  incape in fereastra, ea va fi afisata doar partial, putand face scroll.
+ - Constructia dintr-o fereastra se poate afisa cu sau fara textura; in
+  ambele cazuri, primitiva curent selectata din componenta ei va fi
+  evidentiata afisand altfel scheletul si textura si afisandu-i centrul,
+  impreuna cu coordonatele sale in spatiu intr-un sistem de referinta ales.
+ - Aplicatia presupune si decodificarea formatului BMP in reprezentare
+  interna.
+Optional:
+ - Posibilitatea de a realiza sectiuni prin planuri sau linii poligonale
+  definite cu mouse-ul pe obiect, cu partile rezultate putand face copy/
+  cut/paste/delete in alte constructii (inclusiv din alte ferestre).
+ - Un modul ce genereaza scheletul si harta primitivelor pe baza unei
+ functii matematice scrisa intr-un limbaj special creat si care este
+ interpretat de program.
+
+40. (echipa de 3-5)
+Mall virtual: pe un site web va exista o cladire virtuala (desenata 3D),
+in care vizitatorul se va putea plimba privind diverse reclame, vitrine,
+usi; fiecare usa ii va oferi acces spre cate un magazin, sala de spectacol,
+sala de jocuri, sala de discutii; magazinele pot fi create (si adaugate la
+cladire) si eliminate in urma unui contract cu mall-ul, iar design-ul si
+modul lor de functionare va fi gestionat de catre proprietarii acestora.
+ Sistemul va oferi cel putin:
+ - o baza de date pe un server MySQL sau Oracle, cu informatii despre
+  utilizatorii inregistrati, configuratia cladirii, magazine, etc.;
+  utilizatorii pot fi de urmatoarele categorii: administrator, sef,
+  comerciant, cumparator;
+ - un server cu o interfata web, care va permite:
+  * oricui: sa viziteze mall-ul si magazinele, sa-si creeze cont de
+   comerciant sau cumparator; conturile de sef sau administrator se pot
+   crea doar de catre un administrator;
+    la crearea unui cont, se vor specifica cel putin numele, prenumele, CNP,
+   username-ul, parola, categoria, adresa e-mail; in plus:
+    ** un comerciant va trebui sa aleaga un magazin marcat liber de pe harta
+      mall-ului (desenata 2D); harta va mentiona codul magazinelor, daca
+      este liber sau ocupat, iar pentru cele libere costul initial de
+      ocupare si chiria zilnica (aceasta harta este editata de sefi);
+       in plus, comerciantul va trebui sa specifice o suma de bani (pe care
+      se presupune ca a platit-o in avans si care acopera costul initial al
+      ocuparii magazinului si chiria platita anticipat pentru o anumita
+      perioada); aceasta este soldul sau initial;
+    ** un cumparator va trebui sa specifice o suma de bani (pe care se
+      presupune ca a platit-o in avans si din care se vor scadea costurile
+      cumparaturilor); aceasta este soldul sau initial;
+    conturile de comerciant si cumparator nu devin functionale decat dupa
+    aprobarea unui sef (atunci interfata acestora va semnala acceptul);
+  * unui comerciant:
+    ** sa-si defineasca aspectul magazinului (o pagina web), inclusiv
+      vitrina, usa si firma vazuta de un vizitator care se plimba prin mall;
+    ** sa creeze/modifice/elimine categorii si subcategorii de produse;
+      acestea vor avea o organizare arborescenta; va fi posibila crearea
+      de noduri, redenumirea lor, mutarea unui subarbore dintr-un loc in
+      altul, stergerea unui subarbore; operatiile cu subarbori se fac prin
+      comenzi atomice asupra radacinilor acestora;
+    ** adaugarea unui produs (nume, descriere, pret, promotie sau nu)
+      intr-o (sub)categorie, mutarea lui dintr-o (sub)categorie in alta,
+      modificarea caracteristicilor produsului, eliminarea produsului; cand
+      se sterge un (sub)arbore de categorii sunt eliminate automat produsele
+      din acestea;
+    ** adaugarea/eliminarea de promotii;
+    ** sa consulte suma totala incasata pana in prezent din vanzari si sa o
+      reseteze la 0;
+    ** sa adauge bani la soldul sau curent (din care sistemul va retine
+      periodic chiria); modificarea va deveni functionala numai dupa
+      confirmare din partea unui sef (atunci interfata comerciantului va
+      semnala acceptul); daca soldul ajunge la 0 si trece termenul urmator
+      de plata al chiriei, magazinul este eliminat automat de sistem si
+      este marcat ca liber in harta mall-ului (totodata sefii vor fi
+      notificati printr-un e-mail generat automat);
+    definirea aspectului magazinului va fi facuta cu un applet care va
+    permite plasarea unor elemente functionale predefinite pe o forma si
+    definirea proprietatilor acestora (la fel ca in IDE-urile de programare
+    vizuala); elementele functionale vor fi: reclame (cu pozitie, dimensiuni
+    si imagine upload-ata), arbore de (sub)categrii si produse (editabil
+    din interfata comerciantului si doar vizitabil din interfata
+    cumparatorului), lista de promotii (se actualizeaza automat la
+    modificarile asupra arborelui de (sub)categorii si produse), caseta
+    de search;
+  * unui cumparator:
+    ** sa viziteze mall-ul, avand acces in toate camerele acestuia;
+    ** intr-un magazin, sa consulte arborele de (sub)categorii si produse,
+      sa faca search (folosind elementele functionale plasate acolo de
+      comerciant), sa adauge/elimine cumparaturi la un cos calculandu-se
+      automat costul total (cosul este local magazinului, iar cand
+      cumparatorul paraseste magazinul cosul se goleste automat de obiectele
+      necumparate); sa cumpere obiectele din cos, dar numai in limita
+      soldului sau curent;
+    ** intr-o sala de spectacol, sa vizioneze un film ales dintr-o lista,
+      platind o suma de bani (in limita soldului sau curent); suma poate
+      diferi de la un film la altul;
+    ** intr-o sala de jocuri, sa participe la un joc dintr-o lista;
+    ** intr-o sala de discutii sa faca talk text cu alti cumparatori
+      prezenti in acea sala;
+    ** sa adauge bani la soldul sau curent; modificarea va deveni
+     functionala numai dupa confirmare din partea unui sef (atunci interfata
+     cumparatorului va semnala acceptul);
+  * unui sef:
+    ** sa defineasca aspectul interior 3D si harta mall-ului (vazuta de
+      comercianti), adaugand/eliminand locatii, editand codul, pretul si
+      chiria lor (doar daca nu sunt ocupate); un magazin nou este automat
+      neocupat; un magazin poate fi eliminat doar daca este neocupat;
+      sa plaseze reclame (imagini upload-ate) in spatiile dintre camere
+      (vor fi privite de vizitatorii mall-ului cand se plimba prin cladire);
+      in toate aceste scopuri va folosi un applet cu un editor 3D/2D; 
+    ** sa confirme crearea conturilor de comerciant si cumparator si sa
+      confirme actualizarea soldurilor acestora;
+    ** sa incarce/elimine filme in listele din salile de spectacol, editand
+      numele si pretul lor;
+    ** sa incarce/elimine jocuri din salile de joc;
+    ** sa urmareasca intr-o caseta soldul total al mall-ului (actualizat
+      automat prin plata chiriilor de catre comercianti, a vizionarilor de
+      filme si din jocuri) si sa-l reseteze la 0;
+  * unui administrator i se permite sa faca toate operatiile de
+   administrare.
+ Se va implementa cel putin un joc (jucabil in salile de jocuri). Preferabil
+un joc de tip ruleta (in timp real), la care sa poata veni/pleca mai multi
+cumparatori; banii castigati de cumparatori se vor adauga la soldul lor
+curent; banii pierduti de cumparatori vor fi doar in limita soldului lor
+curent. Ruleta se declanseaza automat in mod periodic, iar intre timp
+cumparatorii isi fac in timp real pariurile (la declasarea ruletei pariurile
+sunt blocate). Banii pierduti de cumparatori se adauga automat la soldul
+mall-ului. Daca soldul mall-ului ajunge la 0 jocul este blocat iar
+cumparatorii dati afara pe hol.
+ Optional:
+ - casetele de search ale magazinelor vor oferi posibilitatea de filtrare
+  pe (sub)categorii, iar (sub)categoriile oferite pentru filtrare se vor
+  actualiza automat in urma operatiilor de editare efectuate de comerciant
+  asupra arborelui sau de (sub)categorii si produse;
+ - cand un cumparator paraseste un magazin, cosul se goleste dar se
+  memoreaza continutul lui, a.i. la revenirea in magazin el se reumple
+  cu obiectele respective;
+ - sistemul va avea o arhitectura deschisa, oferind posibilitatea de a
+  adauga ulterior o gama larga de jocuri sub forma de plug-in-uri si
+  applet-uri;
+ - forum.
+
+41. (echipa de 3-5)
+Sistem pentru testare conducere auto online: pe un site web vizitatorii
+isi fac cont, apoi pot da teste alese din diverse liste, obtinand puncte.
+Testele privesc conducerea auto si sunt psihologice, de cunoastere a
+regulilor de circulatie, de conducere in poligon, de conducere pe traseu.
+ Sistemul va oferi cel putin:
+ - o baza de date pe un server MySQL sau Oracle, cu informatii despre
+  utilizatorii inregistrati, situatia si punctajul lor curent, teste, etc.;
+   utilizatorii pot fi de urmatoarele categorii: administrator, supervizor,
+  candidat;
+ - un server cu o interfata web, care va permite:
+  * oricui: sa afle informatii generale si sa-si creeze cont de candidat
+   (conturile de supervizor se pot crea doar de catre un administrator);
+    la crearea unui cont, se vor specifica cel putin numele, prenumele, CNP,
+   username-ul, parola, categoria;
+  * unui administrator: sa faca toate operatiile de administrare;
+  * unui supervizor: sa incarce/elimine teste; sa creeze/modifice/elimine
+   grupuri de teste (un grup acopera toata testarea necesara obtinerii
+   permisului auto pe diverse categorii de vehicole, cu punctajul necesar);
+    testele pot fi:
+   ** psihologice; vor fi applet-uri/plugin-uri adaugate din interfata
+     supervizorului;
+   ** de cunoastere a regulilor: formulare cu mai multe item-uri; fiecare
+     item contine o figura, un text (si o intrebare) si o lista cu variante
+     de raspuns (butoane radio); pentru definirea unui asemenea test,
+     supervizorul va folosi un applet continand un editor 2D pentru figuri
+     (ce permite plasarea unor elemente grafice de tip strada, automobil,
+     biciclist, semafor pe o anumita culoare, semn de circulatie, marcaj
+     rutier, etc.) si un formular pentru adaugarea textelor, a variantelor
+     de raspuns si a punctajelor aferente; de asemenea, va specifica limita
+     de timp;
+   ** de conducere in poligon; pentru definirea unui asemenea test,
+     supervizorul va folosi un applet continand un editor 2D cu ajutorul
+     caruia va putea defini forma poligonului si va putea plasa in diverse
+     locuri elemente grafice precum: rampa, jaloane, loc parcare (din fata/
+     spate/lateral), etc., si va defini o limita de timp;
+   ** de conducere pe traseu: pentru definirea unui asemenea test,
+     supervizorul va folosi un applet continand un editor 2D cu ajutorul
+     caruia va putea defini harta (blocuri, strazi cu numar divers de
+     benzi, trotuare, intersectii), si va putea plasa in diverse locuri
+     elemente grafice si functionale precum: marcaje rutiere si zebre,
+     semne de circulatie, semafoare (care comuta automat si periodic
+     culorile), agenti de circulatie (care executa automat si periodic
+     anumite miscari), etc.
+  * unui candidat: sa aleaga un test sau grup de teste din listele prezente
+   si sa sustina testele respective; sistemul va calcula automat punctajul
+   obtinut;
+    sustinerea unui test psihologic se desfasoara conform programului
+   respectiv (applet);
+    sustinerea unui test de cunoastere a regulilor se face bifand optiunile
+   corecte (in limita de timp specificata);
+    sustinerea unui test de conducere in poligon se face conducand in timp
+   real (folosind un applet cu grafica 2D) o masina in poligonul respectiv
+   si facand manevrele necesare, in limita de timp specificata; vederea va
+   fi de sus, iar comenzile auto implementate vor fi cel putin: acceleratie/
+   frana, inainte/marsarier, stanga/dreapta;
+    sustinerea unui test de conducere pe traseu se face conducand in timp
+   real (folosind un applet cu grafica 2D) o masina pe harta respectiva,
+   concomitent cu alti candidati (conectati in acel moment la acelasi
+   traseu) si niste masini generate aleator si conduse automat de sistem
+   (sistemul va avea grija ca acestea sa respecte regulile); vederea va
+   fi de sus, iar comenzile auto implementate vor fi cel putin: acceleratie/
+   frana, inainte/marsarier, stanga/dreapta, semnalizare stanga/dreapta,
+   claxon; se va afisa mereu viteza curenta; cursa va dura cat doreste
+   candidatul (daca va dori sa plece, va iesi printr-un anumit punct al
+   traseului) sau pana cand punctajul sau curent pe acest traseu ajunge la
+   0; daca punctajul acumulat pe traseul respectiv nu atinge o valoare
+   minima necesara, se considera 0; de fiecare data cand apare un eveniment
+   de trafic (apropierea de un marcaj, semn, semafor, agent, alt participant
+   la trafic), sistemul va adauga/scadea automat puncte candidatilor
+   implicati dupa cum au procedat corect sau nu; de exemplu:
+    ** daca un candidat intra intr-o intersectie pe verde/rosu (trece linia
+      de demarcare a intersectiei cand semaforul este pe culoarea
+      respectiva) i se adauga/scad puncte; la fel daca incetineste sau nu
+      in prezenta unui indicator de stop;
+    ** daca un candidat intr-o intersectie da prioritate unuia care vine
+      din dreapta si nu sunt indicatoare de drum cu prioritate sau de cedare
+      a trecerii, el primeste puncte (si i se scad daca nu o face);
+      asemanator in cazul cand exista indicatoare ce specifica prioritatea;
+    ** daca un candidat depaseste linia intrerupta/continua i se adauga/scad
+      puncte;
+    ** daca efectueaza o depasire sau oprire in zona unui indicator ce
+     interzice acest lucru, sau daca depaseste viteza reglementata prin
+     indicatoare in zona acestora, i se scad puncte;
+   punctele adaugate la respectarea repetata a unei aceleiasi reguli pe un
+   acelasi traseu scad progresiv, a.i. candidatul sa nu fie tentat sa
+   acumuleze punctele facand repetet o aceeasi miscare; in caz de accident
+   (lovire alta masina, semn, semafor, agent, bloc) punctajul primit de
+   candidat pe traseul respectiv devine 0.
+Optional:
+- suport pentru volan cu pedale.
+Observatii:
+- implementarea se poate face a.i. editorul 2D si elementele grafice
+ folosite la definirea diferitelor tipuri de teste sa fie aceleasi; de
+ asemenea, motorul general de simulare a conducerii auto in poligon si
+ pe traseu sa fie acelasi; un element grafic si functional pe traseu
+ (tronson de linie continua sau intrerupta, semn, semafor, etc.) se
+ poate defini ca un obiect avand un desen, o pozitie si o distanta in jurul
+ sau a.i. orice participant la trafic care intra in distanta respectiva
+ trebuie sa faca sau sa nu faca anumite manevre; de exemplu un tronson
+ de linie continua nu trebuie calcata, iar in apropierea unui indicator de
+ "cedeaza trecerea" nu ai voie sa intri in intersectie cat timp exista alte
+ masini pe drumul transversal in vecinatatea aceluiasi indicator.
+- in cazul unei echipe slabe, se poate renunta la testele psihologice si
+ de poligon; eventual, pe traseu candidatul va circula singur.
+
+42. (echipa de 3)
+Portal web cu evenimente online. El va contine cel putin urmatoarele:
+ - o baza de date pe un server MySQL sau Oracle, cu evenimentele postate,
+  utilizatorii inregistrati, etc.;
+   pentru fiecare eveniment se va retine cel putin: titlul, organizatorul,
+  perioada de desfasurare (dupa care se va sterge automat din baza de date,
+  pastrandu-se doar o parte din informatiile sale, intr-o pagina-istoric),
+  categoria, rating;
+   pentru fiecare utilizator se va retine cel putin: numele contului si
+  parola, numele real, telefon, e-mail, categoria (administrator,
+  organizator sau utilizator obisnuit), un sold de bani curent, rating
+  (in cazul organizatorilor);
+   contul unui organizator va deveni functional doar dupa ce a fost
+  confirmat de administrator (organizatorul primeste un e-mail de notificare
+  generat automat);
+ - o interfata web care ofera cel putin urmatoarele:
+  * motor de cautare in baza de evenimente si organizatori, cu categorii si
+   search (cu filtrare pe categorii/subcategorii, intervale de desfasurare,
+   organizatori, locatia geografica a user-ului, etc. si sortare dupa
+   rating-uri);
+  * creare cont/logare in cont;
+ - odata logat, interfata ofera utilizatorului informatii suplimentare
+  diferite, in functie de categoria acestuia:
+  * unui organizator i se permite:
+   ** definirea/modificarea/stergerea de categorii/subcategorii de
+     evenimente; (sub)categoriile de evenimente formeaza un arbore, in care
+     se pot adauga/muta/sterge noduri; organizatorul va putea manevra doar
+     nodurile create de el; va putea muta/sterge (sub)arbori printr-o
+     comanda atomica data asupra radacinii acestuia; cand este stearsa o
+     (sub)categorie, se sterg automat evenimentele din ea; daca exista insa
+     in ea evenimente adaugate alti organizatori, acestea raman, impreuna cu
+     (sub)categoria; cand este sters un eveniment inainte de a se produce,
+     toti utilizatorii care au platit deja bilet la el primesc banii inapoi
+     (se trec din soldul organizatorului in cel al utilizatorilor) impreuna
+     cu un e-mail de notificare generat automat;
+      in general, modificarile facute de un organizator devin accesibile la
+     delogarea lui sau in momentul cand da o comanda de tip commit (iar
+     sistemul va permanentiza modificarile doar dupa ce va verifica automat
+     ca respecta regulile);
+      daca organizatorul a creat (sub)arbori in care nu a adaugat nici un
+     eveniment, la delogare sau commit acestea sunt sterse automat
+     (de exemplu in baza de date se va face un rollback);
+   ** la postarea unui eveniment, i se va afisa un chestionar ce trebuie
+     completat (el va cere toate informatiile necesare pentru a permite
+     instalarea/dezinstalarea automata a evenimentului in structura logica a
+     site-ului) si i se va permite definirea aspectului grafic al paginii
+     evenimentului, folosind un applet care va permite plasarea unor
+     elemente functionale predefinite pe o forma si definirea proprietatilor
+     acestora (la fel ca in IDE-urile de programare vizuala); elementele
+     functionale vor fi:
+     *** imagini, texte (cu diverse fonturi si culori);
+     *** fisiere video si audio; ele vor putea fi vizionate/ascultate
+        oricand (pana la data expirarii evenimentului) si de catre oricine,
+        sau li se poate pune restrictia sa fie vizionate/ascultate doar o
+        data, si/sau doar de utilizatorii care au platit bilet in prealabil,
+        si/sau doar pe perioada evenimentului; vizionarea materialelor video
+        va fi posibila atat in mod fereastra si full screen;
+     *** streaming video si audio in direct; vor putea fi vizionate/
+        ascultate doar de utilizatorii care au platit bilet in prealabil si
+        doar pe perioada evenimentului; vizionarea va fi posibila atat in
+        mod fereastra si full screen; la testare se va folosi ca input o
+        camera web si un microfon;
+     *** istoric (daca astfel de evenimente au mai avut loc - contine
+        link-uri catre paginile editiilor anterioare din baza de date);
+   ** consultarea soldului curent (el se actualizeaza automat pe masura ce
+     utilizatorii cumpara bilete);
+   ** daca la un eveniment exista deja utilizatori care au cumparat bilete,
+     el nu mai poate fi modificat (nici ca aspect) ci doar eventual sters cu
+     totul, caz in care cumparatorii primesc automat banii inapoi si
+     e-mail-ul de notificare;
+  * unui utilizator obisnuit i se permite:
+   ** consultarea soldului curent;
+   ** adaugarea unei sume de bani la soldul curent (ea devine functionala
+     doar dupa confirmarea administratorului, caz in care primeste si un
+     e-mail de notificare generat automat);
+   ** cumpararea unui bilet la un eveniment, inainte de a se produce;
+     suma se trece din soldul utilizatorului in cel al organizatorului;
+   ** urmarirea evenimentului, a se vedea mai sus; utilizatorul va putea
+     seta sa primeasca automat e-mail-uri de notificare, la niste momente
+     alese de el (de exemplu la o lista de date anume, cu o zi inainte de
+     eveniment si in momentul inceperii evenimentului);
+   ** accesul la un forum;
+   ** talk (text) cu alti utilizatori logati in acel moment; se va putea
+     restrictiona talk-ul doar la utilizatorii care urmaresc in acel
+     moment un anumit eveniment;
+   ** posibilitatea de a acorda un rating evenimentelor la care a participat
+     (cumparand bilet); sistemul va calcula automat si va afisa in
+     pagina evenimentului numarul de participanti si rating-ul mediu;
+     de asemenea, sistemul va calcula un rating mediu al organizatorului,
+     pe care il va afisa in lista organizatorilor;
+  * unui administrator i se permit, pe langa  operatiile generale de
+   administrare si:
+   ** stergerea unui (sub)arbore de (sub)categorii si evenimente, sau a unui
+     eveniment individual; in acest caz cumparatorii primesc automat banii
+     inapoi (a se vedea mai sus) si se va genera automat un e-mail de
+     notificare catre acestia si catre organizator;
+   ** stergere/delogare utilizatori (ei primesc si un e-mail de notificare
+     generat automat);
+   ** restrictionare temporara (pe o perioada precizata) a unui utilizator
+     de la talk; eliminarea tuturor mesajelor unui utilizator de pe forum
+     printr-o comanda atomica (sistemul se ocupa de detalii).
+   ** confirmarile adaugarilor de bani in sold din partea cumparatorilor.
+  * in general toti utilizatorii isi pot edita informatiile personale
+   aferente contului;
+
+43. (echipa de 2-3)
+ Videoconferinta 3D: program care se poate rula in doua instante
+interconectate, aflate pe doua masini conectate in retea sau prin internet,
+si care ofera utilizatorilor posibilitatea efectuarii unei comunicari video
+si audio, ambele 3D. In acest scop:
+ - la fiecare statie imaginea va fi captata monocrom prin doua webcam-uri,
+  iar aceste imagini vor fi translatate in culori opuse (ex: rosu/verde) si
+  afisate suprapus pe monitorul celeilalte statii; ea va fi privita prin
+  ochelari cu lentilele colorate in cele doua culori, fiind indusa astfel
+  senzatia de relief (ca in cazul anaglifelor);
+ - la fiecare statie sunetul va fi captat prin mai multe microfoane dispuse
+  spatial (cel putin doua), apoi va fi prelucrat si redat la cealalta statie
+  folosind mai multe boxe (cel putin doua) sau casti stereo; in cazul
+  folosirii a doar doua boxe/casti, este necesara prelucrarea suplimentara
+  a sunetului pentru crearea iluziei de pozitionare pe verticala.
+In cazul echipei de 3 se va implementa posibilitatea comunicarii simultane
+intre mai multi utilizatori, fiecare aflandu-se pe alta masina. Fiecare
+utilizator isi va vedea toti interlocutorii, fiecare in cate o fereastra
+mica cu imagine 3D si sunet mono; el va putea alege din cand in cand cate
+una din ferestre pentru a se vedea mare si avand atat imaginea cat si
+sunetul 3D.
+ Varianta de implementare:
+ Iaginea poate fi captata color si redata prin doua proiectoare avand
+filtre de polarizare orientate pe directii perpendiculare; ea va fi privita
+prin ochelari cu lentile de polarizare, orientate pe aceleasi directii
+perpendiculare ca si filtrele proiectoarelor; ecranul de proiectie trebuie
+ales a.i. sa conserve polaritatea luminii.
+
+44. (echipa de 3)
+ Orchestra online: aplicatie client-server care simuleaza o orchestra in
+care fiecare instrument canta online. Vor fi implementate urmatoarele
+facilitati:
+- componenta client va simula un instrument muzical, la care canta un
+ utilizator in timp real; ea se conecteaza la server prin retea sau
+ internet, spre a fi coordonata (dirijata) de acesta;
+  componenta server va permite conectarea mai multor clienti; utilizatorul
+ serverului va putea coordona in timp real clientii;
+- componenta client:
+ * va putea alege instrumentul simulat dintr-o lista; vor fi implementate
+  cel putin 3 tipuri diferite de instrumente;
+ * va reda atat sunetul instrumentului propriu cat si al celorlalte
+  instrumente din orchestra;
+ * in functie de instrumentul simulat, va afisa o interfata specifica (cu
+  clape actionate prin click/taste in cazul pianului, cu corzi actionate
+  prin miscarea mouse-lui si taste pentru inaltimea notei in cazul chitarei,
+  etc.);
+ * va afisa in timp real ritmul impus de server, pentru a permite
+  utilizatorului corelarea cu ceilalti;
+ * va permite editarea de partituri specifice instrumentului ales si le va
+  putea play-a in locul interpretarii live (ele vor asculta automat de
+  ritmul impus de server); partiturile se pot si salva/incarca in fisiere;
+- componenta server:
+ * va permite conectarea unui numar oarecare de clienti, chiar mai multi
+  decat numarul de tipuri de instrument (deci pot fi mai multi clienti cu
+  acelasi tip de instrument); se va implementa un mod de invitare/
+  acceptare a clientilor in orchestra;
+ * va reda sunetul tuturor instrumentelor din orchestra; va putea modifica
+  insa volumul fiecarui instrument si ritmul general (ritmul se afisaza la
+  fiecare client);
+ * interfata serverului va afisa simbolic membrii orchestrei (clientii cu
+  instrumentul lor) si dirijorul, iar cu click pe fiecare se va putea
+  modifica proprietatile acestuia: volum (la instrumente), ritm (la
+  dirijor); va sti cand un client foloseste o partitura.
+Optional (pentru inca 1-2 membri in echipa): se va implementa un API in care
+ se vor putea defini noi instrumente; API-ul va permite definirea timbrului
+ sonor, modul de actionare si efectul comenzilor respective asupra
+ inflexiunilor si volumului sunetului, interfata grafica afisata la client
+ (clape, corzi si modul de actionare), simbolul care apare in orchestra la
+ server; noile instrumente se vor putea adauga ca plugin-uri, la server
+ si/sau la clienti (si vor aparea automat in lista din care clientii isi
+ selecteaza instrumentul).
+
+45. (echipa de 3-5)
+Sistem client-server pentru camere de discutii. Formele de discutie (dialog
+text, videoconferinta, jocuri, etc.) vor putea fi programate sub forma de
+plugin-uri.
+Programul server va oferi cel putin urmatoarele facilitati:
+ - retine o baza de date (interactionand cu un server Oracle, MySQL, etc.);
+  cu utilizatorii existenti si camerele de discutii create;
+ - permite conectarea clientilor (prin retea si Internet);
+ - gestioneaza conexiunile intre useri prin diferite protocoale;
+ - gestioneaza o lista de pluginuri si asigura ca in momentul in care o
+  camera de discutii este pornita cu un anumit plugin, acesta sa se afle pe
+  toate masinile clientilor care se conecteaza la ea;
+ - gestioneaza securitatea intre camerele de discutii.
+Programul client va oferi cel putin urmatoarele facilitati:
+ - creare/stergere/logare/delogare cont; editare caracteristici ale contului
+  propriu;
+ - creare/stergere/modificare camera de discutii; cel care a creat camera
+  devine moderatorul ei; el va putea specifica numarul maxim de participanti
+  (poate fi si nelimitat), daca conectarea la camera necesita confirmarea
+  moderatorului, daca sunt permisi spectatori (doar urmaresc ce se intampla
+  in ea, fara sa poata interveni - ei au aceleasi ferestre, dar nu pot
+  comanda in ele), plugin-urile folosite in camera;
+ - conectarea la o camera de discutii existenta (ca participant sau
+  spectator), cu confirmare din partea moderatorului atunci cand e cazul;
+ - scrierea unui nou plug-in, upload-area si inregistrarea lui pe server;
+  plugin-urile se vor scrie intr-un API specific, continand instrumente ce
+  permit comunicarea de text, video, audio, grafica 2D si preluarea de
+  comenzi de la utilizator (a.i. sa se poata implementa jocuri 2D,
+  comunicari de tip blackboard, etc.), etc.
+Se vor implementa cel putin urmatoarele plugin-uri:
+ - talk in mod text (intre participantii la o camera, detectati automat);
+  va fi o singura fereastra per camera;
+ - videoconferinta cu sunet; fiecare participant la camera va aparea intr-o
+  fereastra proprie;
+ - conversatie grafica gen blackboard; mai exact in fereastra putem desena/
+  sterge cu mouse-ul sau cu o tableta grafica desene sau text scris de mana,
+  iar acestea vor fi vazute in acelasi tip de toti interlocutorii; se vor
+  putea folosi mai multe culori; va fi o singura tabla per camera;
+ - prezentare text: un participant poate incarca un fisier text pe care
+  doreste sa-l explice celorlalti; atunci la fiecare participant se va
+  deschide cate o fereastra dedicata fisierului, in care se afisaza
+  continutul (scroll-abil al) acestuia; cel care a incarcat fisierul poate
+  scroll-a fisierul, iar scroll-area se va face automat sincron la toti
+  ceilalti; de asemena poate manevra (cu mouse-ul) un indicator in fisier si
+  poate face/sterge marcaje (sublinieri, incercuiri), iar acestea vor fi
+  vizibile automat sincron la toti ceilalti;
+ - prezentare imagine: un participant poate incarca o imagine pe care vrea
+  sa o arate celorlalti; atunci la fiecare participant se va deschide cate o
+  fereastra in care este afisata imaginea respectiva; cand cel care a
+  incarcat imaginea inchide fereastra ei, ea se inchide automat la toti;
+ - transfer fisiere intre participantii la camera; in ferestra aferenta
+  plugin-ului un participant poate adauga/sterge link-uri la fisiere aflate
+  pe masina proprie iar ceilalti prin click si li pot transfera; serverul
+  va realiza automat conexiunile necesare a.i. transferul sa se faca prin
+  comunicare directa intre clienti (netrecand prin server);
+ - un joc 2D (in care sunt implicati automat toti participantii la camera):
+  biliard, carti, etc.
+Varianta: comunicarea client server se poate face prin interfete web,
+ iar plugin-urile sa fie applet-uri; de asemenea, o comunicarea prin
+ generare/preluare XML-uri permite implementarea clientilor pe mai multe
+ arhitecturi.
+
+
+DANIEL DRAGULICI
+februarie - martie, 2007
+actualizat: 3 septembrie 2007, 3 martie 2008, 6 martie 2008, 10 martie 2008,
+           20 martie 2008

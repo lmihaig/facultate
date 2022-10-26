@@ -1,0 +1,2891 @@
+NIVELUL INFERIOR DE PRELUCRARE A FISIERELOR:
+--------------------------------------------
+
+Exista doua nivele de prelucrare a fisierelor:
+- nivelul inferior: fisierele sunt desemnate prin descriptori (numere
+   naturale), iar functiile ce lucreaza cu ele ("open", "close", "read",
+   "write", etc.) sunt apeluri sistem; ele sunt intim legate de structura
+   sistemului de operare, iar programele ce lucreaza cu ele sunt eficiente
+   dar neportabile (de exemplu fisierele header ce trebuie incluse difera
+   de la un sistem la altul);
+- nivelul superior: fisierele sunt desemnate prin (pointeri la) structuri
+   "FILE" (ce contin printre altele un buffer si un descriptor), iar
+   functiile ce lucreaza cu ele ("fopen", "fclose", "fread", "fwrite",
+   "fscanf", "fprintf", etc.) sunt in biblioteca standard C (iar in corpul
+   lor folosesc la un moment dat apelurile "open", "close", "read", "write",
+   etc.); aceste functii nu mai sunt intim legate de sistemul de operare ci
+   de standardul limbajului C, iar programele ce lucreaza cu ele sunt
+   portabile (de exemplu fisierul header ce trebuie inclus este "stdio.h",
+   indiferent daca lucram pe un sistem UNIX, Linux, DOS, etc.); de asemenea,
+   functiile de nivel superior ofera si posibilitatea citirii si scrierii cu
+   format.
+Fiecare proces are o tabela de descriptori (TD); ea este un vector de
+ structuri, indexat de la 0 la cel mai mare descriptor posibil. Daca
+ procesul a asociat unui fisier un descriptor i (numar natural), intrarea
+ i din aceasta tabela e completata cu informatii specifice, printre care
+ un pointer la o intrare in tabela deschiderilor de fisiere a sistemului
+ (vezi mai jos). De regula primii trei descriptori sunt asignati automat
+ dupa cum urmeaza: 0 = intrarea standard; 1 = iesirea standard; 2 = iesirea
+ standard pentru erori; ei pot fi desemnati si prin urmatoarele constante
+ simbolice, definite in "unistd.h": STDIN_FILENO (=0), STDOUT_FILENO (=1),
+ STDERR_FILENO (=2).
+Sistemul are o tabela a deschiderilor de fisiere (TDF); o intrare corespunde
+ unei "deschideri" a unui fisier de catre un proces si contine printre
+ altele:
+ - numarul total de descriptori asociati acestei intrari de diverse procese
+    (vezi mai sus);
+ - modul de deschidere (citire, scriere, citire si scriere);
+ - pozitia curenta in fisier;
+ - un pointer la o intrare din tabela de i-noduri accesate a sistemului
+    (vezi mai jos).
+Sistemul are de asemenea o tabela a i-nodurilor accesate la un moment dat
+ de diverse procese (TIA); fiecare intrare in aceasta tabela contine printre
+ altele numarul intrarilor din TDF care pointeaza spre ea.
+Mai multi descriptori (din acelasi proces sau din procese diferite) pot fi 
+ asociati unei aceeasi intrari in TDF, mai multe intrari din TDF pot pointa o 
+ aceeasi intrare in TIA.
+Exemplu:
+        TD pt. PS1                   TDF                          TIA
+            ---               ------------------               ----------
+         0 |   |           0 |                  |           0 |          |
+         . |   |           . |                  |           . |          |
+         . |   |           . |                  |           . |          |
+         .  ---            . |                  |           . |          |
+         i | a |           . |                  |           . |          |
+     PS1    ---            . |                  |              ----------
+         j | b |           . |                  |           x | 2 |      |
+         .  ---               ------------------               ----------
+         . |   |           a | 2 |  r | 100 | x |           . |          |
+         . |   |              ------------------            . |          |
+           |   |           b | 1 | rw |  12 | x |              ----------
+            ---               ------------------            y | 1 |      |
+                           . |                  |              ----------
+        TD pt. PS2         . |                  |           . |          |
+            ---            . |                  |           . |          |
+         0 |   |           . |                  |           . |          |
+         . |   |           . |                  |              ----------
+         . |   |              ------------------            z | 1 |      |
+         .  ---            c | 1 |  w |  55 | y |              ----------
+         k | a |              ------------------            . |          |
+     PS2    ---            d | 2 |  r |   0 | z |           . |          |
+         l | d |              ------------------            . |          |
+            ---            . |                  |              ----------
+         m | d |           . |                  |
+            ---            . |                  |
+         n | c |              ------------------
+         .  ---
+         . |   |
+            ---
+Observatie: daca un proces asociaza doi descriptori i si j la aceeasi
+ intrare in TDF, operatiile facute asupra fisierului prin intermediul lor
+ vor folosi acelasi indicator de pozitie curenta (indicatorul fiind continut
+ in intrarea din TDF) - deci o citire via i urmata de o citire via j vor
+ furniza informatii succesive din fisier.
+Citirile/scrierile din fisiere se pot realiza in doua moduri:
+ - in mod bloc, cand sunt mediate de niste buffere ale sistemului; sistemul
+    isi scrie automat, periodic, informatiile din buffere pe disc (operatia
+    de sincronizare);
+ - in mod caracter, cand au loc direct pe disc, ocolind aceste buffere.
+In cele ce urmeaza toate operatiile se fac in mod bloc (eventualele exceptii 
+ vor fi semnalate).
+In cazul folosirii functiilor de nivel inferior, operatiile in mod bloc sunt
+ mediate doar de bufferele sistemului; in cazul folosirii functiilor de
+ nivel superior (care manipuleaza fisierele cu ajutorul unor structuri
+ "FILE"), operatiile sunt mediate de doua buffere succesive: cel din
+ structura "FILE", apoi cel al sistemului.
+Cateva functii pentru prelucrarea fisierelor la nivelul inferior (apeluri
+ sistem):
+#include<sys/types.h>  (man -S 2 open)
+#include<sys/stat.h>
+#include<fcntl.h>
+int open(const char *spec, int mod [, mode_t drepturi]);
+=> efectueaza o deschidere a unui fisier pentru operatii;
+   spec = specificatorul fisierului;
+   mod = precizeaza tipul operatiilor pentru care se face deschiderea
+    (citire, scriere, etc.) si anumite actiuni facute cu ocazia deschiderii;
+    se poate construi ca o disjunctie pe biti de urmatoarele constante
+    simbolice (pentru ele putem include "fcntl.h"):
+      - exact una din:  O_RDONLY => deschidere doar pentru citire
+                        O_WRONLY => deschidere doar pentru scriere
+                        O_RDWR => deschidere pentru citire si scriere
+       (informatia precizata de ele va fi scrisa in intrarea creata in TDF);
+      - 0 sau mai multe din:
+        O_TRUNC => daca fisierul exista, vechiul continut se sterge in
+         prealabil;
+        O_CREAT => daca fisierul nu exista, se va crea (ca fisier vid); in
+         acest caz trebuie sa fie prezent si parametrul "drepturi";
+        O_EXCL => daca am folosit O_CREAT si fisierul exista, functia se
+         termina cu eroare (returneaza -1);
+        O_APPEND => inainte de fiecare scriere in fisier indicatorul
+         pozitiei curente se va muta automat la sfarsit (dupa scriere insa
+         nu va reveni la pozitia anterioara);
+        O_NONBLOCK => apelul lui "open" este neblocant (in cazul cand ar
+         trebui sa produca adormirea procesului (vezi mai jos) n-o face ci
+         se termina cu eroare);
+        O_SYNC => orice scriere in fisier va bloca procesul pana cand
+         informatia ajunge efectiv din bufferul sistemului pe disc;
+   drepturi (parametru optional, dar obligatoriu daca se creaza un fisier
+     nou, vezi O_CREAT) = precizeaza drepturile de acces asupra fisierului
+     creat si se poate construi ca disjunctie pe biti ("|") de urmatoarele
+     constante simbolice (definite in "sys/stat.h"): S_IRWXU (= 700 octal), 
+     S_IRUSR (= 400 octal), S_IWUSR (= 200 octal), S_IXUSR (= 100 octal), 
+     S_IRWXG (= 070 octal), S_IRGRP (= 040 octal), S_IWGRP (= 020 octal), 
+     S_IXGRP (= 010 octal), S_IRWXO (= 007 octal), S_IROTH (= 004 octal),
+     S_IWOTH (= 002 octal), S_IXOTH (= 001 octal); drepturile cu care va fi 
+     creat fisierul in realitate se vor obtine ca conjunctie pe biti ("&") 
+     intre valoarea lui "drepturi" si negatia pe biti ("~") a unei masti de 
+     drepturi implicita a procesului, pe care acesta o mosteneste de la shell
+     (ea este o caracteristica setabila pentru fiecare utilizator in parte);
+     de obicei masca implicita este: 
+                        S_IWGRP|S_IWOTH  (adica 022 octal)
+     deci negatia ei pe biti este: 
+            S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH  (adica 755 octal)
+     ceea ce va face ca eventualele drepturi de scriere pentru "grup" si 
+     "altii" precizate de parametrul "drepturi" sa nu fie luate in 
+     considerare; pentru a remedia acest neajuns, putem efectua inaintea lui
+     "open" un apel "umask" (a se vedea mai jos), sub forma: "umask(0);" 
+     - atunci masca de drepturi implicita a procesului se schimba in 0, deci
+     negatia ei pe biti va fi: 
+                    S_IRWXU|S_IRWXG|S_IRWXO  (adica 777 octal)
+     un asemenea apel "umask" este necesar doar atunci cand vrem ca fisierul
+     creat se poata fi deschis in scriere si de alti utilizatori decat 
+     proprietarul (pentru ca negatia mastii uzuale S_IWGRP|S_IWOTH contine
+     S_IRWXU, deci nu anuleaza nici unul din drepturile specificate de
+     parametrul "drepturi" pentru proprietar).
+Efect: daca fisierul nu exista si cerem crearea lui (O_CREAT), se va crea
+ (apare un i-nod nou); daca i-nodul fisierului nu e incarcat in TIA, se
+ incarca; se creaza o noua intrare in TDF, ce pointeaza spre intrarea in TIA
+ corespunzatoare i-nodului fisierului (chiar daca mai exista o intrarea in
+ TDF ce pointa spre acea intrare in TIA); se gaseste un descriptor liber
+ in TD si se aloca intrarea respectiva - ea va pointa intrarea creata in TDF.
+Returneaza: descriptorul alocat, sau -1 pentru eroare (caz in care seteaza
+ errno).
+Exemplu:
+    int d1, d2;
+    d1=open("nae.txt",O_RDONLY); d2=open("nae.txt",O_RDWR);
+      TD a procesului            TDF                      TIA
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        . |          |
+    d1 --> | a |       a | 1 |  r |   0 | x |       . |          |
+         .  ---        .  ------------------        .  ----------
+         . |   |       . |                  |       x | 2 |      | "nae.txt"
+            ---        .  ------------------        .  ----------
+    d2 --> | b |       b | 1 | rw |   0 | x |       . |          |
+            ---           ------------------           ----------
+    (o citire via "d1" urmata de o citire via "d2" vor furniza insa aceeasi
+      informatie, deoarece se folosesc indicatori de pozitie independenti).
+Apelul "open" poate fi blocant daca nu folosim O_NONBLOCK - de exemplu se
+ incearca deschiderea unui tub cu nume pentru citire si nu exista procese
+ care scriu in el, sau pentru scriere si nu exista procese care citesc din
+ el (a se vedea mai incolo).
+Legat de drepturile de acces asupra fisierelor nou create, am spus mai sus ca
+ pentru fiecare utilizator exista o masca implicita setabila "umask". De 
+ obicei ea este S_IWGRP|S_IWOTH (adica 022 octal). Aceasta masca se mosteneste
+ de la un proces la altul (in particular de la shell la procesele lansate ca 
+ rezultat al unor comenzi shell). In general, daca din shell sau dintr-un alt 
+ proces se incearca crearea unui fisier "f" si precizam drepturile de acces pe
+ care vrem sa le aibe printr-un numar "d" (care poate fi construit ca o 
+ disjunctie pe biti de constantele simbolice S_I... dinainte), drepturile cu 
+ care va fi creat fisierul in realitate vor fi de fapt "d & ~umask". Din shell
+ putem afla/modifica masca de drepturi implicita a acestuia cu comanda "umask"
+ (pentru detalii: "man bash"); ea poate fi data sub forma:
+                   umask drepturi
+		   umask -S drepturi
+		   umask
+		   umask -S
+ daca "drepturi" este prezent, el defineste modificarile ce vor fi facute in 
+ masca, altfel	comanda doar afisaza masca utilizata actual; daca "-S" este 
+ prezent, drepturile setate sau afisate se vor scrie simbolic, ca la comanda 
+ "chmod", altfel se scriu numeric in octal; atentie: cand lucram numeric (fara
+ "-S") atat la setare cat si la afisare se ia in considerare chiar masca 
+ "umask", iar cand lucram simbolic (cu "-S") se seteaza/afisaza ceea ce 
+ contine negatia pe biti a mastii "umask"; exemple (am scris ce apare pe 
+ ecran, "bash$" e prompterul):
+                   bash$ umask
+                   022
+		   bash$ umask -S
+		   u=rwx,g=rx,o=rx
+ (deci prima comanda "umask" a afisat chiar masca "umask", a doua comanda a 
+  afisat de fapt negatia pe biti a acesteia)		   
+		   bash$ umask 0777
+ (masca "umask" devine 777 octal, adica S_IRWXU|S_IRWXG|S_IRWXO)		   
+		   bash$ umask -S
+		   u=,g=,o=
+ (se afisaza negatia pe biti a lui S_IRWXU|S_IRWXG|S_IRWXO, adica 0)		   
+		   bash$ umask -S uo=rw
+		   u=rw,g=,o=rw
+ (in negatia pe biti a mastii, adica "~umask", se seteaza ca drepturile 
+  asociate proprietarului si "celorlalti" sa fie "citire"+"scriere"; acum
+  negatia pe biti a mastii devine S_IRUSR|S_IWUSR|S_IROTH|S_IWOTH, deci masca 
+  nenegata "umask" devine S_IXUSR|S_IRWXG|S_IXOTH; observam ca in prezenta lui
+  "-S", indiferent daca am specificat sau nu modificari in drepturi, comanda
+  face si afisarea)		   
+		   bash$ umask -S
+		   u=rw,g=,o=rw
+ (se afisaza acelasi lucru ca mai sus)		   
+		   bash$ umask -S u=x
+		   u=x,g=,o=rw
+ (in negatia pe biti a mastii, adica "~umask", se seteaza ca drepturile 
+  asociate proprietarului sa fie doar "executie" (anuland deci acel 
+  "citire"+"scriere" de mai inainte); acum negatia pe biti a mastii devine
+  S_IXUSR|S_IROTH|S_IWOTH, deci masca nenegata "umask" devine 
+  S_IRUSR|S_IWUSR|S_IRWXG|S_IXOTH)
+		   bash$ umask -S ug+w
+		   u=wx,g=w,o=rw
+ (in negatia pe biti a mastii, adica "~umask", se adauga la "proprietar" si
+  "grup" dreptul "scriere"; acum negatia pe biti a mastii devine
+  S_IWUSR|S_IXUSR|S_IWGRP|S_IROTH|S_IWOTH, deci masca nenegata "umask" devine
+  S_IRUSR|S_IRGRP|S_IXGRP|S_IXOTH)
+                   besh$ umask -S u-x
+		   u=w,g=w,o=rw
+ (in negatia pe biti a mastii se elimina de la proprietar dreptul "executie")
+                   bash$ umask -S u-r
+		   u=w,g=w,o=rw
+ (nu se schimba nimic, deoarece in negatia pe biti a mastii proprietarul nu
+  avea dreptul "citire")
+                   bash$ umask -S uo=
+		   u=,g=w,o=
+ (in negatia pe biti a mastii se seteaza ca drepturile asociate proprietarului
+  si "celorlalti" sa fie eliminate; acum negatia pe biti "~umask" este 
+  S_IWGRP, deci masca nenegata este S_IRWXU|S_IRGRP|S_IXGRP|S_IRWXO)		   
+                   bash$ umask 0
+		   bash$ umask -S
+		   u=rwx,g=rwx,o=rwx
+Dintr-un program C putem modifica masca implicita de drepturi a procesului 
+ folosind functia:
+#include<sys/types.h>  (man -S 2 umask)
+#include<sys/stat.h>
+mode_t umask(mode_t drimplicite);
+=> masca implicita de drepturi a procesului curent devine "drimplicite";
+    acest parametru se poate construi ca disjunctie pe biti ("|") de
+    aceleasi constante simbolice ca parametrul "drepturi" de la functia
+    "open";
+   returneaza vechea masca implicita folosita de proces (apelul nu esueaza
+    niciodata); 
+astfel, daca in continuare procesul respectiv creaza un fisier cu "open",
+ drepturile cu care va fi creat fisierul in realitate vor fi cele descrise
+ de "drepturi & ~drimplicite" (unde "drepturi" este al treilea parametru dat 
+ la "open"); deci, pentru a nu afecta drepturile precizate de "open", inainte 
+ de acesta putem apela "umask(0)";
+subliniem ca prin functia "umask" se modifica doar masca implicita de drepturi
+ a procesului curent; ea va fi mostenita de procesele-fiu, dar nu va afecta
+ masca procesului tata (de exemplu a shell-ului).
+#include<unistd.h>  (man close)
+int close(int desc);
+=> inchide descriptorul "desc" (intrarea sa din TD redevine libera); ca
+    efect, in intrarea pointata in TDF numarul descriptorilor asociati scade
+    cu 1; daca devine 0, ea este eliminata din TDF iar in intrarea din TIA
+    pointata de ea numarul deschiderilor (numarul intrarilor din TDF care o
+    pointeaza) scade cu 1; daca devine 0, i-nodul respectiv este scos din
+    TIA, iar daca numarul legaturilor fizice la el este 0, el si fisierul
+    respectiv sunt sterse de pe disc (unele fisiere, ca tuburile fara nume,
+    nu au legaturi fizice si exista in sistem doar cat timp exista procese
+    care le acceseaza).
+   returneaza: 0=succes, -1=esec (si seteaza errno);
+Exemplu:
+      TD a procesului            TDF                      TIA
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        .  ----------
+    d1 --> | a |       a | 3 |          | x |       x | 2 |      |
+         .  ---        .  ------------------        .  ----------
+    d2 --> | b |       b | 1 |          | y |       y | 2 |      |
+         .  ---        .  ------------------        .  ----------
+    d2 --> | c |       c | 1 |          | z |       z | 1 |      |
+         .  ---        .  ------------------        .  ----------
+                             || close(d1); close(d2); close(d3);
+                             \/
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        .  ----------
+    d1 --> |   |       a | 2 |          | x |       x | 2 |      |
+         .  ---        .  ------------------        .  ----------
+    d2 --> |   |                                    y | 1 |      |
+         .  ---                                     .  ----------
+    d2 --> |   |
+            ---
+#include<unistd.h>  (man -S 2 read)
+ssize_t read(int desc, void *buf, size_t nr);
+=> incearca citirea a "nr" octeti din fisierul indicat de "desc" in zona
+    pointata de "buf"; daca de la pozitia curenta pana la sfarsitul
+    fisierului sunt mai putini octeti, se citesc citi sunt; in intrarea
+    corespunzatoare din TDF trebuie sa figureze permisiunea "r" sau "rw";
+    indicatorul de pozitie din aceasta intrare avanseaza pana dupa ultimul
+    octet citit;
+   returneaza: numarul de octeti cititi = succes, -1 = esec (si seteaza
+    errno);
+(pentru tipul "ssize_t" putem include "unistd.h" si in principiu e "int";
+ pentru tipul "size_t" putem include tot "unistd.h" si in principiu e
+ "unsigned").
+Exemplu:
+      TD a procesului            TDF                      TIA
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        .  ----------
+     d --> | a |       a | 3 |  r |  20 | x |       x |          |
+         .  ---        .  ------------------        .  ----------
+         . |   |       . |                  |       . |          |
+            ---           ------------------           ----------
+                             || char v[100];
+                             || read(d, v, 50);
+                             \/
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        .  ----------
+     d --> | a |       a | 3 |  r |  70 | x |       x |          |
+         .  ---        .  ------------------        .  ----------
+         . |   |       . |                  |       . |          |
+            ---           ------------------           ----------
+#include<unistd.h>  (man -S 2 write)
+ssize_t write(int desc, void *buf, size_t nr);
+=> incearca scrierea a "nr" octeti din zona pointata de "buf" in fisierul
+    indicat de "desc"; in intrarea corespunzatoare din TDF trebuie sa
+    figureze permisiunea "w" sau "rw"; indicatorul de pozitie din aceasta
+    intrare avanseaza pana dupa ultimul octet scris;
+   returneaza: numarul de octeti scris = succes, -1 = esec (si seteaza
+    errno);
+#include<sys/types.h>  (man lseek)
+#include<unistd.h>
+off_t lseek(int desc, off_t offset, int origine);
+=> pozitioneaza indicatorul de pozitie din intrarea in TDF asociata
+    descriptorului "desc" la distanta "offset" de "origine";
+   "origine" poate fi: SEEK_SET (=0) = inceputul fisierului
+                       SEEK_CUR (=1) = pozitia curenta
+                       SEEK_END (=2) = sfarsitul fisierului
+    (constantele simbolice sunt definite in "unistd.h");
+   pentru tipul "off_t" putem include "sys/types.h" si in principiu este
+    "long";
+   returneaza: pozitia curenta fata de inceputul fisierului = succes,
+    (off_t)-1 = esec (si seteaza errno).
+Exemple:
+    lseek(d, (off_t)0, SEEK_SET); => pozitionare la inceputul fisierului
+                                      (returneaza (off_t)0);
+    lseek(d, (off_t)0, SEEK_CUR); => pozitia curenta nu se schimba (si este
+                                      returnata - astfel o putem determina);
+    lseek(d, (off_t)0, SEEK_END); => pozitionare la sfarsitul fisierului
+                                      (returneaza dimensiunea fisierului);
+Urmatorul program ilustreaza modul de functionare a fisierelor deschise cu
+ O_APPEND:
+p1.c:
+   #include<sys/types.h>
+   #include<sys/stat.h>
+   #include<fcntl.h>
+   #include<unistd.h>
+   #include<stdio.h>
+   int main(){
+    int d; char x;
+    d=open("f",O_RDWR|O_APPEND);
+    printf("%ld ",lseek(d,0l,SEEK_CUR));
+    write(d,"x",1);
+    printf("%ld ",lseek(d,0l,SEEK_CUR));
+    lseek(d,0l,SEEK_SET);
+    read(d,&x,1);
+    printf("%ld ",lseek(d,0l,SEEK_CUR));
+    write(d,"y",1);
+    printf("%ld ",lseek(d,0l,SEEK_CUR));
+    read(d,&x,1);
+    printf("%ld\n",lseek(d,0l,SEEK_CUR));
+   return 0;
+   }
+Utilizare: daca fisierul "f" exista deja si contine 6 caractere, cand lansam
+ programul acesta va afisa: 0 7 1 8 8.
+Concluzie: initial indicatorul de pozitie curenta din TDF este pozitionat
+ la inceputul fisierului; inainte de fiecare scriere indicatorul sare
+ automat la sfarsit (pentru a scrie numai la sfarsit, in continuare),
+ chiar daca intre timp il mutam fortat in alta parte; inainte de citiri
+ indicatorul nu sare automat la sfarsit sau in alta parte; la ultimul "read"
+ din program nu se citeste nimic ("read" returneaza 0).
+#include<unistd.h>  (man dup)
+int dup(int desc);
+=> aloca un nou descriptor in TD pentru aceeasi intrare din TDF ca "desc";
+    noul descriptor este CEL MAI MIC descriptor liber;
+   returneaza: noul descriptor = succes, -1 = esec (si seteaza errno).
+Exemplu:
+      TD a procesului            TDF                      TIA
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        .  ----------
+    d1 --> | a |       a |              | x |       x |          |
+         .  ---        .  ------------------        .  ----------
+         . |   |       . |                  |       . |          |
+            ---           ------------------           ----------
+                             || d2=dup(d1);
+                             \/
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        .  ----------
+    d1 --> | a |       a |              | x |       x |          |
+         .  ---        .  ------------------        .  ----------
+    d2 --> | a |       . |                  |       . |          |
+            ---           ------------------           ----------
+#include<unistd.h>  (man dup2)
+int dup2(int desc1, int desc2);
+=> aloca fortat descriptorul "desc2" pentru aceeasi intrare in TDF ca
+    "desc1"; daca "desc2" nu era liber, sistemul il inchide in prealabil
+    ("close(desc2)");
+   returneaza: noul descriptor (adica "desc2") = succes, -1 = esec (si
+    seteaza errno).
+Folosirea lui "dup", "dup2" este utila pentru a redirecta intrarea sau
+ iesirea standard sau iesirea standard de erori spre fisiere:
+Exemplu:
+    int d;
+    d=open("f1",O_WRONLY|O_CREAT|O_TRUNC,S_IRWXU);
+    close(1); /* inchid iesirea standard;
+                 cel mai mic descriptor liber devine 1 */
+    dup(d); close(d); /* descriptorul 1 va viza fisierului "f1";
+                         descriptorul "d" se poate elibera */
+    write(1,"ABC",3); /* "ABC" se va scrie in fisierul "f1" */
+    printf("abc");    /* "abc" se va scrie in fisierul "f1" */
+Observatii:
+ - in loc de "1" putem folosi peste tot "STDOUT_FILENO";
+ - "printf" foloseste variabila "stdout", care pointeaza o structura "FILE"
+    ce contine descriptorul 1;
+ - "write(1,"ABC",3);" va scrie sirul "ABC" intr-un buffer al sistemului,
+    de unde acesta va ajunge pe disc (in fisierul "f1") la prima operatie de
+    sincronizare efectuata de sistem;
+ - "printf("abc");" va scrie sirul "abc" in bufferul lui "*stdout"; acest
+    buffer se va goli mai departe in bufferul sistemului in momentul cand
+    vom executa "fflush(stdout)" (in cazul cand scrierea se face pe
+    ecran, bufferul se goleste si prin scrierea unui "\n", de exemplu
+    "printf("\n")"); din bufferul sistemului va ajunge apoi de disc la
+    prima sincronizare;
+ - de regula, in cazul unei terminari normale a procesului (printr-un "return"
+    din "main" sau ca urmare a executarii unui apel "exit"), bufferele 
+    structurilor "FILE" care nu au fost golite se golesc automat in bufferele
+    sistem asociate.
+Asa cum am mai spus, cand mai multi descriptori vizeaza aceeasi intrare din
+ TDF, ei folosesc acelasi indicator de pozitie curenta in fisier (deci
+ accesarea fisierului prin intermediul unuia modifica pozitia curenta
+ vizibila prin intermediul altuia).
+Exemplu:
+     int d1,d2,d3; char buf[10];
+     d1=open("f1",O_RDONLY); d2=open("f1",O_RDONLY); d3=dup(d2);
+     read(d1,buf,2); buf[3]='\0'; printf("%s\n",buf);
+     read(d2,buf,2); buf[3]='\0'; printf("%s\n",buf);
+     read(d3,buf,2); buf[3]='\0'; printf("%s\n",buf);
+  Daca fisierul "f1" continea "abcdef", pe ecran se va afisa: "ab", "ab",
+   "cd" (deoarece "d1" si "d2" folosesc indicatori de pozitie independenti,
+   in timp ce "d3" foloseste acelasi indicator de pozitie ca "d2").
+Am spus mai inainte ca la nivelui superior de prelucrare a fiserelor, acestea
+ sunt manipulate prin intermediul unor (pointeri la) structuri "FILE"; un
+ apel "fopen" apeleaza functia "open" care furnizeaza un descriptor, aloca o
+ structura "FILE" in care stocheaza printre altele si acel descriptor si
+ returneaza adresa acesteia; un apel de forma "fscanf(f, ...)" apeleaza
+ "read(d, ...)", unde "d" este descriptorul stocat in structura "*f":
+  o structura  TD a procesului           TDF                      TIA
+     FILE           ---           ------------------           ----------
+      --         0 |   |       0 |                  |       0 |          |
+     | i         .  ---        .  ------------------        .  ----------
+ f ->|           i | a |       a |              | x |       x |          |
+     |           .  ---        .  ------------------        .  ----------
+     |           . |   |       . |                  |       . |          |
+      --            ---           ------------------           ----------
+Prezentam doua functii de la nivelul superior de prelucrare a fisierelor
+ care fac legatura cu nivelul inferior - ele stabilesc legaturi intre
+ descriptori si structuri "FILE":
+#include<stdio.h>  (man fileno)
+int fileno(FILE *pf);
+=> returneaza descriptorul utilizat de structura "FILE" "*pf";
+   "man" afirma ca aceasta functie nu ar trebui sa esueze sau sa seteze
+   errno niciodata.
+#include<stdio.h>  (man fdopen)
+FILE *fdopen(int desc, const char *mod);
+=> aloca o structura "FILE" pe care o asociaza descriptorului "desc" (in
+    continuare fisierul respectiv poate fi gestionat cu ajutorul acestei
+    structuri si functiilor de nivel superior in aceeasi masura in care
+    poate fi gestionat cu ajutorul descriptorului "desc" si functiilor de
+    nivel inferior);
+   descriptorul "desc" trebuie sa fie deja asociat unei intrari in TDF (sa
+    fi fost "deschis" in prealabil cu "open"); parametrul "mod" (care indica
+    tipul operatiilor pentru care se face deschiderea) poate lua acelesi
+    valori ca parametrul al doilea de la "fopen" ("r", "r+", "w", "w+", "a", 
+    "a+", etc.) si trebuie sa fie compatibil cu modul in care a fost 
+    "deschis" descriptorul (vezi parametrul "mod" de la "open"); de exemplu,
+    daca descriptorul a fost deschis cu O_RDWR, putem pune la "mod" "r"; de 
+    notat insa ca folosirea lui "w" sau "w+" nu vor provoca stergerea 
+    continutului actual al fisierului, ca in cazul lui "fopen";
+   returneaza adresa structurii "FILE" alocate sau NULL in caz de eroare (si
+    atunci seteaza errno).
+Observatie: daca aplicam "fclose(f)", unde "*f" este o structura "FILE"
+ obtinuta in urma unui apel "fdopen(d, ...)", se inchide si descriptorul "d"
+ (un apel ulterior de forma "read(d, ...)" sau "write(d, ...)" va esua).
+Cele doua functii de mai sus nu sunt inverse una alteia; de exemplu daca 
+ aplicam "fdopen" unui descriptor utilizat deja de o structura "FILE", nu vom 
+ obtine adresa acelei structuri "FILE" ci se va aloca o structura noua care 
+ foloseste acelasi descriptor (si in consecinta aceeasi intrare in TDF).
+ Cele doua structuri "FILE" nu vor putea fi insa folosite la fel de bine
+ pentru a manevra intrarea (unica) pointata in TDF.
+Exemplu:
+   int d; FILE *f1,*f2; char x='x',y='y';
+   f1=fopen("f","rb");  /* se aloca un descriptor i si se deschide pentru
+     citire (apare totodata o intrare noua in TDF), se aloca o structura
+     "FILE" care se initializeaza cu i si se returneaza adresa sa */
+   d=fileno(f1);  /* "d" primeste valoarea i */
+   f2=fdopen(d,"rb"); /* se aloca o structura "FILE" noua, care se
+     initializeaza tot cu i si se returneaza adresa sa */
+   printf("%d\n",f1==f2);  /* se afisaza 0, deoarece structurile "*f1" si
+     "*f2" sunt diferite */
+   fscanf(f1,"%c",&x); fscanf(f2,"%c",&y); printf("%c%c\n",x,y);  /* "*f1" 
+     si "*f2" folosesc aceeasi intrare din TDF, deci acelasi indicator de
+     pozitie curenta in bufferul sistemului asociat fisierului, si astfel 
+     cele doua "fscanf" ar trebui sa citesaca informatii succesive; totusi,
+     daca fisierul "f" contine "abc", pe ecran se afisaza "ay" - cu alte
+     cuvinte primul "fscanf" blocheaza accesul celui de-al doilea, care
+     astfel va esua; acelasi fenomen apare si daca citim intai cu "f2"
+     si apoi cu "f1" (prima citire blocheaza pe a doua) */
+   fscanf(f1,"%c",&x); printf("%c\n",x); /* se afisaza "b", deoarece al 
+     doilea "fscanf" esuind, nu a mutat indicatorul pozitiei curente din 
+     TDF; observam ca prin intermediul lui "*f1" (cel prin care am citit
+     prima data) putem citi in continuare */
+ situatia din sistem arata astfel:    
+  o structura
+     FILE
+      --
+     | i
+f1 ->|         TD a procesului           TDF                      TIA
+     |              ---           ------------------           ----------
+     |           0 |   |       0 |                  |       0 |          |
+      --         .  ---        .  ------------------        .  ----------
+alta structura   i | a |       a | 1 |  r|      | x |       x |          |
+     FILE        .  ---        .  ------------------        .  ----------
+      --         . |   |       . |                  |       . |          |
+     | i            ---           ------------------           ----------
+f2 ->|
+     |
+     |
+      --
+Legat de bufferele sistemului in raport cu bufferele structurilor "FILE", in
+ practica se pot observa urmatoarele:
+ - bufferele sistemului urmeaza dupa intrarea in TIA corespunzatoare
+    fisierului accesat; ne putem imagina ca fiecare intrare in TIA are
+    asociat un buffer al sistemului (el va fi folosit de functiile "read" si
+    "write", si prin intermediul lor si de "fscanf" si "fprintf"); intrucat
+    un i-nod se incarca o singura data in TIA (chiar daca este solicitat de
+    mai multe operatii de deschidere "open" sau "fopen" succesive), toate
+    operatiile de citire/scriere referitoare la fisierul respectiv vor
+    folosi acelasi buffer de sistem; de aceea, o informatie scrisa in buffer
+    de un "write" va fi imediat accesibila oricarei citiri cu "read", chiar
+    daca ea n-a ajuns inca efectiv pe disc (in cadrul unei operatii de
+    sincronizare a sistemului); practic, daca lucram numai cu functii de
+    nivel inferior (ele folosesc doar bufferele sistemului), putem ignora ca
+    exista aceste buffere - nu sunt necesare operatii de golire explicita,
+    gen "fflush" (singurul pericol posibil ar fi de exemplu ca, in cazul
+    unei pene de curent, sistemul sa cada fara a apuca sa-si salveze
+    bufferele pe disc in cadrul unei operatii de sincronizare); binenteles,
+    daca mai multe intrari in TDF pointeaza o aceeasi intrare in TIA (deci
+    folosesc acelasi buffer sistem), fiecare are un indicator de pozitie
+    curenta independent in bufferul asociat (am vazut ca indicatorul de
+    pozitie curenta se afla in intrarea in TDF, nu in cea din TIA).
+   Exemplu:
+    int d1, d2; char b[10];
+    d1=open("f",O_WRONLY); d2=open("f",O_RDONLY);
+    write(d1,"abc",3);  /* sirul "abc" ajunge in bufferul sistem asociat
+      i-nodului fisierului "f", care este unic pentru toate caile prin care
+      accesam fisierul */
+    read(d2,&b,3);  /* intrucat bufferul sistem asociat i-nodului lui "f"
+      este unic, sirul "abc" este accesibil citirii prin "d2", fara sa fi
+      fost nevoie ca la "write" sa facem o operatie de tip "fflush" */
+    b[3]='\0'; printf("%s\n",b);  /* pe ecran apare "abc" */
+TD a procesului       TDF                 TIA
+      ---      ------------------      ----------
+   0 |   |  0 |                  |  0 |          |
+   .  ---   .  ------------------   . |          |     buffer al
+d1-> | a |  a | 1 |  w |     | x |  . |          |    sistemului
+   .  ---   .  ------------------   .  ----------      -------     fisierul
+   . |   |  . |                  |  x | 2 |      | -> | abc   | -> "f" de pe
+      ---   .  ------------------   .  ----------      -------     disc
+d2-> | b |  b | 1 |  r |     | x |  . |          |
+      ---      ------------------      ----------
+ - in cazul structurilor "FILE", fiecare asemenea structura are un buffer
+    propriu, care se interpune inaintea bufferului sistem (care este asociat
+    i-nodului accesat) - deci nu exista un unic buffer folosit de toate
+    structurile "FILE", chiar daca ele gestioneaza un acelasi fisier
+    (i-nod); de aceea, o informatie scrisa intr-un fisier prin intermediul
+    unei structuri "FILE" (cu "fprintf") poate sa ramana in bufferul ei
+    (daca nu facem "fflush") si sa nu fie accesibila citirii pe alte cai
+    decat aceasta structura; daca insa dupa scriere facem "fflush",
+    informatia ajunge din bufferul acelei structuri "FILE" in bufferul
+    sistem asociat i-nodului (care este unic pentru orice cale de acces la
+    i-nodul respectiv) si poate fi citita ulterior prin intermediul altui
+    descriptor (cu "read") sau altei structuri "FILE" (cu "fscanf"); de
+    notat ca fiecare structura "FILE" are un indicator de pozitie curenta
+    propriu (deci pe langa indicatorul din TDF mai avem unul), care tine cont
+    si de continutul bufferului structurii; pozitia indicata de el (si care
+    se poate afla cu "ftell") poate fi diferita de pozitia data de indicatorul 
+    din TDF (care se poate afla cu "lseek(..., (off_t)0, SEEK_CUR)"); uneori
+    insa, cu ocazia unui apel "ftell", "fseek" sau "fflush" cei doi indicatori
+    se pot sincroniza (indicatorul din TDF va lua valoarea celui din structura
+    "FILE"); uneori aceste apeluri produc si sincronizarea dintre continutul
+    bufferului structurii "FILE" si bufferul sistem (de exemplu "fflush"
+    aplicat unui "FILE" deschis pentru scriere goleste continutul bufferului
+    sau in bufferul sistem); de aceea, daca operam asupra unei intrari in TDF
+    si printr-un descriptor (cu functii de nivel inferior) si printr-o
+    structura "FILE" (cu functii de nivel superior) e bine sa inseram intre
+    citiri/scrieri succesive apeluri "ftell", "fseek" sau "fflush" ("man"
+    recomanda "ftell" si "fseek"), altfel informatiile nu sunt coerente.
+   Exemplu ilustrand diverse fenomene care se pot produce:
+   int d,df1,df2,n; FILE *f1,*f2; char x='Z';
+   f1=fopen("f","w+b"); /* creaza fisierul "f" ca fisier vid si-l deschide
+     pentru citire si scriere (apare o intrare noua in TDF) */
+   df1=fileno(f1);
+   f2=fopen("f","rb");  /* deschide fisierul "f", care acum exista, pentru
+     citire (apare o noua intrare in TDF) */
+   df2=fileno(f2);  
+   d=open("f",O_RDONLY);/* deschide fisierul "f" pentru citire (apare o noua 
+     intrare in TDF) */
+   fprintf(f1,"abc");printf("%ld\n",lseek(df1,(off_t)0,SEEK_CUR));
+     /* sirul "abc" ajunge in bufferul structurii "FILE" "*f1" si nu poate fi 
+     citita decat tot prin intermediul lui "*f1"; intrucat nu se scrie in 
+     bufferul sistemului, indicatorul pozitiei curente din TDF nu se
+     deplaseaza; "printf" va afisa: 0 (indicatorul din structura "FILE" "*f1"
+     are insa valoarea 3) */
+   n=fscanf(f2,"%c",&x); printf("%d %c\n",n,x); /* din perspectiva lui "*f2"
+     fisierul e vid; deci nu se citeste nimic, "x" contine in continuare "Z",
+     iar "fscanf" returneaza -1; "printf" va afisa: -1 Z */
+   n=read(d,&x,1); printf("%d %c\n",n,x); /* si din perspectiva lui "d"
+     fisierul e vid; nu se citeste nimic, "x" contine in continuare "Z", iar
+     "read" returneaza 0; "printf" va afisa: 0 Z */
+ situatia din sistem arata astfel (intr-o structura "FILE" am evidentiat de
+  sus in jos: descriptorul folosit, indicatorul de pozitie propriu, bufferul):
+        TD a procesului      TDF           TIA
+               ---         --------        -----
+     ---    0 |   |     0 |        |    0 |     |
+    | i     .  ---      .  --------     . |     |       buffer al
+f1->| 3     i | a |     a |1|rw|0|x|    . |     |      sistemului
+    |abc    .  ---      .  --------     .  -----        -------      fisierul
+     ---    . |   |     . |        |    x |3|   |  ->  |       |  -> "f" de
+     ---       ---      .  --------     .  -----        -------      pe disc
+    | j     j | b |     b |1| r|0|x|    . |     |
+f2->| 0     .  ---      .  --------        -----
+    |       . |   |     . |        |
+     ---    .  ---      .  --------
+         d -> | c |     c |1| r|0|x|
+               ---         --------
+ in continuare executam:
+   printf("%ld\n",ftell(f1)); /* "printf" va afisa: 3; in urma apelului lui 
+     "ftell" insa si indicatorul din TDF devine 3, iar continutul bufferului
+     sistemului se sincronizeaza cu cel al lui "*f1"; astfel, sirul "abc" 
+     ajunge in bufferul sistem (nu neaparat si pe disc) si devine accesibil 
+     prin intermediul lui "*f2" si "d" */
+   printf("%ld\n",lseek(df1,(off_t)0,SEEK_CUR)); /* "printf" va afisa: 3 */
+   n=fscanf(f2,"%c",&x); printf("%d %c\n",n,x); 
+   printf("%ld\n",lseek(df2,(off_t)0,SEEK_CUR));
+     /* initial bufferul lui "*f2" era gol; pentru a se face citirea, se 
+     incarca mai intai acest buffer cu cat mai multe caractere (in cazul 
+     nostru se va incarca tot sirul "abc"), apoi in "x" se citeste "a"; din 
+     acest motiv, indicatorul din TDF asociat lui "*f2" va deveni 3 (pentru 
+     ca din bufferul sistem s-au citit 3 caractere), dar indicatorul din 
+     structura "FILE" "*f2" va deveni 1 (pentru ca din punctul de vedere al 
+     lui "*f2" s-a citit doar un caracter, cel care s-a pus in variabila "x"); 
+     de aceea, primul "printf" va afisa: 1 a, iar al doilea "printf" va afisa:
+     3 */
+   n=read(d,&x,1); /* in "x" se citeste tot "a", deoarece "d" foloseste
+     o alta intrare in TDF, unde indicatorul de pozitie era la 0; acest 
+     indicator devine 1, iar "read" returneaza tot 1 */
+   printf("%d %c %ld\n",n,x,lseek(d,(off_t)0,SEEK_CUR));
+     /* se afisaza: 1 a 1 */
+   fclose(f1); /* structura "FILE" "*f1" se inchide (se elibereaza), si la fel
+     descriptorul i continut in "df1"; intrucat intrarea corespunztoare din 
+     TDF era pointata de un singur descriptor, ea se scoate din TDF */
+   printf("%d\n",write(df1,"xyz",3)); /* scrierea cu "write" esueaza, deoarece
+     descriptorul folosit este inchis; "printf" va afisa: -1 (valoarea 
+     returnata de "write") */
+ in acest moment situatia din sistem arata astfel:
+        TD a procesului      TDF           TIA
+               ---         --------        -----
+            0 |   |     0 |        |    0 |     |
+            .  ---      . |        |    . |     |       buffer al
+            i |   |     . |        |    . |     |      sistemului
+            .  ---      . |        |    .  -----        -------      fisierul
+            . |   |     . |        |    x |2|   |  ->  | abc   |  -> "f" de
+     ---       ---      .  --------     .  -----        -------      pe disc
+    | j     j | b |     b |1| r|3|x|    . |     |
+f2->| 1     .  ---      .  --------        -----
+    |abc    . |   |     . |        |
+     ---    .  ---      .  --------
+         d -> | c |     c |1| r|1|x|
+               ---         --------
+============================================================================
+
+DUPLICAREA PROCESELOR:
+----------------------
+
+#include<unistd.h>  (man fork)
+pid_t fork();
+=> procesul se duplica; noul proces este fiu al primului; fiul va executa
+    acelasi program ca tatal, punctul de plecare fiind iesirea din apelul
+    "fork"; fiul mosteneste o copie a datelor tatalui (cu valorile din
+    momentul bifurcarii) si environmentul acestuia; de asemenea mosteneste
+    proprietarul real si cel efectiv, directorul curent, prioritatea,
+    descriptorii de fisiere (vezi mai jos), sesiunea, grupul, terminalul de
+    control;
+   returneaza: in tata: PID-ul fiului
+               in fiu: 0
+   in caz de esec, procesul initial nu se duplica iar "fork" returneaza (in
+    el) -1 si seteaza errno (o cauza: prea multe procese in sistem pentru
+    utilizatorul respectiv);
+pentru tipul "pid_t" putem include "unistd.h" si in principiu este "int".
+Exemple care arata fenomene aparute la duplicarea proceselor:
+p2.c:
+   #include<sys/types.h>
+   #include<sys/stat.h>
+   #include<fcntl.h>
+   #include<unistd.h>
+   int main(){int d,i;
+     d=open("f",O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
+     write(d,"I",1);
+     if(fork())for(i=0;i<5;++i){write(d,"T",1); sleep(1);}
+          else for(i=0;i<5;++i){write(d,"F",1); sleep(1);}
+     return 0;
+   }
+Utilizare si comentarii: lansam (rularea dureaza 5 secunde); daca fisierul
+ "f" nu exista, programul il creaza (O_CREAT) cu drepturile "-rw-------"
+ (S_IRUSR|S_IWUSR); daca exista, ii sterge vechiul continut (O_TRUNC); il
+ deschide pentru scriere (O_WRONLY); apoi scrie in el "I"; apoi se bifurca
+ in doua procese ("fork"), care executa acelasi program (executia fiului
+ incepe de la iesirea din "fork"); ambele au un "i" si un "d", cu aceleasi
+ valori, ambele au descriptorul "d" legat la aceeasi intrare in TDF (legat
+ mai departe la i-nodul fisierului "f"); dupa iesirea din"fork":
+ - tatal scrie in "f" cinci de "T" la interval de o secunda, apoi se termina
+   ("return 0;") - pentru ca doar in el "fork" returneaza o val !=0 (anume
+   PID-ul fiului);
+ - fiul scrie in "f" cinci de "F" la interval de 1 secunda, apoi se termina
+   ("return 0";) - pentru ca doar in el "fork" returneaza 0;
+ fiul si tatal se desfasoara in paralel, independent, iar in "f"se obtine
+  ceva de tipul: "ITFTFTFTFTF".
+p3.c:
+   #include<unistd.h>
+   #include<stdio.h>
+   int main(){int i; FILE *f;
+     f=fopen("f","wb");
+     fprintf(f,"I"); fflush(f);
+     if(fork())for(i=0;i<5;++i){fprintf(f,"T"); fflush(f); sleep(1);}
+          else for(i=0;i<5;++i){fprintf(f,"F"); fflush(f); sleep(1);}
+     return 0;
+   }
+Utilizare si comentarii: este varianta programului anterior, dar cu functii
+  de prelucrare a fisierelor la nivel superior; in fisierul "f" se obtine
+  tot ceva gen: "ITFTFTFTFTF";
+ "fflush(f)"este necesar deoarece structura "*f" de tip "FILE" se duplica
+  intre cele 2 procese (ca orice variabila) si fiecare copie va contine cate
+  un buffer care va fi utilizat independent de procesul respectiv;
+ in absenta lui "fflush(f)" in fisierul se obtine ceva gen: "ITTTTTIFFFFF"
+  (deci si "I" se repeta), deoarece: "I" e scris in bufferul lui"*f" inainte
+  de bifurcare (iar bufferul nu e golit in fisier), dupa bifurcare bufferul
+  se duplica cu tot cu continut intre cele 2 procese (fiecare primind o
+  copie), in continuare fiecare proces umple bufferul sau cu "T" respectiv
+  "F", apoi care se termina primul scrie tot bufferul sau in fisier.
+p4.c:
+   #include<unistd.h>
+   #include<stdio.h>
+   int main(){int i; FILE *f;
+     f=fopen("f","wb");
+     fprintf(f,"I"); fflush(f);
+     if(fork())for(i=0;i<5;++i){fprintf(f,"T"); fflush(f); sleep(1);}
+          else {sleep(6); 
+               for(i=0;i<5;++i){fprintf(f,"F"); fflush(f); sleep(1);}}
+     return 0;
+   }
+Utilizare si comentarii: lansam; in fisierul "f" se obtine: "ITTTTTFFFFF";
+ aici, desi tatal si fiul merg in paralel, fiul doarme mai intai 6 secunde
+ (timp in care tatal termina de scris cei 5 de "T") si apoi scrie 5 de "F";
+Atentie: prompterul apare dupa 5 secunde, cand se termina tatal; fiul mai
+ dureaza inca 6 secunde, dar de desfasoara in background (vezi comentariile
+ de la "p5"); daca citim fisierul "f" inainte de 11 secunde, vom gasi in
+ el mai putin de cinci "F" !
+p5.c:
+|  #include<unistd.h>
+|  #include<stdio.h>
+|  int main(){int i; 
+|    sleep(1);
+|    printf("I"); fflush(stdout);
+|    if(fork())for(i=0;i<5;++i){printf("T"); fflush(stdout); sleep(1);}
+|         else {sleep(6); 
+|               for(i=0;i<5;++i){printf("F"); fflush(stdout); sleep(1);}}
+|    return 0;
+|  }
+Utilizare si comentarii: este varianta programului anterior care insa scrie
+  pe ecran, nu in fisier;
+ daca terminalul e "tostop" si lansam in foreground, obtinem:
+  "ITTTTTbash$" ("bash$" e prompterul);
+ daca terminalul e "-tostop" si lansam in foreground, obtinem:
+  "ITTTTTbash$ FFFFF";
+ daca terminalul e "-tostop" si lansam in background, obtinem:
+  "bash$ ITTTTTFFFFF" (iar daca nu pun "sleep(1)" la inceput, "I"-ul apare
+  inaintea prompterului);
+ explicatie: cand lansam un proces in foreground, se creaza un grup nou, al
+  carui lider este procesul, iar acest grup devine grupul din foreground la
+  terminalul respectiv; cand acesta se termina, grupul shell-ului redevine
+  grupul aflat in foreground, iar eventualii fii ai procesului terminat se
+  muta in background; in cazul nostru:
+  - cand lansam procesul "p5" in foreground, atat el cat si fiul lui sunt
+     initial in foreground; tatal insa dureaza mai putin ca fiul si dupa ce
+     el se termina shell-ul ajunge in foreground (de aceea afisaza "bash$")
+     iar fiul se muta in background (si nu poate scrie pe ecran decat daca
+     terminalul este "-tostop");
+  - cand lansam procesul "p5" in background, si el si fiul lui sunt in
+     background si nu pot scrie pe ecran decat terminalul este "-tostop";
+     in acest caz prompterul apare pe ecran imediat dupa lansare (shell-ul
+     ramane in foreground), dar daca nu punem "sleep(1)" la inceput "I"-ul
+     apare si mai repede.
+ alta observatie: chiar daca avem "tostop", daca lansam "p5 > f", in "f"
+  obtinem "ITTTTTFFFFF" (dar atentie: prompterul apare dupa 5 secunde, cand 
+  se termina tatal); aceasta arata ca fii obtinuti cu "fork" mostenesc 
+  redirectarile din linia de comanda.
+p6.c:
+   #include<unistd.h>
+   #include<signal.h>
+   #include<stdlib.h>
+   #include<stdio.h>
+   void h(int n){
+     printf("%d: terminare prin primirea lui SIGALARM.\n",getpid()); 
+     fflush(stdout);
+     sleep(3);
+     exit(0);}
+   int main(){
+     signal(SIGALRM,h);
+     printf("Procesul initial: %d.\n",getpid()); fflush(stdout);
+     alarm(1);
+     fork();
+     sleep(2);
+     printf("%d: terminare normala.\n",getpid()); fflush(stdout);
+     return 0;
+   }
+Utilizare si comentarii: lansam; inainte de bifurcare procesul armeaza
+ ceasul pentru o secunda; dupa "fork" ambele procese aparute lucreaza la
+ fel (deoarece mersul executiei nu a fost conditionat de valoarea returnata
+ de "fork"), deci ambele dorm doua secunde, apoi, daca nu s-au terminat prin
+ primirea unui semnal mortal, vor scrie pe ecran "Terminare normala"; pe
+ ecran va apare insa:
+                    Procesul initial: 21609.
+                    21609: terminare prin primirea lui SIGALARM.
+                    21610: terminare normala.
+ deci doar tatal primeste SIGALARM-ul ("sleep(3)" din handler este pentru ca
+ tatal sa se termine dupa fiu, a.i. fiul sa ramana in foreground si sa poata
+ scrie pe ecran pana la capat).
+p7.c:
+   #include<unistd.h>
+   #include<signal.h>
+   #include<stdlib.h>
+   #include<stdio.h>
+   void h(int n){
+     printf("%d: terminare prin primirea lui SIGALARM.\n",getpid()); 
+     fflush(stdout);
+     sleep(3);
+     exit(0);}
+   int main(){
+     signal(SIGALRM,h);
+     printf("Procesul initial: %d.\n",getpid()); fflush(stdout);
+     fork();
+     alarm(1);
+     sleep(2);
+     printf("%d: terminare normala.\n",getpid()); fflush(stdout);
+     return 0;
+   }
+Utilizare si comentarii: lansam; pe ecran apare:
+                    Procesul initial: 21635.
+                    21635: terminare prin primirea lui SIGALARM.
+                    21636: terminare prin primirea lui SIGALARM.
+ deci acum ambele procese primesc SIGALARM (pentru ca fiecare armeaza un
+ ceas propriu); "sleep(3)" din handler foloseste doar ca sa se termine ambele
+ scrieri inainte de a se termina vreun proces (altfel, daca primul se
+ termina tatal, fiul ajunge in background si nu mai poate scrie pe ecran
+ decat daca terminalul este "-tostop"); pot pune acolo mai putin de 3, dar
+ CEL PUTIN 1.
+p8a.c:
+   #include<sys/types.h>
+   #include<sys/stat.h>
+   #include<fcntl.h>
+   #include<unistd.h>
+   #include<stdio.h>
+   int main(){int d1, d2; char s[3];
+     d1=open("f",O_RDONLY); d2=open("f",O_RDONLY);
+     s[2]='\0';
+     read(d1,&s,2); printf("%s\n",s);
+     read(d2,&s,2); printf("%s\n",s);
+     return 0;
+   }
+p8b.c:
+   #include<sys/types.h>
+   #include<sys/stat.h>
+   #include<fcntl.h>
+   #include<unistd.h>
+   #include<stdio.h>
+   int main(){int d; char s[3];
+     d=open("f",O_RDONLY);
+     s[2]='\0';
+     if(fork()){read(d,&s[0],1); sleep(2); read(d,&s[1],1); 
+                printf("Tata: %s\n",s); sleep(2);}
+         else  {sleep(1); read(d,&s[0],1); sleep(2); read(d,&s[1],1); 
+                printf("Fiu: %s\n",s);}
+     return 0;
+   }
+Utilizare si comentarii (p8a, p8b): lansam; daca fisierul "f" contine "abcd",
+ atunci:
+ - "p8a" scrie pe ecran:
+                    ab
+                    ab
+ - "p8b" scrie pe ecran:
+                    Tata: ac
+                    Fiu: bd
+Explicatii:
+ - in cazul lui "p8a": fisierul "f" este deschis de doua ori cu "open"; de
+    fiecare data se creaza o noua intrare in TDF, fiecare avand indicatorul
+    sau de pozitie curenta in fisier (ambii indicatori fiind pozitionati la
+    inceputul fisierului); astfel, citirile via descriptorii "d1" si "d2"
+    folosesc indicatori de pozitie independenti si deci furnizeaza aceeasi
+    informatie:
+   TD a procesului "p8a"         TDF                      TIA
+            ---           ------------------           ----------
+         0 |   |       0 |                  |       0 |          |
+         .  ---        .  ------------------        . |          |
+    d1 --> | a |       a | 1 |  r |   0 | x |       . |          |
+         .  ---        .  ------------------        .  ----------
+         . |   |       . |                  |       x |          | "f"      
+            ---        .  ------------------        .  ----------
+    d2 --> | b |       b | 1 |  r |   0 | x |       . |          |
+            ---           ------------------           ----------
+ - in cazul lui "p8b": fisierul "f" este deschis o data de procesul initial
+    inainte de bifurcare, creindu-se o singura intrare in TDF si alocandu-se
+    un descriptor; dupa bifurcare fiul mosteneste TD-ul tatalui, deci
+    ACELASI descriptor din fiu pointeaza ACEEASI intrare in TDF (asociata
+    fisierului "f"); deci cei doi descriptori "d" (din tata si fiu) folosesc
+    ACELASI indicator de pozitie in fisier, deci o citire intr-un proces via
+    "d" urmata de o citire din celalalt proces via "d" furnizeaza informatii
+    succesive:
+  TD pentru "p8b" tata
+            ---
+         0 |   |
+         .  ---                                                      
+     d --> | a |                 TDF                      TIA        
+         .  ---           ------------------           ----------
+         . |   |       0 |                  |       0 |          |          
+            ---        .  ------------------        . |          |
+  TD pentru "p8b" fiu  a | 2 |  r |   0 | x |       . |          |
+            ---        .  ------------------        .  ----------
+         0 |   |       . |                  |       x |          | "f"
+         .  ---           ------------------        .  ----------
+     d --> | a |                                    . |          | 
+         .  ---                                        ----------
+         . |   |           
+            ---
+Alte comentarii: 
+ - ultimul "sleep(2)" de la tata este pentru ca fiul sa se termine primul
+    (altfel ajunge in background si nu poate scrie pe ecran decat daca avem
+    "-tostop");
+ - daca in loc de "read" citim cu "scanf", primul proces care citeste din 
+    fisierul "f" blocheaza accesul celuilalt proces (acesta nu mai poate citi 
+    din fisier), ca in cazul exemplului prezentat mai inainte dupa functia
+    "fdopen"; astfel, procesul care reuseste sa citeasca din fisier va citi pe 
+    rand "ab", pentru ca celalalt proces nu poate muta indicatorul pozitiei 
+    curente din TDF.
+Pentru urmatorul program avem nevoie de urmatoarele functii de lucru cu
+ numere aleatoare:
+#include<stdlib.h>  (man rand)
+int rand();
+=> furnizeaza un numar pseudoaleator intre 0 si o valoare maxima, desemnata
+    de constanta simbolica RAND_MAX (definita in "stdlib.h", in principiu
+    egala cu 2147483647);
+   numerele sunt generate pe baza unui algoritm care porneste de la o
+    valoare initiala (germene) setabila; implicit germenele este 1;
+   odata germenele fixat, sirul numerelor produse de apeluri succesive ale
+    lui "rand" este bine determinat;
+Observatii:
+ 1) fie programul:
+     #include<stdlib.h>
+     #include<stdio.h>
+     void main(){printf("%d ",rand()); printf("%d ", rand());}
+    daca rulam programul de mai sus de doua ori vom obtine aceeasi secventa
+     de doua numere:
+                   1804289383 846930886 
+     (primele doua elemente din secventa data de germenele implicit, 1).
+ 2) daca vrem un numar aleator intre 1 si 10, in "man rand" se recomanda sa
+     folosim:
+                 j=1+(int) (10.0*rand()/(RAND_MAX+1.0));
+     si nu ceva gen:
+                 j=1+((int) (1000000.0*rand()) % 10);
+ 3) daca vrem o functie "prob" care sa primeasca un parametru real
+     0<=p<=1 si sa returneze 1 cu probabilitatea p si 0 cu probabilitatea
+     1-p, putem scrie:
+         int prob(double p){ return rand()/(RAND_MAX+1.) < p; }
+#include<stdlib.h>  (man srand)
+void srand(unsigned int germene);
+=> seteaza germenele sirului produs cu "rand" la valoarea "germene";
+    apelurile ulterioare ale lui "rand" vor genera numere din sirul
+    corespunzator noului germene.
+Observatie: daca la inceputul unui program apelam "srand" cu o valoare fixa,
+ la executii diferite ale programului vom obtine acelasi sir de numere; de
+ aceea se recomanda apelarea lui "srand" cu un parametru care sa difere de
+ la o executie la alta a programului, cum ar fi timpul sistemului sau PID-ul
+ procesului:
+       #include<stdlib.h>        #include<stdlib.h>
+       #include<time.h>          #include<unistd.h>
+        ...                       ...
+       srand(time(NULL));        srand(getpid());
+p9a.c: un proc.se bifurca; tatal trimite fiului un nr. oarecare intre 20000 si
+|      50000 de SIGUSR1, apoi scrie cate a trimis, apoi trimite fiului un
+|      SIGINT; fiul numara semnalele SIGUSR1 primite, iar la primirea lui 
+|      SIGINT scrie cate a primit si se termina; nu se cauta evitarea 
+|      pierderii unor semnale:  
+|  #include<sys/types.h>
+|  #include<unistd.h>
+|  #include<signal.h>
+|  #include<stdlib.h>
+|  #include<stdio.h>
+|  int nr;
+|  void h1(int n){}
+|  void h2(int n){printf("Fiul a primit %d semnale.\n",nr); exit(0);}
+|  int main(){
+|    pid_t pf;
+|    if(pf=fork()){int i;
+|                  sleep(1); 
+|                  srand(getpid());
+|                  nr=20000+rand()%30001;
+|                  for(i=0; i<nr; ++i)kill(pf, SIGUSR1);
+|                  printf("Tatal a trimis %d semnale.\n",nr);
+|                  kill(pf, SIGINT);
+|                  sleep(1);
+|                  return 0;
+|                 }
+|             else{struct sigaction a; sigset_t ms;
+|                  sigemptyset(&ms); a.sa_mask=ms;
+|                  a.sa_handler=h1; sigaction(SIGUSR1,&a,NULL);
+|                  a.sa_handler=h2; sigaction(SIGINT,&a,NULL);
+|                  nr=0;
+|                  while(1){pause(); ++nr;}
+|                 }   
+|  }
+Utilizare si comentarii: lansam; pe ecran apare ceva gen:
+                   Tatal a trimis 43537 semnale.
+                   Fiul a primit 23249 semnale.
+ Variabila "nr" va fi duplicata intre cele 2 procese, dar fiecare o va
+  folosi in mod diferit. Variabilele "a" si "ms", fiind locale unei
+  instructiuni compuse, vor exista doar in fiu (doar fiul executa ramura
+  "else").
+ Primul "sleep(1);" de la tata ne asigura ca acesta nu va incepe sa emita
+  semnale SIGUSR1 pana cand fiul nu a ajuns la "pause".
+ Tatal trebuie sa trimita SIGINT (sau alt semnal diferit de SIGUSR1, cu efect
+  mortal) fiului, altfel acesta nu s-ar termina niciodata. 
+ Ultimul "sleep(1);" de la tata este pentru ca tatal sa nu se termine
+  inaintea fiului.
+ Fiul trebuie sa asocieze lui SIGUSR1 un handler de ignorare, dar acesta nu
+  poate fi SIG_IGN, deoarece SIG_IGN nu intrerupe pe "pause".
+ Daca la "printf("Tatal ...")" nu pun "\n", mesajul fiului este afisat
+  primul; aceasta deoarece bufferul lui "*stdout", in care scrie "printf"-ul
+  tatalui, nu se goleste pe ecran decat la sfarsitul executiei, iar tatal
+  se termina dupa fiu; deci scrierea unui "\n" in bufferul lui "*stdout"
+  provoaca golirea acestuia pe ecran, ca un "fflush(stdout)"; reamintim insa
+  ca atunci cand se scrie in fisiere (nu pe ecran) bufferul trebuie golit cu 
+  "fflush".
+p9b.c: varianta a lui "p9a", in care fiul trimite semnale tatalui (aflat cu
+|      "getppid()"), iar acesta isi reprogrameaza handlerul pentru SIGCHLD
+|      a.i. sa scrie cate a primit si sa termine procesul:
+|  #include<sys/types.h>
+|  #include<unistd.h>
+|  #include<signal.h>
+|  #include<stdlib.h>
+|  #include<stdio.h>
+|  int nr;
+|  void h1(){}
+|  void h2(int n){printf("Tatal a primit %d semnale.\n",nr); exit(0);}
+|  int main(){
+|    pid_t pt;
+|    if(fork()){struct sigaction a; sigset_t ms;
+|               sigemptyset(&ms); a.sa_mask=ms; 
+|               a.sa_handler=h1; sigaction(SIGUSR1,&a,NULL);
+|               a.sa_handler=h2; sigaction(SIGCHLD,&a,NULL);
+|               nr=0;
+|               while(1){pause(); ++nr;}
+|              }
+|          else{int i;
+|               sleep(1); 
+|               pt=getppid(); srand(pt); nr=20000+rand()%30001;
+|               for(i=0; i<nr; ++i)kill(pt, SIGUSR1);
+|               printf("Fiul a trimis %d semnale.\n",nr);
+|               return 0;
+|             }
+|  }
+Utilizare si comentarii: lansam; pe ecran apare ceva gen:
+                   Fiul a trimis 35872 semnale.
+                   Tatal a primit 22372 semnale.
+ Observam ca nu mai e nevoie ca fiul sa trimita un semnal de terminare
+  (SIGINT) si de asemenea nu mai e nevoie ca tatal sa astepte artificial
+  ("sleep") terminarea fiului; in fine, intrucat fiul se termina inaintea
+  "printf"-ului tatalui, indiferent la care "printf" pun sau nu pun "\n",
+  intai se va afisa mesajul fiului, apoi cel al tatalui.
+p10.c: cautarea tuturor aparitiilor unui fisier dat intr-o arborescenta cu
+|      procese paralele:
+|  #include<unistd.h>
+|  #include<sys/types.h>
+|  #include<dirent.h>
+|  #include<string.h>
+|  #include<sys/stat.h>
+|  #include<stdio.h>
+|  #include<stdlib.h>
+|
+|  void cauta(const char *nf, const char *specd){
+|    DIR *pd; struct dirent *pde; struct stat s;
+|    char cale[256], specificator[256];
+|    if((pd=opendir(specd))==NULL)return;
+|    strcpy(cale,specd); strcat(cale,"/");
+|    for(pde=readdir(pd); pde; pde=readdir(pd)){
+|      strcpy(specificator,cale); strcat(specificator, pde->d_name);
+|      if(stat(specificator,&s)==-1)continue;
+|      if(S_ISDIR(s.st_mode))
+|       if(strcmp(pde->d_name,".") && strcmp(pde->d_name,".."))
+|        if(!fork()){cauta(nf,specificator); exit(0);}
+|    }
+|    rewinddir(pd);
+|    for(pde=readdir(pd); pde; pde=readdir(pd)){
+|      strcpy(specificator,cale); strcat(specificator, pde->d_name);
+|      if(stat(specificator,&s)==-1)continue;
+|      if(S_ISREG(s.st_mode))
+|        if(!strcmp(nf,pde->d_name))printf("%s\n",specificator);
+|    }
+|    closedir(pd);
+|  }
+|
+|  int main(int na, char *a[]){struct stat s; 
+|    if(na!=3)return 1;
+|    if(stat(a[2],&s)==-1){perror(a[2]); return 1;}
+|    if(!S_ISDIR(s.st_mode)){printf("%s nu e director.\n",a[2]); return 1;}
+|    cauta(a[1],a[2]); 
+|    return 0;
+|  }
+Utilizare si comentarii: setam terminatul cu "stty -tostop"; lansam
+ programul in background, dand fisierul de cautat si directorul origine
+ al arborescentei ca argumente in linia de comanda, de exemplu:
+                   p10   p10.c   ..   &
+ Fisierul va fi cautat recursiv in arborescenta si de fiecare data cand este
+  gasit unul cu acelsi nume va fi scris cu cale cu tot.
+ Functia "cauta" cauta fisierul respectiv (el apare mereu ca prim parametru)
+  intr-un director:
+  - mai intai este parcurs directorul detectandu-se subdirectoarele si
+     pentru fiecare dintre ele se initiaza o cautare a fisierului in acel
+     director; noua cautare va fi facuta insa de catre un alt proces
+     (obtinut cu "fork"), care se executa in paralel cu primul (care
+     continua cautarea in vechiul director); in noul proces, dupa revenirea
+     din apelul "cauta(nf,specificator)" nu mai trebuie continuata cautarea
+     in directorul vechi, deoarece aceasta este facuta de procesul tata (de
+     aceea fiul face "exit(0)"); de asemenea, cand se parcurge un director 
+     trebuie evitate primele doua intrari, deoarece acestea sunt "." si ".." 
+     si ar produce ramificari de procese la infinit !
+  - apoi este reparcurs directorul pentru a se cauta fisierul respectiv in
+     el insusi.
+ Functia "cauta" putea face totul dintr-o singura parcurgere, dar procedand
+  ca mai sus procesele fiu sunt lansate mai devreme si astfel cautarea este 
+  mai rapida.
+ Intrucat nu se asigura ca procesul tata sa se termine dupa toti
+  descendentii, este posibil ca unii dintre ei sa ramana in background;
+  de aceea, pentru uniformizarea afisarii, procesul se lanseaza de la
+  inceput in background (altfel prompterul care apare dupa terminarea
+  procesului initial din foreground se intercaleaza intre specificatorii de
+  fisier afisati).
+============================================================================
+
+ASTEPTAREA TERMINARII UNUI PROCES FIU:
+--------------------------------------
+
+Cand un proces se termina, el intra in starea zombi (defunct); in aceasta
+ stare el nu se mai executa dar sistemul inca il mai pastreaza in evidenta,
+ blocul sau de control continand doar codul sau de retur (valoarea returnata
+ de "main" sau data ca parametru lui "exit"), detalii privind modul cum
+ s-a terminat (terminare normala, terminare datorata primirii unui semnal
+ mortal, etc.), timpul cat a durat executia (in kernel mode si user mode), 
+ PID-ul sau si PID-ul tatalui sau.
+In acest timp tatal sau primeste semnalul SIGCHLD (al carui handler implicit
+ este de ignorare).
+Tatal poate afla codul de retur al unui fiu al sau aflat in starea zombi si
+ modul in care acesta s-a terminat folosind functiile "wait" sau "waitpid". 
+ Dupa furnizarea acestei informatii aceste functii provoaca eliminarea 
+ efectiva a fiului respectiv din sistem; in particular, rezulta ca codul de
+ retur al unui fiu zombi poate fi aflat o singura data (un singur apel al lui
+ "wait" sau "waitpid").
+Daca tatal unui proces se termina inainte acestuia, procesul devine fiul al
+ procesului cu numele "init" (avand PID-ul 1).
+Urmatoarea functie permite asteptarea terminarii unui fiu oarecare:
+#include<sys/types.h>  (man -S 2 wait)
+#include<sys/wait.h>
+pid_t wait(int *ps);
+=> daca procesul n-are fii, returneaza -1 si seteaza errno la valoarea
+    ECHILD;
+   daca procesul are cel putin un fiu zombi, este ales unul dintre fiii sai
+    zombi, in "*ps" (daca "ps" nu e NULL) se pun informatiile referitoare la
+    terminarea lui (codul de retur, detaliile privind modul de terminare)
+    si se returneaza PID-ul sau; fiul respectiv este eliminat efectiv din 
+    sistem;
+   daca procesul are fii dar nici unul nu e zombi, procesul adoarme pana
+    se intampla unul din urmatoarele evenimente:
+    - unul din fii devine zombi - atunci comportarea e ca mai sus;
+    - procesul primeste un semnal neignorat si nemortal; comportamentul
+       observat in practica este: se executa handlerul semnalului, apoi
+       uneori "wait" se termina imediat si returneaza -1, alteori (de
+       exemplu la SIGALRM cu handler definit de utilizator) procesul
+       ramane adormit in continuare in "wait" (asteptand un eveniment
+       capabil sa produca trezirea);
+Urmatoarea functie permite asteptarea terminarii unui fiu anume:
+#include<sys/types.h>  (man waitpid)
+#include<sys/wait.h>
+pid_t waitpid(pid_t pid, int *ps, int opt);
+=> testeaza terminarea unui fiu / unor fii, in mod blocant sau nu; daca
+    apelul este neblocant, functia se termina imediat intotdeauna (procesul
+    nu adoarme niciodata);
+   pid = PID-ul fiului testat; daca este -1, este vorba de un fiu oarecare,
+     ca in cazul functiei "wait";
+   ps = daca este diferit de NULL, la aceasta adresa se vor pune
+     informatiile referitoare la terminarea fiului;
+   opt = poate fi 0, sau poate fi o combinatie de optiuni (constante
+     simbolice pentru care este suficienta includerea lui "sys/wait.h")
+     legate prin "|"; cateva optiuni si semnificatia lor:
+       WNOHANG = apelul este neblocant;
+       WUNTRACED = daca fiul testat este suspendat, in "*ps" se vor pune
+                    informatii referitoare la aceasta suspendare;
+   comportamentul observat in practica:
+   daca s-a produs o eroare sau daca procesul n-are fii, functia se termina
+    imediat (indiferent de parametrul "opt") si returneaza -1, iar errno
+    este setata corespunzator (in cazul absentei fiilor, errno devine
+    ECHILD);
+   daca fiul testat e zombi, functia se termina imediat (indiferent de
+    parametrul "opt"), in "*ps" se pun informatiile referitoare la
+    terminarea lui si se returneaza PID-ul sau; fiul este eliminat efectiv
+    din sistem; daca parametrul "pid" a fost -1, atunci acest comentariu
+    este valabil in cazul cand exista cel putin un fiu zombi, caz in care
+    se alege unul dintre fii zombi si i se aplica lui cele mentionate;
+   daca fiul testat e activ (sau, in cazul cand parametrul "pid" a fost -1, 
+    daca exista fii dar toti sunt activi), atunci:
+    - daca am folosit WNOHANG, functia se termina imediat si returneaza 0,
+       iar in "*ps" nu se pune nimic;
+    - daca nu am folosit WNOHANG, procesul apelant adoarme pana se intra
+       intr-una din situatiile celelalte;
+   daca fiul respectiv este suspendat (in cazul cand parametrul "pid" a fost
+    -1, comentariul e valabil atunci cand exista fii suspendati si toti
+    ceilalti fii sunt activi, alegandu-se un fiu suspendat), atunci:
+    - daca am folosit WUNTRACED (indiferent daca am folosit sau nu si
+       WNOHANG), functia se termina imediat, returneaza PID-ul fiului
+       respectiv, iar in "*ps" se pun informatii referitoare la suspendarea
+       acestuia (ele se pot analiza ulterior cu macro-urile WIFSTOPPED(.)
+       si WSTOPSIG(.) - a se vedea mai incolo);
+    - daca n-am folosit WUNTRACED dar am folosit WNOHANG, functia se termina
+       imediat, returneaza 0, iar in "*ps" nu se pune nimic;
+    - daca n-am folosit nici WUNTRACED nici WNOHANG (deci "opt" a fost 0),
+       procesul adoarme pana se intra intr-una din situatiile celelalte;
+   daca in timp ce procesul este adormit intr-un "waitpid" primeste un
+    semnal neignorat si nemortal, comportamentul este ca la "wait";
+In continuare, pentru analizarea informatiei recuperate in "*ps" de
+ functiile "wait" sau "waitpid" se pot folosi urmatoarele macro-uri
+ (definite in "sys/wait.h"):
+ WIFEXITED(.) => fiul s-a terminat normal ?
+ WEXITSTATUS(.) => furnizeaza codul de retur al fiului (are semnificatie
+      doar daca acesta s-a terminat normal);
+ WIFSIGNALED(.) => fiul s-a terminat ca urmare a primirii unui semnal ?
+ WTERMSIG(.) => furnizeaza semnalul care a provocat terminarea fiului (are
+      semnificatie doar daca fiul s-a terminat ca urmare a primirii unui
+      semnal);
+ WIFSTOPPED(.) => fiul a fost suspendat ? (aceasta informatie este pusa de
+      "waitpid" in "*ps" doar daca s-a apelat cu WUNTRACED);
+ WSTOPSIG(.) => semnalul care a provocat suspendarea fiului (are sens doar
+      daca fiul a fost suspendat, iar aceste informatii sunt puse de
+      "waitpid" in "*ps" doar daca s-a apelat cu WUNTRACED).
+In general procesele raman in stare zombi putina vreme si de aceea este
+ putin probabil ca la o comanda "ps" sa vedem un asemenea proces. Urmatorul
+ program provoaca o asemena situatie (un proces care sa ramana in stare
+ zombi mai multa vreme, astfel incat sa poata fi detectat cu "ps"):
+p11.c:
+|  #include<unistd.h>
+|  int main(){
+|  if(fork())while(1);
+|  return 0;
+|  }
+Utilizare si comentarii: lansam in background: "p11 &" (ca sa primim imediat
+ prompterul); imediat procesul se bifurca cu "fork"; tatal intra intr-un
+ ciclu infinit (deci nu se va termina decat la primirea unui semnal mortal);
+ fiul se termina imediat (si returneaza 0); la terminarea fiului, el devine
+ zombi iar tatal primeste semnalul SIGCHLD (care va fi ignorat, conform
+ handlerului implicit); tatal insa nu incearca sa afle codul de retur al
+ fiului (cu "wait" sau "waitpid") si astfel fiul ramane in sistem (in stare
+ zombi) pana se va termina tatal; deci daca in continuare dam comanda "ps",
+ pe ecran se va afisa ceva gen:
+                     PID TTY          TIME CMD
+                    7517 pts/7    00:00:00 bash
+                    7550 pts/7    00:00:05 p11
+                    7551 pts/7    00:00:00 p11 <defunct>
+                    7552 pts/7    00:00:00 ps
+ (procesul "p11" cu PID-ul 7550 este tatal aflat in ciclu infinit, iar
+ procesul "p11" cu pidul 7551 este fiul sau zombi); in continuare, pentru a
+ termina tatal, vom da comanda "kill -KILL 7550"; dupa terminarea tatalui
+ (care va fi eliminat din sistem de tatal sau, shell-ul "bash"), fiul va
+ deveni fiul al procesului "init" (cu PID-ul 1), care, constatand ca e
+ zombi, il va elimina din sistem; daca initial programul "p11" nu era
+ lansat in background ci in foreground, atat tatal cat si fiul ar fi fost
+ in foreground si intrucat tatal nu se termina singur (intra in ciclu
+ infinit), nu am fi primit niciodata prompterul ca sa putem da mai apoi
+ comenzile "ps" si "kill".
+p12.c: functie pentru analizarea codului de retur al unui proces si program
+|     ce ilustreaza folosirea ei:
+|  #include<sys/types.h>
+|  #include<sys/wait.h>
+|  #include<unistd.h>
+|  #include<signal.h>
+|  #include<stdio.h>
+|
+|  void test(pid_t pid, int status, int untraced){
+|    int cod;
+|    if(pid==-1){printf("Eroare sau nu sunt fii.\n"); return;}
+|    if(pid==0)if(untraced){printf("Fiu activ.\n"); return;}
+|                     else {printf("Fiu activ sau suspendat.\n"); return;}
+|    if(WIFEXITED(status)){
+|       printf("Proc. %d s-a term. cu codul de retur %d\n",
+|               pid,WEXITSTATUS(status));
+|       return;}
+|    if(WIFSIGNALED(status)){
+|       printf("Proc. %d s-a term. primind semnalul %d\n",
+|               pid,WTERMSIG(status)); 
+|       return;}
+|    if(WIFSTOPPED(status))
+|       printf("Proc. %d a fost susp. primind semnalul %d\n",
+|               pid,WSTOPSIG(status));
+|  }
+|
+|  int main(){
+|    pid_t p,q; int s;
+|    q=waitpid(-1, &s, WNOHANG); test(q, s, 0);
+|    if(!(p=fork())){sleep(10); return 1;}
+|    sleep(1); q=waitpid(p, &s, WNOHANG); test(q, s, 0);
+|              q=waitpid(p, &s, WNOHANG|WUNTRACED); test(q, s, 1);
+|    if(!(p=fork())){raise(SIGSTOP); return 2;}
+|    sleep(1); q=waitpid(p, &s, WNOHANG|WUNTRACED); test(q, s, 1);
+|    kill(p, SIGKILL);
+|    sleep(1); q=waitpid(p, &s, WNOHANG|WUNTRACED); test(q, s, 1);
+|    q=wait(&s); test(q, s, 0);
+|    return 0;
+|  }
+Utilizare: lansam; pe ecran apare ceva gen:
+                   Eroare sau nu sunt fii.
+                   Fiu activ sau suspendat.
+                   Fiu activ.
+                   Proc. 3150 a fost susp. primind semnalul 19
+                   Proc. 3150 s-a term. primind semnalul 9
+                   Proc. 3149 s-a term. cu codul de retur 1
+Comentarii: 
+ la "waitpid" am folosit NOHANG pentru ca tatal sa nu adoarma in asteptarea
+  fiului testat;
+ la primul "test" s-a raportat eroare pentru ca in acel moment procesul
+  apelant nu avea fii ("waitpid" a returnat -1);
+ la al 2-lea "test" s-a raportat "Fiu activ sau suspendat", deoarece exista
+  un fiu activ, "waitpid" a returnat 0, dar nu am folosit la el WUNTRACED,
+  deci el nu a stiut sa distinga intre cele doua cazuri (in ambele cazuri el
+  returneaza 0);
+ la al 3-lea "test" s-a raportat "Fiu activ", deoarece "waitpid" a returnat
+  tot 0, dar acum am folosit la el WUNTRACED (deci el nu returneaza 0 decat
+  in cazul fiului activ);
+ la al 4-lea "test" s-a testat fiul generat la al 2-lea "fork", care s-a
+  autosuspendat cu "raise(SIGSTOP);"; intrucat la "waitpid" am folosit 
+  WUNTRACED, acesta a detectat suspendarea, returnand PID-ul fiului (altfel
+  ar fi returnat 0 ca in cazul unui fiu activ); in acest caz WNOHANG nu s-a
+  dovedit util;
+ la al 5-lea "test" s-a testat acelasi fiu (care a fost in prealabil ucis
+  cu "kill" si a devenit zombi); acesta fiind zombi, "waitpid" a returnat
+  PID-ul sau si a pus in "s" informatii legate de terminarea acestuia; din
+  aceste informatii, functia "test" a aflat ca fiul a fost ucis de un
+  semnal si anume de care;
+ in continuare se ajunge la "wait"; in acest moment procesul mai are un
+  singur fiu (cel generat la primul "fork"); procesul adoarme pana se
+  termina acesta; apoi "wait" returneaza PID-ul sau si pune in "s"
+  informatii legate de terminarea acestuia; din aceste informatii functia
+  "test" a aflat ca fiul s-a terminat cu codul de retur 1.
+Alte comentarii:
+ La ultimul "if" din functia "test" se ajunge doar in cazul WUNTRACED, asa
+  ca nu mai trebuie intrebat "if(untraced)";
+ "slepp(1)"-rile din "main" sunt necesare deoarece altfel exista riscul ca
+   tatal sa faca testul inainte ca fiul ial 2-lea sa faca "raise" sau sa
+   primeasca SIGKILL.
+p13.c: varianta a lui "p9b" in care nu mai trebuie reprogramat SIGCHLD
+|      pentru a termina tatal:
+|  #include<sys/types.h>
+|  #include<sys/wait.h>
+|  #include<unistd.h>
+|  #include<signal.h>
+|  #include<stdlib.h>
+|  #include<stdio.h>
+|  int nr;
+|  void h1(){++nr;}
+|  int main(){
+|    pid_t pt;
+|    if(fork()){struct sigaction a; sigset_t ms;
+|               sigemptyset(&ms); a.sa_mask=ms; 
+|               a.sa_handler=h1; sigaction(SIGUSR1,&a,NULL);
+|               nr=0;
+|               while(wait(NULL)==-1);
+|               printf("Tatal a primit %d semnale.\n",nr);
+|               return 0;
+|              }
+|          else{int i;
+|               sleep(1); 
+|               pt=getppid(); srand(pt); nr=20000+rand()%30001;
+|               for(i=0; i<nr; ++i)kill(pt, SIGUSR1);
+|               printf("Fiul a trimis %d semnale.\n",nr);
+|               return 0;
+|              }
+|  }
+p14.c: rescrierea lui "p10" a.i. sa nu mai fie nevoie lansarea in background:
+|          textul este identic, dar se include in plus:
+|                  #include<sys/wait.h>
+|          iar in "main" se inlocuieste:
+|                  cauta(a[1],a[2]); 
+|                  return 0;
+|          cu:
+|                  cauta(a[1],a[2]); 
+|                  while(waitpid(-1,NULL,WNOHANG)>-1);
+|                  return 0;
+|
+Utilizare si comentarii: se lanseaza ca si "p10", dar in foreground, de
+ exemplu:
+                   p14   p14.c   ..
+ Acum nici un proces nu se va termina inaintea fiilor lui (iar acestia
+  nu se vor termina inaintea fiilor lor, etc.); astfel, putem lansa totul
+  in foreground (nici un descendent nu va ajunge in background, unde ar
+  putea fi impiedicat sa scrie pe ecran). Desi fiecare proces va astepta
+  terminarea fiilor lui pentru a se termina si el, cautarea nu va fi
+  incetinita, deoarece fiecare proces isi va termina cautarea ininte de
+  a-si astepta fii - practic procesele cauta la fel de repede ca inainte,
+  apoi se asteapta intre ele pentru a se termina cam in acelasi timp.
+============================================================================
+
+EXECUTAREA UNEI COMENZI SHELL DINTR-UN PROGRAM C:
+-------------------------------------------------
+
+#include<stdlib.h>  (man system)
+int system(const char *ldc);
+=> "ldc" trebuie sa fie adresa unui string continand o linie de comanda
+    shell;
+   efect: se lanseaza un proces fiu care executa linia de comanda shell
+    "ldc"; initial, in procesul fiu, SIGCHLD va fi blocat, iar SIGINT si
+    SIGQUIT vor fi ignorate (procesul fiu insa poate asigna alte handlere
+    pentru ele).
+p15.c:
+   #include<stdlib.h>
+   void main(){system("ps -l");}
+Utilizare si comentarii: lansam; pe ecran vom vedea efectul executiei unei
+ comenzi shell "ps -l"; in esenta vom vedea: login-shell-ul ("bash"),
+ procesul "p15" si procesul "ps"; de exemplu am obtinut:
+  F S   UID   PID  PPID  C PRI  NI ADDR    SZ WCHAN  TTY          TIME CMD
+000 S   520 18691 18689  0  70   0    -   523 wait4  pts/6    00:00:00 bash
+000 S   520 19231 18691  0  75   0    -   254 wait4  pts/6    00:00:00 p15
+000 R   520 19232 19231  0  77   0    -   603 -      pts/6    00:00:00 ps
+p16a.c:
+   #include<sys/types.h>
+   #include<sys/stat.h>
+   #include<fcntl.h>
+   #include<unistd.h>
+   #include<stdlib.h>
+   int main(){
+   int d;
+   d=open("f",O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
+   if(d==5)return;
+   dup2(d,5); close(d);
+   write(5,"A",1);
+   system("./p16b");
+   return 0;
+   }
+p16b.c:
+   #include<unistd.h>
+   int main(){
+   write(5,"B",1);
+   return 0;
+   }
+Utilizare: lansez: "p16a"; in "f" apare: "AB".
+Concluzie: fii obtinuti cu "system" mostenesc tabela de descriptori, ca la 
+ fii obtinuti cu "fork".
+p17a.c:
+   #include<stdio.h>
+   #include<stdlib.h>
+   int main(){printf("A"); fflush(stdout); system("./p17b"); return 0;}
+p17b.c:
+   #include<stdio.h>
+   int main(){printf("B"); fflush(stdout); return 0;}
+Utilizare si comentarii: lansam "p17a > f", iar "f" va contine "AB"; deci
+ fii obtinuti cu  cu "system" mostenesc redirectarile din linia de comanda.
+Observatie: daca in "p17a", "p17b" pun "printf("...\n")" si nu pun "fflush",
+ atunci:
+  - daca lansez "p17a", pe ecran apare "AB";
+  - daca lansez "p17a > f", in "f" apare "BA" (fiecare proces isi goleste
+     bufferul in fisier cand se termina, iar fiul se termina inaintea
+     tatalui) - deci in acest caz bufferul lui "*stdout" nu se mai goleste
+     doar cu "\n" ci trebuie neaparat "fflush".
+In general fii cu "system" nu mostenesc handlerele tatalui (este si normal,
+ deoarece acestia executa in general un alt program).
+Atentie: cand scriem programe care folosesc "system" putem avea surpriza ca
+ fisierele executabile solicitate de acesta sa nu fie gasite (ca atunci cand
+ vrem sa lansam din linia de comanda shell un program "p" aflat in directorul
+ curent si acesta nu este gasit decat daca dam "./p"); o cauza este setarea
+ necorespunzatoare a variabilei de environment "PATH" a shell-ului. De aceea
+ se recomanda sa indicam aceste fisiere cu cale absoluta (ceva gen: "/a/b/p",
+ daca fisierul "p" se afla in directorul "b", fiul lui "a", fiul radacinii),
+ sau cu cale care pleaca din directorul "home", indicat prin "~" (ceva gen: 
+ "~/a/b/p", daca fisierul "p" se afla in directorul "b", fiul lui "a", fiul 
+ directorului "home" al utilizatorului respectiv), sau cu o cale care incepe 
+ cu "." sau ".." (ceva gen "./p", daca fisierul "p" se afla in directorul 
+ curent).
+============================================================================
+
+ENVIRONMENT:
+------------
+
+Fiecare proces are un environment, format din niste variabile cu diverse
+ nume, asignate la diverse valori string (valoarea poate fi si stringul
+ vid). Ele nu sunt variabile declarate in program, ci sunt asociate si
+ gestionate de sistem in legatura cu procesul. In general environmentul se
+ mosteneste, dar un proces isi poate schimba valorile diverselor variabile
+ de environment, isi poate adauga variabile de environment noi, asignate la
+ diverse valori, sau isi poate elimina din variabilele de environment
+ existente.
+Shell-ul, fiind tot un proces, are si el un environment; cand dam o comanda,
+ se lanseaza un proces fiu care mosteneste o parte din acest environment.
+Prin comenzi shell putem accesa/modifica environmentul shell-ului si putem
+ preciza care variabile de environment se vor transmite proceselor generate
+ de comenzi (acele variabile de environment care sunt "exportabile"). Initial
+ tot environmentul shell-ului este exportabil.
+ Exemple de comenzi:
+ "var=val"  =>  variabila de environment "var" se (re)asigneaza la valoarea
+     "val" (daca "var" nu exista, ea se creaza in prealabil);
+     "var" este un identificator, "val" este un sir;
+    exemplu: "TERM=vt100"
+ "unset var" => se elimina variabila respectiva din environment;
+ "export var" => variabila de environment "var" devine exportabila
+    (procesele fiu generate de comenzi o vor mosteni);
+ "export var=val" => variabila de environment "var" se asigneaza la valoarea
+    "val" (daca "var" nu exista, ea se creaza in prealabil) si devine
+    exportabila;
+ "set"  =>  se afisaza vaiabilele de environment si valorile lor (ca siruri
+    "var=val").
+Un proces isi poate accesa environmentul folosind un al 3-lea parametru al
+ lui "main", care trebuie sa fie de tip vector de stringuri (sau "char **")
+ (numele lui nu conteaza);
+Exemplu:  int  main(int na, char *a[], char *e[100]){.....}
+          int  main(int na, char *a[], char *e[]){.....}
+          int  main(int na, char *a[], char **e){.....}
+ (in toate cele trei cazuri "e" se aloca la fel, anume de tip "char **").
+ La inceputul executiei, componentele "e" se initializeaza automat cu
+ adresele unor stringuri de forma "var=val", unde "var" este numele unei
+ variabile de environment a procesului iar "val" valoarea sa, care este un
+ sir (chiar daca valoare este "123", este vorba de sirul "123", nu de
+ intregul "123"); ultima componenta a lui "e" se initializeaza cu NULL
+ (astfel putem determina cate componente sunt folosite efectiv).
+p18a.c:
+   #include<stdio.h>
+   void main(int na, char *a[], char *e[]){ char **pe;
+     for(pe=e; *pe; ++pe)printf("%s\n",*pe); }
+p18b.c:
+   #include<stdio.h>
+   void main(int na, char *a[], char *e[]){ 
+     for(;*e;++e)printf("%s\n",*e); }
+p18c.c:
+   #include<stdio.h>
+   void main(int na, char *a[], char *e[]){ 
+     while(*e)printf("%s\n",*e++); }
+p18d.c:
+|  #include<stdio.h>
+|  void main(int na, char *a[], char *e[]){int i;
+|    for(i=0;e[i];++i)printf("%s\n",e[i]); }    
+Utilizare si comentarii: in toate cazurile lansam si se va afisa
+ environmentul procesului lansat, sub forma unor siruri de forma "var=val"
+ (cate unul pe linie); in programele "p18b" si "p18c" insa "e" pierde
+ valoarea initiala si astfel prin metoda respectiva environmentul nu poate
+ fi parcurs decat o singura data la fiecare rulare.
+Un proces isi poate accesa environmentul si prin intermediul variabilei
+ predefinite "environ" - ea pointeaza inceputul matricii de stringuri care
+ contine acest environment; practic insa se observa ca valoarea initiala a
+ lui "environ" coincide cu cea a lui "e", dar ulterior "environ" poate
+ pointa o alta zona, ca si cand ar exista 2 copii ale zonei cu environmentul
+ iar "e" si "environ" pointeaza fiecare cate una (vezi programul "p21");
+ pentru a putea folosi variabila "environ" in program, nu este necesar sa
+ scriem al 3-lea parametru la "main" si nu trebuie sa includem vreun fisier
+ header special, dar trebuie sa scriem  in program declaratia:
+   extern char **environ;
+p19a.c:
+   #include<stdio.h>
+   extern char **environ;
+   void main(){ char **pe;
+     for(pe=environ; *pe; ++pe)printf("%s\n",*pe); }
+p19b.c:
+   #include<stdio.h>
+   extern char **environ;
+   void main(){
+     for(;*environ;++environ)printf("%s\n",*environ); }
+p19c.c:
+   #include<stdio.h>
+   extern char **environ;
+   void main(){
+     while(*environ)printf("%s\n",*environ++); }
+p19d.c:
+|  #include<stdio.h>
+|  extern char **environ;
+|  void main(){int i;
+|    for(i=0;environ[i];++i)printf("%s\n",environ[i]); }    
+Utilizare si comentarii: lansarea si efectul sunt ca la "p18..."; observam
+ ca in "p19b" si "p19c" valoarea lui "environ" se pierde, deci prin aceasta
+ metoda environmentul poate fi parcurs o singura data la fiecare rulare.
+Daca dam comenzile shell "aaa=1", "export bbb=2", apoi rulam oricare din
+ programele "p18...", "p19...", in lista rezultata vom regasi "bbb=2", dar
+ nu si "aaa=1".
+Cu functiile "getenv", "putenv" si "unsetenv" un proces isi poate afla /
+ modifica environmentul (pentru a le folosi intr-un program nu e nevoie sa
+ am parametrii la "main"):
+#include<stdlib.h>  (man getenv)
+char *getenv(const char *var);
+=> "var" este numele unei variabile de environment;
+   returneaza adresa la care este stocata valoarea acelei variabile (ca
+    string); daca variabila respectiva nu exista, returneaza NULL.
+p20.c:
+   #include<stdlib.h>
+   void main(){ printf("%s\n",getenv("xx2")); }
+Utilizare: dam comanda shell: "export xx2=20"; lansez "p20"; se afisaza:
+ "20"
+#include<stdlib.h>  (man putenv)
+int putenv(const char *sir);
+=> "sir" este un string de forma "var=val"; daca exista variabila de
+     environment "var", valoarea ei este schimbata la "val"; daca nu exista
+     o variabila de environment "var", se creaza una si se asigneaza la
+     valoarea "val";
+   returneaza: 0=succes, -1=esec (caz in care seteaza errno; de exemplu,
+    daca nu a avut loc in memorie pentru o noua variabila de environment,
+    errno devine ENOMEM).
+#include<stdlib.h>  (man unsetenv)
+void unsetenv(const char *var);
+=> elimina variabila "var" din environment; daca variabila "var" nu exista,
+    nu se face nimic.
+Observatie: in practica se constata ca modificarile asupra environmentului
+ efectuate cu functiile "putenv" si "unsetenv" sunt sesizate integral doar
+ daca accesam environmentul cu variabila "environ" (vezi programele
+ "p19..."); daca il accesam cu al 3-lea parametru al lui "main" (vezi
+ programele "p18...") nu vom vedea decat o parte din aceste modificari (de
+ exemplu daca scoatem o variabila cu "unsetenv", nu o vom mai vedea in
+ primul caz, dar uneori in cazul al 2-lea o vom vedea, ca si cand nu ar fi
+ fost scoasa). De aceea, in general este mai bine sa lucram cu variabila
+ "environ" decat cu al 3-lea parametru al lui "main".
+p21.c:
+   #include<stdio.h>
+   extern char **environ;
+   void main(int na, char *a[], char *e[]){int i;
+      for(i=0; e[i]; ++i)printf("%s\n",e[i]);
+      for(i=0; environ[i]; ++i)printf("%s\n",environ[i]);
+      printf("%p   %p   %d\n", e, environ, e==environ); 
+      unsetenv("PATH");
+      printf("%p   %p   %d\n", e, environ, e==environ); 
+      putenv("XXXXXXXX=123");
+      printf("%p   %p   %d\n", e, environ, e==environ); 
+      putenv("yyyyyyyy=abc");
+      printf("%p   %p   %d\n", e, environ, e==environ); 
+      unsetenv("XXXXXXXX");
+      printf("%p   %p   %d\n", e, environ, e==environ); 
+      unsetenv("TERM");
+      printf("%p   %p   %d\n", e, environ, e==environ); 
+      for(i=0; e[i]; ++i)printf("%s\n",e[i]);
+      for(i=0; environ[i]; ++i)printf("%s\n",environ[i]);
+   }
+Utilizare si comentarii: lansam; pe ecran apare ceva gen:
+  <o afisare a environmentului mostenit de la shell (partea exportabila a
+   environmentului shell-ului)>
+  <o alta afisare a environmentului, identica cu prima>
+                   0xbffffc2c   0xbffffc2c   1
+                   0xbffffc2c   0xbffffc2c   1
+                   0xbffffc2c   0x80498d8   0
+                   0xbffffc2c   0x80498d8   0
+                   0xbffffc2c   0x80498d8   0
+                   0xbffffc2c   0x80498d8   0
+  <o afisare a environmentului, in care nu apar "yyyyyyyy" si "PATH", dar
+   apare "TERM">
+  <o afisare a environmentului in care apare "yyyyyyyy" si nu apar "PARH"
+   si "TERM">
+ Deci modificarile facute per total (adaugarea lui "yyyyyyyy" si eliminarea
+ lui "PATH" si "TERM", care erau mostenite de la shell) nu au fost
+ evidentiate in totalitate decat prin intermediul lui "environ". Observam
+ cum dupa primul "putenv" variabila "environ" si-a schimbat zona pointata
+ (iar in continuare a pointat aceasta zona, indiferent ce alte apeluri am
+ facut), iar noua zona a continut aceeasi informatie cu prima, mai putin
+ modificarile facute cu "putenv" si "unsetenv". In fine, remarcam ca desi
+ ne-a interesat doar parametrul "e" al lui "main", a trebuit sa-i punem si
+ pe "na" si "a", altfel "e" n-ar fi fost al 3-lea (si ar fi avut alta
+ semnificatie) ! 
+p22.c:
+   #include<stdlib.h>
+   extern char **environ;
+   void main(){ int i,j; char buf[100];
+     for(i=0; environ[i]; ){
+       printf("%s\n",environ[i]);
+       for(j=0; environ[i][j]!='='; ++j)buf[j]=environ[i][j]; buf[j]='\0';
+       unsetenv(buf);
+     }
+   }
+Utilizare si comentarii: lansam; pe ecran apare environmentul mostenit de
+ proces de la shell (partea exportabila a environmentului shell-ului);
+ "for(j..." are rolul de a recupera in "buf" numele variabilei care apare
+ in stringul de forma "var=val" pe care il pointeaza "environ[i]"; remarcam
+ ca daca eliminam variabila de environment la care se refera "environ[i]",
+ "environ[i]" se va referi la variabila de environment urmatoare ("for(i..."
+ nu e nevoie sa miste "i"-ul, toate inregistrarile venind singure pe pozitia
+ 0); instructiunile din "main" puteau fi inlocuite cu:
+     while(*environ){
+       printf("%s\n",*environ);
+       for(j=0; (*environ)[j]!='='; ++j)buf[j]=(*environ)[j]; buf[j]='\0';
+       unsetenv(buf);
+     } 
+ sau, daca includeam si "string.h", puteam inlocui aceste instructiuni cu:
+     for(i=0; environ[i]; ){
+       printf("%s\n",environ[i]);
+       j=strchr(environ[i],'=')-environ[i];
+       strncpy(buf,environ[i],j); buf[j]='\0';
+       unsetenv(buf);
+     }
+ sau cu:
+     while(*environ){	
+       j=strchr(*environ,'=')-*environ;
+       strncpy(buf,*environ,j); buf[j]='\0';
+       unsetenv(buf);
+     }
+ (functia "strchr" returneaza adresa primei aparitii a lui '=' in stringul
+  de forma "var=val" pe care il pointeaza "environ[i]", respectiv "*environ";
+  diferenta "j" dintre aceasta adresa si "environ[i]", respectiv "*environ", 
+  este exact lungimea numelui variabilei de environment care apare in stringul
+  respectiv; "strncpy" copiaza acest nume de "j" caractere in "buf" dar nu 
+  pune si '\0'; acest '\0' este pus explicit la urma; pentru detalii asupra 
+  celor doua functii: "man strchr" si "man strncpy");
+ la terminarea lui "for(i...", respectiv "while(*environ)...", environmentul 
+ procesului e vid.
+p23.c
+   #include<stdlib.h>
+   #include<unistd.h>
+   extern char **environ;
+   void afisenv(){int i; 
+    for(i=0; environ[i]; ++i)printf("  %s\n",environ[i]);
+   }
+   int main(int na, char *a[]){
+     int i,j; char buf[100];
+     if(na==2){printf("Fiul cu system are ca env.:\n"); afisenv(); exit(0);}
+     for(i=0; environ[i]; ){
+       for(j=0; environ[i][j]!='='; ++j)buf[j]=environ[i][j]; buf[j]='\0';
+       unsetenv(buf);
+     }
+    printf("Env. initial:\n"); afisenv();
+    putenv("x1=10");printf("Am ad.x1=10; env. rezultat este:\n"); afisenv();
+    putenv("x1=20");printf("Am modif.x1=20; env. rezultat este:\n");afisenv();
+    putenv("x2=50");printf("Am ad.x2=50; env. rezultat este:\n"); afisenv(); 
+    unsetenv("x1");printf("Am elim.x1; env. rezultat este:\n"); afisenv();
+    if(!fork()){printf("Fiul cu fork are ca env.:\n"); afisenv(); exit(0);}
+    wait(NULL);
+    system("./p23 1");
+    return 0;
+   }
+Utilizare si comentarii: lansam "p23"; pe ecran apare ceva gen:
+                   Env. initial:
+                   Am ad.x1=10; env. rezultat este:
+                     x1=10
+                   Am modif.x1=20; env. rezultat este:
+                     x1=20
+                   Am ad.x2=50; env. rezultat este:
+                     x1=20
+                     x2=50
+                   Am elim.x1; env. rezultat este:
+                     x2=50
+                   Fiul cu fork are ca env.:
+                     x2=50
+                   Fiul cu system are ca env.:
+                     x2=50
+                     PWD=/home/funinf/dra/work
+                     HOSTNAME=moisil.cs.unibuc.ro
+                     MACHTYPE=i586-mandrake-linux-gnu
+                     SHLVL=1
+                     SHELL=/bin/bash
+                     HOSTTYPE=i586
+                     OSTYPE=linux-gnu
+                     TERM=dumb
+                     PATH=/usr/local/bin:/bin:/usr/bin
+                     _=./p23
+ Programul de mai sus pe de-o parte ofera o noua ilustrare a modului de
+ lucru cu "putenv" si "unsetenv", pe de alta parte arata cum se mosteneste
+ environmentul prelucrat astfel la fii cu "fork" si "system". El fiind
+ lansat fara argumente in linia de comanda, sare peste primul "if" si
+ executa "for", care videaza environmentul; apoi se adauga/modifica/scot
+ niste variabile de environment, afisandu-se de fiecare data environmentul
+ obtinut - environmentul va avea doar variabile noi, cele mostenite de la
+ shell fiind eliminate; inainte de "fork", procesul are in environment doar
+ "x2=50"; apoi se genereaza un fiu cu "fork" si se asteapta terminarea lui
+ ("wait"), apoi se genereaza un fiu cu "system". Fiul cu "fork" isi scrie
+ environmentul si se termina; fiul cu "system" executa tot "p23" dar cu un
+ argument in linia de comanda (valoarea lui nu conteaza) - astfel fiul va
+ executa doar primul "if", unde isi va scrie environmentul, apoi se va
+ termina. Observam ca ambii fii mostenesc "x2=50" - deci variabilele de
+ environment pe care un proces si le adauga cu "putenv" sunt automat
+ exportabile catre fii cu "fork" sau "system"; fiul cu "fork" are ca
+ environment doar "x2=50" (deci environmentul tatalui de dinaintea
+ bifurcarii), in timp ce fiul cu "system" are un environment mai bogat,
+ datorat shell-ului care a executat linia de comanda "./p23 1".
+============================================================================
+
+INLOCUIREA UNUI PROCES CU ALTUL:
+--------------------------------
+
+#include<unistd.h>  (man execv)
+int execv(const char *spec, char *const a[]);
+=> se incarca in memorie fisierul executabil cu specificatorul "spec" si se
+    lanseaza in executie cu argumentele din linia de comanda specificate 
+    de "a"; "a" trebuie initializat in acelasi stil in care se initializeaza
+    automat parametrul al doilea al lui "main" (in particular "a[0]" trebuie
+    sa pointeze un string identic cu cel pointat de "spec" iar ultima 
+    componenta a lui "a" trebuie sa contina "NULL"); noul proces ia locul 
+    celui curent (deci va avea ca PID PID-ul acestuia si ca tata tatal 
+    acestuia);
+  in caz de succes nu exista retur din aceasta functie (pentru ca procesul
+    initial nu mai exista); in caz de esec functia returneaza -1 (si seteaza
+    errno) iar procesul initial continua.
+#include<unistd.h>  (man execve)
+int execve(const char *spec, char *const a[], char *const e[]);
+=> similar ca la "execv", dar noul proces va avea environmentul specificat
+    de "e"; "e" trebuie initializat in acelasi stil in care se initializeaza
+    automat parametrul al treilea al lui main (deci componentele lui "e" 
+    trebuie sa pointeze stringuri de forma "var=val" iar ultima componenta
+    a sa trebuie sa contina NULL); in cazul lui "execv" environmentul noului 
+    proces este cel preluat de la vechiul proces.
+Observatii:
+  1) In cazul ambelor functii, suma lungimilor tuturor stringurilor date ca
+      parametrii prin intermediul lui "a" si "e" nu trebuie sa depaseasca o
+      valoare maxima specificata de constanta simbolica ARG_MAX, pentru care
+      putem include "limits.h" (in principiu este 131072).
+  2) Noul proces obtinut cu una din functiile de mai sus preia aproape toate
+      caracteristicile procesului initial, cu cateva exceptii, printre care:
+      - proprietarul efectiv si grupul efectiv sunt cei ai fisierului
+         indicat de "spec", nu cei reali (cei reali sunt la fel ca la
+         procesul initial), daca acest fisier are setati bitii "set_uid",
+         respectiv "set_gid";
+      - handlerele nu sunt preluate (asemanator cu "system");
+      - in cazul lui "execve" environmentul va fi cel specificat de "e", nu
+         cel al procesului initial.
+  3) In general variabilele de environment pe care un proces si le adauga cu
+      "putenv" sunt si ele preluate in procesul obtinut cu "execv";
+  4) In general procesul obtinut cu una din functiile de mai sus preia
+      tabela de descriptori a procesului initial.
+  5) Este bine ca specificatorii folositi pentru a initializa parametrul 
+      "spec" si componenta "a[0]" sa respecte aceleasi masuri de precautie
+      pe care le-am prezentat la "system" (in particular, daca vrem sa 
+      specificam un fisier "p" aflat in directorul curent, vom scrie "./p").
+p24.c:
+   #include<unistd.h>
+   int main(){
+     char *argumente[]={"/bin/ls", "-l", NULL};
+     execv("/bin/ls", argumente);
+     /* in caz de succes al lui "exec", aici nu se mai ajunge */
+     return 0;
+   }
+Utilizare: lansam; pe ecran apare efectul executiei unei comenzi shell
+  "ls -l" ("/bin/ls" este specificatorul executabilului din sistem care
+  face comanda "ls").
+p25a.c:
+   #include<stdio.h>
+   #include<unistd.h>
+   int main(int na, char *a[], char *e[]){
+     int i; 
+     char *arg[]={"./p25b","a","b",NULL}, *env[]={"x=1",NULL};
+     printf("Proces PID=%d, PPID=%d\n",getpid(),getppid());
+     printf("Argumente:\n"); for(i=0; i<na; ++i)printf("  %s\n",a[i]);
+     printf("Environment:\n"); for(i=0; e[i]; ++i)printf("  %s\n",e[i]);
+     execve("./p25b", arg, env);
+     return 0;
+   }
+p25b.c:
+   #include<stdio.h>
+   #include<unistd.h>
+   int main(int na, char *a[], char *e[]){
+     int i;
+     printf("Proces PID=%d, PPID=%d\n",getpid(),getppid());
+     printf("Argumente:\n"); for(i=0; i<na; ++i)printf("  %s\n",a[i]);
+     printf("Environment:\n"); for(i=0; e[i]; ++i)printf("  %s\n",e[i]);
+   }
+Utilizare si comentarii: lansam "p25a"; pe ecran apare ceva gen:
+                   Proces PID=19677, PPID=19280
+                   Argumente:
+                     p25a
+                   Environment:
+                     <un environment mare, mostenit de la shell>
+                   Proces PID=19677, PPID=19280
+                   Argumente:
+                     ./p25b
+                     a
+                     b
+                   Environment:
+                     x=1
+  Observam ca noul proces a avut acelasi PID si PPID ca cel initial.
+p26.c: Numarul aparitiilor unui fisier dat intr-o arborescenta data:
+|  #include<unistd.h>
+|  #include<sys/types.h>
+|  #include<dirent.h>
+|  #include<string.h>
+|  #include<sys/stat.h>
+|  #include<stdio.h>
+|  #include<stdlib.h>
+|  #include<sys/wait.h>
+|  int main(int na, char *a[]){ 
+|    DIR *pd; struct dirent *pde; struct stat s;
+|    char cale[256], specificator[256];
+|    char *arg[]={a[0],a[1],specificator,NULL}, *env[]={"numaratoare=0",NULL};
+|    int suma,status;
+|    if(na!=3){printf("Nr. gresit de argumente.\n"); return -1;}
+|    if(stat(a[2],&s)==-1)
+|      {printf("%s nu poate fi accesat.\n",a[2]); return -1;}
+|    if(!S_ISDIR(s.st_mode)){printf("%s nu e director.\n",a[2]); return -1;}
+|    if((pd=opendir(a[2]))==NULL)return 0;
+|    strcpy(cale,a[2]); strcat(cale,"/"); 
+|    for(pde=readdir(pd); pde; pde=readdir(pd)){
+|      strcpy(specificator,cale); strcat(specificator, pde->d_name);
+|      if(stat(specificator,&s)==-1)continue;
+|      if(S_ISDIR(s.st_mode))
+|       if(strcmp(pde->d_name,".") && strcmp(pde->d_name,".."))
+|        if(!fork())execve(a[0],arg,env); 
+|    }
+|    rewinddir(pd);
+|    suma=0;
+|    for(pde=readdir(pd); pde; pde=readdir(pd)){
+|      strcpy(specificator,cale); strcat(specificator, pde->d_name);
+|      if(stat(specificator,&s)==-1)continue;
+|      if(S_ISREG(s.st_mode))if(!strcmp(a[1],pde->d_name)){suma=1; break;}
+|    }
+|    closedir(pd);
+|    while(wait(&status)>-1){suma+=WEXITSTATUS(status);} 
+|    if(!getenv("numaratoare"))printf("Sunt %d aparitii.\n",suma);
+|    return suma;
+|  }
+Utilizare si comentarii: lansam in foreground, dand ca argumente in linia de
+ comanda fisierul cautat si directorul origine al arborescentei in care se
+ cauta (ca la"p14"); de exemplu:
+                   p26   p26.c   ..
+ Modul de functionare este asemanator programelor "p10" si "p14", cu
+  urmatoarele mentiuni:
+ - aici cautarea este efectuata de "main" insusi, nu se mai folosim o
+    functie; fisierul cautat si directorul origine al arborescentei, care
+    erau dati ca parametrii functiei, aici sunt luati direct din parametrii
+    lui "main"; apelul recursiv (la intalnirea unui director fiu) este
+    inlocuit cu o alta executie a acestui program (avand ca argumente in
+    linia de comanda acelasi fisier cautat si specificatorul directorului
+    fiu), care va inlocui un fiu obtinut cu "fork"; noul proces, inlocuind
+    un fiu cu "fork" al procesului anterior, devine fiu al lui (deci ii va
+    furniza lui codul de retur);
+ - in primele trei "if"-uri ale programului doar in procesul initial 
+    conditia poate fi adevarata (in cazul cand operatorul a dat un numar 
+    necorespunzator de argumente in linia de comanda, sau entitatea a doua
+    nu poate fi accesata sau nu este director), deci doar procesul initial 
+    poate sa scrie pe ecran acele mesaje de eroare; procesele fiu sunt lansate
+    intotdeauna cu numar corect de argumente in linia de comanda si numai dupa 
+    ce verificarile necesare au fost deja facute de procesul tata;
+- fiecare executie a programului returneaza prin codul de retur (valoarea
+    returnata de "main") numarul aparitiilor fisierului cautat in
+    arborescenta in care s-a cautat la acea executie; acest numar este suma
+    dintre numarul aparitiilor fisierului in directorul respectiv (care
+    poate fi 0 sau 1) si numarul aparitiilor fisierului in subarborescentele
+    -fiu, aceste numere fiind returnate de procesele fiu; pentru a recupera
+    toate aceste numere, o executie nu se termina pana cand toti fii sai
+    s-au terminat ("while(wait...)");
+ - doar procesul initial (din care s-au generat toate) va scrie numarul
+    calculat pe ecran; in acest scop se utilizeaza o variabila de
+    environment "numaratoare", care se presupune ca nu exista in shell
+    (deci inainte de a lansa programul pentru prima data trebuie sa ne
+    asiguram ca in shell nu exista o asemenea variabila de environment):
+    procesul initial nu o are (deci in el "getenv" returneaza NULL) dar
+    descendentii lui (obtinuti cu "fork" si "execve") o au (prin intermediul
+    vectorului "env" dat ca parametru la "execve").
+ Subliniem ca atunci cand un proces face "execv", "execve", noul proces nu
+  este fiu al primului ci ii ia locul (si are acelasi PID, PPID), dar in
+  programul nostru fiecare proces face mai intai "fork", generand un fiu,
+  apoi FIUL face "excve", inlocuindu-se cu un alt proces - astfel noul
+  proces devine fiu al procesului care a facut "fork" (avand acelasi PPID
+  ca fiul cel autentic, pe care l-a inlocuit).
+p27a.c: ilustrarea faptului ca procesele obtinute cu "execv" preiau de la
+         procesul initial tabela de descriptori:
+   #include<sys/types.h>
+   #include<sys/stat.h>
+   #include<fcntl.h>
+   #include<stdio.h>
+   #include<unistd.h>
+   int main(){
+   int d;
+   d=open("f",O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
+   if(d==5)return;
+   dup2(d,5); close(d);
+   write(5,"A",1);
+   execv("./p27b",NULL);
+   return 0;
+   }
+p27b.c: program auxiliar:
+   #include<unistd.h>
+   int main(){
+   write(5,"B",1);
+   return 0;
+   }
+Utilizare si comentarii: lansam "p27a"; daca in fisierul "f" se scrie ceva
+ (deci daca in "p27a" "open" a returnat ceva !=5), atunci se scrie "AB";
+ observam ca "p27a" a deschis fisierul "f" si l-a asociat descriptorul 5,
+ dar "p27b" nu a facut nici o operatie de deschidere ci a scris prin 5
+ direct; concluzia: procesul "p27b" a preluat tabela de descriptori asa cum
+ a completat-o "p27a".
+p28a.c: ilustrarea faptului ca procesele obtinute cu "execv", "execve"
+         preiau redirectarile din linia de comanda ale procesului initial:
+   #include<unistd.h>
+   #include<stdio.h>
+   int main(){printf("A"); fflush(stdout); execv("./p28b",NULL); return 0;}
+p28b.c: program auxiliar:
+   #include<stdio.h>
+   int main(){printf("B"); fflush(stdout); return 0;}
+Utilizare si comentarii: lansam "p28a > f"; atunci "f" va contine "AB";
+ concluzie: procesul "p28b" a preluat redirectarea "> f" si a scris tot in
+ "f".
+Observatie: daca in "p28a", "p28b" pun "printf("...\n")" si nu pun "fflush",
+     atunci:
+      - daca lansez fara redirectare: "p28a", pe ecran apare "AB";
+      - daca lansez cu redirectare "p28a > f", in fisierul "f"  apare "B";
+     acestea arata doua lucruri:
+      - in cazul unui proces cu iesirea standard redirectata din linia de 
+         comanda catre un fisier, bufferul lui "*stdout" nu se mai goleste
+         la scrierea lui "\n" ci trebuie neaparat "fflush";
+      - la inlocuirea lui "p28a" cu "p28b" bufferul lui "*stdout" nu s-a
+         golit automat ca la orice terminare normala a unui proces ci a fost
+         pierdut (in exterior a ajuns doar ce a scris "p28b"); deci la
+         inlocuirea unui proces cu altul prin "execv", "execve", nu se mai
+         efectueaza toate operatiile de inchidere intocmai ca la o terminare
+         normala.
+p29a.c:  minishell care permite lansarea unor procese cu environment
+|         setabil:
+|  #include<stdio.h>
+|  #include<string.h>
+|  #include<stdlib.h>
+|  #include<unistd.h>
+|  #include<sys/types.h>
+|  #include<sys/wait.h>
+|  #define MAXNRARG 10
+|  #define MAXNRENV 10
+|  int acvar(char *s1, char *s2){
+|    while(*s1 && *s2 && *s1==*s2 && *s1!='=' && *s2!='='){++s1; ++s2;}
+|    if((*s1=='=' && *s2=='=') ||
+|       (*s1=='=' && !*s2) ||
+|       (*s2=='=' && !*s1) ||
+|       (!*s1 && !*s2)
+|      )return 1;
+|    else return 0;
+|  }
+|  char buf[256], *a[MAXNRARG], *e[MAXNRENV]; int na, ne, i, j, k, s;
+|  int main(){
+|  ne=0; e[0]=NULL; 
+|  do{
+|    printf(">"); gets(buf); s=0; na=0;
+|    for(i=0;buf[i];++i)
+|      if(buf[i]==' ' && s==1){buf[i]='\0'; s=0;}
+|      else if(buf[i]!=' ' && s==0){a[na]=buf+i; ++na; s=1;}
+|    a[na]=NULL;
+|    if(a[0]==NULL)continue;
+|    else if(a[0][0]!='#')
+|           {if(!fork()){execve(a[0],a,e); return 1;} wait(NULL);}
+|    else if(!strcmp(a[0],"#set"))
+|     for(i=1;i<na;++i){
+|       for(j=0;j<ne;++j)if(acvar(a[i],e[j]))
+|        {e[j]=realloc(e[j],strlen(a[i])); strcpy(e[j],a[i]); break;}
+|       if(j==ne && ne<MAXNRENV-1)
+|        {e[ne]=(char *)malloc(strlen(a[i])); 
+|         strcpy(e[j],a[i]); ++ne; e[ne]=NULL;}
+|     }
+|    else if(!strcmp(a[0],"#unset"))
+|     for(i=1;i<na;++i)for(j=0; j<ne; ++j){if(acvar(a[i],e[j]))
+|      {free(e[j]); for(k=j;k<ne;++k)e[k]=e[k+1]; --ne; break;}}
+|    else if(!strcmp(a[0],"#show"))
+|     for(i=0;i<ne;++i)printf("%s\n",e[i]);
+|    else if(!strcmp(a[0],"#exit"))break;
+|    else printf("Nu cunosc comanda: %s\n",a[0]);
+|  }while(1);
+|  return 0;
+|  }
+p29b.c: program auxiliar:
+|  #include<stdio.h>
+|  int main(int na, char *a[], char *e[]){
+|    int i;
+|    printf("Program p29b:\n");
+|    printf("\nArgumente:\n"); for(i=0; i<na; ++i)printf("%s\n",a[i]);
+|    printf("\nEnvironment:\n"); for(i=0; e[i]; ++i)printf("%s\n",e[i]);
+|  }
+Utilizare: lansam; apare un prompter ">"; in continuare putem da comenzi 
+ specifice mini-shell-ului, anume:
+  #set var1=val1 ... varn=valn
+     => in environmentul construit local se adauga/modifica variabilele
+         "var1", ... "varn" cu valorile "val1", ... respectiv "valn";
+  #unset var1 ... varn
+     => se elimina din environmentul construit local variabilele "var1",
+         ..., "varn";
+  #show
+     => se afis environmentul local din momentul respectiv;
+  #exit
+     => parasirea mini-shell-ului (se revine la shell-ul adevarat);
+  p a1 ... an
+     => se lanseaza programul "p" ("p" este un specificator) de pe disc, cu
+        argumentele din linia de comanda "a1", ..., "an", procesul avand ca
+        environment environmentul local (construit cu comenzile de mai sus);
+ initial environmentul local este vid.
+ Exemplu de executie (am scris ce se vede pe ecran):
+                   >#show
+                   >#set a=1
+                   >#set bb=2 c=3
+                   >#show
+                   a=1
+                   bb=2
+                   c=3
+                   >#set bb=3
+                   >#show
+                   a=1
+                   bb=3
+                   c=3
+                   >p29b 1 2
+                   Program p29b:
+
+                   Argumente:
+                   p29b
+                   1
+                   2
+
+                   Environment:
+                   a=1
+                   bb=3
+                   c=3
+                   >#unset bb c
+                   >#show
+                   a=1
+                   >p29b x yyy
+                   Program p29b:
+
+                   Argumente:
+                   p29b
+                   x
+                   yyy
+
+                   Environment:
+                   a=1
+                   >#xx
+                   Nu cunosc comanda: #xx
+                   >#exit
+                   bash$
+Comentarii: functia "acvar" primeste doua siruri de forma "var=val" sau
+ "var" si testeaza daca variabila care apare in ele (partea "var") coincide;
+ ea se putea inlocui cu:
+   int acvar(char *s1, char *s2){
+     char *p1, *p2; int n1, n2;
+     p1=strchr(s1,'='); if(p1==NULL)n1=strlen(s1); else n1=p1-s1;
+     p2=strchr(s2,'='); if(p2==NULL)n2=strlen(s2); else n2=p2-s2;
+     if(n1!=n2)return 0; else return !strncmp(s1,s2.n1);
+   }		 
+ (despre functia "strchr" am mai vorbit, iar functia "strncmp" are acelasi
+ efect ca "strcmp", insa compara lexicografic numai prefixele de lungime "n1"
+ din "s1" si "s2"; pentru detalii asupra aceastei functia: "man strncmp");  
+ in "e" este construit environmentul local, care se va transmite proceselor
+ rezultate din comenzi (initial e vid); in "buf" se citeste o linie de
+ comanda a mini-shell-ului, care contine fie o comanda interna (cu "#"), fie
+ o comanda externa (un specificator de fisier executabil de pe disc), apoi
+ niste argumente - componentele vectorului "a" vor pointa aceste entitati
+ (deci numele comenzii interne / specificatorul executabilului si
+ argumentele) direct in "buf"; cand se lanseaza un proces cu "execve", "a"
+ contine exact ce trebuie dat ca al doilea parametru (specificatorul
+ executabilului si argumentele sale); remarcam ca procesele lansate ca 
+ rezultat al unor comenzi sunt fii ai mini-shell-ului (cu acelasi argument ca
+ la "p26": ele inlocuiesc niste fii autentici obtinuti cu "fork") iar
+ environmentul dat lor nu este environmentul mini-shell-ului (ca proces),
+ ci un environment fabricat local; in fine, acel "return 1;" din randul
+ "{if(!fork()){execve(a[0],a,e); return 1;} wait(NULL);}" este necesar
+ pentru cazul cand "execve" esueaza (de exemplu programul solicitat de pe
+ disc nu exista), deci se revine in fiul obtinut cu "fork" (acesta trebuie
+ oricum terminat, altfel va incurca mini-shell-ul initial), iar "wait" din
+ aceeasi linie este ca sa nu continui mini-shell-ul initial si sa primesc
+ prompterul ">" decat dupa ce s-a terminat fiul.
+============================================================================
+
+FISIERE TUB (PIPE):
+-------------------
+
+Sunt fisiere speciale cu o organizare de tip coada: prima informatie citita
+ este prima informatie scrisa; citirea dintr-un tub este distructiva, deci o
+ informatie poate fi citita de acolo o singura data. In general, tuburile au
+ o capacitate maxima limitata.
+                                  tub
+		    ----------------------------------      
+        scriere -------->                         --------> citire
+                    ----------------------------------
+Un tub poate avea un nume (o legatura fizica intr-un director) sau poate fi
+ anonim (sa nu figureze in nici un director). Un tub anonim exista doar atat
+ timp cat exista procese care il acceseaza (cat timp i-nodul sau este in
+ TIA); in momentul cand nu mai exista nici un proces care il acceseaza
+ (deci i-nodul sau este scos din TIA), el este sters de pe disc. Un tub cu
+ nume poate exista chiar daca nu exista procese care sa il acceseze (deci
+ i-nodul sau sa nu fie in TIA), atata timp cat are legeturi fizice (la fel
+ ca in cazul fisierelor obisnuite); daca un tub cu nume pierde toate
+ legaturile sale fizice, el devine automat un tub fara nume (si va continua
+ sa existe doar atat timp cat exista procese care il acceseaza).
+
+TUBURI ANONIME:
+---------------
+
+#include<unistd.h>  (man -S 2 pipe)
+int pipe(int p[2]);
+=> creaza un tub anonim si il deschide de doua ori (ii aloca doua intrari
+    in TDF): o data pentru citire si o data pentru scriere; in cadrul
+    procesului i se aloca doi descriptori: unul asociat deschiderii pentru
+    citire si care va fi stocat in "p[0]", altul asociat deschiderii pentru
+    scriere si care va fi stocat in "p[1]"; parametrul "p" este implementat
+    de fapt ca fiind "int *p";
+   returneaza: 0=succes, -1=esec (caz in care seteaza errno).
+      TD a procesului
+            ---                  TDF                      TIA
+         0 |   |          ------------------           ----------
+         .  ---        0 |                  |       0 |          |
+  p[0] --> | a |       .  ------------------        . |          |
+         .  ---        a | 1 |  r |     | x |       . |          |
+         . |   |       .  ------------------        .  ----------  i-nod
+         .  ---        . |                  |       x | 2 |      | asociat   
+  p[1] --> | b |       .  ------------------        .  ----------  tubului
+         .  ---        b | 1 |  w |     | x |       . |          |
+         . |   |          ------------------           ----------
+            --- 
+Deci un tub deschis ca mai sus are deodata un cititor si un scriitor (ambii
+ fiind procesul insusi); ulterior, prin diverse manevre, numarul proceselor
+ cititor sau scriitor in tubul respectiv se poate modifica (in plus sau 
+ minus). De exemplu daca procesul care a facut "pipe" isi inchide unul din
+ descriptorii continuti in "p[0]" si "p[1]", tubul pierde un cititor, 
+ respectiv un scriitor; daca insa acest proces face "fork", fiii mostenesc
+ TD-ul sau, deci devin cititori si/sau scriitori in acel tub.
+Citirea/scrierea intr-un tub deschis ca mai sus se poate efectua cu
+ functiile obisnuite care opereaza cu fisierele prin intermediul
+ descriptorilor ("read", "write", etc.).
+Prezentam cateva aspecte importante legate de citirea si scrierea in tuburi
+ in general (anonime sau cu nume):
+1 - in cazul citirii dintr-un tub nevid care contine n caractere folosind 
+     apelul "read(p[0], buf, m)", se citesc min(n, m) caractere in zona
+     pointata de "buf"; deci, daca m > n, procesul nu adoarme pana cand
+     tubul va contine m caractere;
+2 - in cazul incercarii de a citi dintr-un tub vid care nu are scriitori, se
+     considera ca s-a intalnit sfarsitul de fisier si nu se citeste nimic
+     ("read" returneaza 0); iarasi, procesul nu adoarme asteptand ca tubul
+     sa devina nevid sau sa capete scriitori;
+3 - in cazul incercarii de a citi dintr-un tub vid care are scriitori,
+     procesul adoarme pana cand tubul nu mai e vid sau pana cand nu mai are
+     scriitori; daca primul eveniment care se intampla este ca tubul devine
+     nevid (cineva a scris in el), in continuare se intampla ca la punctul 1
+     (fiind deci posibil ca in continuare se nu se citeasca atatea caractere
+     cate se doreste, daca prima scriere nu a pus acolo suficiente
+     caractere); daca primul eveniment care se intampla este disparitia
+     tututor scriitorilor, in continuare se intampla ca la punctul 2; de
+     notat ca putem modifica proprietatile unui tub a.i. nici in cazul 3
+     citirea sa nu fie blocanta.
+4 - exista un numar maxim de caractere care se pot scrie atomic intr-un tub
+     (adica respectivele caractere vor aparea in tub consecutive sau nu vor
+     aparea deloc), desemnat de constanta simbolica PIPE_BUF, pentru care 
+     putem include "limits.h" (in principiu este 4096);
+5 - in cazul incercarii de a scrie intr-un tub fara cititori, procesul 
+     primeste semnalul SIG_PIPE (=13), efectul implicit fiind terminarea
+     (in cazul proceselor lansate ca rezultat al unor comenzi shell se
+     afisaza si mesajul "Broken pipe");
+6 - in cazul incercarii de a scrie n caractere intr-un tub cu cititori:
+     a) daca n > diferenta dintre capacitatea maxima a tubului si numarul de
+        caractere care deja exista in tub, procesul poate sa adoarma pana
+        cand cititorii consuma suficiente caractere din tub a.i. sa poata fi
+        scrise toate cele n caractere; iarasi, putem modifia proprietatile
+        tubului	a.i. scrierea sa nu fie blocanta;
+     b) in cazul ca se face scrierea (respectand deci ce am zis la punctul 
+        a)), daca n <= PIPE_BUF atunci scrierea este atomica, altfel nu este
+	neaparat atomica (deci caracterele ajung in tub in mai multe transe
+	si daca si alte procese scriu in tub in acest timp, caracterele
+	respective nu vor aparea consecutive, intre transe putand aparea
+	intercalate alte caractere);
+    observatii: practic am observat ca PIPE_BUF = capacitatea maxima a unui
+     tub = 4096; de asemenea, la a), nu se scriu deja o parte din cele n
+     caractere pe masura ce se elibereaza spatiul, ci se asteapta pana cand
+     e posibila o scriere atomica de lungime maxima - deci daca n<4096, se
+     asteapta pana cand in tub exista n pozitii libere si atunci se scriu
+     toate cele n caractere deodata; daca n>=4096, se asteapta pana se
+     goleste tot tubul, apoi se scriu 4096 caractere, apoi daca n-4096>=4096,
+     iar se asteapta pana se goleste tot tubul, etc.
+Cand lucram cu tuburi pot aparea frecvent situatii de autoblocaj al unui
+ proces sau de interblocaj intre mai multe procese:
+Exemplul 1 (autoblocaj):
+                 int p[2]; char buf[10];
+	         pipe(p);
+		 read(p[0], buf, 1);  ->  autoblocaj; tubul e vid si nu are
+		  ...                   alt scriitor decat procesul insusi
+	         write(p[1], buf, 1);   (iar acesta doarme in "read", nemai-
+                                        ajungand la "write" unde ar fi scris
+					ceva in tub);
+Exemplul 2 (interblocaj):
+                 int p1[2], p2[2]; char buf[10];
+                 pipe(p1); pipe(p2);
+		 if(fork()){read(p1[0],buf,1); ... write(p2[1],buf,1);}
+		       else{read(p2[0],buf,1); ... write(p1[1],buf,1);}
+-> aici am modelat o situatie cand doua procese vor sa comunice prin doua
+  tuburi, fiecare tub corespunzand unui sens de circulatie a informatiei:
+
+                                  tub1
+		    ----------------------------------      
+         p1[0] <--------                         <-------- p1[1]   
+                    ----------------------------------
+  PS1 (tata)                                                   PS2 (fiu)
+                                  tub2
+		    ----------------------------------      
+        p2[1]   -------->                         --------> p2[0] 
+                    ----------------------------------
+
+  procesul initial deschide (de fapt creaza) ambele tuburi, alocand patru
+  descriptori; dupa "fork" procesul fiu mosteneste cei patru descriptori,
+  asa ca fiecare tub are acum doi cititori si doi scriitori (desi fiecare 
+  proces foloseste efectiv doar doi descriptori, prezentati in desenul de
+  mai sus); in continuare, ambele procese ajung la "read" inainte de a apuca
+  sa scrie ceva in tubul "celalalt" si adorm pe o perioada indefinita -
+  fiecare asteapta ca celalalt sa scrie in tubul din care el trebuie sa
+  citeasca (tuburile sunt in acest moment vide, dar au scriitori, fiecare
+  proces are descriptori in scriere pe ambele tuburi).
+O sugestie pentru a evita asemenea blocaje/interblocaje este ca tot timpul
+ se pastram deschisi doar descriptorii pe care-i folosim efectiv si sa-i
+ inchidem pe ceilalti - astfel, unele adormiri in "read" se pot sfarsi prin
+ faptul ca tubul respectiv, desi este vid, nu mai are scriitori.
+Cu urmatoarele programe vom studia anumite aspecte legate de citirea si 
+ scrierea intr-un tub:
+Pentru primul program avem nevoie de urmatoarele functii:
+#include<unistd.h>  (man -S 3 usleep)
+void usleep(unsigned long microsec);
+=> procesul apelant adoarme pentru "microsec" microsecunde;
+   acest timp este usor influentat de intensitatea activitatii din sistem;
+   daca intre timp procesul primeste un semnal neignorat, se trezeste;
+#include<unistd.h>  (man -S 2 nice)
+int nice(int increment);
+=> numarul ce caracterizeaza prioritetea procesului creste cu "increment";
+   incrementul poate fi intre -20 si 19;
+   numai root poate folosi incrementi negativi;
+   cu cat numarul ce caracterizeaza prioritatea este mai mare, prioritatea 
+    este mai mica (procesul se executa mai lent);
+p30.c:
+|  #include<unistd.h>
+|  int d[2]; char buf[1000];
+|  int main(){int i;
+|    pipe(d);
+|    if(fork())
+|{close(d[1]); nice(19); buf[read(d[0],buf,1000)]='\0'; printf("%s\n",buf);}
+|    else
+|{close(d[0]); sleep(1); for(i=0;i<1000;++i){write(d[1],"a",1); usleep(1);}}
+|    return 0;
+|  }
+Utilizare: lansam de mai multe ori; de fiecare data dupa o secunda pe ecran
+ va apare un sir de "a"; numarul de "a" afisati nu va fi insa mereu acelasi;
+ de exemplu la trei rulari succesive am obtinut:
+                   aaaaa
+                   aaaa
+                   aaaaaaa
+Explicatii: procesul fiu asteapta o secunda ca tatal sa ajunga la "read" si
+ sa adoarma (in acest moment tubul fiind vid dar cu scriitori), apoi executa 
+ 1000 de scrieri ale cate unui "a" in tub - scrierea atomica se face deci cu 
+ cate un "a", nu cu cate 1000 de "a"; dupa ce tatal a adormit, sistemul 
+ testeaza periodic (prin functia sa de "scheduling") daca sunt indeplinite
+ conditiile pentru a se trezi (adica daca tubul a devenit nevid); prima data
+ cand constata ca da, il trezeste, acesta citeste toate "a"-urile din tub
+ (pentru ca oricum nu vor fi mai multe de 1000), scrie pe ecran ce a citit
+ si se termina; intrucat tatal are prioritate mica (datorita lui "nice(19)"),
+ testele efectuate de sistem au loc mai rar, iar variatiile in incarcarea cu
+ sarcini a acestuia se resimt mai bine in timpul scurs intre doua testari;
+ pe de alta parte, faptul ca fiul face "usleep(1)" intre doua scrieri va
+ face ca de cele mai multe ori intre doua testari ale tatalui se fie scris
+ in tub cel putin un "a", dar nu toti 1000 de "a"; mai mult, intrucat acest
+ timp de 1 microsecunda este usor influientat de activitatea din sistem, 
+ numarul de "a" scris de fiu intre doua testari ale tatalui va avea si din
+ acest motiv variatii; per total, la rulari diferite, intre doua testari 
+ succesive ale tatalui, fiul va scrie in tub un numar diferit de "a". Remarcam
+ cu ocazia asta ca atunci cand sistemul constata pentru prima data ca tubul e
+ nevid, el trezeste tatal, care citeste tot ce este acolo si trece de "read",
+ chiar daca nu a gasit la momentul respectiv 1000 de "a", cati ar fi dorit 
+ (urmatorii "a" scrisi in tub de fiu vor ramane necititi).
+p31.c:
+|  #include<unistd.h>
+|  #include<sys/types.h>
+|  #include<sys/wait.h>
+|  #include<stdio.h>
+|  int d[2]; char a[10000],b[10000],c[10000];
+|  int main(){int i;
+|  for(i=0;i<10000;++i)a[i]='A';
+|  for(i=0;i<10000;++i)b[i]='B';
+|  for(i=0;i<10000;++i)c[i]='\0';
+|  pipe(d);
+|  if(fork()){write(d[1],a,4090); write(d[1],b,1000); wait(NULL);}
+|       else {sleep(1); i=read(d[0],c,5000); printf("%s %d\n",c,i);}
+|  return 0;
+|  }
+Utilizare: lansam; dupa 1 secunda se scriu pe ecran 4090 de "A", apoi
+ numarul 4090.
+Comentarii: programul a fost facut stiind ca capacitatea maxima a unui tub =
+ PIPE_MAX = 4096; dupa "fork" fiul doarme 1 secunda, timp in care tatal
+ scrie in tub 4090 de "A" (in mod atomic), apoi incercand sa scrie 1000 de
+ "B" adoarme (in tub mai sunt libere doar 6 pozitii iar el are nevoie de
+ 1000, deoarece 1000 < 4096, deci cea mai lunga scriere atomica posibila ar
+ fi de 1000 de caractere); dupa consumarea secundei, fiul se trezeste si
+ incearca sa citeasca 5000 de caractere din tub, dar cum in acest moment nu
+ sunt acolo decat 4090 de "A", le citeste doar pe acestea si trece mai
+ departe - deci "c" va contine un sir de 4090 de "A" iar "read" returneaza
+ 4090 (aceste date sunt scrise pe ecran de "printf"); dupa ce fiul a
+ terminat "read"-ul, tubul este vid iar tatal se trezeste si scrie in el
+ cei 1000 de "B" - acestia insa nu vor mai fi cititi de nimeni; in final tatal
+ asteapta terminarea fiului ("wait(NULL)") si apoi se termina (daca tatal nu
+ asteapta, exista riscul ca el sa se termine inainte ca fiul sa faca "printf"
+ si atunci acesta, ajungand in background, nu va reusi sa scrie  tot ce 
+ trebuie pe ecran decat daca avem "-tostop"). O ultima remarca: "c" a fost 
+ initializat inainte cu "\0" pe toate componentele ca sa nu mai fie nevoie sa
+ punem ulterior un "\0" dupa ultimul "A" citit in el (fara acest "\0" functia 
+ "printf" nu stie pana unde sa afiseze stringul).
+Cand operam cu tuburi folosind structuri FILE, este posibil ca informatiile
+ scrise sa ramana in bufferele acestor structuri si sa nu ajunga imediat in
+ tub; acest fenomen poate fi si sursa unor blocaje:
+p32.c:
+   #include<unistd.h>
+   #include<stdio.h>
+   int d[2]; char c; FILE *f,*g;
+   int main(){
+     pipe(d); f=fdopen(d[0],"rb"); g=fdopen(d[1],"wb");
+     write(d[1],"a",1); 
+     fscanf(f,"%c",&c); 
+     printf("%c\n",c);  /* pe ecran apare "a" */
+     fprintf(g,"a");    /* "a" ajunge in buff. lui "*g", nu in tub */
+     fscanf(f,"%c",&c); /* blocaj: citire din tub vid, dar cu scriitori */
+     printf("%c\n",c);
+     return 0;
+   }
+ Comentarii: la scrierea cu "write", "a" ajunge imediat in tub si este citit
+  cu succes la primul "fscanf" (deci la primul "printf" pe ecran apare "a");
+  la scrierea cu "fprintf", "a" ajunge in bufferul lui "*g", nu in tub; 
+  astfel, in momentul executarii celui de-al doilea "fscanf" tubul e vid dar 
+  are scriitori (procesul insusi e si cititor si scriitor) - de aceea, aici 
+  procesul se autoblocheaza (nu ajunge niciodata la al doilea "printf").
+  Daca dupa "fprintf(g,"a")" puneam "fflush(g)", atunci "a" ajungea in tub,
+  "fscanf" citea acest "a" (procesul nu se autobloca), iar la al doilea 
+  "printf" "a"-ul ar fi fost scris pe ecran.
+Aplicatie: program care sa primeasca ca argumente in linia de comanda doi
+ specificatori de programe "p1" si "p2" si sa lanseze comanda "p1 | p2":
+p33a.c: programul principal:
+|  #include<unistd.h>
+|  int d[2]; char *anou[2]; 
+|  int main(int na, char *a[]){
+|    if(na!=3){printf("Nr. gresit de argumente.\n"); return 1;}
+|    if(pipe(d)==-1){perror("pipe"); return 1;}
+|    switch(fork()){
+|      case -1: perror("fork"); return 1;
+|      case 0: close(1); dup(d[1]);  /* 1 <=>  d[1] */
+|              close(d[0]); close(d[1]);
+|              anou[0]=a[1]; anou[1]=NULL;
+|              execv(a[1],anou);
+|              perror("execv"); return 1;
+|      default:close(0); dup(d[0]);  /* 0  <=>  d[0] */
+|              close(d[0]); close(d[1]);
+|              anou[0]=a[2]; anou[1]=NULL;
+|              execv(a[2],anou);
+|              perror("execv"); return 1; 
+|    }
+|    return 0;
+|  }
+p33b.c: primul program auxiliar:
+|  #include<stdio.h>
+|  int main(){while(1)printf("A"); fflush(stdout); return 0;}
+p33c.c: al doilea program auxiliar:
+|  #include<stdio.h>
+|  #include<unistd.h>
+|  int main(){char c; 
+|    while(1){scanf("%c",&c); printf("%c\n",c); sleep(1);} 
+|    return 0;
+|  }
+Utilizare si comentarii: se lanseaza: 
+                   p33a  p33b  p33c
+  programul "p33b" scrie "A"-uri foarte repede la iesirea standard;
+  programul "p33c" citeste de la intrarea standard caractere si le
+  scrie la iesirea standard cate o data pe secunda; programul "p33a"
+  realizeaza inlantuirea "p33b | p33c", avand ca rezultat scrierea pe ecran
+  a cate unui "A" pe secunda; pentru a realiza aceasta inlantuire, "p33a"
+  creaza si deschide un tub pentru citire si scriere, apoi face "fork";
+  ambele procese rezultate mostenesc descriptorii legati la tub; in
+  continuare procesul fiu leaga iesirea standard 1 la tub si se inlocuieste
+  ("execv") cu un proces ce executa primul program dat ca argument (aici
+  "p33b") - acest proces va pastra noua legare si astfel se va executa cu
+  iesirea standard legata la tub; in acelasi timp, procesul tata leaga
+  intrarea standard 0 la tub si se inlocuieste cu un proces care executa al
+  doilea program dat ca argument (aici "p33c") - acest proces va pastra noua
+  legare si astfel se va executa cu intrarea standard legata la tub; pentru
+  a termina totul, tastam ^c - in felul acesta este emis semnalul SIGINT
+  catre toate procesele aflate in foreground la terminalul curent, adica
+  "p33b" si "p33c" ("p33a" a fost inlocuit cu "p33c"), si intrucat aceste
+  procese nu si-au asignat alte handlere pentru acest semnal, se vor
+  termina.
+
+TUBURI CU NUME:
+---------------
+
+Din shell se pot crea cu comanda 
+                   mkfifo   specificator_tub
+		   mkfifo --mode=drepturi specificator_tub
+ (pentru detalii: "man mkfifo"). In al doile caz, prin "drepturi" putem
+ specifica ce drepturi de acces sa aiba tubul; acest parametru se construieste
+ ca la "chmod" (atentie: la "--mode" sunt doua "-"). De exemplu:
+   mkfifo f1
+    => creaza tubul "f1" cu drepturile "rw-r--r--" (drepturile implicite)
+   mkfifo --mode=u=r f2
+    => creaza tubul "f2" cu drepturile "r--r--r--" (in drepturile implicite 
+        s-au inlocuit cele pentru proprietar cu "citire")
+   mkfifo --mode=g+w f3
+    => creaza tubul "f3" cu drepturile "rw-rw-r--" (in drepturile implicite
+        s-a adaugat la "grup" dreptul "scriere")
+Dintr-un program C se pot crea cu functia:
+#include<sys/types.h>  (man -S 3 mkfifo)
+#include<sys/stat.h>
+int mkfifo(const char *spec, mode_t drepturi);
+=> creaza un tub cu specificatorul "spec" si drepturile de acces date de
+    "drepturi" (acestea se pot preciza prin combinatii de constante
+    simbolice la fel ca in cazul parametrului "drepturi" al lui "open" si
+    sunt afectate de masca implicita de drepturi a procesului "umask" la
+    fel ca la "open");
+   returneaza: 0=succes, -1=esec (caz in care seteaza errno).
+La comanda "ls -l" linia afisata pentru un tub cu nume va incepe cu "p", de
+ exemplu "prw-r--r-- ...".
+Tuburile cu nume se pot deschide pentru citire sau scriere cu aceleasi
+ functii ca fisierele obisnuite ("open", "fopen", etc.). Un apel de
+ deschidere in citire a unui tub cu nume fara scriitori va adormi insa 
+ procesul apelant pana cand un alt proces va incerca sa-l deschida pentru
+ scriere; de asemenea, un apel de deschidere in scriere al unui tub cu nume
+ fara cititori va adormi procesul apelant pana cand un alt proces va incerca
+ sa-l deschida pentru citire; in momentul cand ambele cereri vor exista, 
+ atat cei care solicita deschiderea pentru citire cat si cei care solicita 
+ deschiderea pentru scriere se vor trezi si isi vor termina deschiderea. 
+ Astfel, prima deschidere a unui tub cu nume poate fi un punct de sincronizare
+ (rendez-vous) in care doua procese sa se astepte unul pe altul, iar in 
+ momentul cand ambele vor ajunge acolo sa realizeze simultan deschiderea si sa
+ treaca mai departe. Mentionam ca deschiderea in citire a unui tub cu nume 
+ care are deja scriitori sau deschiderea in scriere a un tub cu nume care are 
+ deja cititori se pot realiza imediat (nu sunt blocante).
+Exemplu:
+             PS1:                              PS2:
+int dr,dw;                        int dr,dw;
+ ...                               ...
+(1) dw=open("tub1", O_WRONLY);    (1') dr=open("tub1", O_RDONLY);
+ ...                               ...
+(2) dr=open("tub2", O_RDONLY);    (2') dw=open("tub2", O_WRONLY);
+
+Primul dintre procesele PS1 si PS2 care ajunge la (1), respectiv (1'), il
+ asteapta pe celalalt; cand ambele ajung acolo, realizeaza apelul "open"
+ simultan apoi merg mai departe independent; in punctul (2), respectiv (2'),
+ ele nu se mai asteapta, deoarele in acel moment fiecare tub are deja o
+ deschidere pentru operatia duala.
+Am vazut la inceput ca un tub anonim este eliminat de pe disc atunci cand
+ nu il mai acceseaza nici un proces (i-nodul sau nu mai este in TIA), iar un
+ tun cu nume este eliminat de pe disc atunci cand nici nu il mai acceseaza 
+ vreun proces, nici nu mai figureaza in vreun director (nu mai are legaturi
+ fizice); de asemenea, am vazut ca un tub cu nume care si-a pierdut toate
+ legaturile fizice (numele), devine un tub anonim. Atat in cazul tuburilor 
+ anonime cat si in cel al tuburilor cu nume, daca atunci cand sunt
+ indeplinite conditiile pentru eliminarea de pe disc tubul nu e vid,
+ caracterele continute in el se pierd.
+Aplicatia 1: comunicarea intre doua terminale sau doua ferestre X-Windows :
+|Cream un tub cu nume, folosind comanda shell "mkfifo t" (unde "t" este un
+| specificator).
+|Ne conectam la doua terminale, sau cream doua ferestre X-Windows pe un 
+| acelasi terminal - deci avem doua shell-uri, la doua terminale diferite, 
+| fizice sau virtuale; e bine (dar nu e obligatoriu) ca cele doua shell-uri 
+| sa aibe acelasi utilizator proprietar si acelasi director curent (altfel va
+| trebui sa dam drepturi suplimentare asupra tubului, de exemplu sa-l cream
+| cu "mkfifo --mode=ugo=rw t" si sa acordam drepturi suplimentare de executie
+| pe directoarele care apar in calea catre el).
+|La unul din terminale dam comanda shell "cat > t" (creind astfel un proces 
+| "cat" care citeste de la tastatura si scrie in "t"), iar la celalalt dam 
+| comanda shell "cat < t" (creind astfel un proces "cat" care citeste din
+| "t" si scrie pe ecran).
+|In continuare introducem la primul terminal diverse linii de text
+| (terminate cu ENTER), iar ele vor fi afisate imediat la celalalt terminal.
+|Cand dorim sa semnalam terminarea introducerii textului la primul terminal,
+| tastam ^d (astfel introducem de la tastatura "sfarsitul de fisier").
+| Aceasta va produce si terminarea celor doua procese "cat": primul se va
+| termina pentru ca citirea sa a intalnit sfarsitul de fisier (cel generat de
+| la tastatura cu ^d); al doilea se va termina pentru ca va ajunge sa citeasca
+| dintr-un tub vid fara scriitori, deci si in el citirea va semnala sfarsitul
+| de fisier (al doilea "cat" incearca sa citeasca pana la sfarsitul fisierului
+| si cat timp tubul avea scriitor, chiar daca devenea din cand in cand vid, 
+| aceasta citire nu semnala sfarsitul de fisier ci adormea procesul asteptand 
+| ca tubul sa devina nevid sau sa piarda scriitorii) - a se vedea in acest
+| sens comentariile 1 - 6 de mai inainte, referitoare la citirea si scrierea 
+| in tuburi,
+|Dupa terminarea celor doua procese "cat", tubul creat ramane insa pe disc,
+| deoarece al are o legatura fizica (acel "t"); pentru a-l sterge, putem da
+| (la unul din cele doua terminale) comanda "rm t".
+|
+|              Terminal 1                         Terminal 2
+|              --------------                     --------------
+|             | $mkfifo t    |                   | $cat < t     |
+|             | $cat > t     |                   | abcd         |
+|             | abcd         |                   | ad           |
+|             | ad           |                   | a123g        |
+|             | a123g        |                   | $            |
+|             | ^d           |                   |              |
+|             | $            |                   |              |
+|             |              |                   |              |
+|              --------------                     --------------
+Observatie: daca in loc de tub foloseam un fisier obisnuit, atunci "cat < t"
+ facea o singura citire (citea ce se afla in fisierul "t" la momentul
+ respectiv) si se termina (nu mai astepta sa introducem si alte caractere
+ in fisier, de la celalalt terminal).
+Aplicatia 2: rescrierea aplicatiei de la tuburi anonime (unde se realiza
+ un program care sa primeasca ca argumente in linia de comanda doi
+ specificatori de programe "p1" si "p2" si sa lanseze comanda "p1 | p2"),
+ folosind tuburi cu nume si "system" (in loc de "execv"):
+p34.c:
+|  #include<sys/types.h>
+|  #include<sys/stat.h>
+|  #include<unistd.h>
+|  #include<string.h>
+|  #include<stdio.h>
+|  FILE *f; char buf[256];
+|  int main(int na, char *a[]){
+|    if(na!=3){printf("Argumente incorecte.\n"); return 1;}
+|    mkfifo("tub",S_IRWXU);
+|    switch(fork()){
+|      case -1: perror("fork"); return 1;
+|      case 0: strcpy(buf,a[1]);strcat(buf," > tub");
+|              system(buf); 
+|              break;   
+|      default:strcpy(buf,a[2]);strcat(buf," < tub");
+|              system(buf); 
+|              break;   
+|    }
+|    unlink("tub");
+|    return 0;
+|  }
+Utilizare: se lanseaza tot cu "p33b" si "p33c":
+                   p34  p33b  p33c
+ iar efectul si terminarea sunt la fel ca la "p33a".
+Observam ca realizarea este foarte apropiata de o comanda shell autentica
+ de forma "p1 | p2".
+Aplicatia 3: programe de talk intre mai multi utilizatori, bazate pe tuburi: 
+p35.c: talk folosind tuburi cu nume, gestionate cu functii de la nivelul
+|       inferior de prelucrare al fisierelor:
+|  #include<sys/types.h>
+|  #include<sys/stat.h>
+|  #include<fcntl.h>
+|  #include<unistd.h>
+|  #include<stdio.h>
+|  #include<signal.h>
+|  #include<stdlib.h>
+|  #include<string.h>
+|  char tubp[11], tuba[10][101], buf[256];
+|  int dp, da[10], na;
+|  void h(int n){close(dp); unlink(tubp); exit(0);}
+|  int main(){int i; sigset_t ms;
+|     umask(0);	
+|     sigemptyset(&ms); sigaddset(&ms,SIGPIPE);
+|     sigprocmask(SIG_SETMASK,&ms,NULL);
+|     signal(SIGINT,h);
+|     printf("Dati numele tubului propriu (max.10 car.): ");scanf("%s",tubp);
+|     mkfifo(tubp,S_IRUSR|S_IWUSR|S_IWGRP|S_IWOTH);
+|     if(fork()){dp=open(tubp,O_RDONLY);}
+|           else{dp=open(tubp,O_WRONLY); close(dp); return 1;}
+|     printf("Specif. tubului propriu este: %s/%s\n",getcwd(buf,255),tubp);
+|     printf("Dati numarul tuburilor adverse: "); scanf("%d",&na);
+|     printf("Dati specif.tuburilor adverse (max.10), cate unul pe linie:\n");
+|     for(i=0; i<na; ++i){scanf("%s",tuba[i]); da[i]=open(tuba[i],O_WRONLY);}
+|     if(fork()){int offbuf,n;
+|                strcpy(buf,tubp); strcat(buf,":  "); offbuf=strlen(buf);
+|      	         while(1){scanf("%s",buf+offbuf); 
+|  	                  n=strlen(buf); buf[n]='\n'; ++n;
+|	                  for(i=0; i<na; ++i) write(da[i],buf,n);
+|                         }
+|               }
+|           else{while(1){for(i=0; i<254; ++i){
+|  		          while(read(dp,buf+i,1)==0);
+|			  if(buf[i]=='\n')break;}
+|		          buf[i]='\0'; printf("\n%s\n",buf);
+|	                 }
+|               }
+|  }
+Utilizare: se lanseaza in paralel de la mai multe terminale diferite (nu 
+ neaparat de catre acelasi utilizator) - obtinem astfel mai multe procese
+ diferite; dam fiecaruia un nume de tub diferit (e bine ca el sa fie
+ sugestiv, de exemplu numele persoanei care opereaza: Ion, Ana, etc.); 
+ fiecare proces va crea un tub cu numele respectiv in directorul sau curent,
+ si va afisa specificatorul sau cu cale absoluta (de exemplu: /home/ion/Ion);
+ astfel, fiecare proces poate fi identificat cu tubul pe care l-a creat;
+ apoi dam fiecarui proces numarul tuburilor (proceselor) cu care vrem sa
+ comunice si specificatorii acestora (nu trebuie neaparat sa fie toate
+ tuburile create ci doar o parte din ele); in continuare are loc talk-ul
+ propriuzis: la fiecare proces operatorul introduce linii de text (terminate
+ prin ENTER), iar acestea vor fi afisate imediat de toate procesele cu care
+ acesta comunica (operatiile fiind efectuate in mod independent); fiecare
+ linie afisata de un proces va fi prefixata de numele tubului procesului
+ care a trimis-o - de exemplu daca la procesul cu tubul "Ion" operatorul a
+ introdus linia:
+                   Ce mai faci ?
+ toate celelalte procese vor afisa linia: 
+                   Ion:  Ce mai faci ?
+ in final fiecare proces va fi terminat cu ^c (la terminare el va sterge
+ legatura fizica (la un tub) pe care a creat-o); de notat ca daca doar o
+ parte dintre procese s-au terminat, celelalte pot continua talk-ul
+ nestingherite.
+Comentarii:
+ Fiecare proces creaza un tub propriu, din care va citi ce i-au trimis
+  celelalte procese; deci, el citeste din acest tub, iar celelalte procese
+  scriu in acest tub; deschiderea pentru citire a tubului propriu se face in
+  paralel cu o deschidere la scriere efectuata de catre un fiu obtinut cu 
+  "fork", altfel procesul ar adormi in "open" pana cand un alt proces ar 
+  incerca deschiderea tubului la scriere si s-ar obtine un interblocaj - 
+  fiecare proces mai intai deschide la citire tubul propriu si apoi deschide
+  la scriere tuburile adverse, dar acolo nu va ajunge niciodata(!); dupa
+  deschidere insa fiul inchide tubul si se termina; astfel, tubul este
+  deschis la citire si la scriere de catre utilizatorul care l-a creat
+  (prin intermediul procesului tata si procesului fiu) si va fi deschis la
+  scriere de catre utilizatorii care au lansat celelalte procese - de aceea
+  drepturile specificate la crearea tubului au fost:
+                   "S_IRUSR|S_IWUSR|S_IWGRP|S_IWOTH"
+  apelul "umask(0)" de la inceput a fost necesar pentru a putea acorda
+  efectiv drepturile de scriere pentru "grup" si "ceilalti" asupra tubului
+  creat (a se vedea comentariile de la inceputul lectiei); pentru a asigura
+  accesul corespunzator al fiecarui proces la tuburile celorlelte mai trebuie
+  insa setate drepturi adecvate de executie pe directoarele care apar in caile
+  catre aceste tuburi - aceste setari trebuie facute de fiecare utilizator 
+  care participa la "talk", cu comanda "chmod", inainte de a lansa acest 
+  program. 
+ Apoi fiecare proces va deschide in scriere tuburile proceselor cu care
+  comunica (deschiderile insa nu vor adormi procesul, deoarece tuburile
+  respective au fost deja deschise la citire de catre acele procese); 
+  specificatorii acestor tuburi trebuie introdusi de la tastatura cu cale
+  absoluta, deoarece procesele nu au neaparat acelasi director curent.
+ In continuare fiecare proces se bifurca cu "fork":
+  - tatal citeste in cadrul unui ciclu infinit cate o linie de text de la
+     tastatura, o completeaza cu numele tubului propriu la inceput si cu un
+     "\n" la sfarsit si o scrie in toate tuburile proceselor adverse; daca 
+     intre timp un proces advers si-a inchis tubul (pentru ca apoi sa-i 
+     stearga legatura fizica si sa se termine), cand procesul i va trimite
+     linia, va primi SIGPIPE dar nu i se va intampla nimic, deoarece acest 
+     semnal a fost blocat; intrucat numele fiecarui tub are <= 10 caractere,
+     daca admitem ca fiecare operator introduce de la tastatura linii de
+     <= 80 caractere, va rezulta ca unitatea de informatie scrisa de catre
+     orice proces in orice tub este un sir de < 256 caractere terminat cu
+     un "\n" (fara "\0"); intrucat lungimea acestei informatii este <= 4096,
+     ea este scrisa atomic;
+  - fiul citeste in cadrul unui ciclu infinit din tubul propriu siruri de
+     caractere terminate cu "\n"; intrucat aceste siruri sunt scrise in mod
+     atomic in tub, nu exista riscul ca vreo asemenea informatie sa fie
+     citita incomplet; citirea se face caracter cu caracter, testandu-se de
+     fiecare data daca s-a citit "\n" (nu putem citi tot sirul odata,
+     deoarece lui "read" ii putem cere sa citeasca un anumit numar de
+     caractere, nu pana la intalnirea unui anumit caracter); dupa citirea
+     unui sir, "\n"-ul este inlocuit cu "\0" (pentru ca "printf"-ul care
+     urmeaza sa-i poata detecta sfarsitul ca string) si este scris pe ecran;
+     citirea propriuzisa din tubul propriu este pusa intr-un "while"
+     ("while(read(dp,buf+1,1)==0);"), deoarece la inceput este posibil ca
+     alte procese sa nu fi apucat inca sa deschida tubul in scriere - fara
+     acel "while", pana cand un alt proces nu va deschide acest tub in
+     scriere, procesul fiu nu va adormi in "read" (este citire din tub vid
+     fara scriitori) si va efectua foarte multe ciclari ale lui "while(1)" in
+     care va afisa cu "printf" siruri absurde; deci, la prima citire, acel
+     "while(read..." va cicla pana cand tubul propriu dobandeste un
+     scriitor; la urmatoarele citiri "while(read..." nu va cicla, deoarece 
+     daca tubul va fi vid, el va avea totusi scriitori si deci procesul va
+     dormi in "read" pana cand in tub va fi ceva (apoi "read" va citi, va 
+     returna o valoare > 0 si se va iesi din "while(read...").
+ In final operatorul tasteaza ^c; ca rezultat, va fi emis semnalul SIGINT
+  catre toate procesele aflate in foreground la terminalul respectiv, deci 
+  si procesului propriu si fiului lui; fiecare va inchide tubul propriu si
+  ii va sterge legatura fizica (prin "unlink"), apoi se va termina - evident, 
+  doar unul va reusi sa stearga legatura fizica a tubului, celalalt nu va mai 
+  avea ce sterge; conform proprietatilor lui "unlink" si ale tuburilor cu
+  nume despre care am vorbit mai inainte, tubul nu va disparea insa de pe
+  disc decat in momentul cand nici celelalte procese nu-l vor mai accesa
+  (el va fi pana atunci un tub anonim).
+ Daca numai unii dintre operatori au dat ^c, celelalte procese vor continua
+  talk-ul nestingherite, deoarece tuburile lor nu au disparut, iar atunci
+  cand vor incerca sa scrie mesaje in tuburile proceselor terminate si vor
+  primi SIGPIPE, nu vor pati nimic (la fiecare proces SIGPIPE e blocat).
+Alte remarci: datorita mecanismelor prin care se face citirea si scrierea in
+ tuburi, nu a fost nevoie sa implementam metode prin care procesele sa se
+ sincronizeze intre ele prin semnale (a se vedea pentru comparatie programul
+ de talk "p6" din lectia dedicata semnalelor); comunicarea intre procese nu
+ se poate face la fel de simplu si prin intermediul unor fisiere obisnuite
+ (in loc de tuburi), deoarece citirea dintr-un fisier obisnuit nu e 
+ distructiva si astfel dimensiunile fisierelor folosite tinde sa creasca la
+ infinit; de asemenea, in cazul programului de mai sus, posibilitatea unui
+ proces de a face talk cu celelalte tine doar de drepturile de acces si 
+ scriere asupra tuburilor lor si astfel aceste procese nu trebuie neaparat sa
+ aibe acelasi proprietar (in cazul programului "p6" mentionat inainte,
+ procesele trebuiau sa aibe acelasi proprietar pentru a-si putea trimite
+ semnale cu functia "kill").
+p36.c: varianta lui "p35", in care tuburile sunt gestionate cu functii de la
+|       nivelul superior de prelucrare a fisierelor:
+|  #include<sys/types.h>
+|  #include<sys/stat.h>
+|  #include<unistd.h>
+|  #include<stdio.h>
+|  #include<signal.h>
+|  #include<stdlib.h>
+|  #include<string.h>
+|  char tubp[11], tuba[10][101], buf[256], c;
+|  FILE *fp, *fa[10]; int na;
+|  void h(int n){fclose(fp); unlink(tubp); exit(0);}
+|  int main(){int i; sigset_t ms;
+|     umask(0);	
+|     sigemptyset(&ms); sigaddset(&ms,SIGPIPE);
+|     sigprocmask(SIG_SETMASK,&ms,NULL);
+|     signal(SIGINT,h);
+|     printf("Dati numele tubului propriu (max.10 car.): ");scanf("%s",tubp);
+|     mkfifo(tubp,S_IRUSR|S_IWUSR|S_IWGRP|S_IWOTH);
+|     if(fork()){fp=fopen(tubp,"rb");}
+|           else{fp=fopen(tubp,"wb"); fclose(fp); return 1;}
+|     printf("Specif. tubului propriu este: %s/%s\n",getcwd(buf,255),tubp);
+|     printf("Dati numarul tuburilor adverse: "); scanf("%d",&na);
+|     printf("Dati specif.tuburilor adverse (max.10), cate unul pe linie:\n");
+|     for(i=0; i<na; ++i){scanf("%s",tuba[i]); fa[i]=fopen(tuba[i],"wb");}
+|     if(fork()){int offbuf; 
+|                strcpy(buf,tubp); strcat(buf,":  "); offbuf=strlen(buf);
+|                while(1){scanf("%s",buf+offbuf); strcat(buf,"\n");
+|  	                  for(i=0; i<na; ++i){fprintf(fa[i],"%s",buf);
+|			                      fflush(fa[i]);}
+|                        }
+|               }
+|           else{while(1){while(!fgets(buf,255,fp));
+|		          printf("\n%s",buf);
+|		         } 
+|               }
+|  }
+Utilizare si comentarii: lansarea si utilizarea sunt la fel ca la "p35";
+ aici, deschiderea bufferelor adverse cu "wb" provoaca stergerea continutului
+ actual al acestora si astfel, daca ceilalti au inceput deja talk-ul (deci
+ daca exista un decalaj intre momentul cand procesul curent introduce
+ specificatorii tuburilor adverse si momentele cand celelalte procese au
+ facut-o), cateva mesaje se pierd; talk-ul adevarat insa incepe abia dupa ce
+ toti au trecut de etapa initializarilor; putem evita totusi acest neajuns
+ deschizand tuburile adverse cu "r+b"; observam apoi ca dupa al doilea "fork"
+ tatal adauga la "buf" pe "\n" cu "strcat" si astfel dupa "\n" va fi adaugat
+ si un "\0" - el este necesar pentru ca "fprintf"-urile care urmeaza sa-i
+ poata detecta sfarsitul ca string; "fprintf"-urile nu vor pune insa si "\0"
+ in tuburi, astfel ca sirurile scrise sunt la fel ca la "p35" (siruri
+ terminate cu "\n"); observam ca dupa fiecare "fprintf" este necesar un
+ "fflush", altfel exista riscul ca sirul scris sa ramana in bufferul
+ structurilor FILE "*fa[i]"; fiul citeste sirurile din tubul propriu cu
+ "fgets", deoarece daca ar citi cu "fscanf" fiecare sir s-ar citi doar pana
+ la primul blank (cel de dupa ":") - cu "fgets" se citesc pana la "\n"
+ inclusiv; conform proprietatilor lui "fgets", "\n"-ul de la sfarsitul
+ fiecarui sir este pus si el in sirul citit (dupa care se pune "\0"), asa
+ ca la "printf"-ul care il scrie pe ecran nu mai e nevoie sa punem "\n%s\n"
+ ci este suficient "\n%s"; de asemenea, dupa acest "printf" nu mai este nevoie
+ de "fflush(stdout)", deoarece sirul scris contine un "\n" la sfarsit si am 
+ vazut mai inainte ca in cazul scrierii pe ecran scrierea unui "\n" provoaca 
+ golirea bufferului lui "*stdout" (ceea ce nu e valabil in cazul scrierii in 
+ fisiere, vezi "fprintf(fa[i],...)" dinainte); observam oricum ca fiul este 
+ scris mult mai natural decat la "p35" (nu mai citeste liniile de mesaj 
+ caracter cu caracter, punand apoi la sfarsit "\0").
+Comentarii finale: programele "p35" si "p36" nu puteau fi realizate cu
+ tuburi anonime, deoarece procesele sunt lansate independent (nu sunt
+ generate unele de altele prin "fork", "execv",etc.) si astfel n-ar avea
+ cum sa achizitioneze descriptori pe intrarile din TDF corespunzatoare
+ tuburilor create de celelalte, deci n-ar avea cum sa-si comunice unul
+ altuia care sunt tuburile folosite pentru comunicare - in cazul folosirii
+ mai sus a tuburilor cu nume am folosit specificatorii acestor tuburi.
+
+
+
+
+                                                        DRAGULICI DANIEL
+

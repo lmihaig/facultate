@@ -1,0 +1,424 @@
+Teme pentru laboratorul de Limbaje de programare procedurala,
+
+anul II colegiu, semestrul II, 2000 - 2001.
+
+
+
+Setul I:
+
+
+
+II.4. Joc tanc in mod text: doua tancuri conduse fiecare de cate un jucator
+se deplaseaza printr-un labirint si trag unul in altul. Proiectul contine:
+* Fisierele "engine" (".h" si ".cpp") care descriu engine-ul 2d al jocului;
+   rolul engine-lui este doar de a gestiona pozitia unitatilor pe tabla si
+   interactiunea (schimbul de informatii) dintre ele; comportamentul specific
+   al fiecarei unitati si modul sau specific de reactie vor fi definite
+   ulterior, in cadrul unor clase derivate (metodele "action" si "behaviour" -
+   a se veda mai jos). Fisierele vor contine doua clase:
+  - clasa "engine", care desemneaza engine-ul propriuzis; ea are:
+    clasa "unit" (a se vedea mai jos) ca clasa friend;
+    membrii data privati:
+      "unit* unittab[MAXNC][MAXNL]" = tabla de joc;
+      "unit* unitvect[MAXNU]" = lista unitatilor de pe tabla;
+      "int nc,nl,nu" = nr. liniilor, coloanelor, unitatilor existente;
+      (eventual alti membrii data privati)
+    metode publice:
+      "void init(int,int)" = init. "nc", "nl" (eventual si alti membrii data)
+	cu val. date ca param.; init. "unittab" cu comp. NULL; se apeleaza o
+	singura data, la inceput;
+      "int getnl()", "int getnc()", "int getnu()" = ret."nl", "nc", resp."nu";
+      "int validxy(int,int)" = test. daca parametrii reprezinta o poz. valida
+	pe tabla "unittab" (deci daca sunt intre 0 si "nc-1",resp."nl-1");
+      "int validpoz(int)" = testeaza daca parametrul reprezinta o poz. valida
+	in lista "unitvect" (deci daca este intre 0 si "nu-1");
+      "unit* getunitxy(int,int)" = ret. adr. unitatii de pe o poz. data in
+	"unittab" (NULL daca poz. e libera); pozitia se presupune valida;
+      "unit* getunitpoz(int)" = ret. adr. unitatii de pe o poz. data in
+	 "unitvect"; pozitia se presupune valida;
+      "void next()" = efect. un pas (trece de la o configuratie a tablei la
+	urmatoarea); e cea mai importanta metoda; algoritmul sau este:
+	  - tuturor unitatilor din "unitvect" le apeleaza metoda "action";
+	  - tuturor unitatilor din "unitvect" le apeleaza metoda "react";
+	  - fiec. unitate moarta ("!alive") din "unitvect" este eliminata din
+	     "unitvect", poz. ocupata de ea pe tabla "unittab" devine NULL,
+	     apoi este dezalocata cu "delete" (iar "nu" scade corespunzator);
+    clasa mai poate avea si alte met.publice, care sa furnizeze inf.despre ea;
+  - clasa "unit", desemnand nucleul comun al unitatilor gestionate de engine;
+     nu se va instantia (in obiecte) direct ci doar prin descendenti; ea are:
+    clasa "engine" ca clasa friend;
+    membru data public:
+      "static engine motor" = engine-ul in care se afla unitatea; fiind
+	 static, va fi automat acelasi pentru toate unitatile; deci,in program
+	 vom declara/aloca doar unitati, nu si un engine (vom lucra cu
+	 obiectul "motor" al clasei "unit" sau al descendentilor sai);
+    membrii data privati:
+      "int alive" = daca mai este viu (0/1); constructorul il inti. cu 1;
+      "int x,y,poz" = poz. unitatii in engine-ul sau "motor", (in "unittab",
+	 resp. "unitvect"); la mutarea unitatii pe alta poz. (in "unittab" sau
+	 "unitvect") se vor actualiza si acesti "x", "y", "poz" (sa concorde
+	 ce stie "motor" si ce stie fiecare unitate despre aceste pozitii);
+      "int message[MAXNM]" = lista cu mesaje (intregi) provenite de la alte
+	 unitati; prin asemenea mesaje unitatile isi comunica actiunile
+	 efectuate una asupra alteia; "message" poate fi si alocat dinamic;
+       "int nm" = nr. mesajelor primite si neprelucrate aflate in "message";
+    metoda privata:
+       "void react()" = reactia la actiunile celorlalte unitati asupra sa: pt.
+	 fiecare mesaj din "message", daca e inca viu ("alive"), apeleaza
+	 "behaviour"; in final pune "nm=0" (mesajele au fost prelucrate);
+    metode protected:
+       "unit(int,int)" = constructorul (fiind protected si nu public, nu vom
+	 putea instantia direct clasa "unit" ci doar descendenti ai sai - in
+	 constructorul lor se va apela acest "unit"); parametrii sunt pozitia
+	 (pres.valida si lib.)in"motor",pe"unittab",unde va fi pusa; actiuni:
+	  - daca "unitvect" e plin sau poz. pe "unittab" e ocupata, se iese;
+	  - inser."this" la sfar. lui "unitvect" si in poz. data pe "unittab";
+	  - "nm" devine 0, "alive" devine 1;
+	  - diverse alte actiuni;
+       "virtual ~unit()" = destructorul; daca "message" este alocat dinamic,
+	 il dezaloca (altfel poate avea corp vid); faptul ca este virtual va
+	 permite dezalocarea uniforma a descendentilor;
+       "void die()" = "alive" devine 0 (dar nu apeleaza destructorul, obiectul
+	 va fi elim. cu "delete" mai tarziu, de metoda "next" a lui "motor");
+       "void move(int dx,int dy)" = se pres. ca "x+dx", "y+dy" e o poz. valida
+	 si libera in "motor" pe"unittab"; efect: muta unitatea in poz."x+dx",
+	 "y+dy" (actualiz."unittab"-ul lui "motor" si "x", "y" ale unitatii);
+       "void sendmes(int pm,unit& pu)"= trimite mesajul "pm" unitatii "pu";
+	 actiune: daca lista"message" a lui "pu" e plina nu face nimic, altfel
+	 adauga "pm" la sfarsitul ei;
+       "virtual void action()=0" = met. virt. pura exprimand ce face unitatea
+	 la un pas al lui "motor"; de ex., poate contine apeluri "sendmes" sau
+	 "die"; este cea mai importanta metoda, ea implem. AI-ul unitatii;
+       "virtual void behaviour(int)=0" = met. virt. pura exprimand comportam.
+	 unitatii fata de un anumit mesaj primit; de ex. poate apela "die";
+    metode publice:
+       "int getx()", "int gety()" = ret. "x", resp. "y";
+       "virtual void* gettip()=0" = metoda virtuala abstracta ce ret. adresa
+	 unei zone de mem. ce contine inf. referitoare la unitate (de ex. ce
+	 trebuie desenat pe ecran atunci cand o afisam).
+  Clasele "engine" si "unit" pot avea si alti membrii/metode, dar ei tb.sa fie
+  de utilit.generala, nu legate de specificul jocului "tanc". Studiati posib.
+  de a scrie un engine ce suporta mai multe unitati pe o aceeasi pozitie !
+* Fisierele "joctanc" (".h" si ".cpp") care descriu aplicarea engine-ului de
+   mai sus la jocul "tanc". Ele contin trei descendenti ai clasei"unit" (toate
+   vor mosteni insa acelasi engine static"motor").Pe langa ele, fisierul".cpp"
+   poate contine si alte definitii cu vizibilitate limitata la el (ele nu vor
+   aparea si in fisierul ".h") -  de ex. un tip enumerare cu mesajele pe care
+   si le pot trimite unitatile cu "sendmes", printre ele "KILL". Clasele sunt:
+  - clasa "zid"; o unitate "zid" nu se deplaseaza si nu poate fi distrusa; din
+     obiecte "zid" plasate pe tabla comuna "motor" se construieste labirintul;
+     clasa mosteneste public pe "unit" si are in plus:
+    membru data privat:
+     "static unsigned char nume" = contine caracterul 177; adresa acestei zone
+       va fi returnata de "gettip" iar continutul ei va fi folosit la afisare;
+    metode protected mostenite ca virtuale abstracte si redefinite:
+     "void action()", "void behaviour(int)" = nu fac nimic (corp vid);
+    metode publice:
+     "zid(int,int)" = constructorul; param. sunt poz. (pres. valida si libera)
+       unde se va plasa zidul (folosind constructorul "unit");
+    metoda publica mostenita ca virtuala abstracta si redefinita:
+     "void* gettip()" = returneaza "&nume"
+  - clasa "bomba"; o unitate "bomba" este un proiectil tras de un tanc; el
+     se misca constant pe o acceasi dir.(oriz. sau vert.), data la crearea sa,
+     pana loveste alta unitate sau iese de pe tabla, iar atunci moare ("die");
+     daca a intalnit alta unitate, inainte de a muri ii trimite cu "sendmes"
+     mesajul "KILL"; clasa mosteneste public pe "unit" si are in plus:
+    membri data privati:
+     "static unsigned char nume" = contine caracterul '.'; adresa acestei zone
+       va fi returnata de "gettip" iar continutul ei va fi folosit la afisare;
+     "int dirx, diry" = directia de deplasare; pot fi -1, 0 sau 1;
+    metode protected mostenite ca virtuale abstracte si redefinite:
+     "void action()" = algoritmul sau este:
+	  - calc. coord. "xn=getx()+dirx, yn=gety()+diry" unde ar trebui sa se
+	     deplaseze ("getx" si "gety" sunt mostenite de la "unit");
+	  - daca poz."xn,yn"invalida, atunci"die"(a iesit de pe tabla),altfel:
+	     daca poz. e libera (NULL), se muta acolo ("move"), altfel trimite
+	     unitatii de acolo mesajul "KILL" si apoi "die";
+     "void behaviour(int)" = actiune: daca parametrul e "KILL" atunci "die";
+    metode publice:
+     "bomba(int,int,int,int)" = constructorul; param. sunt poz. (pres. valida
+       si libera) unde se va plasa bomba (folosind constructorul "unit") si
+       directia de deplasare (cu care se vor initializa "dirx", "diry");
+    metoda publica mostenita ca virtuala abstracta si redefinita:
+     "void* gettip()" = returneaza "&nume".
+  - clasa "tanc"; o unitate "tanc" se poate misca (oriz. sau vert.) sau poate
+     trage, in fct. de o comanda (char) primita de la intrare (tastatura);
+     clasa mosteneste public pe "unit" si are in plus:
+    membru data public:
+     "static char cc" = comanda curenta data spre exec.; fiind static, este
+       acelasi pt. toate tancurile; ideea: de la tastatura se cit."tanc::cc",
+       apoi toate tancurile vor trata (la "action") aceasta comanda dar doar
+       acela care o va recunoaste va face ceva; la inceput se init. cu 0;
+    membri data privati:
+     "unsigned char nume" = contine numele tancului(setat de constructor);adr.
+       lui va fi ret. de "gettip" iar continutul lui va fi fol. la afisare;
+     "char stg,dr,sus,jos,foc" = comenzile proprii pentru deplasare si foc;
+       vor fi setate de constructor;
+     "char pc" = ultima comanda de deplasare executata de tanc (va fi folosita
+       in cazul unei comenzi foc, deoarece bombei i se va da aceeasi dir. in
+       care tancul s-a deplasat ultima oara);
+    metode protected mostenite ca virtuale abstracte si redefinite:
+     "void action()" = algoritmul sau este:
+	  - testeaza "cc" (care e comun tuturor tancurilor); doar daca este
+	     egala cu "stg", "dr", "sus", "jos" sau "foc" propriu face ceva;
+	  - daca este egala cu "stg", "dr", "sus" sau "jos" iar poz. in care
+	     ar trebuie sa se mute este valida si libera,efectueaza deplasarea
+	     respectiva ("move") si seteaza "pc=cc";
+	  - daca este egala cu "foc": determina in functie de "pc" dir. in
+	     care va trage, apoi determina coord."bx,by" unde trebuie creata o
+	     bomba ("new bomb(.....)"); daca pozitia "bx,by" e valida, atunci:
+	      - daca e si libera, creaza o bomba in acea pozitie si cu dir.
+		de deplasare stabilita mai inainte in functie de"pc";
+	      - daca nu e lib.,trimite "KILL" unitatii de acolo (cu"sendmes");
+     "void behaviour(int)" = actiune: daca parametrul e "KILL" atunci "die";
+    metode publice:
+     "tanc(char,char,char,char,char,char,int,int)" = constructorul;parametrii:
+       numele, comenzile de depl.si foc, poz.pe tabla (pres. valida si lib.);
+       creaza tancul in poz.resp.(cu constructorul "unit") si init. membrii;
+    metoda publica mostenita ca virtuala abstracta si redefinita:
+     "void* gettip()" = returneaza "&nume".
+* Fisierele "input" (".h" si ".cpp") care descriu interfata prin care se cit.
+   date de la intrare. Contin def.clasei"input". Ea va avea o singura instant.
+   numita "intrare", in prog. princ., care va fi interf. de intrare - de la ea
+   se va citi de fiecare data comanda "tanc::cc". In plus, fisierul ".cpp"
+   poate contine si alte definitii cu vizibilitate limitata la el (ele nu vor
+   aparea si in fis. ".h"). Clasa are (cel putin) urmatoarele metode publice:
+    "void init()" = init.interfetei;poate contine orice (chiar si corpul vid);
+      se va apela o singura data, la inceput;
+    "void close()" = inchiderea interfetei; poate contine orice (chiar si
+      corpul vid); se va apela o singura data, la sfarsit;
+    "char getc()" = testeaza daca s-a testat un caracter; daca nu, ret. 0;
+      daca da, ret. caracterul respectiv (un fel de "kbhit"+"getch"); trebuie
+      scrisa a.i. daca se apasa o tasta speciala sa se ret. doar caracterul
+      nenul de la sfarsitul secventei emise - de ex. stim ca tastele sgeata
+      stg, dr, sus, jos emit caracterul nul, urmat de resp.'K', 'M', 'H', 'P';
+   Clasa "input" tb. scrisa indep. de celelalte fisiere din proiect, a.i. daca
+   vrem sa modif.jocul pt.ca datele sa nu mai fie citite de la tastatura ci de
+   la mouse sau un port de comunic. sa fie necesara doar rescr.clasei "input".
+* Fisierele "outputt" (".h" si ".cpp") care descriu interf. prin care se afis.
+   desfasurarea jocului pe ecran. Contin def. clasei "output". Ea va avea o
+   singura instantiere numita "iesire", in prog. princ., care se va ocupa cu
+   afisarea pe ecran a desfasurarii jocului. In plus, fis.".cpp" poate contine
+   si alte def. cu vizib. limitata la el (ele nu vor aparea si in fis. ".h")
+   Clasa are (cel putin) urmatoarele:
+    membru data privat:
+     "engine& motor" = (referinta la) engine-ul jocului afisat; e initializat
+       de constructor si e singura cale comunicare cu jocul(orice informare cu
+       priv.la starea jocului se face prin metodele publice ale lui "motor");
+    metode publice:
+     "output(engine& pm)" = constructorul; asigneaza "motor" cu "pm"(si atat);
+     "void init()" = initializeaza modul de afisare text ("textmode(c4350)",
+       _setcursortype(_NOCURSOR)", "clrscr()", etc., vezi "conio.h"), desen.
+       chenarul (caractere 219) si labirintul - "zid"-urile nu dispar si nu se
+       misca niciodata,deci pot fi desen.acum;se poate afla poz.lor parcurgand
+       "unitvect"-ul lui "motor" si testand cu "gettip" tipul unitatilor;
+       aceasta metoda se va apela o singura data, la inceputul programului;
+     "void close()" = restaureaza modul de afisare text ("textmode(C80)",
+       "_setcursortype(_NORMALCURSOR)", "clrscr()", etc); aceasta metoda se
+       va apela o singura data, la sfarsitul programului;
+     "void afisare()" = reactualizeaza informatia de pe ecran conform starii
+       actuale a lui "motor" (afisaza unitatile la noile lor pozitii);pt. a nu
+       redesena de fiecare data si "zid"-urile, se va proceda astfel: in fis.
+       "outputt.cpp" declaram doua entitati cu vizibilitate limitata la el:
+	 "static int pictvect[MAXNU][2], npict;"
+       avand semnificatia:
+	 "npict" = nr. unitatilor <> "zid" afisate ultima data; initial e 0
+	   (asa il va seta metoda "init");
+	 "pictvect" = lista ceulelor de pe ecran ocupate ult.data de unitati
+	   <>"zid"; "pictvect[i][0]", "pictvect[i][1]" = poz.pe ecran a cel.i;
+       iar metoda "afisare" lucreaza astfel:
+	 - pt.0<=i<npict pune pe ecran in poz."picvetc[i][0]","pictvect[i][1]"
+	    un ' ' (adica sterge unitatile <> "zid" afisate ultima data);
+	 - seteaza "npict" cu 0;
+	 - parcurge "unitvect"-ul lui "motor" si pt. fiec.unitate testeaza cu
+	    "gettip" daca e <> "zid"; daca da, deseneaza informatia sa (aflata
+	    cu "gettip") pe ecran la poz. aflata cu "getx", "gety" si introd.
+	    aceasta pozitie la sfarsitul lui "pictvect", incrementand "npict".
+   Clasa "output" tb. scrisa indep. de celelalte fisiere din proiect, a.i.
+   daca vrem sa modif.jocul pt.ca afisarea sa se faca altfel (de ex. in mod
+   grafic, nu in mod text) sa fie necesara doar rescrierea clasei "output".
+* Fisierul "tanc.cpp" cu programul principal; in esenta el are urm. structura:
+   - include "input.h", "outputt.h", "joctanc.h"
+   - se declara global obiectele:  "input intrare;"
+				   "output iesire(tanc::motor);"
+     (deoarece exista clasa"tanc",exista si ob.static "tanc::motor", care este
+     de fapt "unit::motor" si este engine-ul comun tuturor unit.de orice tip);
+   - se initializeaza tabla, de ex: "tanc::motor.init(78,47);"
+   - se citesc de la tastatura numele si comenzile a doua tancuri, dupa care
+      ele se creaza dinamic:  "new tanc(....)"
+			      "new tanc(....)"
+   - se gen. un labirint de ziduri facand o serie de apeluri: "new zid(....)"
+      (cu diversi parametrii alesi inteligent, a.i. sa apara un desen frumos);
+   - se apeleaza:  "intrare.init(); iesire.init();"
+   - se efectueaza ciclul: "do{
+			       tanc::cc=intrare.getc();
+			       tanc::motor.next();
+			       iesire.afisare();
+			    }while(tanc::cc!=27);"
+   - se apeleaza:  "intrare.close();  iesire.close();".
+
+5. Jocul vietii, folosind engine-ul de la probl.anterioara. Proiectul contine:
+* Fisierele "engine" (".h" si ".cpp") de la problema anterioera.
+* Fisierele "jocv" (".h" si ".cpp") care descriu aplicarea engine-ului de mai
+   sus la jocul vietii. Ele contin clasa "fiinta", descendenta a lui "unit" si
+   clasele "planta", "ierbivor", "carnivor",descendente ale lui "fiinta"(toate
+   vor mosteni acelasi engine static "motor"). Pe langa ele, fisierul ".cpp"
+   poate contine si alte definitii cu vizibilitate limitata la el (ele nu vor
+   aparea si in fisierul ".h") -  de ex. tipul enumerare cu mesajele pe care
+   si le pot trimite unitatile cu "sendmes", printre ele "KILL". Clasele sunt:
+  - clasa "fiinta", care def. caract. comune ale fiintelor; nu se va instantia
+    direct ci doar prin descendenti; ea mosteneste public pe "unit" si are:
+    membri data privati:
+     "static int nrfiinte" = contor static (comun tuturor fiintelor) cu nr.
+       total de fiinte existente in "motor"; initial este 0; la fiecare creare
+       /distrugere a unei fiinte (apel "fiinta"/"~fiinta") creste/scade cu 1;
+     "int energieoptima" = pragul de en. de la care se schimba comportamentul
+       (hranire/reproducere); e o constanta care depinde de fiecare tip de
+       fiinta (va fi setat de constructorii descendentilor lui "fiinta");
+     "int timpramas" = timpul de viata ramas (la fiecare apel "action" scade
+       cu 1 - vezi mai jos);
+    membru data protected:
+     "int energie" =  energia curenta a fiintei (e protected ca sa poata fi
+       mai usor modificata de catre descendenti);
+    metoda mostenita ca virtuala abstracta si redefinita ca privata:
+     "int action()" = algoritm:
+       - daca nu a trebuit sa se apere ("!apara") atunci:
+	  daca "energie < energieoptima" atunci "mananca", altfel "inmulteste"
+	  (pt. metodele "apara", "mananca", "inmulteste" vezi mai jos);
+       - imbatraneste si flamanzeste: "timpramas" si "energie" scad cu 1;
+       - daca vreunul din "timpramas" sau "energie" a ajuns <=0, atunci "die";
+    metode protected:
+     "fiinta(int,int,int,int,int)" = constructorul (fiind protected, nu vom
+       putea clasa "fiinta" direct, ci doar prin descendenti);parametrii sunt:
+       poz. x, y in "motor" (furnizata constructorului "unit"),energia optima,
+       durata vietii (cu ea se init."timpramas"), energia initiala (cu ea se
+       init. "energie"); dupa init. membrilor data increm. pe "nrfiinte" cu 1;
+     "~fiinta()" = destructorul; decrementeaza pe "nrfiinte" cu 1;
+    metode protected virtuale si pure:
+     "virtual int apara()=0" = actiunea de aparare; in descendenti va ret. 1
+       daca fiinta a trebuit sa efectueze o manevra de aparare si 0 altfel;
+     "virtual void mananca()=0" = actiunea de hranire;
+     "virtual void inmulteste()=0" = actiunea de inmultire;
+     "virtual void behaviour(int)=0"=met.vir.mosten.de la "unit"si nedef.inca;
+    metode publice:
+     "static int getnrfiinte()" = returneaza "nrfiinte";
+     "int getenergie()" = ret."energie"(e folosita pt.a afla en.curenta atunci
+      cand nu ne aflam intr-un loc unde putem accesa direct membrul"energie");
+     "virtual void* gettip()=0" = met.virt.mosten.de la "unit" si nedef. inca;
+  - clasa "planta"; o unitate "planta" nu se deplaseaza, nu se apara, se
+    hraneste cu viteza constanta ("energie" creste cu viteza constanta) si
+    gen. cate un singur fiu odata;clasa"planta"mosten.public pe"fiinta"si are:
+    membru data privat:
+     "static unsigned char nume" = contine caracterul 177; adresa acestei
+       zone va fi ret.de"gettip" iar continutul ei va fi folosit la afisare;
+    metode mostenite ca virtuale abstracte si redefinite ca private:
+     "int apara()" = ret. 0 (planta nu face manevre de aparare);
+     "void mananca()"=increm."energie"cu 2 (planta se hran. cu viteza const.);
+     "void inmulteste()" = testeaza pozitiile adiacente (pozitia sa se afla
+       cu "getx", "gety", mostenite de la "unit"); daca gaseste una valida
+       ("validxy(...)") si libera ("getunitxy(...)==NULL") atunci creaza o
+       planta acolo ("new planta(...)") iar energia sa "energie" scade cu o
+       anumita fractie (de ex. 1/30); la un apel genereaza <= 1 fiu;
+     "void behaviour(int pm)" = daca "pm<0" atunci "energie" scade cu "-pm"
+       (un asemenea mesaj este trimis de un ierbivor care mananca din planta -
+       a se vedea mai jos); daca "pm==KILL" atunci "die";
+    metode publice:
+     "planta(int,int)"=constructorul; parametri: poz. x, y in "motor";apeleaza
+       "fiinta(x,y,100,100,50)"(const.pot fi schimb.la latit.programatorului);
+     "void* gettip()" = returneaza "&nume";
+  - clasa "ierbivor"; o unitate "ierbivor" se apara fugind de carnivore, se
+     se hraneste cautand si mancand plante si genereaza cate un singur fiu
+     odata; clasa "ierbivor" mosteneste public pe "fiinta" si are:
+    membru data privat:
+     "static unsigned char nume" = contine caracterul 'i'; adresa acestei
+       zone va fi ret. de "gettip" iar continutul ei va fi folosit la afisare;
+    metode mostenite ca virtuale abstracte si redefinite ca private:
+     "int apara()" = algoritm:
+       - testeaza un patrat 11 X 11 in jurul poz.sale (aflata cu"getx","gety")
+	  si retine nr.si pozitia carnivorelor aflate in acest patrat; daca
+	  nu gas. nici un carnivor iese si ret.0 (nu face manevre de aparare);
+       - pt. poz. sa si pentru fiecare poz. adiacenta ei care este valida si
+	  libera calculeaza suma distantelor la carnivorele detectate mai sus
+	  si o retine pe cea in care suma e maxima;
+       - daca poz. retinuta mai sus este diferita de cea curenta,se muta acolo
+	  ("move") si ret. 1, altfel nu se muta nicaieri si ret. 0;
+     "void mananca()" = algoritm:
+       - testeaza poz. adiacente pozitiei sale si daca gaseste o planta manaca
+	  din ea, apoi iese ("return"); la un apel mananca din <= 1 planta;
+	  mancatul din planta se face astfel:
+	   - daca en.plantei(aflata cu"getenergie") este >10, atunci "energie"
+	      proprie creste cu 10, iar plantei ii trimite(cu"sendmes")mesajul
+	      -10 (ulterior functia "behaviour" a plantei va trata acest mesaj
+	      prin decrementarea cu 10 a energiei ei - a se vedea mai sus);
+	   - daca energia plantei este <= 10, atunci "energie" proprie creste
+	      cu aceasta energie, iar plantei ii trimite mesajul "KILL";
+	   (constanta 10 poate fi schimbata la latitudinea programatorului);
+       - (aici ajunge daca n-a gasit nici o planta mai inainte) testeaza
+	  un patrat 11 X 11 in jurul poz. sale si retine nr. si poz. plantelor
+	  aflate in acest patrat;daca nu gaseste nici o planta iese("return");
+       - pt. pentru fiecare poz. adiacenta poz. sale care este valida si
+	  libera calculeaza minimul distantelor la plantele detectate mai sus
+	  si o retine pe cea in care acest minim e minim; s-ar putea sa nu
+	  existe poz.adiacente valide si lib. si atunci nu retine nici o poz.;
+       - daca mai sus s-a retinut o pozitie, se muta acolo ("move");
+     "void inmulteste()" = testeaza pozitiile adiacente celei curente si
+       daca gaseste una valida si libera atunci genereaza un ierbivor acolo
+       ("new ierbivor(...)") iar energia sa "energie" scade cu o anumita
+       fractie (de ex. 1/30); la un apel genereaza <= 1 fiu;
+     "void behaviour(int pm)" = daca "pm==KILL" atunci "die";
+    metode publice:
+     "ierbivor(int,int)"=constructorul; parametri: poz.x, y in"motor";apeleaza
+      "fiinta(x,y,100,100,50)"(const.pot fi schimb.la latit. programatorului);
+     "void* gettip()" = returneaza "&nume";
+  - clasa "carnivor"; o unitate "carnivor" nu se apara, se hraneste cautand si
+     mancand ierbivore si genereaza cate un singur fiu odata; clasa "carnivor"
+     mosteneste public pe "fiinta" si are:
+    membru data privat:
+     "static unsigned char nume" = contine caracterul 'c'; adresa acestei
+       zone va fi ret. de "gettip" iar continutul ei va fi folosit la afisare;
+    metode mostenite ca virtuale abstracte si redefinite ca private:
+     "int apara()" = returneaza 0;
+     "void mananca()" = algoritm:
+       -test.poz.adiacente si daca gaseste un ierbivor il manaca(i.e."energie"
+	 proprie creste cu en. ierbivorului (aflata cu"getenergie"),iar lui ii
+	 trimite "KILL"),apoi iese("return");la un apel mananca <= 1 ierbivor;
+       -(aici ajunge daca n-a gasit ierbivori mai inainte) testeaza un patrat
+	 11 X 11 in jurul poz. sale si retine nr. si poz. ierbiv. aflati in
+	 acest patrat; daca nu gaseste nici unul iese ("return");
+       -pt. pentru fiecare poz. adiacenta care este valida si libera calc.
+	 minimul distantelor la ierbiv. detectati mai sus si o retine pe cea
+	 in care acest minim e minim; s-ar putea sa nu existe poz.adiacente
+	 valide si libere si atunci nu retine nici o pozitie;
+       -daca mai sus s-a retinut o pozitie, se muta acolo ("move");
+     "void inmulteste()" = testeaza pozitiile adiacente celei curente si
+       daca gaseste una valida si libera atunci genereaza un carnivor acolo
+       ("new carnivor(...)") iar energia sa "energie" scade cu o anumita
+       fractie (de ex. 1/30); la un apel genereaza <= 1 fiu;
+     "void behaviour(int pm)" = corp vid (carnivorii nu vor primi mesaje);
+  metode publice:
+     "carnivor(int,int)"=constructorul; parametri:poz. x, y in"motor";apeleaza
+      "fiinta(x,y,100,200,50)"(const.pot fi schimb.la latit. programatorului);
+     "void* gettip()" = returneaza "&nume".
+* Fisierele "outputjv" (".h"si".cpp") asemanatoare fisierelor "outputt" de la
+   problema anterioara, cu urmatoarele diferente:
+  - metoda "init" doar deseneaza conturul tablei;
+  - metoda "afisare" sterge si reafis.toate unitatile (aici nu exista unitati
+    nemuritoare ca unitatile "zid");in plus,dupa fiecare reafis.a tablei,scrie
+    dedesubt nr.generatiei respective;pt.numarare se def.in fis."outputjv.cpp"
+    un contor static, vizibil doar in acest fisier; "init" il initializ. cu 0.
+* Fisierul "jv.cpp" cu programul principal; in esenta el are urm. structura:
+   - include "outputjv.h", "jocv.h"
+   - se declara global obiectul:  "output iesire(fiinta::motor);"
+   - se initializeaza tabla, de ex: "fiinta::motor.init(78,47);"
+   - se gen. o configuratie initiala pe tabla prin apeluri "new planta(...)",
+      "new ierbivor(...)", "new carnivor(...)";
+   - se apeleaza:  "iesire.init();"
+   - se efectueaza ciclul: "do{
+			       fiinta::motor.next();
+			       iesire.afisare();
+			       delay(50);
+			     }while(fiinta::nrfiinte>0);
+   - se apeleaza:  "iesire.close();".
+
+							DRAGULICI DANIEL
+                                                        2001

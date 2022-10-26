@@ -1,0 +1,43 @@
+FCLOSE(3)		   Linux Programmer's Manual		     FCLOSE(3)
+
+
+
+NAME
+       fclose - close a stream
+
+SYNOPSIS
+       #include <stdio.h>
+
+       int fclose(FILE *stream);
+
+DESCRIPTION
+       The  fclose  function  dissociates the named stream from its underlying
+       file or set of functions.  If the stream was being used for output, any
+       buffered data is written first, using fflush(3).
+
+RETURN VALUE
+       Upon  successful	 completion 0 is returned.  Otherwise, EOF is returned
+       and the global variable errno is set to indicate the error.  In	either
+       case  any  further  access  (including another call to fclose()) to the
+       stream results in undefined behaviour.
+
+ERRORS
+       EBADF  The filedescriptor underlying stream is not valid.
+
+       The fclose function may also fail and set errno for any of  the	errors
+       specified for the routines close(2), write(2) or fflush(3).
+
+NOTES
+       Note  that fclose only flushes the user space buffers provided by the C
+       library. To ensure that the data is physically stored on disk the  ker-
+       nel buffers must be flushed too, e.g. with sync(2) or fsync(2).
+
+CONFORMING TO
+       The fclose function conforms to ANSI X3.159-1989 (``ANSI C'').
+
+SEE ALSO
+       close(2), fcloseall(3), fflush(3), fopen(3), setbuf(3)
+
+
+
+BSD MANPAGE			  1993-11-29			     FCLOSE(3)

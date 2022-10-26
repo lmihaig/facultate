@@ -1,0 +1,109 @@
+Intreruperea 10h:
+~~~~~~~~~~~~~~~~~
+
+;;;;;;;;;;;;;;;;;;;;
+
+INT 10,1A00 - Testarea existentei modului grafic 13h
+
+Parametri:
+  AX = 1A00h
+Returneaza:
+  AL = 1Ah daca modul 13h este suportat
+  (returneaza ceva si in BL, BH)
+Comentarii:
+- modul 13h e caracterizat prin rezolutie 320 (orizontal) x 200 (vertical) si
+   256 culori; punctul (0,0) este in coltul din stanga sus;
+  memoria video incepe de la adresa fizica A0000h (segment 0A000h, offset 0h)
+   si contine liniile succesive ale ecranului de sus in jos, fiecare linie
+   fiind memorata de la stanga la dreapta, cate un byte per pixel - valoarea
+   byte-ului indica culoarea pixelului si reprezinta o intrare intr-o paleta
+   de culori (pentru setarea paletei se folosesc porturile);
+  rezulta ca pixelul (x,y) (de pe linia y si coloana x) se afla in memorie
+   la adresa seg:offs, unde seg=0A000h iar offs=x+(y*320);
+- inainte de a comuta in modul 13h trebuie sa verificam daca el este suportat
+   de hardware-ul curent, iar asta se poate face printr-o secventa de forma:
+
+          mov ax,1a00h
+          int 10h
+          cmp al,1ah
+          je ok        ;modul 13h este suportat
+          jmp sfarsit  ;modul 13h nu este suportat
+          ok:
+
+;;;;;;;;;;;;;;;;;;;;
+
+INT 10,0F - Aflarea modului video curent
+
+Parametri:
+  AH = 0Fh
+Returneaza:
+  AL = modul video curent
+  (returneaza ceva si in AH, BH)
+
+;;;;;;;;;;;;;;;;;;;;
+
+INT 10,0 - Schimbarea modului video
+
+Parametri:
+  AH = 0h
+  AL = noul mod video
+(returneaza ceva in AL)
+Comentarii:
+- de obicei la inceputul programului modul video implicit este un mod text
+   (de ex. 3); pentru a lucra in alt mod se salveaza modul vechi (de ex.
+   intr-o variabila), se comuta in cel nou, se lucreaza, apoi se restaureaza
+   modul vechi (salvat inainte); aceasta deoarece la terminarea programului
+   nu se revine automat la acel mod implicit iar afisarea ramane dereglata;
+  restaurarea se face cu acelasi apel cu care am facut schimbarea (INT 10,0);
+  de exemplu un program care lucreaza in modul 13h poate avea structura:
+
+         mod_vechi db ?
+           ...
+         ;testez existenta modului 13h
+         mov ax,1a00h
+         int 10h
+         cmp al,1ah
+         je ok
+         jmp sfarsit
+         ok:
+
+         ;salvez modul vechi
+         mov ah,0fh
+         int 10h
+         mov mod_vechi,al
+
+         ;setez modul 13h
+         mov ah,0
+         mov al,13h
+         int 10h
+          
+         ;;;;;; aici se lucreaza in modul 13h
+
+         ;restaurez modul vechi
+         mov ah,0
+         mov al,mod_vechi
+         int 10h
+
+         sfarsit:
+
+;;;;;;;;;;;;;;;;;;;;
+
+INT 10,0C - Desenarea unui pixel
+
+Parametri:
+  AH = 0Ch
+  BH = numarul paginii video
+  AL = culoarea pixelului (daca bitul 7 este 1, valoarea este xor-ata cu cea
+    de pe ecran, cu exceptia cazurilor cand suntem intr-un mod cu 256 culori)
+  CX = coloana
+  DX = linia
+Returneaza: nimic
+Comentarii:
+- mai rapid se poate scrie direct in memoria video (cu "mov", "stosb", etc.);
+- in cazurile uzuale parametrul BH are valoarea 0.
+
+;;;;;;;;;;;;;;;;;;;;
+
+
+DANIEL DRAGULICI
+decembrie, 2007

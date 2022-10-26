@@ -1,0 +1,827 @@
+
+Assembler, lectia 1 - Generalitati, adresare, transfer:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Structura logica a calculatorului:
+
+   magistrala                     magistrala
+   de adrese                       de date  
+      |  |                           |  |  Memoria: 
+      |  |    ------------------     |  | - este formata din OCTETI (BYTE)
+      |  |--->|A0            D0|<----|->|  fiecare continand cate 8 BITI
+      |  |    |.              .|     |  |  (numim la fel dispozitivul si
+      |  |    |.   MEMORIE    .|     |  |  informatia continuta);
+      |  |    |.              .|     |  | - fiecare bit are un RANG 0,...,7 
+      |--|--->|An            Dm|<--->|  |  in cadrul octetului sau;
+      |  |    ------------------     |  | - fiecare octet are o ADRESA
+      |  |           ^  ^            |  |  FIZICA; acestea sunt numere 
+      |  |           |  |            |  |  naturale consecutive incepand de
+      |  |       de  |  |  de        |  |  la 0; 
+      |  |     citire|  |scriere     |  | - grafic, convenim sa reprezentam: 
+      |  |           |  |            |  | 
+      |  |           |  V            |  |
+      |  |    ------------------     |  |   ...|b7...b0|b7...b0|...
+      |  |    |	   semnale     |     |  |   -----------------------
+      |  |    |	  de comanda   |     |  |      ^       ^       ^      
+      |  |<---|A0            D0|<----|->|      n      n+1     n+2
+      |  |    |.              .|     |  |
+      |  |    |.     CPU      .|     |  |
+      |  |    |.              .|     |  | Magistralele (adrese,date,semnale):
+      |<-|----|An            Dm|<--->|  | - asigura comunicarea dintre
+              ------------------     |  |  diversele componente;
+                     |  |            |  | - o magistrala are un numar fixat
+                     |  |            |  |  de LINII, fiecare putand transmite
+                --------------       |  |  un bit; daca magistrala are p
+                | controler  |       |  |  linii, ea poate transmite p biti
+                |     de     |-------|  |  simultan;
+                |intreruperi |       |  | - de ex. pentru scrierea in memorie
+                --------------       |  |  CPU parcurge urmatorii pasi:
+                  |    |    |        |  |  1. aplica adresa (scrisa binar) pe 
+                  |    | --------    |  |   magistrala de adrese;
+                  |    | | IO 1 |----|  |  2. aplica bitii de date (numar
+                  |    | --------port|  |   intreg de octeti) pe magistrala 
+                  |    |             |  |   date;
+                  | --------         |  |  3. activeaza semnalul de comanda a 
+                  | | IO 2 |---------|  |   scrierii (atunci octetii de date
+                  | --------     port|  |   intra in memorie in locatia de la
+                  |                  |  |   adresa aplicata pe magistrala de
+               --------              |  |   adrese);
+               | IO 3 |--------------|  |  4. se dezactiveaza semnalul de
+               --------          port       scriere;
+                                           5. se elibereaza magistralele de
+                                            adrese si de date;
+                                           citirea decurge analog.
+
+
+Latimile magistralelor pentru diverse generatii de calculatoare:
+
+                         M. adrese    M. date
+                    8080     16          8
+                    8086     20         16
+           80286,80386SX     24         16
+           80386DX,80486     32         32
+
+- de ex. la 8086 adresele pot fi doar numere 0...2^20-1, deci el poate accesa
+ doar 1MB de memorie (nu pot pune calculatorului memorie decat de max. 1MB);
+ 80486 poate accesa pana la 4GB de memorie;
+  la o singura citire/scriere 8080 poate transfera doar date de 1 octet
+ (byte), in timp ce 80486 poate transfera date de 1 octet (byte), 2 octeti
+ (word) sau 4 octeti (dword) - acestea sunt date multi-octet;
+- in cazul datelor multi-octet numerice si pointeri se foloseste conventia 
+ Intel("little endian"), anume octetii mai semnificativi se pun la adrese mai
+  mari; de ex. valoarea 266 de tip unsigned short in limbajul C, care se 
+ reprezinta binar sub forma 00000001 00001010, sau hexa sub forma 01h 0Ah, va 
+ fi stocata sub forma:
+                   0Ah        01h
+              | 00001010 | 00000001 |
+             -------------------------
+              ^ octetul  ^   octetul
+     adresa:  n  low     n+1   hi
+ adresa unei locatii de mai multi octeti este adresa primului (celui mai 
+ putin semnificativ) octet al sau;
+- aspect de aliniere (il ilustram pentru magistrale de date cu 16 linii):
+ un octet se poate transmite atat pe liniile D7-D0, cat si pe D15-D8;
+  daca A0=0 (adresa octetului destinatie este para), el se emite pe D7-D0,
+  iar daca A0=1 (adresa este impara), el se emite pe D15-D8;
+ astfel, daca adresa la care trebuie sa ajunga un word (octetul sau low) este
+  para (A0=0), wordul se poate transmite (prin D15-D0) printr-un singur ciclu
+  (octetul low prin D7-D0, octetul hi prin D15-D8);
+ daca insa adresa la care trebuie sa ajunga wordul este impara (A0=1), 
+  atunci sunt necesare doua cicluri (ele insa se inlantuie automat): intai
+  octetul low se tranmite prin D15-D8, apoi octetul hi prin D7-D0;
+ deci datele aliniate in memorie la adrese pare pot fi accesate mai rapid; in
+  acest scop compilatoarele/asambloarele ofera optiunea "word align data".
+
+
+ Dispozitivele de I/O:
+- au fiecare asociata o linie de intrerupere si un grup de adrese (porturi); 
+- controlerul de intreruperi inregistreaza cererile de deservire emise la un 
+ moment dat de diverse dispozitive de I/O si comunica CPU pe cea mai 
+ prioritara;
+- CPU acceseaza dispozitivul respectiv si il deserveste prin intermediul
+ porturilor si magistralelor.
+
+
+ Unitatea centrala (CPU):
+- contine cateva locatii de memorie proprii (REGISTRI); acestia n-au adrese
+ explicite ca locatiile de memorie, intern sunt desemnati prin coduri de
+ 3-4 biti, iar in limbajele de programare sunt desemnati prin mnemonice;
+- registrii au un numar intreg de octeti iar dimensiunile lor sunt corelate
+ cu latimile magistralelor de adrese si de date; de ex. 8086 are registri de 
+ 8 si 16 biti, 80486 are registri de 8, 16 si 32 biti;
+- locatia unor registri coincide cu partea low sau hi a locatiei altor 
+ registri; de ex. AH (care are 8 biti) contine de fapt bitii b15-b8 din 
+ locatia lui AX (care are 16 biti);
+- informatia dintr-un registru poate fi o adresa sau o data (citita din
+ memorie, rezultata dintr-un calcul sau care urmeaza a fi scrisa in memorie);
+- fiecare registru are o utilitate specifica; unii pot fi folositi si in
+ alte scopuri, dar nu la orice; de asemenea, pentru anumite scopuri putem
+ folosi mai multi registrii, dar nu pe oricare;
+- de exemplu la inceputul rularii unui program CS si IP contin adresa
+ din memorie a primei instructiuni (primul octet al acesteia); CPU citeste
+ primul octet, apoi incrementeaza IP pentru a-l pointa pe al doilea, apoi
+ citeste al doilea octet, etc., pana conchide ca a citit o instructiune 
+ intreaga (instructiunile pot avea lungimi diferite); apoi executa 
+ instructiunea; apoi incepe incarcarea noii instructiuni de la octetul 
+ pointat de IP, etc.;
+- grafic, in cazul registrilor convenim sa reprezentam: 
+
+  |b15..b8|b7..b0|   (deci invers ca la reprezentarea octetilor in memorie) 
+  ----------------  
+   oct.hi  oct.low
+
+ Adresarea memoriei:
+- CPU priveste memoria ca impartita in segmente (zone continue de octeti);
+  un segment incepe de la o adresa fizica multiplu de 16 (10h) (paragraf) si 
+   are <= 2^16 octeti = 64K (la masinile cu magistrale de adrese de 32 biti 
+   pot exista si segmente mai lungi);
+  segmentele se pot intersecta (partial sau total) sau nu; deci un acelasi
+   octet de memorie poate face parte din mai multe segmente;
+  adresa unui octet (sau a octetului de inceput al unei locatii) este 
+   specificata indicand:
+   - numarul de ordine al unui segment ce il contine (numarand de la 0);
+   - numarul de ordine al octetului in cadrul segmentului (numarand de la 0);
+   cele doua numere se scriu hexa sub forma "segment:offset", iar adresa 
+   fizica se calculeaza din ele dupa formula: segment*10h + offset
+   (sau in baza 10: segment*16 + offset);
+- daca magistrala de adrese are 20 linii, (deci adresele fizice au 20 biti,
+   adica 5 cifre hexa) numerele "segment" si "offset" trebuie sa aibe 16 biti
+   (4 cifre hexa) - ele pot fi stocate de ex. in registri de 16 biti;
+  in acest caz "offset" nu poate depasi 2^16, deci segmentele au <= 64K;
+  cele 5 cifre hexa "zzzzz" ale adresei fizice corespunzatoare unei 
+   specificari "xxxx:yyyy" se obtin facand adunarea hexa: xxxx0+
+                                                           yyyy
+                                                          -----
+                                                          zzzzz
+- daca magistrala de adrese are 32 linii, (adresele fizice au 32 biti,
+   adica 8 cifre hexa) numarul "segment" trebuie sa aibe tot 16 biti, dar
+   numarul "offset" poate avea si 32 biti (deci poate depasi 2^16, iar 
+   segmentul va fi mai lung de 64K);
+  cele 8 cifre hexa "zzzzz" ale adresei fizice corespunzatoare unei 
+   specificari "xxxx:yyyyyyyy" se obtin facand adunarea hexa: xxxx0+
+                                                           yyyyyyyy
+                                                           --------
+-exemplu (pe desen, "-" = un octet):                       zzzzzzzz         
+                                  seg=0002h| off=0009h
+                                  --------------------------------- (segment)
+                  seg=0001h                | off=0019h
+                  ------------------------------------------ (segment)
+  seg=0000h                                | off=0029h
+  --------------------------------------------------- (segment)
+  --------------------------------------------------------------------------
+  ^00000h         ^00010h         ^00020h  |=======| (locatie de 7 octeti)
+  adrese fizice                            ^00029h
+ 
+  deci pentru locatia de la adresa fizica 00029h, putem specifica adresa
+  sub una din formele: 0000:0029, 0001:0019, 0002:0009 (calculele fiind:
+  0000h*10h+0029 = 0001h*10h+0019h = 0002h*10h+0009h = 00029h)
+- memoria ocupata de un program in executie contine mai multe zone (ele pot
+ avea unul sau mai multe segmente si se pot intersecta sau nu):
+  zona de cod - contine instructiunile programului (in cod masina);
+  zona de date - contine locatiile variabilelor statice;
+  stiva - e folosita pentru alocarea unor variabile temporare, cum sunt cele
+          folosite in cadrul apelurilor de subrutine (variabile automatice);
+  heap - e folosita pentru alocarea variabilelor dinamice;
+ in functie de dimensiunile acestor zone, exista mai multe MODELE DE MEMORIE:
+  tiny - zonele de date, cod, stiva ocupa un acelasi segment;
+         programele ce folosesc modelul tiny ocupa in total <=64K si pot fi
+           de tip COM;
+  small - zona de date are 1 segment, cea de cod 1 segment, segmentele
+          putand fi separate; 
+         programele ce folosesc modelul small pot avea >64K, dar datele,
+          resp. codul, luate separat, nu pot depasi 64K;
+ medium - zona de date are 1 segment, cea de cod poate avea mai multe;
+compact - zona de date poate avea mai multe segmente, cea de cod 1 segment;
+         o structura de date nu poate depasi insa 64K;
+  large - si zona de date si cea de cod pot avea mai multe segmente;
+         o structura de date nu poate depasi insa 64K;
+   huge - si zona de date si cea de cod pot avea mai multe segmente;
+         nu mai avem limitarea referitoare la structuri de date;
+- daca unui compilator ii specific (de exemplu prin directive scrise in sursa
+   unui program) specific modelul de memorie pe care il va folosi programul,
+   compilatorul va optimiza codul a.i. pentru accesarea datelor sau
+   instructiunilor sa nu se specifice de fiecare data atat segmentul cat si
+   offsetul (adrese sau pointeri "far") ci doar offsetul (adrese sau pointeri
+   "near"), segmentul fiind cunoscut;
+  de ex. la tiny si small toti pointerii vor fi implementati near, la medium 
+   pointerii la cod vor fi far iar cei la date vor fi near, la large toti
+   pointerii vor fi far.
+
+
+ Registrii cei mai importanti CPU (mnemonice si utilizare):
+
+- registrii generali (general purpose registers):
+  ei pot fi folositi in operatiile uzuale de programator;
+  fiecare insa are si o utilitate specifica si este luat in consideratie
+    automat de anumite instructiuni (fara sa trebuiasca sa-l precizam):
+
+EAX, AX, AL, AH - registru acumulator (accumulator)
+  ut. specifica: acumulatori si pentru intrari/iesiri
+EBX, BX, BL, BH - registru baza (base)
+  ut. specifica: calcul adrese bazate  
+ECX, CX, CL, CH - registru contor (count)
+  ut. specifica: contor pentru instructiuni de ciclare
+EDX, DX, DL, DH - registru data (data)
+  ut. specifica: op. de inmultire/impartire, intrari/iesiri din porturi
+  accesate direct (DX contine adresa portului)
+
+reg. "E.." au 32 biti si exista doar la procesoarele 386+
+un reg. ".X" are 16 biti si coincide cu partea low a reg. "E.." corespunzator
+un reg. ".L" sau ".H" are 8 biti si coincide cu parea low, resp. hi, a reg.
+  ".X" corespunzator
+de ex. avem:       AH     AL
+               7------07------0
+              15--------------0 Ax  
+31----------------------------0 EAX 
+
+- registrii de segment (segment registers): 
+  de regula sunt folositi pentru a pointa segmente;
+  toate au 16 biti (reamintim: "segment" e mereu pe 16 biti)
+  fiecare are si o utilizare specifica (e luat automat de unele instr.):
+
+CS - code segment - pointeaza segmentul de cod activ;
+DS - data segment - pointeaza segmentul de date activ;
+ adresarile la date folosesc implicit segmentul indicat de DS, cu exceptia 
+ adresarilor bazate si/sau indexate cu reg. (E)BP, (E)SP si a instructiunilor
+ pt. siruri ce folosesc indexari cu reg. DI
+SS - stack segment - pointeaza segmentul de stiva activ;
+ adresarile bazate si/sau indexate cu reg. (E)BP, (E)SP folosesc implicit
+ segmentul pointat de SS;
+ES - extra segment - pointeaza segmentul de date suplimentar curent;
+ instructiunile pt. siruri ce folosesc indexari cu reg. DI folosesc implicit
+ segmentul pointat de ES;
+FS (386+), GS(386+) - se folosesc ca si ES;
+
+- registri indicatori de adrese (pointer registers):
+ indica offsetul unor locatii importante si sunt folositi in adresarile
+  bazate;
+ cele cu "E.." au 32 biti si exista doar la 386+, restul au 16 biti
+  si coincid cu partea low a celor cu "E.." corespunzatori;
+ ei pot fi folositi in scopuri generale de calcul, dar fiecare are si o 
+  utilizare specifica (e luat automat de unele instr.): 
+
+ESP, SP - stack pointer - indica varful segmentului de stiva curent;
+EBP, BP - base pointer - indica inceputul ultimului bloc incarcat in stiva
+  (blocul este cuprins intre SS:SP si SS:BP); poate fi folosit insa si pt.
+  adresarea in cadrul altor segmente;
+
+- registrii index (index registers):
+ indica deplasamentul unor date in cadrul unor locatii importante mai mari
+  (de ex. elementele unui vector) si sunt folositi in adresarile indexate;
+ cele cu "E.." au 32 biti si exista doar la 386+, restul au 16 biti
+  si coincid cu partea low a celor cu "E.." corespunzatori;
+ ei pot fi folositi in scopuri generale de transfer si calcul, dar au si o 
+  utilizare specifica (sunt luate automat de unele instr.) - de exemplu
+  instructiunile pt. siruri considera implicit ca sirul sursa este parcurs
+  de SI, iar cel destinatie de DI:
+
+ESI, SI - source index
+EDI, DI - destination index
+
+- registrul indicator al instructiunii curente:
+ indica offsetul instructiunii ce urmeaza a fi executate (in segmentul de
+  cod curent); 
+ cea cu "E.." are 32 biti si exista doar la 386+, cealalta are 16 biti
+  si coincide cu partea low a celei cu "E..";
+  
+EIP, IP - instruction pointer - adresa instructiunii ce urmeaza a fi
+ executate este CS:EIP (386+), respectiv CS:IP;
+  
+- registrul indicatorilor de conditii (flags register):
+ are 16 biti, fiecare din ei avand o semnificatie si un mnemonic - s.n. 
+  indicator sau flag; dupa executarea fiecarei instructiuni unii dintre 
+  indicatori sunt pusi pe 1 (set) sau 0 (clear), indicand modul cum s-a
+  terminat operatia;
+ pozitia indicatorilor in registru este:
+
+   |--|--|--|--|OF|DF|IF|TF|SF|ZF|--|AF|--|PF|--|CF|
+   -------------------------------------------------
+    15                                            0
+ indicatorii si semnificatia lor cand au valoarea 1:
+ CF - carry - transport/imprumut in bitul cel mai semnificativ;
+ PF - parity - octetul low al rezultatului are un nr. par de 1;
+ AF - auxiliary flag - transport/imprumut intre bitii de rang 3-4;
+   e folosit de operatiile cu numere zecimale codificate binar;
+ ZF - zero - rezultatul este 0;
+ SF - sign - bitul cel mai semnificativ al rezultatului e 1; la numere 
+   intregi (in complement fata de 2) inseamna rezultat negativ;
+ TF - trace - e utilizat in depanare, pentru rularea pas cu pas;
+   daca TF=1, dupa fiecare instructiune se genereaza un semnal de
+   intrerupere intern (pe nivelul 1) (rutina care trateaza intreruperea
+   se executa insa cu TF=0);
+ IF - interrupt - daca IF=1 este activata acceptarea semnalelor de
+   intrerupere externa; IF nu are efect in cazul semnalului de intrerupere
+   nemascabila;
+ DF - direction - daca DF=1, instructiunile pt. siruri le vor parcurge
+   de la adrese mici la mari; daca DF=0, le vor parcurge invers;
+ OF - overflow - la executia unei instructiuni aritmetice cu semn s-a produs
+   depasire (iar rezultatul s-a memorat trunchiat);
+
+ indicatorii pot fi setati/stersi explicit (instructiuni ca STC, CLC, ...)
+ sau putem salva/incarca oct.low al registrului in/din AH (instr. SAHF, LAHF)
+
+Exemple comentate de programe in TASM:
+--------------------------------------
+
+Se editeaza cu un editor de fisiere text (ex. Notepad).
+
+Se compileaza cu:
+ tasm [/l] fisier.asm
+(optiuni:
+ /zi - se includ in obj si informatii pentru depanare
+ /l - genereaza un listing detaliat (fisier.lst))
+
+Se linkediteaza cu:
+ tlink [/t] [/v] fisier.obj
+(optiuni:
+ /t - creaza executabil ".com" (doar daca in program am folosit modelul tiny)
+ /v - se includ si informatii pentru depanare)
+
+Se executa cu:
+ fisier.ext
+sau, pentru depanare, cu
+ td fisier.ext
+(unde "ext" este "exe" sau "com")
+
+In cele de mai sus, extensiile "asm", "obj", "exe", "com" se pot omite.
+
+Daca avem instalat in sistem Borland C++ 3.1, putem lucra eficient astfel:
+- cream sursele asm intr-un acelasi director, de ex. "c:\work";
+- in acelasi director cu sursele ("c:\work") cream fisierele batch urmatoare:
+
+a.bat:
+c:\borlandc\bin\tasm /zi /l %1.asm
+
+l.bat:
+c:\borlandc\bin\tlink /v %1.obj
+
+d.bat:
+c:\borlandc\bin\td %1
+
+- deschidem Notepad, si cu el vom edita sursele asm;
+- deschidem o consola Command prompt si in ea comutam directorul curent in 
+ cel care contine sursele asm ("cd c:\work"); de fiecare data cand dorim
+ sa asamblam/linkeditam/depanam un program "fisier.asm", vom da din aceasta 
+ consola comenzile:
+
+a fisier
+l fisier
+d fisier
+
+
+Exemplul 1:
+===========
+.model small    ;un segment de cod, un segment de date
+.stack          ;inceputul segmentului de stiva;
+.data           ;inceputul segmentului de date
+  a db 0ah, 10d, 10, 12q, 1010b ;a: 0Ah 0Ah 0Ah 0Ah 0Ah
+  b dw 10Ah, 10Bh, 10Ch         ;b: 0Ah 01h 0Bh 01h 0Ch 01h (little endian)
+  c db ?                        ;c: --
+  d db 3 dup(0Bh), 0Ch, 'abc'   ;d: 0Bh 0Bh 0Bh 0Ch 61h 62h 63h
+  e db 01h, 02h, 03h, 04h       ;e: 01h 02h 03h 04h
+  f dw 040Ah, 050Bh, 060Ch      ;f: 0Ah 04h 0Bh 05h 0Ch 06h
+  x dw ?                        ;x: --  --
+  y dw ?                        ;y: --  --
+.code           ;inceputul segmentului de cod
+start:          ;o eticheta - marcheaza o pozitie (offset) in segm. de cod
+ mov ax,@data   ;"data" e o constanta (operand imediat) si nu poate fi
+ mov ds,ax      ;   atribuita direct unui registru segment
+ mov es,ax      ;acum DS, ES pointeaza acelasi segment
+
+;;;;;;;; diverse instructiuni: ;;;;;;;;
+
+ mov ax,f       ;ax: 040Ah; nu merge mov ax,e (tipuri diferite)
+ mov ah,e       ;ax: 010Ah ("al" ramane 0Ah dinainte)
+ mov ax,00ffh   ;al: FFh, ah:00h, ax: 00FFh
+ mov a,al       ;a: FFh 0Ah 0Ah 0Ah 0Ah; nu merge mov b,al (tipuri diferite)
+ mov byte ptr b,al  ;b: FFh 01h 0Bh 01h 0Ch 01h
+ mov ax,b       ;ax: 01FFh
+ mov word ptr c,ax  ;c: FFh d: 01h 0Bh 0Bh 0Ch 61h 62h 63h
+
+;;;;;;;; exemple de adresare: ;;;;;;;;
+
+;adr. imediata: valoarea este inclusa la compilare in codul instructiunii
+
+ mov ax,5         ;ax: 5d
+ mov ax,seg b     ;in ax ajunge adresa segmentului lui "b", adica seg.de date
+ mov bx,@data     ;acum bx = ax
+ mov ax,offset b  ;in ax ajunge offsetul lui "b" in seg. sau, adica 5 (0005h)
+
+;adr. prin registri: valoarea este intr-un registru
+
+ mov cx,ax
+ mov dl,al
+
+;adr. directa: operandul este in mem., in instructiune apare adresa sa
+
+ mov ax,b
+ mov b,ax
+ mov ax,word ptr a
+ mov word ptr a,ax
+ mov al,e+2           ;al: 03h (octetul aflat la distanta 2 de "e")
+ mov e+2,al
+ mov al,byte ptr f+3  ;al: 05h (octetul aflat la distanta 3 de "f")
+ mov byte ptr f+3,al
+ mov ax,word ptr e+1  ;ax: 0302h (wordul aflat la 1 octet distanta de "e")
+ mov word ptr e+1,ax
+
+;adr. bazata: operandul este in mem. iar in instructiune apare adresa sa
+; prin intermediul registrului BX sau BP;
+;forma adresarii este "[reg]" sau "[reg+val]", unde "reg" este BX sau BP iar
+; "val" o valoare inclusa la compilare in codul instructiunii;
+;daca nu precizam segmentul, el este implicit cel pointat de DS in cazul BX
+; si cel pointat de SS in cazul BP;
+;adr. bazate se fol. pt. a referi elementul unei structuri (BX sau BP va 
+; contine offsetul structurii, iar "val" deplasamentul elemen. in cadrul ei)
+
+mov bx,offset f  ;pregatire
+mov ax,[bx+2]    ;ax: 050Bh (de la "f" pointat de BX se mai parcurg 2 octeti)
+mov ax,ds:[bx+2] ;idem (ds e considerat implicit)
+mov ax,es:[bx+2] ;aici e acelasi lucru caci am facut inainte ca es = ds;
+                 ; daca "f" era intr-un segment pointat de es, altul decat
+                 ; cel pointat de ds, trebuie precizat "mov ax,es:[bx+2]"
+                 ; caci "mov ax,[bx+2]" foloseste implicit ds
+mov [bx+2],ax
+mov ds:[bx+2],ax
+mov es:[bx+2],ax
+push ax          ;pregatire: in stiva este scris continutul lui ax (050Bh),
+                 ;  iar SP contine offsetul word-ului scris (deci al 
+                 ;  octetului low 0Bh) in segmentul pointat de SS
+mov bp,sp        ;pregatire
+mov al,[BP+1]    ;al: 05h, deci ax: 0505h
+mov bx,2         ;pregatire
+mov ax,[bx+offset f] ;la fel ca dupa primele doua instr. din acest grup
+
+;adr. indexata: e la fel ca cea bazata, dar se foloseste SI, DI in loc de
+; BX si BP; registrul segment implicit este in ambele cazuri DS;
+;adr. indexate se folosesc pt. a referi elementele unui vector;
+
+mov si,offset f  ;pregatire
+mov ax,[si+2]    ;ax: 050Bh
+mov ax,ds:[si+2] ;idem
+mov [si+2],ax
+mov ds:[si+2],ax 
+mov si,2         ;pregatire
+mov ax,[si+offset f]  ;la fel ca dupa primele doua instr. din acest grup
+
+;adr. bazata si indexata; operandul este in mem. iar in instructiune apare 
+; adresa sa prin intermediul unuia din reg. BX, BP si unuia din reg. SI, DI;
+;forma adresarii este "[reg1+reg2]" sau "[reg1+reg2+val]", unde "reg1" este 
+; BX sau BP, reg2 este SI sau DI iar "val" o valoare inclusa la compilare in 
+; codul instructiunii;
+;daca nu precizam segmentul, el este implicit cel pointat de DS in cazul BX
+; si cel pointat de SS in cazul BP;
+;adr. bazate si indexate se fol. pt. a referi elem. unei structuri din stiva 
+; sau dintr-un vector de structuri (BX sau BP va contine offsetul vectorului,
+; SI sau DI va contine indicele in vector al structurii, iar "val"
+; deplasamentul elementului in structura respectiva
+
+mov bx,offset f  ;pregatire
+mov si,2
+mov al,byte ptr [bx+si+1]    ;al: 05h
+mov al,ds:byte ptr [bx+si+1] ;idem
+
+mov ah, 4ch  ;incarcam AH cu 4Ch si apelam intreruperea 21h (ea preia ca
+int 21h      ; param. val. din AH); efect: reda controlul sistemului DOS
+
+end start       ;sfarsitul programului; programul va incepe de la eticheta
+                ;  mentionata aici, "start"
+
+Comentarii:
+- cu ".code", ".data", ".stack" specificam ca ceea ce urmeaza face parte din
+ segmentul de cod, date, resp. stiva (in acest prog.avem cate un singur segm.
+ pt. cod, date, stiva); cu ".stack numar" specificam ca stiva va avea dimens.
+ de "numar" octeti (implicit este 512);
+- daca am fi dorit sa cream un executabil ".com", trebuia sa specificam 
+ ".model tiny", iar segmentul de cod sa-l incepem asa:
+   .code
+   org 100h
+    ...
+ aceasta deoarece sistemul de operare incarca excutabilele ".com" in memorie 
+  de la offsetul 100h, lasand un antet de 100h (256) bytes la inceputul
+  segmentului de cod (unicul segment al programului dealtfel); aici
+  sistemul de operare pastreaza cateva informatii despre program, ca de ex.
+  argumentele in linia de comanda;
+ directiva "org 100h" spune compilatorului ca la rulare executabilul va fi 
+  incarcat de la offsetul 100h si astfel compilatorul va calcula corect
+  offsetul variabilelor atunci cand va inlocui in codul generat numele lor 
+  cu adresa;
+ executabilele ".exe" insa sunt incarcate de sistemul de operare in memorie
+  de la offsetul 0000h si folosesc in general segmente speciale pentru date;
+  de aceea nu trebuie sa folosim "org 100";
+- variabilele sunt considerate pozitii in mem. carora li s-a asociat un tip
+   (numele unei variabile este asemeni numelui unui vector in limbajul C, 
+   care reprezinta o constanta, anume adresa primului element - element de 
+   tipul precizat in declarare);
+  tipurile posibile sunt:
+   DB - byte (1 octet)
+   DW - word (2 octeti)
+   DD - dword (double word: 4 octeti)
+   DQ - qword (quad word: 8 octeti) - utilizate pt. mem. nr. reale
+   DT - tbyte (ten bytes: 10 octeti) - utilizate pt. mem. numerelor BCD
+  numele "a" si "b" desemneaza offseturile 0000h, respectiv 0005h fata 
+   de inceputul segmentului de date - intre ei sunt 5 octeti egali cu 10 (in 
+   declaratie sufixul indica baza), iar de la offsetul "b" gasim octetii
+   0Ah 01h 0Bh 01h 0Ch 01h etc. (reamintim: in conventia Intel nr. 10Ah se 
+   memoreaza cu octetul low primul: 0Ah 01h, s.a.m.d.);
+  la poz. "c" (aflata la 2*3=6 octeti dupa "b") este un octet neinitializat;
+  de la poz "d" gasim octetii: 0Bh 0Bh 0Bh 0Ch 61h 62h 63h (la stringuri nu 
+   se aplica conventia little endian ci doar la numere si pointeri);
+  facand o analogie cu limbajul C, ne putem gandi de ex. ca "b" este un 
+   vector de dimensiune neprecizata si cu elemente word, al carui nume 
+   reprezinta adresa primului sau element (offsetul 0005h); daca fac 
+   "mov ax,b", se ia de la adresa "b" (si se pune in AX) o cantitate care ar 
+   corespunde primului element, anume 2 octeti (este vector de word); daca 
+   insa fac "mov ax,[b+14d]", de la adresa "b" se numara 14 octeti, nu 14 
+   word (deci nu e ca in limbajul C), ajungandu-se la adresa desemnata de 
+   variabila "e", iar in AX ajung cei 2 octeti de dupa "e" -  01h si 02h (iar
+   AX va avea val. 201h);
+- instructiunea "mov destinatie,sursa" efectueaza "destinatie := sursa";
+  caracteristici:
+   - operanzii pot fi imediati, registri sau zone de memorie; 
+     nu pot fi ambii zone de memorie sau ambii registri segment;
+       (ex: nu merge "mov [bx],[bp]" sau "mov ds,es"; 
+        merg insa succesiunile: "mov ax,[bp]" "mov [bx],ax"
+                            si:  "mov ax,es" "mov ds,ax") 
+   - operanzii trebuie sa aibe acelasi tip (db, dw, etc.); tipul poate fi
+       insa fortat cu "byte ptr", "word ptr", etc.
+   - intr-un registru segment nu se poate atribui o valoare imediata
+       (ex: nu merge "mov ds,2" dar merge "mov ax,2" "mov ds,ax")
+- o instructiune poate avea 0, 1 sau 2 operanzi; felul lor si modul de
+   adresare posibile sunt comentate in program pentru "mov" dar sunt valabile
+   si in cazul altor instructiuni;
+- asamblam, linkeditam si lansam in depanare programul asa cum am indicat mai
+   inainte, iar in TD deschidem (din View/...) fereastrele:
+     CPU - contine zona de cod
+     Registers - contine registrii
+     Watches - contine expresii pe care le urmarim;
+              aici introducem: a (sau [a] sau ds:[a])
+                               [a+1]
+                               [byte ptr b]
+                               [byte ptr b+1]
+                               [c]
+                               [byte ptr d]
+                               [e]
+                               [e+1]
+                               [e+2]
+                               [byte ptr f+2]
+                               [byte ptr f+3]
+              atentie ca aici constantele 2, 3, etc. adaugate sunt 
+              considerate implicit hexa (pt. zecimal punem 2d, 3d, etc.)
+   rulam pas cu pas cu F7 (putem rula continuu pana la o instructiune data 
+    cu F4); in timpul rularii urmarim registrii si expresiile din Watches;
+   in general, in mediul TD se lucreaza ca in mediile Turbo - de ex. putem
+    redimensiona/muta ferestrele cu Ctrl-F5/sageti/Enter, si le putem
+    permuta cu F6; in fereastra Watches mutam cu sageti selectorul pana unde 
+    vrem sa inseram o expresie, iar o expresie se insereza/editeaza/sterge cu
+    Enter/Enter/Delete.
+
+ Fiecare segment declarat in program are un nume; in exemplul anterior, 
+unicele segmente de cod, date, stiva, declarate cu ".code", ".data", resp.
+".stack" au primit implicit numele "_TEXT", "_DATA" resp. "STACK"; daca vrem 
+mai multe segmente, le putem decl. folosind directive complete de segmentare,
+in care precizam (printre alte inf.) si numele lor:
+
+Exemplul 2:
+~~~~~~~~~~~
+.model compact        ;zona de date poate avea mai multe segmente
+.stack                ;un segm. de stiva, numit implicit "STACK"
+variabile1 segment    ;un segm. numit "variabile1" ce contine date
+  a db 01h,02h,03h      ;la compilare numele "a" se inloc. cu offsetul 0000h
+  b db 04h,05h          ;la compilare numele "b" se inloc. cu offsetul 0003h
+variabile1 ends
+variabile2 segment    ;un segm. numit "variabile2" ce contine date
+  c db 06h,07h,08h,09h  ;la compilare numele "c" se inloc. cu offsetul 0000h
+variabile2 ends      
+.code                 ;un segm. de cod, numit implicit "_TEXT"
+  assume cs:@code,ss:@stack,ds:variabile1,es:variabile2
+inceput:
+  mov ax,variabile1
+  mov ds,ax
+  mov ax,variabile2
+  mov es,ax
+  mov al,a  ;face implicit mov al,ds:a, i.e. mov al,ds:[0000h], deci AL:=01h
+  mov al,c  ;face implicit mov al,es:c, i.e. mov al,es:[0000h], deci AL:=06h
+  mov al,b  ;face implicit mov al,ds:b, i.e. mov al,ds:[0003h], deci AL:=04h
+  mov ax, 4c00h   ;ne intereseaza doar ca AH:=4ch, dar putem scrie si asa
+  int 21h
+end inceput ;putem numi oricum eticheta ce marcheaza punctul de start al
+            ; programului, totul e sa o mentionam si la "end"
+
+Comentarii:
+- "assume cs:@code,ss:@stack,ds:variabile1,es:variabile2" este o directiva de
+ compilare (este tratata la mom. compilarii, nu executiei) ce instruieste
+ compilatorul sa traduca toate instructiunile ce se refera la entitati
+ declarate in segm. de cod/stiva/variabile1/variabile2 si nu precizeaza reg.
+ de segment in instr. masina ce folosesc implicit CS/SS/DS/respectiv ES;
+  astfel, instructiunile referitoare la "a", "b", "c" care nu indica reg. de
+ segment sunt traduse in instructiuni masina ce folosesc implicit pe DS in 
+ cazul lui "a", "b" si pe ES in cazul lui "c";
+  intr-adevar, la compilare numele "a", "b", "c" sunt inlocuite cu niste
+ constante, care sunt offseturile lor in segmentele din care fac parte, 
+ adica 0000h, 0003h, respectiv 0000h; astfel, instructiunea "mov al,a"
+ s-ar traduce prin "mov al,[0000h]" si conteaza daca offsetul 0000h este
+ masurat in segmentul "variabile1" (caz in care am obtine AL=01h) sau in
+ "variabile2" (caz in care am obtine AL=06h); faptul ca am facut 
+ "assume ds,variabile1" face ca la compilare "mov al,a" sa se trad. prin
+ "mov al,ds:[0000h]";analog, "mov al,c" se va trad. prin"mov al,es:[0000h]";
+  totul va fi OK daca la mom. executiei DS chiar va pointa segm."variabile1"
+ iar ES chiar va pointa segm."variabile2" - acest lucru nu poate fi asigurat
+ la mom. compilarii si de aceea am inclus in cod secventa (care se trateaza
+ la mom. executiei):
+                     mov ax,variabile1
+                     mov ds,ax
+                     mov ax,variabile2
+                     mov es,ax
+ (trecerea prin AX este necesara deoarece numele segmentelor "variabile1" si
+ "variabile2" sunt niste constante (operanzi imediati) si nu pot fi atribuite
+ direct unor registri segment);
+  notam ca daca am fi facut aceleasi "assume" dar am fi atribuit invers:
+                     mov ax,variabile1
+                     mov es,ax
+                     mov ax,variabile2
+                     mov ds,ax
+ atunci "mov al,a" si "mov al,b", care conform "assume" s-ar fi tradus prin
+ "mov al,ds:[0000h]", respectiv "mov al,ds:[0003h]",ar fi masurat offseturile
+ 0000h si 0003h in segmentul "variabile2" (pointat de DS), adica am fi 
+ obtinut AL=06h, respectiv AL=09h;
+- in programul de mai sus avem un singur segment de cod, avand numele
+ implicit "_TEXT" (la modelele medium, large, huge putem sa-i dam un nume 
+ scriind ".code nume"); daca nu dorim sa folosim acest nume in "assume", 
+ putem scrie (cum am si facut) "assume cs:@code"; similar, pt. stiva am facut
+ "assume ss:@stack"; 
+  initializarea lui CS nu poate fi facuta insa explicit, gen:
+                     mov ax,@code
+                     mov cs,ax
+ dar este facuta implicit de sistemul de operare cand lanseaza programul
+ (va pointa segmentul de cod ce contine pct.de start,care aici e "inceput");
+- daca in prog.nu punem "assume"-uri si modelul de mem. este "small" sau
+ "compact",compilatorul va face implicit:
+
+   assume cs:_TEXT, ds:DGROUP, ss:DGROUP
+
+ iar daca modelul de mem. este altul, va face implicit:
+
+   assume cs:nume_TEXT, ds:DGROUP, ss:DGROUP
+
+ unde"DGROUP"e un gr.de segm.ce contine printre altele segm.de date si stiva;
+- concluzie: la programele simple, cu model "small" sau "compact" si care 
+ folosesc cate un singur segment (cu numele implicit) pt. cod, date si stiva
+ nu mai este necesar sa folosim "assume" ("assume"-urile implicite sunt OK) 
+ si este suficient sa initializam doar DS (daca folosim variabile) si SS 
+ (daca folosim stiva).
+ 
+Obs: Cand rulam programul cu TD, daca avem in program variabile initializate
+ si le vizualizam in fereastra Watch, este posibil sa nu vedem acolo valorile
+ cu care le-am initializat pana nu trecem cu executia (cu F7) de partea care 
+ initializeaza registrii segment pentru date (partea cu "mov ax,@data", 
+ "mov ds,ax") - intr-adevar, TD foloseste pentru accesarea variabilelor 
+ vizualizate registrii segment respectivi si daca acestia au valori 
+ necorespunzatoare afisaza informatia luata din alta parte.
+  
+  Stiva este folosita pentru a salva/recupera valori temporare si pentru
+a aloca variabile automatice in cadrul apelurilor de subprograme; ea este
+gestionata de trei registri:
+
+       ultima inreg. incarcata        zona deja ocupata
+                             |        |
+        segment stiva        V        V
+       ---------------------------------------    sensul cresterii adreselor
+       |                  |====|.............|    ----->
+   ---------------------------------------------------
+       ^          <-----  ^    ^ 
+       SS   stiva creste  SP   BP
+             spre adrese
+                    mici
+
+SS - pointeaza segmentul stiva curent (ca adresa de segment);
+SP - pointeaza varful stivei (ultimul octet incarcat) (ca offset);
+BP - pointeaza octetul urmator ultimului octet din ultima inreg. incarcata
+      (ca offset) (e important la subrutine);
+
+ Instructiunea "push operand" (unde "operand" este word) efectueaza:
+    SP := SP-2           (decrementeaza SP cu 2)
+    SS:[SP] := operand   (pune operandul la adresa SS:SP)
+
+ Instructiunea "pop operand" (unde "operand" este word) efectueaza:
+    operand := SS:[SP]   (pune in operand wordul de la adresa SS:SP)
+    SP :=SP+2            (incremeteaza SP cu 2)
+
+ Caracteristici:
+ - operandul poate fi indicat ca la "mov" (imediat, bazat, ...)
+ - nu merge "pop cs" (desi merge "push CS") (CS poate fi incarcat din stiva
+    doar prin returul dintr-o subrutina in context far)
+
+ Obs.: Faptul ca stiva creste spre adrese mici face ca SP sa pointeze mereu
+inceputul ultimei date incarcate, nu sfarsitul ei, ceea ce permite o citire 
+naturala a acesteia.
+
+Exemplul 3:
+===========
+
+.model small
+.stack         ;stiva de 512 octeti
+.data
+alpha db 01h, 02h, 03h         ;alpha: 01h 02h 03h
+beta  dw 050Ah, 060Bh, 070Ch   ;beta:  0Ah 05H 0Bh 06h 0Ch 07H
+.code
+start:
+  ;nu sunt necesare "assume" (cele facute implicit sunt OK)
+mov ax,@stack  ;se rezolva la executie                 
+mov ss,ax      ; cs este initializat de sistemul de operare
+mov ax,@data   ;
+mov ds,ax      ;
+push beta            ;                [SP]: 0Ah 05h
+push word ptr alpha  ;        [SP]: 01h 02h 0Ah 05h
+push beta+2          ;[SP]: 0Bh 06h 01h 02h 0Ah 05h
+pop  ax              ;        [SP]: 01h 02h 0Ah 05h;AX: 060Bh (little endian)
+pop  ax              ;                [SP]: 0Ah 05h;AX: 0201h (little endian)
+pop word ptr alpha   ;stiva vida; alpha: 0Ah 05h 03h
+mov ah, 4ch    ;redam controlul sistemului DOS;
+int 21h      
+end start
+
+Comentarii:
+- cand rulam exemplul de mai sus cu TD, in fereastra Watches vom introduce:
+ [byte ptr sp]       (sau ss:[byte ptr sp])
+ [byte ptr sp+1]
+ [byte ptr sp+2]
+ [byte ptr sp+3]
+ [byte ptr sp+4]
+ [byte ptr sp+5]
+ [alpha]
+ [alpha+1]
+ [alpha+2]
+
+Atentie ca daca facem multe "push" iesim din zona alocata stivei si intram in
+ alte zone - de ex. in cea de cod, caz in care programul poate pica.
+
+Exemplul 4: interschimbarea valorilor a doi registrii folosind stiva
+===========   (la rularea cu TD vom urmari registri):
+
+.model small
+.stack
+.code
+start:
+  mov ax,@stack
+  mov ss,ax
+  mov ax,1
+  mov bx,2
+  push ax
+  push bx
+  pop ax
+  pop bx
+  mov ah, 4ch  ; redam controlul
+  int 21h      ;  sistemului DOS
+end start
+
+
+Alte instructiuni:
+ xchg opd1,opd2  ;interschimba continutul operanzilor; 
+                 ; operanzii trebuie sa fie de acelasi tip byte, word
+ lea reg,opd     ;incarca in registru offsetul operandului;"reg" are 16 biti;
+                 ; seamana cu "mov reg,offset opd"
+ lds reg,opd     ;"opd" e privit ca o adresa;
+                 ; se iau primii 4 octeti de la acea adresa si se privesc
+                 ; ei insisi ca fiind o adresa (little endian: primii doi
+                 ; offsetul, urmatorii 2 segmentul); primii 2 (offsetul)
+                 ; se incarca in "reg", urm. 2 (segmentul) se incarca in DS;
+                 ; "reg" are 16 biti
+ les reg,opd     ;ca lds, dar se incarca ES in loc de DS
+ lahf            ;copiaza in AH octetul low al reg. de flaguri 
+ sahf            ;copiaza in octetul low al reg. de flaguri pe AH
+ pushf           ;salveaza in stiva (push) registrul de flaguri
+ popf            ;incarca din stiva (pop) registrul de flaguri
+
+
+Exercitii (se vor rula cu TD):
+------------------------------
+
+I.1) (1 punct)
+ Program care interschimba doua variabile word initializate, folosind
+  o a treia variabila, neinitializata (nu se va folosi "xchg").
+
+I.2) (0.5 puncte)
+ Program care interschimba doua variabile word initializate, folosind
+  doi registri (nu se va folosi "xchg").
+
+I.3) (0.5 puncte)
+ Program care interschimba doua variabile word initializate, folosind
+  stiva (nu se va folosi "xchg").
+
+
+Bibliografie:
+~~~~~~~~~~~~~
+1. "Gavin's Guide to 80x86 Assembly",
+  Intrenet: http://www.redbrick.dcu.ie/~creech/assembly/asm.html
+2. "Microprocesoarele 8086/80286/80386 Programarea in limbaj de asamblare"
+  Irina Athanasiu, Alexandru Panoiu, ed. Teora, 1992
+3. "Limbaje si calculator"
+  Vlad Bazon, ed. Petrion
+4. "Programarea in assembler"
+  Dan Somnea, Teodor Vladut, ed. Tehnica, 1992
+
+
+DANIEL DRAGULICI
+octombrie, 2005
+actualizat: 18 octombrie 2005

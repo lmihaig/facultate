@@ -1,0 +1,824 @@
+Incursiune in Linux - Procese (completarea cursului tinut la tabla):
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Un proces poate genera procese copil (care fie vor rula in paralel cu
+parintele in mod indepemndent, fie parintele va astepta terminarea copiilor
+pentru a continua) sau se poate substitui pe sine cu un alt proces.
+
+ Pentru a genera un proces copil se foloseste apelul "fork()"; copilul va
+rula in continuare in paralel cu parintele, in mod independent de acesta;
+parintele insa poate astepta terminarea copilului (dupa care sa-si continue
+rularea) cu apelurile "wait()" sau "waitpid()".
+ Pentru substituirea procesului curent cu un alt proces se foloseste un
+apel "exec()" ("exec()" e un termen generic, sunt mai multe functii din
+aceasta familie - vom vedea mai tarziu); noul proces ia locul celui vechi
+in sistem, avand acelasi PID si acelasi proces parinte.
+
+ Atat la "fork()" cat si la "exec()" noul proces mosteneste multe dintre
+caracteristici (prioritatea, proprietarul real, o parte din tabela de
+descriptori, terminalul de control, directorul curent, environmentul, etc.).
+Ulterior, cand un copil ruleaza in paralel cu parintele (cazul "fork()")
+oricare dintre cele doua procese isi poate modifica caracteristicile fara sa
+le mai afecteze pe ale celuilalt. Detalii despre "fork()" si "exec()" - mai
+tarziu.
+
+ Intr-o instanta Linux exista un proces cu PID=0 care apare automat la
+boot-are, in rest orice alt proces a rezultat in urma unui apel "fork()"
+sau "exec()" si are un proces parinte.
+
+(*) Terminarea proceselor:
+--------------------------
+
+ Cand un proces se termina, parintele sau primeste:
+ - un semnal SIGCHLD ("sig child");
+ - codul de retur al copilului.
+
+ Un semnal (in particular SIGCHLD) este o entitate Linux de un tip special,
+care poarta ca singura informatie relevanta un cod numeric intreg (tipul
+semnalului); el poate fi trimis de la un proces catre alt proces (cu apelul
+"kill()") - de exemplu procesul P1 trimite procesului P2 un semnal 2, apoi un
+3, alt 2, alt 2, un 5, etc. Cand la un proces ajunge un semnal, acesta nu
+"cunoaste" decat tipul semnalului, nu si expeditorul (deoarece, asa cum am
+zis, semnalul poarta ca singura informatie relevanta codul reprezentand tipul
+sau) - de exemplu procesul P1 primeste (in ordine) un 2, un 3, alt 2, alt 2,
+un 7, fara a "sti" cine le-a trimis (poate fi un acelasi proces, procese
+diferite, sau chiar el insusi).
+
+ Cand la un proces ajunge un semnal, acesta isi intrerupe executia normala si
+executa o functie numita handler asociat tipului respectiv de semnalul (mai
+simplu: semnalului respectiv); apoi, daca handlerul nu a cerut altceva (de
+exemplu terminarea programului), programul se reia de unde a ramas:
+
+              proces
+              --------------------
+              |                  |      -----------------
+     2 ------>|..................|----->| handler pt. 2 |
+              |                  |      -----------------
+              |                  |
+              |                  |      -----------------
+     3 ------>|..................|----->| handler pt. 3 |
+              |                  |      -----------------
+              |                  |
+              |                  |      -----------------
+     2 ------>|..................|----->| handler pt. 2 |
+              |                  |      -----------------
+              |                  |
+              |                  |
+              |                  |
+              |                  |
+              |                  |      -----------------
+     2 ------>|..................|----->| handler pt. 2 |
+              |                  |      -----------------
+              |                  |
+              |                  |      -----------------
+     7 ------>|..................|----->| handler pt. 7 |
+              |                  |      -----------------
+              --------------------
+
+ Exista detalii care precizeaza comportamentul de mai sus; de exemplu,
+daca la primirea unui semnal procesul era in kernel mode (de exemplu executa
+un apel sistem), acesta nu se intrerupe ci semnalul ramane in asteptare (in
+pending) la proces pana cand el revine in user mode (executa din nou
+instructiuni obisnuite din program); cand procesul revine un user mode,
+trateaza mai intai semnalele venite intre timp si aflate in pending (le
+apeleaza handlerul), apoi isi continua executia in user mode. In exemplele
+noastre uzuale insa procesele isi petrec putin timp in kernel mode, asa ca
+este o buna aproximatie sa zicem ca atunci cand vine semnalul procesul se
+intrerupe si executa handlerul. Pentru detalii legate de comportamentul
+proceselor in raport cu semnalele a se vedea lectia "sn6d.txt".
+
+ Constatam ca primirea unui semnal provoaca un apel de functie, al carui
+loc nu a fost stabilit la design time si mentionat in codul programului ci
+decis la run time.
+
+ Pentru fiecare tip de semnal implementat in sistem exista cate un handler
+implicit; de regula, acesta ori cere terminarea procesului (semnal mortal)
+ori este de ignorare. Pentru majoritatea tipurilor de semnal putem insa
+instala un handler utilizator. In acest scop, declaram in program o functie
+cu o anumita signatura (sa aibe un singur parametru, de tip "int", si sa
+returneaze "void"), apoi o instalam ca handler pentru tip de semnal respectiv
+(folosind apelurile "signal()" sau "sigaction()"), iar in continuare
+de fiecare data cand la proces va veni un semnal de acel tip, procesul
+se va intrerupe ca mai inainte dar va executa functia noastra pe post de
+handler; in acelasi fel se poate reveni pentru tipul respectiv de semnal la
+handlerul implicit.
+
+              proces
+              --------------------
+              |void h(int n){...}|
+              |    .             |
+              |    .             |
+              |    .             |
+              |signal(2,h);      |
+              |    .             |
+              |    .             |
+              |    .             |      -----------------
+     2 ------>|..................|----->| h             |
+              |                  |      -----------------
+              |                  |
+              |                  |      -----------------
+     3 ------>|..................|----->| handler pt. 3 |
+              |                  |      -----------------
+              |                  |
+              |                  |      -----------------
+     2 ------>|..................|----->| h             |
+              |                  |      -----------------
+              |                  |
+              |                  |
+              |                  |
+              |                  |
+              |                  |      -----------------
+     2 ------>|..................|----->| h             |
+              |                  |      -----------------
+              |                  |
+              |                  |      -----------------
+     7 ------>|..................|----->| handler pt. 7 |
+              |                  |      -----------------
+              --------------------
+
+ Lucrurile se complica atunci cand un handler utilizator modifica niste date
+globale care influenteaza traseul ulterior al execuitei, deoarece traseul
+executiei va depinde de numarul semnalelor de tipul respectiv primite
+si de locul primirii lor, iar acestea nu sunt cunoscute la design time.
+De aceea, programele in care manevram explicit semnale si le asociem handlere
+utilizator sunt greu de scris, intrucat trebuie sa avem in vedere toate
+variantele si sa scriem programul a.i. sa se comporte corect indiferent cate
+semnale vor veni de fiecare tip si cand vor veni ele.
+
+Exemplu: ilustram doua cazuri de rulare a unui acelasi program:
+
+              proces
+              ---------------------
+              |int x=0;           | /* data globala */
+              |void h(int n){++x;}|
+              |    .              |
+              |    .              |
+              |    .              |
+              |signal(2,h);       |
+              |    .              |
+              |    .              |
+              |    .              |      -----------------
+     2 ------>|...................|----->| h: ++x        |
+              |                   |      -----------------
+              |                   |
+              |if(x==2)           | /* cond. falsa, x este 1 */
+              |  printf("a");     |
+              |else               |
+              |  printf("b");     |
+              |                   |
+              |                   |      -----------------
+     3 ------>|...................|----->| handler pt. 3 |
+              |                   |      -----------------
+              |                   |
+              |                   |      -----------------
+     2 ------>|...................|----->| h: ++x        |
+              |                   |      -----------------
+              |                   |
+              |if(x==2)           | /* cond. adevarata, x este 2 */
+              |  printf("x");     |
+              |else               |
+              |  printf("y");     |
+              ---------------------
+
+     per total, procesul afisaza: bx
+
+
+              proces
+              ---------------------
+              |int x=0;           | /* data globala */
+              |void h(int n){++x;}|
+              |    .              |
+              |    .              |
+              |    .              |
+              |signal(2,h);       |
+              |    .              |
+              |    .              |
+              |    .              |      -----------------
+     2 ------>|...................|----->| h: ++x        |
+              |                   |      -----------------
+              |                   |
+              |                   |      -----------------
+     2 ------>|...................|----->| h: ++x        |
+              |                   |      -----------------
+              |                   |
+              |if(x==2)           | /* cond. adevarata, x este 2 */
+              |  printf("a");     |
+              |else               |
+              |  printf("b");     |
+              |                   |
+              |                   |      -----------------
+     3 ------>|...................|----->| handler pt. 3 |
+              |                   |      -----------------
+              |                   |
+              |                   |      -----------------
+     2 ------>|...................|----->| h: ++x        |
+              |                   |      -----------------
+              |                   |
+              |if(x==2)           | /* cond. falsa, x este 3 */
+              |  printf("x");     |
+              |else               |
+              |  printf("y");     |
+              ---------------------
+
+     per total, procesul afisaza: ay
+
+ Semnalul SIGCHLD are ca handler implicit unul de ignorare, dar i se poate
+asocia un handler utilizator (care de exemplu sa incrementeze un contor
+global de fiecare data cand procesului curent i se mai termina un copil).
+
+ Codul de retur este un intreg pus la dispozitia parintelui sau de catre
+procesul care se termina. El poate fi ales de programator si specificat in
+program ca valoare returnata de "main()" sau ca parametru al functiei
+"exit()". Conventia uzuala este sa se returneze 0 daca totul a fost OK si
+ceva nenul altfel (iar valoarea nenula sa indice si eroarea aparuta):
+
+ #include<stdlib.h>
+ int main(){
+
+   if(...){... exit(2);} /* esec */
+
+   if(...){... exit(0);} /* succes */
+
+   if(...) return 1;     /* esec */
+
+   return 0;             /* succes */
+ }
+
+ Daca declaram "void main(){...}" si nu returnam ceva explicit, la run
+time, cand procesul se va termina, va furniza parintelui un cod implicit
+(furnizarea codului de retur tine de mecanismele Linux, nu poate fi
+impiedicata prin programul utilizator); deci, un program "void main(){...}"
+este nenatural dar nu imposibil de executat - de aceea la compilarea lui cu
+"gcc" se va semnala warning si nu error.
+ Notam de asemenea ca parintele preia codul de retur al copilului ca un
+"unsigned char"- deci daca in copil returnam -1, parintele va prelua 255;
+de aceea recomandam returnarea de valori in intervalul 0, ..., 255.
+
+ Despre functia "exit()" (pentru care trebuie inclus "stdlib.h") se spune
+ca este modul cel mai curat de a incheia fortat un proces, intrucat se
+dezaloca corect toate resursele ocupate de acesta. Ea ne permite sa terminam
+procesul si in alte puncte decat in "main()" (unde putem folosi in acelasi
+scop si "return"-ul).
+
+ Codul de retur al unui proces terminat este preluat de parintele sau atunci
+cand "vrea" - cand executa un apel "wait()" sau "waitpid()"; pana atunci
+copilul este in starea "zombi" - mai exact, el este inca in evidentele
+sistemului, blocul sau de control (sau referinta la el) se afla inca in coada
+de planificare la executie si nu contine ca informatie relevanta decat codul
+de retur, iar cand ii vine randul la executie nu se executa nimic:
+
+
+                                 ------------
+                    ------------>| procesor |-------------
+                    |            ------------            |
+                    |                                    |
+                    |  -------------------------------   |
+                    ---|    |    | CR |    |    |    |<---
+                       -------------------------------
+
+ In momentul cand parintele executa un apel "wait()" sau "waitpid()" (cu
+parametri adecvati), acest apel realizeaza doua lucruri: pe de-o parte
+livreaza parintelui (printr-un parametru de iesire) codul de retur al
+copilului, pe de alta parte elimina zombi-ul din sistem.
+
+ Apelul "wait()" este mai simplist, in timp ce "waitpid()" ne permite sa
+specificam un comportament mai variat. De exemplu "waitpid()" poate fi
+blocant (daca toti copii apelantului sunt activi, acesta asteapta pana cand
+unul (oarecare sau anume) devine zombi) sau neblocant (apelantul nu asteapta
+niciodata - daca la momentul respectiv totii copii sai sunt activi, apelul
+returneaza imediat 0 iar apelantul ruleaza mai departe); functionarea in mod
+blocant este implicita, pentru cea in mod neblocant trebuie folosit
+parametrul "WNOHANG". Mentionam ca "waitpid()" ne permite sa testam si copii
+suspendati, nu numai pe cei terminati.
+
+ Pentru detalii despre terminarea proceselor si apelurile "wait()",
+"waitpid()", a se vedea lectia "dfwseet.txt".
+
+ Retinem ca la terminarea unui proces, parintele sau primeste un semnal
+SIGCHLD si codul de retur al copilului; parintele trateaza SIGCHLD atunci
+cand vine (se intrerupe si executa handlerul asociat) si codul de retur
+atunci cand "vrea" (cand executa un apel "wait()" sau "waitpid()", cu
+parametri adecvati) - pana atunci copilul este in starea zombi.
+
+ Se pune intrebarea ce se intampla daca parintele nu face niciodata "wait()"
+sau "waitpid()", sau se termina inaintea copilului - atunci dupa terminarea
+sa copilul va ramane permanent in sistem ca zombi ? Raspunsul va fi dat mai
+jos.
+
+(*) Duplicarea si substituirea proceselor (Mecanismele "fork()", "exec()"):
+---------------------------------------------------------------------------
+
+ Reamintim:
+ - cu apelul "fork()" se genereaza un proces copil, care apoi ruleaza in
+  paralel si in mod independent cu parintele;
+ - cu un apel "exec()" (sunt mai multe din aceasta familie) se substituie
+  procesul curent cu un altul, care ii ia locul in sistem, preluand acelasi
+  PID si acelasi parinte.
+ Atat la "fork()" cat si la "exec()" se transmit prin mostenire mai multe
+caracteristici catre noul proces (proprietarul real, terminalul de control,
+o parte a tabelei de descriptori, etc.).
+ Intr-o instanta Linux exista un proces cu PID=0 care apare automat la
+boot-are, in rest orice alt proces a rezultat in urma unui apel "fork()"
+sau "exec()" si are un proces parinte.
+
+ Asadar mecanismul "fork()"/"exec()" este instrumentul prin care cream
+procese noi; in continuare vom explica in detaliu acest mecanism (apelurile
+"fork()", "exec()") ilustrand-ul in cazul executarii comenzilor externe de
+catre un shell.
+
+ Shell-ul (interpretorul de comenzi) este un program care executa un ciclu
+infinit, unde la fiecare iteratie afisaza un prompter, citeste o linie de
+comanda si apoi o executa; unele comenzi sunt executate chiar de shell
+(prin propriile sale instructiuni) si acelea s.n. comenzi interne, altele
+sunt numele unor fisiere executabile pe care shell-ul le lanseaza ca procese
+fiu (folosind "fork()"/"exec()") si acelea s.n. comenzi externe.
+ Shell-ul are (ca orice proces) un proprietar real si unul efectiv (care in
+principiu sunt user-ul care s-a logat), un terminal de control (unde
+afisaza prompterul si citeste linile de comanda), un director curent
+(la care isi raporteaza caile relative scrise in comenzi) si o tabela de
+descriptori, in care cei standard (0 = stdin, 1 = stdout, 2 = stderr) sunt
+pe terminalul de control. Prompterul este afisat la terminal prin stdout (cu
+apeluri gen "write(1,...)", "puts()" sau "printf()") iar liniile de comanda
+sunt citite de la terminal prin stdin (cu functii gen "read(0,...)",
+"gets()" sau "scanf()").
+ Putem da o comanda externa "normal", si atunci procesul copil rezultat va
+mosteni terminalul de control si descriptorii standard pe el, deci cand
+programul respectiv va executa "scanf()"/"printf()" va citi/scrie pe
+terminal, sau putem da comanda specificand o redirectare spre fisiere si
+atunci shell-ul isi va redirecta mai intai descriptorii standard spre
+fisierele respective si apoi va lansa noul proces, a.i. acesta va mosteni
+descriptorii redirectati - deci, cand programul respectiv va executa
+"scanf()"/"printf()" va citi/scrie in fisiere. De asemenea, putem da
+comenzile specificand redirectari spre procese (comenzi filtru) - detalii
+la laborator.
+
+ Pentru ilustrarea mecanismelor de mai sus vom considera cazul comenzii
+externe "echo", care primeste un numar oarecare de cuvinte ca argumente in
+linia de comanda si le afisaza pe stdout, separate prin blank-uri si avand
+la sfarsit un cap de linie.
+ Intr-o forma simplificata, programul "echo" arata astfel:
+
+#include<stdio.h>
+int main(){
+  int i;
+  for(i=1; i<argc; ++i) printf("%s ",argv[i]);
+  printf("\n");
+  return 0;
+}
+
+(utilitarul real "echo" este mai complex - de exemplu admite si optiunea
+"-en" cu care nu mai emite capul de linie din final).
+
+ Daca "$" este prompterul shell, o rulare "normala" poate arata astfel:
+
+$echo abc
+abc
+$
+
+(am dat comanda "echo" cu argumentul "abc" si a afisat pe ecran "abc",
+trecand apoi la linie noua). Putem da insa comanda specificand o redirectare:
+
+$echo abc > f
+$ls
+f
+$cat f
+abc
+$
+
+(la introducerea liniei de comanda "echo abc > f" nu s-a mai afisat nimic
+pe ecran, am obtinut direct prompterul "$", apoi cu comanda "ls" am vazut
+ca in directorul curent avem fiserul "f", si afisand acest fisier cu "cat f"
+am vazut ca el contine "abc" (si un cap de linie) - deci comanda
+"echo abc > f" a scris "abc" in fisiserul "f").
+
+ Pentru o mai buna intelegere a mecanismului prin care shell-ul e executat
+cele doua comenzi "echo", il vom ilustra pas cu pas:
+
+                            sh:                 sh.c
+                            -----------------  -------------------------------
+                            |               |  |char ldc[1000];              |
+             -------------  ||comanda     | |  |while(1){                    |
+             |           |  |-------------- |  |  puts("$");                 |
+Terminal:    V      BCP  |  |ldc            |  |  gets(ldc);                 |
+----------------    ---  |  -----------------  |  parsare(ldc);              |
+|$comanda      |    |TC---    |                |  if(interna(ldc)){          |
+|$             |    |SA--------                |    ... /* com. interna */   |
+|              |    |FE------------------------|  else{                      |
+|              |    |        0 1 2 3 4 5       |    ... /* com. externa */   |
+|              |    |       -------------      |  }                          |
+----------------    |TD-----||||||| | | |      |}                            |
+         ^ ^ ^      ---     -|-|-|-------      -------------------------------
+         | | |               | | |
+         | | ----------------- | |
+         | --------------------- |
+         -------------------------
+
+Comentarii: conceptual, procesul shell (sh) detine in blocul de control (BCP):
+ - o referinta catre terminalul sau de control (TC);
+ - o referinta catre spatiul sau de adrese (SA);
+ - o referinta care programul (fisierul) executat de shell (FE); in desen am
+  reprezentat sursa corespunzatoare, in pseudocod (sh.c);
+ - o tabela de descriptori (TD), in care descriptorii standard 0, 1, 2 sunt
+ directati catre TC;
+ - alte informatii;
+In programul shell (sh.c) este declarat un buffer (ldc), alocat in SA, in care
+este citita linia de comanda curenta; shell-ul executa un ciclu infinit, unde
+la fiecare iteratie afisaza un prompter (la terminal, prin stdout), citeste o
+linie de comanda (de la terminal, prin stdin) si apoi o executa.
+
+ Daca dam comanda "echo abc", shell-ul intra pe "else", unde trebuie sa
+lanseze un proces nou. In acest scop, efectueaza mai intai "fork()".
+
+ Efectul lui "fork()" consta in urmatoarele:
+ - procesul apelant (in cazul nostru sh) se duplica; noul proces este copil
+  al primului; in continuare procesele parinte si copil ruleaza in paralel,
+  in mod independent;
+ - copilul executa acelasi program ca parintele, punctul de plecare fiind
+  iesirea din "fork()", si primeste o copie a SA al parintelui din momentul
+  iesirii din "fork()" (deci o copie a datelor parintelui cu valorile din
+  momentul iesirii din "fork()"); notam ca la inceputul rularii datele
+  copilului sunt consistente cu punctul din program unde se afla cu executia;
+  in particular, copilul primeste o copie a liniei de comanda citite de
+  parinte ("echo abc");
+ - copilul mosteneste aproape toate caracteristicile parintelui, incluzand
+  prioritatea, proprietarul real si efectiv, tabela de descriptori, terminalul
+  de control, directorul curent, environment-ul.
+ - intrucat ambele procese executa acelasi cod si se afla la un moment dat
+  cu executia la iesire din "fork()" avand si aceleasi date, pentru ambele se
+  pune problema valorii returnate de "fork()" (insa numai parintele a executat
+  cu adevarat "fork()"-ul, copilul a aparut intr-o stare ca si cum l-ar fi
+  executat); aici este singura diferenta intre situatia parintelui si cea a
+  copilului: "fork()" returneaza in parinte PID-ul copilului (numar nenul),
+  iar in copil 0; deci, daca in unicul program pe care il executa ambele
+  procese "fork()" este pus la conditia unui "if", in continuare parintele o
+  va lua pe o ramura, copilul pe alta, si astfel putem face ca procesele sa
+  execute ulterior lucruri diferite.
+  
+ In cazul nostru, pe ramura "else" care desemneaza cazul comenzilor externe
+vom avea "if(fork())"; prin "fork()" procesul shell se duplica generandu-si un
+copil care este tot shell - el executa tot "sh.c", incepand de la iesirea din
+"fork()"; noul shell mosteneste o copie a datelor parintelui de la momentul
+iesirii din "fork()", in particular o copie a liniei de comanda citite
+inainte "echo abc"; de asemenea, copilul mosteneste o referinta la acelasi
+TC si o copie a TD, unde descriptorii standard sunt tot pe acest terminal; in
+continuare parintele o va lua pe ramura "then" a lui "if(fork())" iar copilul
+pe ramura "else"; parintele va intra intr-un "wait()" sau "waitpid()" blocant,
+asteptand sa se termine copilul, dupa care va relua ciclul "wile(1)":
+
+                            sh (parinte):      sh.c
+                            -----------------  -------------------------------
+                            |               |  |char ldc[1000];              |
+             -------------  ||echo abc    | |  |while(1){                    |
+             |           |  |-------------- |  |  puts("$");                 |
+Terminal:    V      BCP  |  |ldc            |  |  gets(ldc);                 |
+----------------    ---  |  -----------------  |  parsare(ldc);              |
+|$echo abc     |    |TC---    |                |  if(interna(ldc)){          |
+|              |    |SA--------                |    ... /* com. interna */   |
+|              |    |FE------------------------|  else if(fork()){ /*tata*/  |
+|              |    |        0 1 2 3 4 5       |         wait_blocant();     |
+|              |    |       -------------    --|       }else{      /*fiu*/   |
+----------------    |TD-----||||||| | | |    | |               ...           |
+ ^ ^ ^ ^ ^ ^ ^      ---     -|-|-|-------    | |       }                     |
+ | | | | | | |               | | |           | |}                            |
+ | | | | | | ----------------- | |           | -------------------------------
+ | | | | | --------------------- |           |
+ | | | | -------------------------           |
+ | | | |                                     |
+ | | | |                    sh (copil):      |
+ | | | |                    -----------------|
+ | | | |                    |               ||
+ | | | |                    ||echo abc    | ||
+ | | | -------------------  |-------------- ||
+ | | |              BCP  |  |ldc            ||
+ | | |              ---  |  -----------------|
+ | | |              |TC---    |              |
+ | | |              |SA--------              |
+ | | |              |FE-----------------------
+ | | |              |        0 1 2 3 4 5 
+ | | |              |       -------------
+ | | |              |TD-----||||||| | | |
+ | | |              ---     -|-|-|-------
+ | | ------------------------- | |
+ | ----------------------------- |
+ ---------------------------------
+
+ Shell-ul copil, care primeste copii ale informatiilor achizitionate de
+parinte inainte de "fork()" (in particular o copie a liniei de comanda
+citite si rezultatele parsarii ei), mai prelucreaza eventual aceste informatii
+si-si face anumite setari, apoi se inlocuieste printr-un apel "exec()" cu un
+proces care executa linia de comanda; noul proces ia locul shell-ului fiu in
+sistem, devenind copilul shell-ului parinte, a.i. la terminarea lui shall-ul
+parinte va iesi din "wait()"/"wait_pid()"-ul blocant si va relua ciclul
+"while(1)".
+
+ Efectul unui apel din familia "exec()" consta in urmatoarele:
+ - procesul curent se inlocuieste cu altul, care ii ia locul in sistem,
+  preluand acelasi PID si acelasi parinte;
+ - noul proces ruleaza un fisier dat ca parametru la "exec()", cu niste
+  argumente in linia de comanda si un environment date de asemenea ca
+  parametri, iar noul program este rulat de la inceput (astfel, nu se pune
+  problema mostenirii datelor);
+ - noul proces mosteneste multe caracteristici, incluzand prioritatea,
+  proprietarul real (nu si cel efectiv, acesta depinde de bitul SETUID al
+  fisierului executat), o parte din tabela de descriptori (cu exceptia celor
+  setati special sa se inchida la "exec()"), terminalul de control, directorul
+  curent, nu si environment-ul (se transmite ca environment unul dat explicit
+  ca parametru la "exec()");
+ - dintr-un "exec()" reusit nu exista return, deoare procesul apelant nu mai
+  exista; daca apelul esueaza (de exemplu fisierul dat ca parametru nu exista
+  sau apelantul nu are drept de executia pe el), returneaza -1.
+
+ In cazul nostru, shell-ul copil dupa ce va mai face niste prelucrari/setari
+legate de comanda primita ("prelucrare(ldc)"), va face un apel "exec()" prin
+care se va substitui cu un proces ce executa comanda indicata in linia de
+comanda cu argumentele indicate tot acolo (in exemplul nostru, "echo" cu
+argumentul in linia de comanda "abc" - el va fi accesat din programul "echo"
+cu "argv[1]"), apoi se va incheia cu "return"; in cazul unui "exec()" reusit
+nu se va ajunge la acel "return" - el este doar o masura de siguranta, a.i.
+daca "exec()" esueaza shell-ul copil sa se termine oricum, nu sa efectueze el
+o alta iteratie in "while(1)"; codul "sh.c" completat si situatia dupa
+"exec()" sunt ilustrate mai jos:
+
+                            sh (parinte):      sh.c
+                            -----------------  -------------------------------
+                            |               |  |char ldc[1000];              |
+             -------------  ||echo abc    | |  |while(1){                    |
+             |           |  |-------------- |  |  puts("$");                 |
+Terminal:    V      BCP  |  |ldc            |  |  gets(ldc);                 |
+----------------    ---  |  -----------------  |  parsare(ldc);              |
+|$echo abc     |    |TC---    |                |  if(interna(ldc)){          |
+|abc           |    |SA--------                |    ... /* com. interna */   |
+|$             |    |FE------------------------|  else if(fork()){ /*tata*/  |
+|              |    |        0 1 2 3 4 5       |         wait_blocant();     |
+|              |    |       -------------      |       }else{      /*fiu*/   |
+----------------    |TD-----||||||| | | |      |         prelucrare(ldc);    |
+ ^ ^ ^ ^ ^ ^ ^      ---     -|-|-|-------      |         exec(ldc);          |
+ | | | | | | |               | | |             |         return 1;           |
+ | | | | | | ----------------- | |             |       }                     |
+ | | | | | --------------------- |             |}                            |
+ | | | | -------------------------             -------------------------------
+ | | | |                                      
+ | | | |                    echo:              echo.c
+ | | | |                    -----------------  -------------------------------
+ | | | |                    |               |  |#include<stdio.h>            |
+ | | | |                    ||abc  | | 1  | |  |int main(int argc,           |
+ | | | -------------------  |------- ------ |  |         char *argv[]){      |
+ | | |              BCP  |  |argv[1]  argc  |  |  int i;                     |
+ | | |              ---  |  -----------------  |  for(i=1; i<argc; ++i)      |
+ | | |              |TC---    |                |    printf("%s ",argv[i]);   |
+ | | |              |SA--------                |  printf("\n");              |
+ | | |              |FE------------------------|  return 0;                  |
+ | | |              |        0 1 2 3 4 5       |}                            |
+ | | |              |       -------------      -------------------------------
+ | | |              |TD-----||||||| | | |
+ | | |              ---     -|-|-|-------
+ | | ------------------------- | |
+ | ----------------------------- |
+ ---------------------------------
+
+ Intrucat procesul "echo" a mostenit acelasi TC ca si shell-ul parinte si
+descriptorul 1 pe el, cand afisaza argv[1] prin stdout, sirul "abc" apare
+pe ecranul unde am dat comanda.
+
+ Daca dam comanda "echo abc > f", evolutia este similara pana cand shell-ul
+copil ajunge la "prelucrare(ldc)"; in acest moment, detectand prezenta in
+"ldc" a caracterului special ">", shell-ul copil isi redirecteaza stdout spre
+fisierul "f" (pe care, daca nu exista, il creaza cu aceasta ocazie), apoi se
+substituie prin "exec()" cu procesul "echo", caruia ii transmte ca argument
+in linia de comanda tot pe "abc"; codul efectuat de "prelucrare(ldc)" ar putea
+fi urmatorul:
+
+  int d;
+  d=open(fisier,O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+  close(1);
+  dup(d);
+  close(d);
+
+(cu "open()" se deschide fisierul "fisier" aparut in "ldc" dupa ">" (in cazul
+nostru "f") in (supra)scriere, creandu-l, daca nu exista, cu drepturi de
+citire si scriere pentru proprietar (ele se mai combina si cu masca de
+drepturi a procesului), si achizitionad spre el un descriptor nou, salvat in
+"d", apoi se inchide cu "close()" stdout, apoi cu "dup()" se redirecteaza
+primul descriptor liber (care acume este 1) spre aceeasi tinta ca descriptorul
+"d" (adica spre "f"), apoi se inchide descriptorul "d" (nu mai avem nevoie de
+el, deoarece avem spre "f" descriptorul 1) - in final procesul are 1=stdout
+spre "f").
+ Situatia dupa "prelucrare(ldc)" este ilustrata mai jos:
+
+                            sh (parinte):      sh.c
+                            -----------------  -------------------------------
+                            |               |  |char ldc[1000];              |
+             -------------  ||echo abc > f| |  |while(1){                    |
+             |           |  |-------------- |  |  puts("$");                 |
+Terminal:    V      BCP  |  |ldc            |  |  gets(ldc);                 |
+----------------    ---  |  -----------------  |  parsare(ldc);              |
+|$echo abc > f |    |TC---    |                |  if(interna(ldc)){          |
+|              |    |SA--------                |    ... /* com. interna */   |
+|              |    |FE------------------------|  else if(fork()){ /*tata*/  |
+|              |    |        0 1 2 3 4 5       |         wait_blocant();     |
+|              |    |       -------------    --|       }else{      /*fiu*/   |
+----------------    |TD-----||||||| | | |    | |         prelucrare(ldc);    |
+ ^   ^ ^ ^ ^ ^      ---     -|-|-|-------    | |         exec(ldc);          |
+ |   | | | | |               | | |           | |         return 1;           |
+ |   | | | | ----------------- | |           | |       }                     |
+ |   | | | --------------------- |           | |}                            |
+ |   | | -------------------------           | -------------------------------
+ |   | |                                     |
+ |   | |                    sh (copil):      |
+ |   | |                    -----------------|
+ |   | |                    |               ||
+ |   | |                    ||echo abc > f| ||
+ |   | -------------------  |-------------- ||
+ |   |              BCP  |  |ldc            ||
+ |   |              ---  |  -----------------|
+ |   |              |TC---    |              |
+ |   |              |SA--------              |
+ |   |              |FE-----------------------
+ |   |              |        0 1 2 3 4 5 
+ |   |              |       -------------
+ |   |              |TD-----||||||| | | |
+ |   |              ---     -|-|-|-------
+ |   ------------------------- | |
+ |                             | |
+ ------------------------------|--
+                               |
+                               V
+                            -------
+                            |     | f
+                            -------
+
+ In urma lui "exec(ldc)", procesul "echo" mosteneste acelasi TC, dar o TD unde
+stdout este redirectat spre fisierul "f"; atunci, cu acelasi "printf()", el
+scrie "abc" in "f"; situatia finala este ilustrata mai jos:
+
+                            sh (parinte):      sh.c
+                            -----------------  -------------------------------
+                            |               |  |char ldc[1000];              |
+             -------------  ||echo abc > f| |  |while(1){                    |
+             |           |  |-------------- |  |  puts("$");                 |
+Terminal:    V      BCP  |  |ldc            |  |  gets(ldc);                 |
+----------------    ---  |  -----------------  |  parsare(ldc);              |
+|$echo abc > f |    |TC---    |                |  if(interna(ldc)){          |
+|$             |    |SA--------                |    ... /* com. interna */   |
+|              |    |FE------------------------|  else if(fork()){ /*tata*/  |
+|              |    |        0 1 2 3 4 5       |         wait_blocant();     |
+|              |    |       -------------      |       }else{      /*fiu*/   |
+----------------    |TD-----||||||| | | |      |         prelucrare(ldc);    |
+ ^   ^ ^ ^ ^ ^      ---     -|-|-|-------      |         exec(ldc);          |
+ |   | | | | |               | | |             |         return 1;           |
+ |   | | | | ----------------- | |             |       }                     |
+ |   | | | --------------------- |             |}                            |
+ |   | | -------------------------             -------------------------------
+ |   | |                                      
+ |   | |                    echo:              echo.c
+ |   | |                    -----------------  -------------------------------
+ |   | |                    |               |  |#include<stdio.h>            |
+ |   | |                    ||abc  | | 1  | |  |int main(int argc,           |
+ |   | -------------------  |------- ------ |  |         char *argv[]){      |
+ |   |              BCP  |  |argv[1]  argc  |  |  int i;                     |
+ |   |              ---  |  -----------------  |  for(i=1; i<argc; ++i)      |
+ |   |              |TC---    |                |    printf("%s ",argv[i]);   |
+ |   |              |SA--------                |  printf("\n");              |
+ |   |              |FE------------------------|  return 0;                  |
+ |   |              |        0 1 2 3 4 5       |}                            |
+ |   |              |       -------------      -------------------------------
+ |   |              |TD-----||||||| | | |
+ |   |              ---     -|-|-|-------
+ |   ------------------------- | |
+ |                             | |
+ ------------------------------|--
+                               |
+                               V
+                            -------
+                            |abc  | f
+                            -------
+
+ Constatam ca efectul rularii lui "echo" difera, dar modificarea nu s-a facut
+in programul "echo" (el executa tot "printf()", scrie tot pe ce "stie" el ca
+este stdout), ci in exteriorul acestui proces: sistemul l-a lansat cu niste
+setari asupra carora programul "echo" n-a mai avut nici o putetre (s-au
+stabilit la run time).
+ De aceea nu este corect sa spunem ca definitie ca "scanf()" citeste de la
+tastatura iar "printf()" scrie pe ecran; corect este: "scanf()" citeste de la
+stdin, "printf()" scrie la stdout; de regula acestea sunt terminalul (pentru
+ca de regula dam comanda "normal", fara a specifica redirectari in linia de
+comanda), dar pot fi si fisiere (daca specificam in linia de comanda
+redirectari spre fisiere) sau procese (in cazul comenzilor filtru).
+
+ Mai notam ca in mecanismul executarii comenzilo externe "fork()" este necesar
+pentru a pastra o copie shell la care sa revenim dupa terminarea comenzii -
+daca shell-ul initial ar fi facut direct "exec()", el s-ar fi substituit cu
+comanda, iar la termiarea ei n-am mai fi avut un shell la care as revenim.
+
+ Pentru alte detalii despre mecanismul "fork()"/"exec()" a se vedea lectia
+"dfwseet.txt".
+
+(*) Arborescenta proceselor:
+----------------------------
+
+ Intr-o instanta Linux, procesele, organizate dupa relatia parinte-copil
+formeaza o arborescenta; o parte din arborescenta este standard (o regasim
+in orice instanta Linux), alta este specifica unei anumite situatii (de
+exemplu apare ca urmare a unor comenzi de la utilizator). In cele ce urmeaza
+vom comenta partea standard (asa cum apare ea intr-un sistem Unix clasic):
+
+                                   0
+                                   |
+                                   V
+                                   1 (init)
+                                  / \
+                                 /   \
+                                /     \
+                               V       V
+                             getty    getty
+
+ Exista un proces cu PID=0 care apare automat la boot-are, in rest orice alt
+proces a rezultat in urma unui apel "fork()" sau "exec()" si are un proces
+parinte; procesul 0 este atipic (nu i se aplica aceleasi reguli/mecanisme ca
+in cazul proceselor obisnuite); pe unele versiuni de Unix se ocupa cu
+planificarea la executie.
+ Procesul 0 genereaza un copil cu PID=1, care se mai numeste procesul "init";
+el ere doua roluri importante: unul legat de logari, altul legat de zombi.
+
+ Rolul lui "init" legat de logari:
+ - supravegheaza terminalele definite in sistem si unde nu s-a logat nimeni
+  lanseaza un proces "getty" care cere cont si parola;
+ - in momentul cand cineva se logheaza (dand un cont si o parola), procesul
+  "getty" de la terminalul respectiv afla restul informatiilor despre acel
+  user consultand "/etc/passwd" cu un apel de tip "getpwnam()", in particular
+  afla directorul sau home si login shell-ul sau; apoi "getrty" efectueaza 
+  urmatoarele (nu neaparat doar atat si nu neaparat in ordinea aceasta):
+    * isi schimba proprietarul real si efectiv din ce era, adica "root",
+     in user-ul indicat (de exemplu "guest"), cu apeluri de tip "setuid()",
+     "seteuid()" (pentru securitate, proprietarii se pot schimba doar daca
+     initial erau "root");
+    * isi schimba directorul curent in directorul home al user-ului indicat
+     (de exemplu "/home/guest"), cu un apel de tip "chdir()";
+    * se substituie printr-un apel "exec()" cu un proces ce executa
+     login-shell-ul user-ului indicat (de exemplu "/bin/bash") si care devine
+     copilul lui "init" in locul lui;
+ - ca urmare, utilizatorul obtine un proces shell care:
+    * mosteneste de la "getty" terminalul de control, de aceea in continuare
+     va da comenzi de la acelasi terminal unde s-a logat;
+    * mosteneste de la "getty" proprietarul real, dar acesta si l-a schimbat
+     in prealabil in utilizatorul logat - deci proprietarul real al shell-ului
+     este utilizatorul logat; proprietarul efectiv este tot el, deoarece
+     shell-ul are SETUID=0;
+    * mosteneste de la "getty" directorul curent, dar acesta si l-a schimbat
+     in prealabil in directorul home al user-ului logat - de aceea la logare
+     primul nostru director curent este directorul nostru home;
+    * ruleaza login-shell-ul user-ului logat.
+ - in continuare, shell-ului i se dau comenzi; unele sunt interne (shell-ul le
+  executa prin propriile sale instructiuni), altele sunt externe (shell-ul
+  lanseaza niste programe ca procese fiu, prin mecanismul "fork()"/"exec()",
+  si acestea executa activitatea); se pot lansa mai multi copii in paralel,
+  acestia pot lansa alti copii; se poate lansa un shell din shell (cu comanda
+  "sh"); shell-ul poate fi terminat cu comanda "exit";
+ - daca terminam shell-ul primit la logare (cu conada "exit"), "init"
+  detecteaza acest lucru si lanseaza un nou "getty" la acel terminal, care
+  cere cont si parola.
+ Cele spuse sunt ilustrate mai jos:
+
+
+                                   0
+                                   |
+                                   V
+                                   1 (init)
+                                  / \
+                                 /   \
+                                /     \
+                               V       V
+                              sh     getty
+                             / | \
+                            V  V  V
+                            P  P  sh
+                               |
+                               V
+                               P
+
+ Mentionam ca arborele standard descris mai sus a fost descris asa cum apare
+el intr-un sistem Unix clasic, sau in distributiile Linux instalate sumar,
+de exemplu fara modul grafic; daca este instalat si modul grafic, se mai pot
+interpune si alte procese (de exemplu legate de gestiunea interfetei grafice).
+
+ Rolul lui "init" legat de zombi este urmatorul: cand un proces se termina,
+copii lui (indiferent daca sunt activi sau zombi, dar parintele s-a terminat
+fara sa le consulte codul de retur cu "wait()"/"waitpid()") devin copiii lui
+"init"; acesta face periodic cate un "wait()" neblocant; astfel, cand capata
+un asemenea copil, daca acesta este inca activ, "wait()"-urile care vin la
+rand nu-i fac nimic (si nici nu pun pe "init" in asteptare), iar cand acesta
+devine zombi (sau daca i-a parvenit de la inceput in starea zombi) primul
+"wait()" care il prinde in aceasta stare furnizeaza lui "init" codul de retur
+("init" il ignora, nu are ce sa faca cu el) si (ceea ce este important)
+elimina zombi-ul. Astfel dispar zombii neeliminati de parintii lor adevarati.
+
+ In final mai notam urmatoarele: asa cum am vazut, procesele din sistem
+sunt organizate intr-o o arborescenta dupa relatia parinte-copil; ele ruleaza
+fisiere organizate intr-o arborescenta dupa relatia de apartenenta intr-un
+director; cele doua arborescente insa nu au nici o legatura intre ele - de
+exemplu este posibil ca doua procese cu acelasi parinte sa ruleze fisiere ce
+nu figureaza in acelasi director.
+
+
+Daniel Dragulici
+martie 2010

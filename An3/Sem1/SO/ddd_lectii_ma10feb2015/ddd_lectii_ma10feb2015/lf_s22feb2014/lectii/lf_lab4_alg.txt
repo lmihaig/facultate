@@ -1,0 +1,580 @@
+     Limbaje formale, algoritmi limbaje regulate si independente de context
+     ======================================================================
+
+A.Definitii:
+------------
+
+In cele ce urmeaza notam cu & pe lambda (cuvantul vid).
+
+Gramatici regulate si independente de context:
+
+1.  GR: G = (VN, VT, S, P), unde:
+	 VN, VT multimi finite nevide disjuncte
+	     (neterminale, respectiv terminale)
+	 S apartine lui VN (simbolul de start)
+	 P inclus in VN x (VN U VT)*
+	 P contine doar perechi (productii) de forma:
+	       A -> bB
+	       A -> a
+	     unde A,B in VN, b in VT, a in VT U {&}
+
+2.  GIC: G = (VN, VT, S, P), unde:
+	 VN, VT, S, P ca mai sus
+	 P contine doar productii de forma:
+	       A -> x
+	     unde A in VN, x in (VN U VT)*
+
+3. Fie G = (VN, VT, S, P) o GR sau GIC.
+   Derivare:
+     x |-- y  (x,y in (VN U VT)*) daca:
+	      x=uAv, y=uzv, u,v in (VN U VT)* si (A,z) in P
+     fie |-*- inchiderea reflexiva si tranzitiva a lui |--
+     fie |-+- inchiderea tranzitiva a lui |--
+   Limbajul generat de G este:
+     L(G) = {x in VT* | S |-*- x}
+
+  Fie G = (VN, VT, S, P) o GIC cu L(G) nevid.
+   Q din VN U VT este inaccesibil daca nu exista o derivare
+     S |-*- xQy  (x,y in (VN U VT)*);
+   Q din VN U VT este neutilizat daca nu exista o derivare
+     S |-*- xQy |-*- xzy  (x,y,z in VT*);
+
+  Fie G = (VN, VT, S, P) o GIC.
+  O &-productie a lui G este o productie a sa de forma A -> &;
+  O redenumire a lui G este o productie a sa de forma A -> B, cu A,B in VN.
+  G este proprie daca este fara simboluri neutilizate, fara &-productii,
+    fara redenumiri.
+
+  Fie G = (VN, VT, S, P) o GIC a.i. not & in L(G).
+  Atunci G este in forma normala Chomsky (FNC) daca are doar productii
+   de forma A -> BC, A -> a, cu A,B,C in VN, a in VT;
+  pentru a acoperi si cazul cand & in L(G) uneori se adauga la definitie
+   si ca putem avea productia S -> &, dar atunci S nu va fi continut in
+   membrul drept al nici unei productii.
+
+  Fie G = (VN, VT, S, P) o GIC.
+  A in VN este recursiv imediat la stanga daca
+     exista w in (VN U VT)+ a.i. A |-- Aw;
+  A in VN este recursiv la stanga daca
+     exista w in (VN U VT)+ a.i. A |-+- Aw.
+
+  Fie G = (VN, VT, S, P) o GIC.
+  Atunci G este in forma normala Greibach (FNG) daca are doar productii
+   de forma A -> aw, cu A in VN, w in (VN U VT)*, a in VT;
+  se demonstreaza ca atunci ea este echivalenta cu un AS fara &-miscari.
+
+Automate stiva (automate push-down):
+
+4.  AS: A = (Q, V, W, d, q0, Z0, F), unde:
+       Q, V, W multimi finite nevide
+	 (stari, alfabet, respectiv alfabetul stivei)
+       q0 apartine lui Q (starea initiala)
+       Z0 apartine lui W (simbolul initial din stiva)
+       F inclusa in Q (stari finale)
+       d : Q x (V U {&}) x W ----> Pf(Q x W*) functie (functia de tranzitie)
+  Descriere instantanee:
+      (q, x, y), unde q in Q, x in V*, y in W*
+  Miscare:
+      (q, ax, Zy) |-- (p, x, y'y) <==> (p, y') in d(q, a, Z)
+	  (a in V U {&}, Z in W)
+      fie |-*- inchiderea reflexiva si tranzitiva a lui |--
+  Limbajul acceptat de A cu stiva vida:
+      L&(A) = {x in V* | (q0, x, Z0) |-*- (q, &, &) cu q oarecare}
+  Limbajul acceptat de A cu stare finala:
+      L(A) = {x in V* | (q0, x, Z0) |-*- (q, &, y) cu q in F}
+
+Automate finite:
+
+5.  AFD: A = (Q, V, d, q0, F), unde:
+         Q, V, F multimi finite nevide
+           (stari, alfabet, respectiv stari finale)
+         q0 apartine lui Q (starea initiala)
+         F inclusa in Q
+         d : Q x V --o--> Q functie partiala (functia de tranzitie)
+    Extindem d la d': Q x V* --o--> Q definita prin:
+	d'(q,&) = q
+        d'(q,xa) = d(d'(q,x),a)
+      (q in Q, x in V*, a in V)
+    Limbajul acceptat de A este urmatoarea submultime a lui V*:
+        L(A) = {x in V* | d'(q0,x) in F}
+
+6.  AFN: A = (Q, V, d, q0, F), unde:
+         Q, V, q0, F ca mai sus
+         d : Q x V ----> P(Q) functie (functia de tranzitie)
+    Extindem d la d': Q x V* ----> P(Q) definita prin:
+        d'(q,&) = {q}
+        d'(q,xa) = {p in Q | exista r in d'(q,x) a.i. p in d(r,a))
+                   (adica reuniunea multimilor d(r,a) pentru r in d'(q,x))
+      (q in Q, x in V*, a in V)
+    Limbajul acceptat de A este urmatoarea submultime a lui V*:
+        L(A) = {x in V* | d'(q0,x) intersectat cu F e nevida}
+
+7. AFNL: A = (Q, V, d, q0, F), unde:
+         Q, V, q0, F ca mai sus
+         d : Q x (V U {&}) ----> P(Q) functie (functia de tranzitie)
+    Pentru q in Q definim submultimea lui Q:
+	<q> = {p in Q | exista s0, ..., sk in Q (k>=0) a.i.
+			s0=q, sk=p, s(i+1) in d(si,&) pentru 0 <= i < k}
+    Pentru P inclus in Q definim urmatoarea submultime a lui Q:
+	<P> = {}, daca P vida
+	<P> = reuniunea multimilor <q> pentru q in P, daca P nevida
+    Extindem d la d': Q x V* ----> P(Q) definita prin:
+	d'(q,&) = <q>
+	d'(q,ax) = {p in Q | exista r in <q> si s in  <d(r,a)> a.i.
+			     p in d'(s,x)}
+      (q in Q, x in V*, a in V)
+    Limbajul acceptat de A este urmatoarea submultime a lui V*:
+	L(A) = {x in V* | d'(q0,x) intersectat cu F e nevida}
+
+
+B. Algoritmi:
+-------------
+
+
+1) Transformarea GR -> AFN:
+---------------------------
+
+Intrare: G = (VN, VT, S, P) GR
+Iesire:  A = (Q, V, d, q0, F) AFN a.i. L(A) = L(G)
+Constructie:
+ - pentru orice terminal a care apare intr-o productie de forma A -> a
+    introduc un neterminal nou V(a) si productia V(a) -> &, apoi inlocuiesc
+    fiecare productie de forma A -> a cu A -> aV(a);
+    in final toate productiile vor fi de forma A -> aB sau A -> &
+    (A, B neterminale, a terminal);
+ - iau Q := VN, V := VT, q0 := S, F := {A in VN | A -> & in P},
+       d(A,a) := {B in VN | A -> aB in P}
+
+
+2) Transformarea AFD -> GR:
+---------------------------
+
+Intrare: A = (Q, V, d, q0, F) AFD
+Iesire:  G = (VN, VT, S, P) GR a.i. L(G) = L(A)
+Constructie:
+ - iau VN := Q, VT := V;
+ - daca not & in L(A) (i.e. not q0 in F) atunci iau S := q0 si
+    P := {p -> aq | d(p,a)=q} U {p -> a | d(p,a) in F};
+ - daca & in L(A) (i.e. q0 in F) atunci iau un simbol de start nou S' si
+    P := {S' -> q0, S' -> &} U {p -> aq | d(p,a)=q} U {p -> a | d(p,a) in F}
+
+
+3) Transformarea GIC -> AS:
+---------------------------
+
+Intrare: G = (VN, VT, S, P) GIC
+Iesire:  A = (Q, V, W, d, q0, Z0, F) AS a.i. L&(A) = L(G)
+Constructie:
+ iau Q := {q} (o multime cu un singur element, oarecare)
+     q0 := q
+     V := VT
+     W := VN U VT
+     Z0 := S
+     F vid
+ iau d(q,&,A) := {(q,x) | x in VT*, A -> x in P}, pentru orice A in VN
+     d(q,a,a) := {(q,&)}, pentru orice a in VT
+     d(q,.,.) := vid, altfel
+
+
+4) Transformarea AS -> GIC:
+---------------------------
+
+Intrare: A = (Q, V, W, d, q0, Z0, F) AS
+Iesire:  G = (VN, VT, S, P) GIC a.i. L(G) = L&(A)
+Constructie: iau
+ VN := {[q,Z,r] | q,r in Q, Z in W} U {S}, unde S este un simbol nou
+ VT := V
+ simbolul de start este S
+ P se construieste astfel:
+  - pentru orice q in Q, a in V U {&}, Z in W,
+     daca d(q,a,Z) contine (r,x(1)...x(k)) (k>=1, x(1), ..., x(k) in W)
+       atunci pentru orice s(1),...,s(k) in Q
+       adaug productia
+         [q,Z,s(k)] -> a[rx(1)s(1)][s(1)x(2)s(2)]...[s(k-1)x(k)s(k)]
+     daca d(q,a,Z) contine (r,&)
+       atunci adaug productia
+         [q,Z,r] -> a
+  - pentru orice q in Q adaug productia: S -> [s0,Z0,q]
+
+
+5) Reuniune GR sau GIC (notam cu GRAM tipul considerat):
+--------------------------------------------------------
+
+Intrare: Gi = (VNi, VTi, Si, Pi), i=1,2, GRAM
+Iesire:  G = (VN, VT, S, P) GRAM a.i. L(G) = L(G1) U L(G2)
+Constructie:
+  S un simbol nou;
+  VN := VN1 U VN2 U {S}
+  VT := VT1 U VT2
+  P := P1 U P2 U {S -> S1, S -> S2}.
+
+
+6) Concatenare GR:
+------------------
+
+Intrare: Gi = (VNi, VTi, Si, Pi), i=1,2, GR
+Iesire:  G = (VN, VT, S, P) GR a.i. L(G) = L(G1)L(G2)
+Constructie:
+  VN := VN1 U VN2
+  VT := VT1 U VT2
+  S := S1
+  P := P2 U {A -> aB | A -> aB in P1} U {A -> aS2 | A -> a in P1}.
+
+
+7) Concatenare GIC:
+-------------------
+
+Intrare: Gi = (VNi, VTi, Si, Pi), i=1,2, GIC
+Iesire:  G = (VN, VT, S, P) GIC a.i. L(G) = L(G1)L(G2)
+Constructie:
+  S un simbol nou
+  VN := VN1 U VN2 U {S}
+  VT := VT1 U VT2
+  P := P1 U P2 U {S -> S1S2}.
+
+
+8) Stelare GR:
+--------------
+
+Intrare: G = (VN, VT, S, P) GR
+Iesire: G' = (VN', VT', S', P') GR a.i. L(G') = L(G)*
+Constructie:
+  S' un simbol nou
+  VN' := VN U {S'}
+  VT' := VT
+  P' := {A -> aB | A -> aB in P} U {A -> aS' | A -> a in P} U
+        U {S' -> S, S' -> &}.
+
+
+9) Stelare GIC:
+---------------
+
+Intrare: G = (VN, VT, S, P) GIC
+Iesire: G' = (VN', VT', S', P') GIC a.i. L(G') = L(G)*
+Constructie:
+  S' un simbol nou
+  VN' := VN U {S'}
+  VT' := VT
+  P' := P U {S' -> S'S, S' -> &}.
+
+
+10) Intersectie GR:
+-------------------
+
+Intrare: Gi = (VNi, VTi, Si, Pi), i=1,2, GR
+Iesire:  G = (VN, VT, S, P) GR a.i. L(G) = L(G1) intersectat cu L(G2)
+Constructie:
+  VN := VN1 X VN2
+  VT := VT1 intersectat cu VT2
+  S := [S1,S2]
+  P := {[A,B] -> a[C,D] | A -> aC in P1, B -> aD in P2} U
+       U {[A,B] -> a | A -> a in P1, B -> a in P2}.
+
+
+11) Pastrarea neterminalelor ce se deriva doar in siruri de terminale:
+----------------------------------------------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC;
+Iesire:  daca L(G) = vid, un mesaj adecvat;
+         daca L(G) nevid, G' = (VN', VT', S', P') GIC a.i. L(G') = L(G)
+           si pentru orice A in VN' exista x in VT'* a.i. A |-*- x;
+Algoritm:
+ (1) V(0) := vid; i := 1;
+ (2) V(i) := V(i-1) U {A in VN | A -> x in P, x in (V(i-1) U VT)*}
+ (3) daca V(i) != V(i-1) atunci i := i+1 si salt la (2)
+ (4) daca not S in V(i) atunci L(G) este vid,
+     altfel iau: VN' := V(i), VT' := VT, S' := S,
+                 P' := multimea productiilor din P cu membrul stang in V(i).
+
+
+12) Eliminarea simbolurilor inaccesibile:
+-----------------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC cu L(G) nevid;
+Iesire: G' = (VN', VT', S', P') GIC a.i. L(G') = L(G) si G' nu contine
+          simboluri inaccesibile;
+Algoritm:
+ (1) V(0) := {S}; i := 1;
+ (2) V(i) := V(i-1) U 
+         U {x in VN U VT | A -> uxv in P, A in V(i-1), u,v in (VN U VT)*}
+ (3) daca V(i) != V(i-1) atunci i := i+1 si salt la (2)
+ (4) iau: VN' := VN intersectat cu V(i),
+          VT' := VT intersectat cu V(i),
+          S' := S,
+          P' := multimea productiilor din P cu ambii membri in V(i)*.
+
+
+13) Eliminarea simbolurilor neutilizate:
+----------------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC cu L(G) nevid;
+Iesire: G' = (VN', VT', S', P') GIC a.i. L(G') = L(G) si G' nu contine
+          simboluri neutilizate;
+Algoritm:
+ (1) aplicam algoritmul 11;
+ (2) aplicam algoritmul 12.
+
+
+14) Eliminarea &-productiilor:
+------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC;
+Iesire: G' = (VN', VT', S', P') GIC a.i. L(G') = L(G) si:
+            - daca not & in L(G), atunci G' nu are &-productii;
+            - daca & in L(G), atunci singura &-productie a lui G' este
+                S' -> &, iar S' nu este continut in membrul drept al
+                nici unei productii a lui G';
+Algoritm:
+ (0) construim multimea N& := {A in VN | A |-+- &}, urmand urmatorii pasi:
+   (0.1) N&(0) := {A in VN | A -> & in P}; i := 1;
+   (0.2) N&(i) := N&(i-1) U {A in VN | exista B in N&(i-1) a.i. A -> B in P}
+   (0.3) daca N&(i) != N&(i-1) atunci i := i+1 si salt la (0.2)
+   (0.4) iau N& := N&(i)
+ (1) P' := vid
+ (2) fie A -> a(0)B(1)...a(k-1)B(k)a(k) o productie din P, unde:
+       k >= 0
+       B(i) in N&
+       a(i) in ((VN U VT) - N&)*
+     daca k=0, atunci P' := P' U ({A -> a(0)} - {A -> &})
+               altfel P' := P' U ({A -> a(0)X(1)...a(k-1)X(k)a(k) |
+                                     X(i) in {B(i), &}, 1<=i<=k} - {A -> &})
+ (3) P := P - {A -> a(0)B(1)...a(k-1)B(k)a(k)}; daca P != vid, salt la (2)
+ (4) VT' := VT;
+     daca S in N&, atunci VN' := VN U {S'} (S' un simbol nou),
+                          S' este simbolul de start,
+                          P' := P' U {S' -> S, S' -> &}
+           altfel VN' := VN,
+                  S' := S,
+                  P' este cel construit.
+
+
+15) Eliminarea redenumirilor:
+-----------------------------
+
+Intrare: G = (VN, VT, S, P) GIC;
+Iesire: G' = (VN', VT', S', P') GIC a.i. L(G') = L(G)
+             si G' nu are redenumiri;
+Algoritm:
+ (0) pentru orice A in VN construim R(A) := {B in VN | A |-*- B},
+     urmand urmatorii pasi:
+   (0.1) R(A,0) := {A}; i := 1;
+   (0.2) R(A,i) := R(A,i-1) U
+                     {C in VN | exista B in R(A,i-1) a.i. B -> C in P}
+   (0.3) daca R(A,i) != R(A,i-1) atunci i := i+1 si salt la (0.2)
+   (0.4) iau R(A) := R(A,i)
+ (1) P' := vid
+ (2) fie B -> a in P, a in (VN U VT)*;
+     daca a in VN, atunci salt la (4);
+ (3) P' := P' U {A -> a | B in R(A)}
+ (4) P := P - {B -> a}; daca P != vid, atunci salt la (2)
+ (5) VN' := VN; VT' := VT; S' := S; P' este cel construit.
+
+
+16) Construirea gramaticii proprii echivalente:
+-----------------------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC cu L(G) nevid;
+Iesire: G' = (VN', VT', S', P') GIC proprie a.i. L(G') = L(G);
+Algoritm:
+ (1) aplicam algoritmul 11;
+ (2) aplicam algoritmul 12.
+ (1) aplicam algoritmul 14;
+ (2) aplicam algoritmul 15.
+
+
+17) Aducerea la FNC:
+--------------------
+
+Intrare: G = (VN, VT, S, P) GIC cu L(G) nevid si not & in L(G);
+Iesire: G' = (VN', VT', S', P') GIC in FNC a.i. L(G') = L(G);
+Algoritm:
+ (0) aplicand eventual algoritmul 16, putem presupune G proprie
+ (1) pentru orice productie A -> w din P (rezulta w != & si not w in VN):
+       daca |w| = 1, atunci w este in VT si lasam productia asa
+       altfel daca w=x(1)...x(m), m>=2, atunci pentru orice x(i) = a din VT
+                introduc un neterminal nou C(a) si productia C(a) -> a, iar
+                in productia A -> w inlocuiesc a cu C(a);
+     in acest moment productiile sunt doar de forma A -> a (a in VT) sau
+       A -> X(1)...X(m), m>=2, X(i) in VN
+ (2) pentru fiecare productie de forma A -> X(1)...X(m) (m>=2, X(i) in VN)
+      consider niste neterminale noi D(1), ..., D(m-2) (ele depind de
+      productie) si inlocuiesc productia cu A -> X(1)D(1), D(1) -> X(2)D(2),
+      ..., D(m-3) -> X(m-2)D(m-2), D(m-2) -> X(m-1)X(m).
+ (3) VN' este VN la care s-au adaugat neterminalele noi C(a) si D(i);
+     VT' := VT; S' := S;
+     P' este P cu modificarile facute mai sus.
+
+
+18)  Eliminarea recursivitatii imediate la stanga:
+--------------------------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC fara &-productii si fara redenumiri;
+Iesire: G' = (VN', VT', S', P') GIC fara recursivitati imediate la stanga
+           a.i. L(G') = L(G);
+Algoritm:
+(1) pentru fiecare A in VN:
+    daca  [A -> Aa(1), ..., A -> Aa(m), A -> b(1), ..., A -> b(n)
+           sunt toate productiile din P cu membrul stang A si pentru orice i
+           avem a(i), b(i) in (VN U VT)+ iar b(i) nu incepe cu A
+          ]
+    atunci [introduc un neterminal nou A' (depinde de A),
+            elimin productiile
+              A -> Aa(1), ..., A -> Aa(m)
+            si adaug productiile
+             A -> b(1)A', ..., A -> b(n)A',
+             A' -> a(1), ..., A' -> a(m), A' -> a(1)A', ..., A' -> a(m)A'
+           ]
+(2) VN' este VN la care s-au adaugat noile neterminale A';
+    VT' := VT; S' := S; P' este P cu modificarile facute mai sus.
+
+
+19)  Eliminarea recursivitatii la stanga:
+-----------------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC fara &-productii si fara redenumiri;
+Iesire: G' = (VN', VT', S', P') GIC fara recursivitati la stanga
+           a.i. L(G') = L(G);
+Algoritm:
+(0) presupunem VN = {A(1), ..., A(n)}, S = A(1);
+(1) pentru i de la 1 la n executa (2.1) si (2.2):
+(2.1) pentru j de la 1 la i-1 executa (3)
+   (3) pentru fiecare A(i) -> A(j)u din P, cu u in (VN U VT)*
+       executa (4.1) si (4.2):
+     (4.1) daca A(j) -> v(1), ..., A(j) -> v(t) sunt toate productiile din P
+             cu membrul stang A(j) atunci adaug productiile
+             A(i) -> v(1)u, ... A(i) -> v(t)u;
+     (4.2) elimin productia A(i) -> A(j)u;
+(2.2) elimin recursivitatea imediata pentru A(i), ca in algoritmul 18
+(5) VT' := VT; S' := S;
+    VN' si P' sunt VN, respectiv P, cu modificarile facute mai sus.
+
+
+20) Aducerea la FNG:
+--------------------
+
+Intrare: G = (VN, VT, S, P) GIC cu L(G) nevid si not & in L(G);
+Iesire: G' = (VN', VT', S', P') GIC in FNG a.i. L(G') = L(G);
+Algoritm:
+(0) presupunem VN = {A(1), ..., A(n)}, S = A(1);
+    aplicam algoritmul 19; cu aceasta ocazie apar niste neterminale noi A',
+     iar toate productiile vor fi in final de una din formele:
+       A(i) -> aw, cu a in VT;
+       A(i) -> A(j)w, cu i<j;
+       A' -> w, iar w nu incepe cu un neterminal de tip B';
+    consideram ca G este gramatica obtinuta;
+(1) pentru k de la n-1 la 1 executa:
+      pentru fiecare productie de forma A(k) -> A(j)u din P executa:
+        P := (P U {A(k) -> vu | A(j) -> v in P}) - {A(k) -> A(j)u}
+(2) pentru fiecare productie de forma B' -> A(j)u din P executa:
+        P := (P U {B' -> vu | A(j) -> v in P}) - {B' -> A(j)u}
+(3) VN' := VN; VT' := VT; S' := S; P' este P cu modificarile facute mai sus.
+
+Obs: la pasul (0), daca la aplicarea algoritmului 18 in cadrul algoritmului
+  19 fiecare neterminal nou A' este adaugat la sfarsitul lui VN (primind un
+  indice incrementat cu 1 fata de maximul existent), atunci pasul (1) de la
+  algoritmul 19 parcurge si noile neterminale, iar in final toate productiile
+  vor fi de forma A(i) -> aw (a in VT), A(i) -> A(j)w (i<j) si astfel aici nu
+  va mai fi necesar pasul (2).
+
+
+21) Analiza sintactica top-down:
+--------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC nerecursiva la stanga,
+         w = a(1)...a(n) in VT+, unde a(1), ..., a(n) in VT, n>0;
+Iesire: o analiza stanga a lui w daca w in L(G), eroare altfel
+ (o analiza stanga a lui w este un sir de productii a.i. w se poate obtine
+  din S facand derivari succesive cu productiile din sir a.i. la fiecare pas
+  se deriveaza cel mai din stanga netermial din cuvantul (forma sententiala)
+  curent);
+Notatii si algoritm:
+ - numerotam productiile de la 1 la p;
+ - pentru fiecare A in VN indexam alternativele lui A (membrii drepti ai
+    productiilor care au in stanga pe A): A -> x(A,1), ..., A -> x(A,k(A))
+    (x(A,i) in (VN U VT)*) si vom nota cu j(A,i) indicele variantei x(A,i)
+    (1 <= i <= k(A));
+ - lucram cu configuratii de forma (s,i,u,v) unde:
+    s in {q, r, t, e} (o multime de 4 simboluri distincte, reprezentand
+     starea curenta, de revenire, de terminare, resp. eroare);
+    i este indicele simbolului curent din cuvantul de intrare w=a(1)...a(n);
+     se considera in plus si un delimitator ca fiind al n+1-lea simbol de
+     intrare (un simbol nou), pe care il notam cu $;
+    u este o stiva cu varful la dreapta; ea va memora alternativele si
+     drumurile parcurse pentru aceste alternative;
+    v este o stiva cu varful la stanga; ea va memora forma sententiala
+     curenta;
+ - configuratia initiala este: (q,1,&,S$);
+ - trecerea de la o configuratie la alta se face dupa urmatoarele reguli:
+  r1) (q,i,u,Av) |- (q,i,uj(A,1),x(A,1)v),
+         unde A -> x(A,1) in P, iar x(A,1) este prima alternativa a lui A;
+  r2) (q,i,u,av) |- (q,i+1,ua,v),
+         daca a=a(i), i<=n;
+  r3) (q,i,u,av) |- (r,i,u,av),
+         daca a!=a(i), i<=n;
+  r4) (q,n+1,u,$) |- (t,n+1,u,&);
+         aceasta este configuratia de acceptare;
+         analiza stanga se obtine din u eliminand terminalele si inlocuind
+          fiecare element de forma j(A,i) cu indicele productiei A -> x(A,i)
+          din P;
+  r5) (r,i,ua,v) |- (r,i-1,u,av),
+         pentru orice a in VT;
+  r6) (r,i,uj(A,h),x(A,h)v) |- (q,i,uj(A,h+1),x(A,h+1)v), daca h+1<=k(A);
+      (r,i,uj(A,h),x(A,h)v) |- (e,n+1,uj(A,h),&), daca i=1, A=S si h=k(S);
+      (r,i,uj(A,h),x(A,h)v) |- (r,i,u,Av), altfel.
+
+
+22) Analiza sintactica bottom-up:
+---------------------------------
+
+Intrare: G = (VN, VT, S, P) GIC proprie,
+         w = a(1)...a(n) in VT+, unde a(1), ..., a(n) in VT, n>0;
+Iesire: o analiza dreapta a lui w daca w in L(G), eroare altfel
+ (o analiza dreapta a lui w este un sir de productii a.i. w se poate obtine
+  din S facand derivari succesive cu productiile din sir a.i. la fiecare pas
+  se deriveaza cel mai din dreapta netermial din cuvantul (forma sententiala)
+  curent);
+Notatii si algoritm:
+ (1) numerotam (in mod arbitrar) productiile;
+ (2) lucram cu configuratii de forma (s,i,u,v) unde:
+    s in {q, r, t, e} (o multime de 4 simboluri distincte, reprezentand
+     starea curenta, de revenire, de terminare, resp. eroare);
+    i este indicele simbolului curent din cuvantul de intrare w;
+     se considera in plus si un delimitator $ (un simbol nou) ca fiind
+     primul simbol de intrare - deci w va avea n+1 simboluri;
+    u este o stiva cu varful la dreapta; ea va contine secvente de terminale
+     si neterminale din care deriva partea de intrare de la stanga lui i;
+    v este o stiva cu varful la stanga; ea va contine un istoric al
+     deplasarilor (notate d), reducerilor (notate r) si indicii productiilor
+     aplicate care au condus la continutul actual al lui u;
+ (3) configuratia initiala este: (q,1,$,&);
+ (4) algoritm:
+  r1) se aplica de cate ori e posibil:
+       (q,i,ux,v) |- (q,i,uA,jv),
+         unde j este indicele productiei A -> x din P iar x este primul
+         membru drept in ordonarea data de (1) care este sufix al lui ux
+         (x in (VN U VT)*);
+  r2) daca i<n+1, atunci:
+       (q,i,u,v) |- (q,i+1,ua(i),dv),
+        si salt la r1);
+  r3) daca u=$S, atunci:
+       (q,n+1,$S,v) |- (t,n+1,u,v),
+        si stop; cuvantul este in L(G) iar analiza dreapta se obtine din v
+        eliminand d-urile (si pastrand numerele);
+  r4) (q,n+1,u,v) |- (r,n+1,u,v);
+  r5) se aplica una din miscarile (a) - (e):
+      (a)  (r,i,uA,jv) |- (q,i,u'B,kv) si salt la r1),
+             unde j este indicele productiei A -> x, k este indicele
+             productiei B -> x', j<k si ux = u'x' (x,x' in (VN U VT)*);
+      (b)  (r,n+1,uA,jv) |- (r,n+1,ux,v) si salt la r5),
+             unde j este indicele productiei A -> x, x in (VN U VT)*,
+             si nu mai este posibila nici o aplicare a lui (a);
+      (c)  (r,i,uA,jv) |- (q,i+1,uxa(i),dv) si salt la r1),
+             unde i<n+1, j este indicele productiei A -> x, x in (VN U VT)*,
+             si (a) nu s-a putut aplica;
+      (d)  (r,i,ua(i-1),dv) |- (r,i-1,u,v) si salt la r5),
+             unde i != 1;
+      (e)  (r,1,$,&) |- (e,1,$,&) si se emite eroare.
+
+
+DANIEL DRAGULICI
+mai, 2007

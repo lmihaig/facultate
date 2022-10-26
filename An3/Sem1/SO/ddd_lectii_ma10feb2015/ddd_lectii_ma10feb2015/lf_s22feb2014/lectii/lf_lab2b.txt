@@ -1,0 +1,154 @@
+
+                     Limbaje formale, teme limbaje regulate
+                     ======================================
+
+ Presupunem definite urmatoarele tipuri de date: AFD (automat finit
+determinist), AFN (automat finit nedeterminist), AFNL (automat finit
+nedeterminist cu lambda miscari).
+ Urmatoarele probleme vor cere implementarea unor algoritmi ce lucreaza
+cu automate finite, pe care le vor primi ca parametri de iesire (pointeri
+in limbajul C, referinte in limbajul C++), de exemplu:
+             void f(AFD *as, AFD *ad){...}
+respectiv:
+             void f(AFD &as, AFD &ad){...}
+Enunturile vor folosi C++, dar se poate lucra si in C.
+ In cazul cand se cere construirea unui automat nou din unele vechi, cel nou
+va respecta aceleasi conventii de implementare ca si cele vechi - de exemplu
+daca la cele vechi starile sunt numere naturale succesive 0, 1, 2, ... iar
+starea initiala este 0, atunci si la cel nou starile sunt numere naturale
+succesive 0, 1, 2, ... iar starea initiala este 0; astfel va fi posibila
+compunerea functiilor scrise la diverse probleme pentru a aplica transformari
+succesive unor automate date.
+
+1. (puncte: a se vedea in text)
+ Scrieti functii de conversie, care construiesc un automat destinatie ("ad")
+echivalent (avand acelasi limbaj acceptat) ca unul sursa ("as"):
+  int afd2afn(AFD &as, AFN &ad);      (0.5 puncte)
+  int afn2afd(AFN &as, AFD &ad);      (2 puncte)
+  int afd2afnl(AFD &as, AFNL &ad);    (0.5 puncte)
+  int afnl2afd(AFNL &as, AFD &ad);    (3 puncte)
+  int afn2afnl(AFN &as, AFNL &ad);    (0.5 puncte)
+  int afnl2afn(AFNL &as, AFN &ad);    (2 puncte)
+Functiile returneaza 1=succes, 0=esec.
+Scrieti un program ilustrativ care citeste un automat de un tip, il
+ converteste intr-unul de alt tip, apoi afisaza pe cel nou (0.5 puncte).
+Obs: Se vor implementa cel putin atatea functii cat sa putem face conversii
+ (eventual in mai multi pasi) intre orice tipuri de automate finite - de
+ exemplu functiile afnl2afn, afn2afd, afd2afnl.
+
+2. (puncte: cate 1 pentru fiecare functie)
+ Scrieti functiile:
+  int afd_acc(AFD &a, int *v, int dim);
+  int afd_coacc(AFD &a, int *v, int dim);
+care primesc ca parametri un automat "a", adresa unui vector de intregi
+alocat in prealabil "v" si dimensiunea alocata a acestuia (numarul maxim de
+intregi pe care au voie sa-i scrie in el) "dim" si scriu in vector starile
+accesibile (in cazul "afd_acc"), respectiv coaccesibile (i.e. din care se
+poate ajunge intr-o stare finala, in cazul "afd_coacc") ale lui "a",
+returnand numarul acestora. In caz de eroare (numarul e mai mare ca "dim")
+nu se vor scrie in vector mai mult de "dim" intregi iar functiile vor returna
+-1. Scrieti un program demonstrativ care citeste un automat, ii determina
+starile accesibile si coaccesibile si le afisaza.
+
+3. (puncte: 1.5)
+ Scrieti o functie:
+  int afd_enac(AFD &as, AFD &ad);
+care primeste un automat "as" si construieste automatul echivalent "ad"
+obtinut prin eliminarea starilor care nu sunt accesibile si coaccesibile.
+Functia returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care cisteste automatul sursa si afisaza
+automatul destinatie.
+
+4. (puncte: 1.5)
+ Scrieti o functie:
+  int afd_vfi(AFD &a);
+care returneaza 1 daca limbajul acceptat de "a" este vid, 2 daca este nevid
+finit, 3 daca este infinit, 0 in caz de eroare. Scrieti un program
+demonstrativ care citeste un automat si afisaza un mesaj adecvat in functie
+de cum este limbajul acceptat de acesta: vid, finit nevid, infinit.
+
+5. (puncte: 4)
+ Scrieti o functie:
+  int afd_min(AFD &as, AFD &ad);
+care primeste un automat "as" si construieste automatul minimal echivalent
+"ad" (avand numarul minim de stari). Functia returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care cisteste automatul sursa si afisaza
+automatul destinatie.
+
+6. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int afd_op(AFD &as1, AFD &as2, AFD &ad, int op);  (2 puncte)
+  int afd_c(AFD &as, AFD &ad);                      (0.5 puncte)
+  int afd_s(AFD &as, AFD &ad);                      (1 punct)
+ Functia "afd_op", in functie de "op", construieste automatul "ad" ce
+recunoaste reuniunea ("op"=1), intersectia ("op"=2), diferenta ("op"=3),
+diferenta simetrica ("op"=4), respectiv concatenarea ("op"=5) limbajelor
+recunoscute de automatele "as1", "as2". Ea returneaza 1=succes, 0=esec.
+ Functia "afd_c" construieste automatul "ad" ce recunoaste complementara in
+raport cu V* (V fiind alfabetul lui "as") a limbajului recunoscut de "as". Ea
+returneaza 1=succes, 0=esec.
+ Functia "afs_s" construieste automatul "ad" ce recunoaste stelarea
+limbajului recunoscut de "as". Ea returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste automatele necesare, le aplica
+functiile si afisaza automatele rezultate.
+ Observatii:
+- in C++ in locul acestor functii se pot supraincarca operatori;
+- in functie de algoritmii alesi, se pot implementa variante ale acestor
+ functii care lucreaza cu automate finite de tipuri diferite - de exemplu
+ functia "afd_c" poate avea parametrii: int afd_c(AFD &as, AFNL &ad); de
+ asemenea, functia "afd_op" poate realiza doar o parte din operatiile
+ mentionate, restul fiind implementate prin functii distincte; important
+ este ca per total sa fie implementate toate operatiile: reuniune,
+ intersectie, diferenta, diferenta simetrica, complementare, concatenare,
+ stelare (pentru fiecare operatie implementata se va primi 0.5 - 1 puncte).
+
+7. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int er2afnl(const char *e, AFNL &a);  (3 puncte)
+  int afd2er(AFD &a, char *e);    (3 puncte)
+ Functia "er2afnl" construieste automatul "a" echivalent cu expresia
+regulata "e", iar functia "afd2er" construieste expresia regulata "e"
+echivalenta cu automatul "a". Functiile returneaza 1=succes, 0=esec.
+ Expresiile regulate folosesc caracterele ASCII oarecare, operatorii
+$ (multimea vida), & (cuvantul vid), + (reuniune), . (concatenare),
+* (inchiderea Kleene), si parantezele ( ). Daca vreunul din aceste caractere
+trebuie considerat caracter obisnuit, va fi precedat de \; de asemenea,
+caracterul \ va fi desemnat prin \\.
+ Scrieti un program demonstrativ care citeste o expresie regulata, o
+transforma in AFNL-ul echivalent, transforma AFNL-ul in AFD-ul echivalent,
+afisaza AFD-ul, transforma AFD-ul in expresia regulata echivalenta, apoi
+afisaza expresia.
+ Observatie: in functie de algoritmii alesi, se pot implementa variante ale
+acestor functii care lucreaza cu automate finite de tipuri diferite (ele vor
+avea nume adecvat) - de exemplu in locul functiei "er2afnl" se poate scrie o
+functie: int er2afd(const char *e, AFD &a).
+
+8. (puncte: 20 puncte)
+ Implementati un analizor lexical pentru un subset al limbajului Pascal
+sau C. Analizorul va trebui se recunoasca: spatiile (i.e. comentariile si
+sirurile de caractere albe: blank, tab, cap de linie), identificatorii,
+cuvintele cheie, operatorii, parantezele, constantele de diverse tipuri,
+alte costructii simbolice care apar ca unitati lexicale distincte (:=, ;,
+etc.). Spatiile nu vor fi raportate. Cand va analiza un text, analizorul va
+construi progresiv si tabelul sirurilor unice prin care se definesc unitatile
+lexicale intalnite.
+ Pentru un text dat la intrare, analizorul va produce o succesiune de
+triplete:
+  nume: valoare, pozitie
+unde "nume" este numele unitatii lexicale intalnite, "valoare" este sirul
+prin care aceasta se defineste iar "pozitie" indicele acestui sir in tabelul
+sirurilor unice.
+ De exemplu pentru textul "x:=y+x+2" va produce:
+  identificator: x, 0
+  ia valoarea: :=, 1
+  identificator: y, 2
+  plus: +, 3
+  identificator: x, 0
+  plus: +, 3
+  constanta intreaga: 2, 4
+(tabelul cu siruri unice va contine in final: x, :=, y, +, 2).
+
+
+DANIEL DRAGULICI
+martie, 2007
+actualizat: 1 mai 2007

@@ -1,0 +1,71 @@
+FSEEK(3)		   Linux Programmer's Manual		      FSEEK(3)
+
+
+
+NAME
+       fgetpos, fseek, fsetpos, ftell, rewind - reposition a stream
+
+SYNOPSIS
+       #include <stdio.h>
+
+       int fseek(FILE *stream, long offset, int whence);
+       long ftell(FILE *stream);
+       void rewind(FILE *stream);
+       int fgetpos(FILE *stream, fpos_t *pos);
+       int fsetpos(FILE *stream, fpos_t *pos);
+
+DESCRIPTION
+       The  fseek  function  sets  the	file position indicator for the stream
+       pointed to by stream.  The new position, measured in bytes, is obtained
+       by  adding offset bytes to the position specified by whence.  If whence
+       is set to SEEK_SET, SEEK_CUR, or SEEK_END, the offset  is  relative  to
+       the  start of the file, the current position indicator, or end-of-file,
+       respectively.  A successful call to the fseek function clears the  end-
+       of-file	indicator  for	the  stream  and  undoes  any  effects	of the
+       ungetc(3) function on the same stream.
+
+       The ftell function obtains the current value of the file position indi-
+       cator for the stream pointed to by stream.
+
+       The  rewind  function  sets  the file position indicator for the stream
+       pointed to by stream to the beginning of the file.   It	is  equivalent
+       to:
+
+	      (void)fseek(stream, 0L, SEEK_SET)
+
+       except  that  the  error	 indicator for the stream is also cleared (see
+       clearerr(3)).
+
+       The fgetpos and fsetpos functions are alternate	interfaces  equivalent
+       to  ftell  and fseek (with whence set to SEEK_SET), setting and storing
+       the current value of the file offset into or from the object referenced
+       by  pos.	  On  some  non-UNIX systems an fpos_t object may be a complex
+       object and these routines may be the only way to portably reposition  a
+       text stream.
+
+RETURN VALUE
+       The  rewind  function  returns  no  value.  Upon successful completion,
+       fgetpos, fseek, fsetpos return 0, and ftell returns the current offset.
+       Otherwise, -1 is returned and the global variable errno is set to indi-
+       cate the error.
+
+ERRORS
+       EBADF  The stream specified is not a seekable stream.
+
+       EINVAL The whence argument to fseek  was	 not  SEEK_SET,	 SEEK_END,  or
+	      SEEK_CUR.
+
+       The  function  fgetpos, fseek, fsetpos, and ftell may also fail and set
+       errno for any of the  errors  specified	for  the  routines  fflush(3),
+       fstat(2), lseek(2), and malloc(3).
+
+CONFORMING TO
+       The  fgetpos,  fsetpos,	fseek,	ftell, and rewind functions conform to
+       ANSI X3.159-1989 (``ANSI C'').
+
+SEE ALSO
+       lseek(2), fseeko(3)
+
+
+
+BSD MANPAGE			  1993-11-29			      FSEEK(3)

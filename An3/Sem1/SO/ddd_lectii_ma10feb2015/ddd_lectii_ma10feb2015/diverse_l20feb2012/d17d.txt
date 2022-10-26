@@ -1,0 +1,1762 @@
+
+		   Tipuri de date numerice predefinite
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A. Modalitati de stocare (format intern) pentru numere:
+   ----------------------------------------------------
+
+1 - Reprezentarea ca intreg fara semn (numar natural):
+
+  Daca locatia de memorie folosita tipul T are p biti (de regula
+multiplu de 8) atunci ea poate stoca numere naturale din intervalul
+[0, ..., 2^p-1].
+ Un numar n din acest interval se stocheaza astfel:
+ * se reprezinta n in baza 2, completandu-se cu cifre semnificative 0 pana
+    la completarea a p pozitii;
+ * se pun cele p cifre binare in locatie, a.i. cifra unitatilor sa fie in
+    bitul 0, cifra zecilor in bitul 1, etc.
+ Operatiile aritmetice cu valori de tipul T se fac modulo 2^p:
+   daca # e o operatie, atunci: m#n  produce: (m#n + k*2^p) % 2^p,
+   pentru un k suficient de mare a.i. paranteza sa fie >=0.
+ De ex: (2^p-1) + 1 = 0, 0 - 1 = 2^p-1;
+
+Ex: In TC++ 1.00 valorile de tip "unsigned char" sunt stocate ca mai sus,
+     in locatii de 1 octet; valorile tipului "unsigned char" sunt numerele
+     naturale din intervalul 0, ..., 255 (=2^8-1).
+    Daca avem: unsigned char n=65; atunci locatia lui n contine: |01000001|
+    De asemenea:                           (i.e. caracterul 'A')  ^      ^
+	      n+=3                   n-=3                        b7     b0
+      n: 254 =======> n: 1,    n: 2 =======> n: 255
+
+      unsigned char m=200, n=200, x; x=m+n; ===> x: 144  (= (200+200) % 256)
+
+    Daca avem: unsigned char n; atunci:
+			   n: 0   |00000000|
+		       ++n ||            || --n
+			   \/            \/
+		 n: 1   |00000001|    |11111111| n: 255
+		       ++n ||            || --n
+			   \/            \/
+		 n: 2   |00000010|    |11111110| n: 254
+		     n+=124||            || n-=253
+			   \/            \/
+		 n: 254 |11111110|    |00000001| n: 1
+		       ++n ||            || --n
+			   \/            \/
+		 n: 255 |11111111|    |00000000| n: 0
+		       ++n ||            || --n
+			   \/            \/
+		 n: 0   |00000000|    |11111111| n: 255
+		       ++n ||            || --n
+			   \/            \/
+		 n: 1   |00000001|    |11111110| n: 254
+
+Ex: unsigned char n;
+    for(n=0; n<256; ++n){...}
+    ==> este un ciclu infinit, deoarece cand n ajunge la 255 incrementarea
+	++n il face iar 0 (si nu ajunge niciodata >=256).
+
+2 - Reprezentarea ca intreg cu semn (numar intreg):
+
+  Daca locatia de memorie folosita de tipul T are p biti (de regula
+multiplu de 8) atunci ea poate stoca numere intregi din intervalul
+[-2^(p-1), ..., 2^(p-1)-1].
+ Un numar n din acest interval se stocheaza astfel:
+ * se considera numarul (n+2^p) % 2^p (el este in interv. [0,...,2^p-1]);
+ * se reprezinta acest numar in locatie ca la 1.
+ Obs: daca n<0, atunci bitul p va fi 1, altfel va fi 0.
+ Operatiile aritmetice cu valori de tipul T se fac tot modulo 2^p, dar
+  translatat: daca # e o operatie, atunci:
+    m#n  produce:  ((m#n) + 2^(p-1) + k*2^p) % 2^p - 2^(p-1),
+    pentru un k suficient de mare a.i. paranteza exterioara sa fie >= 0
+  (cu alte cuvinte la m#n initial se aduna/scade un multiplu de 2^p a.i
+   rezultatul sa fie in intervalul [-2^(p-1), ..., 2^(p-1)-1]).
+ De ex: (2^(p-1)-1) + 1 = - 2^(p-1),   -2^(p-1) - 1 = 2(p-1)-1;
+	
+Ex: In TC++ 1.00 valorile de tip "char" sunt stocate ca mai sus, in locatii
+     de 1 octet; valorile tipului "char" sunt numerele intregi din
+     intervalul -128 (=-2^7), ..., 127 (=2^7-1).
+    Daca avem: char m=65, n=-65; atunci locatile lor contin:
+     m: |01000001| (carac. 'A')      n: |10111111| (caract. cu codul 191)
+	 ^      ^                        ^      ^
+	b7     b0                       b7     b0
+    De asemenea:
+	      n+=3                         n-=3
+      n: 126 =======> n: -127,    n: -126 =======> n: 127
+
+      char m=200, n=200, x; x=m+n; ===> x:-112 (= (200+200+128) % 256 - 128)
+
+    Daca avem: char n; atunci:
+			   n: 0   |00000000|
+		       ++n ||            || --n
+			   \/            \/
+		 n: 1   |00000001|    |11111111| n: -1
+		       ++n ||            || --n
+			   \/            \/
+		 n: 2   |00000010|    |11111110| n: -2
+		     n+=124||            || n-=125
+			   \/            \/
+		 n: 126 |01111110|    |10000001| n: -127
+		       ++n ||            || --n
+			   \/            \/
+		 n: 127 |01111111|    |10000000| n: -128
+		       ++n ||            || --n
+			   \/            \/
+		 n:-128 |10000000|    |01111111| n: 127
+		       ++n ||            || --n
+			   \/            \/
+		 n:-127 |10000001|    |01111110| n: 126
+
+    Constatam ca prin numerele naturale:
+	 0, ..., 127, 128, ..., 255
+     au fost reprezentate, in ordine, urmatoarele valori ale tipului char:
+	 0, ..., 127, -128, ..., -1
+
+Obs: calculele pe reprezentarile binare se fac la fel ca in cazul 1, dar
+  reprezentarile obtinute sunt interpretate altfel ca numere intregi.
+
+Cu urmatoarele instructiuni putem afla usor cea mai mare valoare pozitiva
+reprezentabila in cadrul unui anumit tip intreg cu semn:
+long x,y; for(x=0; x>=0; ++x){y=x;} printf("%ld",y);
+(in loc de long si %ld se poate pune orice alt tip intreg si %-ul adecvat).
+
+3 - Reprezentarea in virgula flotanta (numar real):
+
+  Daca locatia de memorie folosita de tipul T are p biti din care k sunt
+folositi pentru caracteristica (de regula p si k sunt multipli de 8 iar
+p>=32), atunci ea poate stoca numere reale din intervalul
+[-(1-1/2^(p-k))*2^(2^(k-1)), ..., (1-1/2^(p-k))*2^(2^(k-1))].
+  Un numar n din acest interval se stocheaza astfel:
+ * se scrie n sub forma +/- (0 + c1/2 + c2/4 ...) * 2^e, unde c1, c2, ...
+    sunt 0 sau 1, iar c1=1 daca n<>0 (deci o scriere normalizata in baza 2);
+   daca n=0, atunci c1, c2, ... vor fi 0 iar e poate fi oarecare; in acest
+    caz convenim ca e=-(2^(k-1)-2);
+ * in bitul p-1 se pune 1 daca semnul este - si 0 daca semnul este +;
+ * in bitii p-2,...p-k-1 se pune numarul f:=e+2^(k-1)-2 scris in baza 2 si
+    completat cu cifre semnificative 0, a.i. cifra unitatilor sa fie in
+    bitul p-k-1, cifra zecilor in bitul p-k, etc. (vezi reprezentarea 1);
+ * daca f=0, atunci in bitii p-k-2, ..., 0 se pun c1, c2, ..., in ordinea
+    asta;
+   daca f>0, atunci in bitii p-k-2, ..., 0 se pun c2, c3, ..., in ordinea
+    asta (deci fara c1, care stim ca este 1 pentru n<>0);
+   in toate cazurile, se completeaza cu 0 pana la bitul 0 daca e cazul, iar
+    daca dimpotriva numarul are mai multe zecimale binare ci, restul se
+    ignora.
+  Observam ca n=0 se reprezinta cu toti bitii 0.
+  Intr-o locatie pot exista si alte configuratii valide decat cele care
+rezulta din regula de mai sus. Astfel, daca privim invers, o configuratie de
+0 si 1 in locatie se interpreteaza astfel ca un numar real n:
+  * daca bitul p-1 este 1, n e negativ, daca e 0, n e pozitiv;
+  * interpretam configuratia din bitii p-2, ..., p-k-1 ca un numar natural f
+     (a se vedea reprez. 1), a.i. bitul p-k-1 sa dea cifra unitatilor, etc.;
+  * daca f=0 (adica bitii p-2, ..., p-k-1 sunt toti 0), atunci
+     n = +/- (0 + c1/2 + c2/4 ...) * 2^e, unde e=f-(2^(k-1)-2) iar
+     c1, c2, ... sunt respectiv bitii p-k-2, p-k-1, ..., 0 (deci bitul p-k-2
+     e prima zecimala in baza 2);
+    in particular, daca bitii p-k-2, p-k-1, ..., 0 sunt 0, atunci n=0; in
+     acest caz, in functie de semnul din bitul p-1, la anumite operatii se
+     face distinctie intre + 0 si - 0;
+  * daca 0 < f < 2^(k-1)-1 (adica bitii p-2, ..., p-k-1 nu sunt toti 0 sau
+     toti 1) atunci n = +/- (0 + 1/2 + c2/4 + c3/8 ...) * 2^e, unde
+     e=f-(2^(k-1)-2) iar c2, c3, ... sunt respectiv bitii p-k-2, p-k-1,
+     ..., 0 (deci prima zecimala in baza 2 este 1 iar bitul p-k-2 este a
+     doua zecimala in baza 2);
+  * daca f=2^(k-1)-1 (adica bitii p-2, ..., p-k-1 sunt toti 1), atunci
+     n = +/- infinit (in functie de semn); in acest caz bitii p-k-2, ..., 0
+     trebuie sa fie 0 (altfel configuratia de biti din locatie nu corespunde
+     unui numar valid).
+
+Observatii:
+* Nu toate numerele reale din intervalul specificat pot fi reprezentate
+   (deoarece se retin doar un numar finit de zecimale in baza 2).
+  Astfel:
+   - numerele din interv. [1/2 * 2^(-2^(k-1)+2), ..., 1/2 * 2^(-2^(k-1)+4)]
+       sunt reprezentate cu pasul 2^(-2^(k-1)-p+k+3) (deci cu eroare <
+       2^(-2^(k-1)-p+k+3));
+   - pentru orice i de la -2^(k-1)+4 la 2^(k-1)-1, numerele din intervalul
+       [1/2 * 2^i, ..., 1/2 * 2^(i+1)] sunt reprezentate cu pasul 2^(i-p+k)
+       (deci cu eroare < 2^(i-p+k));
+   - numerele din intervalul
+       [1/2 * 2^(2^(k-1)), ..., (1 - 1/2^(p-k)) * 2^(2^(k-1))]
+       sunt reprez. cu pasul 2^(2^(k-1)-p+k) (deci cu eroare <
+       2^(2^(k-1)-p+k)).
+  Observam ca precizia este mai mare in jurul lui 0.
+* Numerele din intervalul [ 0, ..., 1/2 * 2^(-2^(k-1)+2) ) sunt prea mici
+   pentru a putea fi reprezentate si astfel sunt asimilate cu 0  (asemenea
+   numere care in matematica sunt nenule dar in calculator se asimileaza cu
+   0 se numesc zerouri ale masinii).
+* Operatiile aritmetice se fac dupa ce numerele sunt aduse la acelasi f;
+   in acest scop, la unul din numere se departeaza zecimalele binare de
+   virgula si se creste f-ul. Cu ocazia acestei deplasari, zecimalele care
+   trec de bitul 0 se pierd si astfel calculele apar eronate; astfel putem
+   avea surpriza ca, daca adunam un numar prea mare cu un numar prea mic,
+   rezultatul sa fie ca si cand am fi adunat numarul mare cu 0.
+  Daca rezultatul unei operatii depaseste intervalul
+     [-(1-1/2^(p-k))*2^(k-1), ..., (1-1/2^(p-k))*2^(k-1)]
+   nu se inlocuieste cu valoarea respectiva modulo ceva (ca la
+   reprezentarile 1 si 2) ci programul se termina cu eroare
+   ("Floating point error: Overflow.")
+* Datorita erorilor de calcul care apar prin pierderea ultimilor zecimale,
+   se recomanda ca in programele cu multe operatii in virgula mobila sa se
+   inlocuiasca testele de forma x==0 teste de forma fabs(x) < eps, unde
+   eps este un numar real strict pozitiv foarte mic, convenabil ales, de
+   exemplu 0.00001.
+  De exemplu, daca programam metoda lui Gauss de rezolvare a unui sistem de
+   ecuatii liniare (algoritmul presupune multiple inmultiri si impartiri la
+   elemente nenule din matricea sistemului alese ca pivot, in urma carora
+   matricea capata 0 sub diagonala), elemente care matematic ar trebui sa
+   fie 0 in calculator sunt numere nenule cu modul foarte mic - deci daca am
+   cauta pivotii nenuli dupa conditia a[i][j]!=0, am risca sa alegem drept
+   pivot un numar care matematic (daca am face calculele exact) ar trebui sa
+   fie 0.
+* Valorile speciale de forma -0, +infinit, -infinit apar cu ocazia anumitor
+   calcule; de exemplu 1/0.0 nu produce eroare de depasire ci valoarea
+   +infinit; la fel, 1/-0.0 produce valoarea -infinit; daca impartim
+   2^(-2^(k-1)+2) la -2^(k-1) obtinem -0 (avand in vedere ca k>=8).
+
+Ex: In TC++ 1.00 valorile de tip "float" sunt stocate ca mai sus, in locatii
+      de 4 octeti; deci p=32, k=8.
+    Valorile tipului "float" sunt numere reale din intervalul:
+	 [-(1-1/2^24)*2^128, ..., (1-1/2^24)*2^128]
+      adica aproximativ intervalul:
+	 [-3.402823*10^38, ..., 3.402823*10^38].
+     Avem urmatoarele reprezentari:            creste adresa
+					      <--------------
+			  octet 3  octet 2  octet 1  octet 0
+  - (1 - 1/2^24)*2^128 : |11111111 01111111 11111111 11111111|
+			  |\_______/|                       |
+			  | e(30-23)|                       |
+			b31         b22                     b0
+
+    (1 - 1/2^24)*2^128 : |01111111 01111111 11111111 11111111|
+			   \_______/ (f=254)
+  (1/2 + 1/2^24)*2^128 : |01111111 00000000 00000000 00000001|
+			   \_______/ (f=254)
+	    1/2 *2^128 : |01111111 00000000 00000000 00000000|
+			   \_______/ (f=254)
+
+    (1 - 1/2^24)*2^127 : |01111110 11111111 11111111 11111111|
+			   \_______/ (f=253)
+  (1/2 + 1/2^24)*2^127 : |01111110 10000000 00000000 00000001|
+			   \_______/ (f=253)
+	    1/2 *2^127 : |01111110 10000000 00000000 00000000|
+		     .     \_______/ (f=253)
+		     .
+		     .
+
+   (1 - 1/2^24)*2^-125 : |00000000 11111111 11111111 11111111|
+			   \_______/ (f=1)
+ (1/2 + 1/2^24)*2^-125 : |00000000 10000000 00000000 00000001|
+			   \_______/ (f=1)
+	   1/2 *2^-125 : |00000000 10000000 00000000 00000000|
+			   \_______/ (f=1)
+
+   (1 - 1/2^23)*2^-126 : |00000000 01111111 11111111 11111111|
+			   \_______/ (f=0)
+ (1/2 + 1/2^23)*2^-126 : |00000000 01000000 00000000 00000001|
+			   \_______/ (f=0)
+	   1/2 *2^-126 : |00000000 01000000 00000000 00000000|
+			   \_______/ (f=0)
+ (obs. ca la ultimele 3 exemple s-a retinut si zecimala c1=1 in locatie si
+  astfel precizia a devenit 1/2^23 in loc de 1/2^24)
+
+		     0 : |00000000 00000000 00000000 00000000|
+			   \_______/ (f=0)
+
+     Numerele 0 < n < 1/2*2^-126 sunt asimilate cu 0 - ele sunt zerouri de
+  masina.
+
+     Numerele din intervalul [1/2 * 2^-126, ..., 1/2 * 2^-124]
+  sunt reprezentate cu pasul 1/2^23 * 2^-126 = 1/2^24 * 2^-125 = 2^-149
+  (deci cu eroare < 2^149).
+     Pentru orice i de la -124 la 127, numerele din intervalul
+  [1/2 * 2^i, ..., 1/2 * 2^(i+1)] sunt reprezentate cu pasul 1/2^24 * 2^i
+  = 2^(i-24) (deci cu eroare < 2^(i-24)).
+     Numerele din intervalul [1/2 * 2^128, ..., (1 - 1/2^24) * 2^128]
+  sunt reprez. cu pasul 1/2^24 * 2^128 = 2^104 (deci cu eroare < 2^104).
+
+
+     Avem: float x,y,z;
+	   x=3e38; x+=3e38; ===> eroare la executie (overflow)
+	     (deoarece in urma operatiei se ajunge la o configuratie cu
+	      bitii 23-30 egali cu 1 si cu bitii 0-22 nu toti nuli - deci
+	      ceva invalid);
+	   x=10e38; ===> x == + infinit;
+	     (10e38 depaseste intervalul de valori al tipului float si
+	      atunci se considera +infinit; in locatia lui x se pune:
+	      |01111111 10000000 00000000 00000001|)
+		\_______/ (f=255)
+	   x=1/-3e38 ===> x=-0
+	   x=(1/-3e38)*(3e38+3e38) ===> -2
+	     (adica (-0) * (+infinit) == -2; semnul vine de la -0)
+	   x=3e38; y=1e-30; z=x+y; ===> z == 3e38 (== x)
+	   x=0.1*(1/0.1)-1 ===> x == 1.084202e-19 (deci !=0 dar foarte mic)
+	     (atentie deci la erorile de calcul si zerourile masinii).
+
+
+B. Tipuri de date predefinite in C:
+   --------------------------------
+
+  Ele sunt tipuri naturale, intregi, reale, pointer sau void (tipul caracter
+este un tip intreg, tipul string se asimileaza cu "char *" iar tipul boolean
+se poate asimila cu orice tip). In continuare ne vom referi doar la tipurile
+numerice: naturale, intregi sau reale.
+
+  Din punct de vedere sintactic, ele sunt desemnate sub forma:
+     <modificator1> <modificator2> <tip>
+sau
+     <modificator2> <modificator1> <tip>
+unde <= 2 din cele 3 cuvinte pot lipsi; aceste cuvinte pot fi:
+ - <tip> poate fi: char, int, float, double; daca lipseste, este int;
+ - <modificator1> poate fi: short, long; daca lipseste, este short;
+ - <modificator2> poate fi: signed, unsigned; daca lipseste, este signed.
+ Nu orice combinatie intre cuvintele de mai sus este valida, ci:
+ - toti modificatorii se pot aplica cu int;
+ - cu char NU se pot aplica: short, long;
+ - cu float NU se poate aplica nici un modificator;
+ - cu double NU se pot aplica: signed, unsigned, short.
+
+ Deci combinatiile valide sunt:
+* short signed int <=> signed short int
+  <=> signed int <=> short int  <=> short signed <=> signed short
+  <=> short <=> signed <=> int
+* short unsigned int <=> unsigned short int
+  <=> unsigned int <=> short unsigned <=> unsigned short
+  <=> unsigned
+* long signed int <=> signed long int
+  <=> long int  <=> long signed <=> signed long
+  <=> long
+* long unsigned int <=> unsigned long int
+  <=> long unsigned <=> unsigned long
+* signed char <=> char
+* unsigned char
+* float
+* double
+* long double.
+
+ Semnifictiile acestor tipuri in TC++ 1.00 (modul de stocare a datelor):
+
+a) Tipuri naturale (in cazul lor se foloseste reprezentarea 1):
+
+   tip        |     dimensiune     | intervalul valorilor valide
+----------------------------------------------------------------------------
+unsigned char | 1 octet   (8 biti) | [0, 2^8-1] = [0, ..., 255]
+unsigned int  | 2 octeti (16 biti) | [0, 2^16-1] = [0, ..., 65535]
+unsigned long | 4 octeti (32 biti) | [0, 2^32-1] = [0,..., 4294967295]
+
+b) Tipuri intregi (in cazul lor se foloseste reprezentarea 2):
+
+ tip  |     dimensiune     | intervalul valorilor valide
+----------------------------------------------------------------------------
+ char | 1 octet   (8 biti) | [-2^7, 2^7-1] = [-128, ..., 127]
+ int  | 2 octeti (16 biti) | [-2^15, 2^15-1] = [-32768, ..., 32767]
+ long | 4 octeti (32 biti) | [-2^31, 2^31-1] = [-2147483648,..., 2147483647]
+
+c) Tipuri flotante (in cazul lor se foloseste reprezentarea 3):
+
+  Vom nota (ca la 3) cu p nr. de biti ai locatiei si cu k nr. de biti din
+locatie in care se pastreaza caracteristica.
+
+float:
+  - dimensiunea locatiei: 4 octeti, deci p=32;
+  - k=8 (deci raman 23 biti pentru zecimale);
+  - intervalul valorilor:
+	 [-(1-1/2^24)*2^128, ..., (1-1/2^24)*2^128]
+      adica aproximativ intervalul:
+	 [-3.402823*10^38, ..., 3.402823*10^38];
+double:
+  - dimensiunea locatiei: 8 octeti, deci p=64;
+  - k=11 (deci raman 52 biti pentru zecimale);
+  - intervalul valorilor:
+	 [-(1-1/2^53)*2^1024, ..., (1-1/2^53)*2^1024]
+      adica aproximativ intervalul:
+	 [-1.79*10^308, ..., 1.79*10^308];
+long double:
+  - dimensiunea locatiei: 10 octeti, deci p=80;
+  - k=16 (deci raman 63 biti pentru zecimale);
+  - intervalul valorilor:
+	 [-(1-1/2^64)*2^32768, ..., (1-1/2^64)*2^32767]
+      adica aproximativ intervalul:
+	 [-1.1*10^4932, ..., 1.1*10^4932].
+
+Atentie: daca folosim alte compilatoare ca TC++ 1.00 dimensiunile de mai sus
+ pot diferi; de exemplu la majoritatea compilatoarelor de C sub Linux tipul
+ int este pe 4 octeti (32 biti). In general diversele compilatoare
+ implementeaza tipul int fie ca pe short fie ca pe long.
+
+Cu urmatorul program simplu se poate studia modul de reprezentare interna a
+ datelor de tipul float (exercitiu: scrieti programe similare si pentru alte
+ tipuri de date numerice predefinite):
+
+#include<stdio.h>
+void citirefloat(){
+ char s[256]; float f; unsigned char *c; int i;
+ printf("Introduceti numere float (ceva invalid pt. iesire):\n");
+ do{printf("Numarul float: "); gets(s); if(sscanf(s,"%f",&f)<1)return;
+    printf("Reprezentarea: ");
+    for(i=sizeof(float),c=(unsigned char*)&f+i-1; i>0; --c,--i)
+     printf("%d%d%d%d%d%d%d%d ",
+     *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+     printf("\n                \\_______/\n\n");
+ }while(1);
+}
+void citireputere2(){
+ char s[256]; float f,n; unsigned char *c; long k,i;
+ printf("Introduceti numere (ceva invalid pt. iesire):\n");
+ do{printf("Dati un numar de forma n * 2^k, k intreg:\n");
+    printf("           n = "); gets(s); if(sscanf(s,"%f",&n)<1)return;
+    printf("           k = "); gets(s); if(sscanf(s,"%ld",&k)<1)return;
+    if(k>=0)for(f=n,i=0; i<k; ++i)f*=2;
+    else for(f=n,i=0; i>k; --i)f/=2;
+    printf("     n * 2^k : %f\n",f);
+    printf("Reprezentarea: ");
+    for(i=sizeof(float),c=(unsigned char*)&f+i-1; i>0; --c,--i)
+     printf("%d%d%d%d%d%d%d%d ",
+     *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+     printf("\n                \\_______/\n\n");
+ }while(1);
+}
+void citirebinar(){
+ char s[256]; float f; unsigned char *c; int k,p,i,j; unsigned long n;
+ printf("Introduceti reprezentari de float (ceva invalid pt. iesire):\n");
+ do{printf("                _/~~~~~~\\______||______||______|\n");
+    printf("Reprezentarea = "); gets(s);
+    for(i=0; i<32; ++i)if(s[i]!='0' && s[i]!='1')return;
+    if(!strncmp(s+1,"11111111",8))
+      if(strncmp(s+9,"00000000000000000000000",23))return;
+    for(i=0,c=(unsigned char*)&f+sizeof(float)-1; i<sizeof(float); --c,++i)
+      for(*c=0,p=128,j=0; j<8; p/=2,++j)
+	*c+=(s[i*8+j]-'0')*p;
+    for(k=0,j=1; j<9; ++j)k=k*2+(s[j]-'0');
+    for(n=k?1:0,j=9; j<32; ++j)n=n*2+(s[j]-'0');
+    if(k==0)k=k-126-23;else k=k-126-24;
+    while(!(n%2)){n/=2;++k;}
+    printf(" Numarul este = %f   sau   %g\n",f,f);
+    printf("In scrierea n * 2^k avem:\n");
+    printf("       Semnul = %c\n",s[0]=='0'?'+':'-');
+    printf("            n = %ld\n",n);
+    printf("            k = %d\n",k);
+    printf("\n\n");
+ }while(1);
+}
+void main(){
+int o;
+do{printf("Optiuni posibile:\n");
+   printf("  0 - iesire\n");
+   printf("  1 - conversie float -> binar\n");
+   printf("  2 - conversie n * 2^k -> binar\n");
+   printf("  3 - conversie binar -> float, n * 2^k\n");
+   do{do{fflush(stdin);printf("Optiunea dvs: ");}while(scanf("%d",&o)==0);
+     }while(o<0 || o>3);
+   fflush(stdin);
+   switch(o){
+     case 0: return;
+     case 1: citirefloat(); break;
+     case 2: citireputere2(); break;
+     case 3: citirebinar();
+   }
+   printf("\n\n\n\n");
+}while(1);
+}
+
+C. Conversii si erori:
+   ------------------
+
+a) Citiri si scrieri cu format:
+
+  Pentru comunicarea datelor numerice in cadrul dialogului cu utilizatorul
+uman sunt folosite reprezentari (formate) externe. Distingem urmatoarele
+formate externe pentru numere:
+ (a) - caracter, ex: a A ? <blank> <enter>
+ (b) - intreg zecimal, ex: 0, 14, 125, 171, -3, -0
+ (c) - intreg octal, ex: 0, 16, 175, 253, -3, -0
+ (d) - intreg hexazecimal, ex: 0, e, E, 7d, 7D, ab, aB, Ab, AB, -3, -0
+ (e) - flotant, ex: 0.12, -12.3, -1.0, 1., .2
+ (f) - flotant cu exponent, ex: 1e3, 1e-3, .2e3, 1.2e3, -1.2e-3, 1.2e-3
+  La citirea/scrierea datelor cu scanf, printf, fscanf, fprintf, sscanf,
+sprintf se face conversia datelor intre formatul intern si un format extern.
+Tipul de conversie facut este specificat de constructiile cu %. Cu ocazia
+acestor conversii apar uneori trunchieri/erori.
+  Functiile fscanf/fprintf si sscanf/sprintf lucreaza similar cu
+scanf/printf, doar ca sursa/destinatia cu formatul extern este un fisier,
+respectiv un string. Analizam conversiile facute doar cazul lui scanf/printf:
+
+  Conform help-ului din TC++1.00, constructiile cu % desemneaza conversii
+dinspre/spre urmatoarele formate externe numerice:
+   %d sau %i : intreg zecimal cu semn
+   %o : intreg octal fara semn
+   %u : intreg zecimal fara semn
+   %x : la printf: intreg hexazecimal fara semn
+	la scanf: intreg hexazecimal
+   %X : la printf: intreg hexazecimal fara semn
+	la scanf: long hexazecimal
+   %f : flotant: [-]dddd.ddd
+   %e : flotant cu exponent: [-]d.ddd e [+/-]ddd
+   %g : flotant e sau f, in functie de precizie
+   %E : ca e, dar exponentul este introdus cu E
+   %G : ca g, dar exponentul este introdus cu E
+   %c : caracter
+(la acestea se adauga: %s : string, %% : caracterul %, %p : pointer near
+ YYYY sau far XXXX:YYYY, %n : depune nr. caracterelor scrise pana la
+ momentul curent in locatia indicata de argumentul corespunzator); de
+ asemenea, putem folosi modificatori cu urmatoarele semnificatii:
+   F : argumentul este far pointer
+   N : argumentul este near pointer
+   h impreuna cu d,i,o,u,x,X : argumentul este short int
+   l impreuna cu d,i,o,u,x,X : argumentul este long int
+   l impreuna cu e,E,f,g,G : argumentul este double (doar la scanf)
+   L impreuna cu e,E,f,g,G : argumentul este long double
+(ex: %ld : long, %lu : unsigned long).
+
+  Daca tipul valorilor citite/scrise sau dimensiunea locatiei in care se
+citeste nu este in totala compatibilitate cu constructia cu % folosita, pot
+aparea trunchieri/erori. Modul in care se fac aceste alterari ale datelor
+depinde foarte mult de compilator. In cazul lui scanf, aceste alterari pot
+fi studiate cu urmatorul program:               ~~~~~
+
+#include<stdio.h>
+void afis(void *p, int n){
+  int i; unsigned char *c;
+  for(i=n,c=(unsigned char*)p+i-1; i>0; --c,--i)
+   printf("%d%d%d%d%d%d%d%d ",
+   *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+  printf("\n");
+}
+union {unsigned char uc;  char c;
+       unsigned int ui;   int i;
+       unsigned long ul; long l;
+       float f; double d; long double ld;
+       char s[100];} m;
+void main(){
+int i;
+do{for(i=0; i<99; ++i)m.s[i]='\0';
+ printf("n = "); scanf("%i",m.s); /* in loc de %i se pot incerca altele */
+ printf("Val: %ld\n",m.l); /* in loc de %ld si m.l se pot incerca altele */
+ printf("Rep: "); afis(&m.s,6); /* in loc de 6 se poate lua orice nr.mare */
+ printf("\n");
+}while(1);
+}
+
+In urma testarii acestui program in TC++1.00, au rezultat urm. conversii:
+				    ~~~~~~~~
+%d, %i, %u: conversie (b) -> format intern de unsigned int (16 biti);
+  daca valoarea introdusa nu este in intervalul 0, ..., 2^16-1, mai intai se
+  aduna/scade un multiplu convenabil de 2^16 = 65536 (deci se citeste o
+  valoare eronata); daca numarul de cifre introduse de la intrarea standard
+  este prea mare, nu se consuma decat o parte din ele (restul raman in
+  buffer), iar numarul citit (si pus in locatie) este 2^16-1;
+ exemplul 1:
+  unsigned char uc=0;  char c=0;
+  unsigned int ui=0;   int i=0;
+  unsigned long ul=0l; long l=0L;
+  daca de la intrare tastam 33023 si executam una din:
+    scanf("%d",&uc), scanf("%d",&c), scanf("%d",&ui), scanf("%d",&i),
+    scanf("%d",&ul), scanf("%d",&l),
+  atunci la adresa specificata se pune: 10000000 11111111, deci va rezulta:
+   uc==255, c==-1 --> in acest caz se considera doar primul octet, cel cu
+     11111111; atentie ca in urma citirii a fost afectat si octetul urmator,
+     care nu face parte din spatiul rezervat pentru uc, respectiv c, putand
+     astfel altera alte date;
+   ui==33023, i=-32513 --> in acest caz se considera ambii octeti, dar sunt
+     interpretati diferit;
+   ul==33023, l=33023 --> prin citire s-au modificat doar primii doi octeti
+     din locatiile lui ul, respectiv l, ceilalti ramanand 0 de la
+     initializare; atentie ca daca nu i-am fi initializat cu 0, valoarea lor
+     actuala ar fi fost alta; de ex. daca i-am fi initializat cu 65792L
+     (deci locatia lor ar fi continut 00000000 00000001 00000001 00000000),
+     in urma citirii locatia ar fi avut 00000000 00000001 10000000 11111111,
+     deci am fi avut ul==98559, l=98559
+ exemplul 2:
+  unsigned int ui=0; unsigned long ul=65792L;
+  daca de la intrare tastam 65537 si executam una din:
+     scanf("%d",&ui), scanf("%d",&ul)
+  atunci la adresa specificata se pune: 00000000 00000001 (deci mai intai
+     din valoarea introdusa se scade 1 * 2^16 = 65536, apoi se codifica pe
+     16 biti si se pune in cei doi octeti), deci va rezulta:
+   ui==1, ul==65537 (loc.lui ul va avea 00000000 00000001 00000000 00000001)
+ exemplul 3:
+  unsigned int ui=0; unsigned long ul=65792L;
+  daca de la intrare tastam -1 si executam una din:
+     scanf("%d",&ui), scanf("%d",&ul)
+  atunci la adresa specificata se pune: 11111111 11111111 (deci mai intai
+     la valoarea introdusa se aduna 1 * 2^16 = 65536, apoi se codifica pe
+     16 biti si se pune in cei doi octeti), deci va rezulta:
+   ui==65535, ul==131071 (loc.lui ul: 00000000 00000001 11111111 11111111)
+ exemplul 4:
+  unsigned long ul;
+  daca de intrare tastam 1234567891234567 si executam scanf("%d",&ul),
+  atunci se consuma doar cifrele 12345678912 (in buffer raman 34567) iar
+  la adresa specificata se pune: 11111111 11111111 (locatia lui ul va avea
+  00000000 00000000 11111111 11111111).
+
+%o, %x: conversie (c) (respectiv (d)) -> format intern de unsigned int (16
+  biti); se fac aceleasi alterari ca mai sus; atentie deci ca se pot
+  introduce de la tastatura si numere negative
+
+%X: conversie (d) -> format intern de unsigned long (32 biti); se fac
+   urmatoarele alterari:
+  daca numarul n tastat este a.i. -2^32+1 <= n <= 2^32-1, se reprezinta
+   pe 32 biti numarul (n+2^32) mod 2^32;
+  daca numarul n tastat este < -2^32+1, atunci se reprezinta pe 32 biti
+   numarul 2^31, iar daca numarul de cifre este prea mare, o parte raman
+   in buffer (deci neconsumate);
+  daca numarul n tastat este > 2^32-1, atunci se reprezinta pe 32 biti
+   numarul 2^31, iar daca numarul de cifre este prea mare, o parte raman
+   in buffer (deci neconsumate);
+  exemple:
+   unsigned long ul; scanf("%X",&ul);
+   in functie de urmatoarele numere tastate obtinem urmatoarele configuratii
+   in locatia lui ul:
+	     -1234567891234567 : 10000000 00000000 00000000 00000000
+		(in buffer raman 4567, deci fara "-")
+	     -123456789        : 10000000 00000000 00000000 00000000
+	     -100000000        : 10000000 00000000 00000000 00000000
+	   / -ffffffff         : 00000000 00000000 00000000 00000001
+	  |  -1                : 11111111 11111111 11111111 11111111
+	  |   0                : 00000000 00000000 00000000 00000000
+	  |   1                : 00000000 00000000 00000000 00000001
+	  |   7fffffff         : 01111111 11111111 11111111 11111111
+	   \  ffffffff         : 11111111 11111111 11111111 11111111
+	      100000000        : 01111111 11111111 11111111 11111111
+	      123456789        : 01111111 11111111 11111111 11111111
+	      1234567891234567 : 01111111 11111111 11111111 11111111
+		(in buffer raman 4567)
+
+%ld: conversie (b) -> format intern de unsigned long (32 biti), cu aceleasi
+  alterari ca la %X
+
+%c: conversie (a) -> format intern de unsigned char (8 biti)
+  exemple:
+   unsigned int ui=0; (locatia lui ui contine: 00000000 00000000)
+   scanf("%c",&ui);
+   in functie de urmatoarele caractere tastate obtinem urmatoarele
+   configuratii in locatia lui ui (intotdeauna va fi afectat doar octetul
+   mai putin semnificativ):
+     A         : 00000000 01000001
+     <Alt 255> : 00000000 11111111
+
+%f: conversie (e) sau (f) -> format intern de float (32 biti, din care 8
+  pentru exponent); daca numarul tastat depaseste intervalul
+	 [-(1-1/2^24)*2^128, ..., (1-1/2^24)*2^128]
+  adica aproximativ intervalul:
+	 [-3.402823*10^38, ..., 3.402823*10^38],
+  atunci se citeste numarul +/- infinit (01111111 10000000 00000000 00000000
+  respectiv 11111111 10000000 00000000 00000000) si nu raman cifre
+  neconsumate in buffer; daca numarul tastat are prea multe zecimale,
+  ultimile se ignora (dar nu raman in buffer), conform preciziei de
+  reprezentare a numarului respectiv (a se vedea sectiunea B);
+  exemple:
+   float f; scanf("%f",&f);
+   in functie de urmatoarele numere tastate obtinem urmatoarele configuratii
+   in locatia lui f:
+     -99999999999999999999e99999999999999999999 :      \
+       11111111 10000000 00000000 00000000 (- infinit)  | nu ram. nimic
+      99999999999999999999e99999999999999999999 :       | in buffer
+       01111111 10000000 00000000 00000000 (+ infinit) /
+     1.000000000 : 00111111 10000000 00000000 00000000 \  deci se ignora
+     1.000000001 : 00111111 10000000 00000000 00000000  | ultima zecimala
+     1.000000009 : 00111111 10000000 00000000 00000000 / (nu ram. in buff.)
+
+%lf: conversie (e) sau (f) -> format intern de double (64 biti, din care 11
+  pentru exponent); comentariile sunt analoage ca in cazul %f, dar se are in
+  vedere intervalul de valori corespunzator lui double;
+
+In cazul lui printf se pot constata urmatoarele:
+	     ~~~~~~
+%x afisaza cifrele > 10 cu litere mici, %X cu litere mari;
+daca tipurile valorilor scrise nu concorda perfect cu constructiile cu %,
+ apar interpretari eronate ale acestora; regulile pe care trebuie sa le
+ aplicam pentru a vedea cum sunt alterate valorile sunt cele legate de
+ functiile cu numar variabil de parametri si regula conversiilor implicite
+ (a se vedea mai jos).
+exemplul 1:
+ printf("%d %d %c",1.628) afisaza: 13631 -17826 I
+ explicatie: in lipsa unei conversii explicite, 1.628 a fost convertit
+  implicit la double (vezi regula conversiilor implicite), apoi a fost
+  incarcat pe stiva; rep. ca double a lui 1.628 care a fost incarcata este:
+  00111111 11111010 00001100 01001001 10111010 01011110 00110101 00111111
+  (octetul cel mai putin semnificativ este cel din dreapta); aplicand
+  mecanismul de interpretare a parametrilor specific functiilor cu numar
+  variabil de parametri (printf este o functie cu nr. var. de parametri),
+  datorita primului %d, printf a incercat sa ia dintre octetii incarcati
+  o pereche si sa o interpreteze ca un int; astfel, a preluat octetii mai
+  putin semnificativi 00110101 00111111 si interpretandu-i ca int a obtinut
+  13631; apoi, prin acelasi mecanism, datorita celui de-al doilea %d, a
+  incercat sa ia alti doi octeti dintre cei incarcati si sa-i interpreteze
+  tot ca un int; astfel, a preluat urmatorii doi octeti 10111010 01011110
+  si interpretandu-i ca int a obtinut -17826; in final, datorita lui %c,
+  a preluat al cincilea octet 01001001 si interpretandu-l ca un caracter
+  a obtinut I ('I' are codul 73, care se reprezinta intern prin 01001001);
+  observam ca o singura valoare data ca parametru lui printf a furnizat
+  suficienta informatie pentru a satisface trei constructii cu % (valorile
+  afisate nu au insa sens);
+exemplul 2:
+ printf("%ld", -1) afisaza: 65535
+ explicatie: in lipsa unei conversii explicite, -1 a fost convertit
+  implicit la int, iar pe stiva a fost incarcata reprezentarea sa ca int:
+  11111111 11111111; aplicand mecanismul de interpretare a parametrilor
+  specific functiilor cu numar variabil de parametri, datorita lui %ld,
+  printf a incercat sa ia patru octeti si sa-i interpreteze ca un long;
+  primii doi octeti, mai putin semnificativi, au fost cei doi incercati;
+  urmatorii doi octeti gasiti au fost 00000000 00000000; astfel, printf
+  a preluat 00000000 00000000 11111111 11111111 si interpretandu-i ca long,
+  a obtinut 65535;
+exemplul 3:
+ printf("%ld", -1L) sau printf("%ld", (long)-1) afisaza: -1
+ explicatie: datorita lui "L", respectiv datorita conversiei explicite
+ (long), -1 a fost convertit la long, iar pe stiva a fost incarcata
+ reprezentarea sa ca long: 11111111 11111111 11111111 11111111; astfel,
+ cand printf a incercat (datorita lui %ld) sa ia patru octeti si sa-i
+ interpreteze ca long, a obtinut tot -1 (deci acum afisarea e corecta).
+
+b) Conversii explicite:
+
+  Se realizeaza folosind operatori de conversie explicita sau "cast" (tip);
+exemple: (int), (unsigned char), (char *), etc. Expresia:
+				   (tip)e
+unde "tip" este un tip iar "e" este o expresie, produce valoarea produsa de
+e, dar convertita spre tipul "tip" (reprezentata conform tipului "tip"). Cu
+ocazia acestor conversii pot aparea alterari ale valorii respective.
+
+  In TC++1.00 mecanismele dupa care se realizeaza conversiile explicite sunt
+urmatoarele:
+- un intreg cu semn este convertit intr-un intreg (cu semn sau fara) de
+   dimensiune mai mare umpland noii biti semnificativi cu copii ale bitului
+   sau de semn (propagand bitul de semn); exemple:
+   char i; i=1; ==>               i: 00000001            (adica 1)
+			     (int)i: 00000000 00000001   (adica 1)
+		    (unsigned int)i: 00000000 00000001   (adica 1)
+   char i; i=-1; ==>              i: 11111111            (adica -1)
+			     (int)i: 11111111 11111111   (adica -1)
+		    (unsigned int)i: 11111111 11111111   (adica 65535)
+- un intreg fara semn este convertit intr-un intreg (cu semn sau fara) de
+   dimensiune mai mare umpland noii biti semnificativi cu 0 (propagand 0);
+   exemple:
+   unsigned char i; i=1; ==>      i: 00000001            (adica 1)
+			     (int)i: 00000000 00000001   (adica 1)
+		    (unsigned int)i: 00000000 00000001   (adica 1)
+   unsigned char i; i=255; ==>    i: 11111111            (adica 255)
+			     (int)i: 00000000 11111111   (adica 255)
+		    (unsigned int)i: 00000000 11111111   (adica 255)
+- un intreg (cu semn sau fara) este convertit intr-un intreg (cu semn sau
+  fara) de dimensiune mai mica eliminand octetii semnificativi suplimentari;
+  exemple:
+   int i; i=-384; ==>             i: 11111110 10000000   (adica -384)
+			    (char)i: 10000000            (adica -128)
+		   (unsigned char)i: 10000000            (adica 128)
+   unsigned int i; i=65152; ==>   i: 11111110 10000000   (adica 65152)
+			    (char)i: 10000000            (adica -128)
+		   (unsigned char)i: 10000000            (adica 128)
+- un intreg (cu semn sau fara) este convertit intr-un intreg (cu semn sau
+  fara) de aceeasi dimensiune prin pastrarea aceleasi configuratii de biti;
+  exemple:
+   char i; i=-2;  ==>             i: 11111110   (adica -2)
+		   (unsigned char)i: 11111110   (adica 254)
+   unsigned char i; i=254;  ==>   i: 11111110   (adica 254)
+			    (char)i: 11111110   (adica -2)
+-un intreg se converteste spre float, double sau long double schimband modul
+ de reprezentare al valorii respective; cu aceasta ocazie anumite zecimale
+ binare se pot pierde sau se poate face o rotunjire la o valoare zecimala
+ superioara, deci valoarea obtinuta este alterata;
+  exemplul 1:
+   int i; i=-32768;
+   atunci ==>    i: 10000000 00000000 (adica -32768 = -2^15)
+	  (float)i: 11000111 00000000 00000000 00000000 (adica -32768)
+  exemplul 2:
+   long l; unsigned long ul; l=-256L; ul=4294967040L;
+   atunci ==>    l: 11111111 11111111 11111111 00000000   (adica -256)
+		ul: 11111111 11111111 11111111 00000000   (adica 4294967040)
+	  (float)l: 11000011 10000000 00000000 00000000
+		     (adica -256, vezi sectiunea A, regula 3 de reprez.)
+	 (float)ul: 01001111 01111111 11111111 11111111
+		     (adica 4294967040, vezi sect. A, regula 3 de reprez.)
+   obs. ca -256L si 4294967040L desi se reprezinta la fel ca intregi, se
+   reprezinta diferit ca float.
+  exemplul 3:
+   long l; l=33554429L;
+   atunci ==>    l: 00000001 11111111 11111111 11111101
+		     (adica 33554429 = 2^25-3)
+	  (float)l: 01001011 11111111 11111111 11111110
+		     (adica 33554428)
+   explicatie: pentru a reprezenta 33554429 ca float, conform regulii 3,
+   sectiunea A, il scriem mai intai in baza 2 in forma normalizata si
+   obtinem 33554429 = m * 2^25, unde mantisa m scrisa in baza 2 este:
+	     0.1111111111111111111111101
+   atunci, reprezentarea ca float a lui 33554429 se obtine astfel:
+    bitul 31 (de semn) este 0
+    bitii 30 - 23 contin repr. binara a lui 25+126=151, adica 10010111
+    bitii 22 - 0 ar trebui sa contina 111111111111111111111101 (sirul de
+     zecimale binare de mai sus, din care omitem primul 1, pt. ca 151>0);
+     intrucat acest sir contine 24 cifre si avem doar 23 biti disponibili,
+     ultimul 1 se pierde, iar bitii 22 - 0 vor contine doar
+     11111111111111111111110
+  exemplul 4:
+   long l; l=33554431L;
+   atunci ==>    l: 00000001 11111111 11111111 11111111
+		     (adica 33554431 = 2^25-1)
+	  (float)l: 01001100 00000000 00000000 00000000
+		     (adica 33554432 = 2^25)
+   explicatie: aici reprezentarea binara normalizata ar fi fost m * 2^25,
+    unde m scrisa binar ar fi fost: 0.1111111111111111111111111; in loc
+    sa se elimine ultimul 1 si sa se reprezinte ca mai sus, s-a preferat
+    sa se ia numarul imediat superior reprezentabil, adica 1 * 2^25
+    (ca si cand la m s-ar fi adaugat 0.0000000000000000000000001 binar in
+    loc sa se scada 0.0000000000000000000000001 binar) si reprezentand
+    normalizat noul numar, adica n * 2^26, unde n scris binar este 0.1, s-a
+    obtinut reprezentarea de mai sus;
+- un flotant (float, double, long dpuble) se converteste spre un intreg (cu
+  semn sau fara) astfel: intai se scrie numarul in format zecimal binar fara
+  exponent (ex: 1011.101); apoi se truncheaza (se elimina) zecimalele; apoi,
+  daca numarul obtinut este < 0, se  aduna o putere a lui 2 suficient de
+  mare a.i. sa obtinem un numar >=0; in final se elimina bitii semnificativi
+  suplimentari, care depasesc numarul de biti corespunzator tipului
+  destinatie; daca tipul flotant sursa foloseste p biti pentru reprezentare,
+  din care k pentru caractersistica (a se vedea sectiunea A, regula 3), iar
+  tipul intreg destinatie foloseste d biti pentru reprezentare, va rezulta
+  ca numerele flotante cu modulul >= 2^(d+p-k-1) vor fi convertite la
+  intregul 0 (deoarece vor fi convertite intr-o reprezentare binara
+  c...c0...0 in care ultimul grup de 0 are >= d cifre);
+  exemple:
+   float f;
+   f=-1.25; ==>    f: 10111111 10100000 00000000 00000000  (adica -1.25)
+	     (char)f: 11111111 (adica -1)
+   explicatie: numarul dat de f s-a convertit intai in reprezentarea
+   binara fara exponent: -1.01, apoi s-au trunchiat zecimalele: -1,
+   apoi s-a adunat 2^8 pentru a obtine un nr. >= 0: 11111111;
+   similar, avem: (char)-1.9 == -1, (char)1.25 == 1, (char)1.9 == 1
+   f=385.5;   ==>     f: 01000011 11000000 110000000 00000000 (adica 385.5)
+		(char)f: 10000001 (adica -127)
+       (unsigned char)f: 10000001 (adica 129)
+   explicatie: s-au obtinut succesiv reprezentarile binare: 110000001.1,
+   110000001, 10000001;
+   f=1073741952L; ==> f: 01001110 00000000 00000000 00000001
+			   (adica 1073741952 = 2^30 + 128)
+		(char)f: 00000001
+       (unsigned char)f: 00000001
+   explicatie: s-a obtinut reprezentarea binara
+			 1000000000000000000000010000000
+    care dupa eliminarea bitilor
+    semnificativi >= 8 a devenit 00000001;
+   f=2147483648L; ==> f: 01001111 00000000 00000000 00000000
+			   (adica 2147483648 = 2^31)
+		(char)f: 00000000
+       (unsigned char)f: 00000000
+   explicatie: s-a obtinut reprezentarea binara
+			10000000000000000000000100000000
+    care dupa eliminarea bitilor semnificativi >= 8 a devenit 00000000;
+    in general, numerele flotante cu modul >= 2^31 = 2^(8+32-8-1), cand
+    se convertesc la char sau unsigned char, devin 0;
+- un flotant se converteste la alt flotant de dimensiune mai mare (ex:
+  float in double) prin schimbarea modului de reprezentare, fara alterarea
+  valorii;
+- un flotant se converteste la alt flotant de dimensiune mai mica
+  (ex: double in float) astfel: daca valoarea depaseste intervalul de valori
+  corespunzator tipului destinatie, ea se converteste in +infinit sau
+  -infinit (dupa semn); daca se afla intre limitele intervalului,
+  se converteste cu schimbarea modului de reprezentare si o eventuala
+  trunchiere sau rotunjire la o valoare din acest interval reprezentabila
+  exact in noul tip (deci valoarea obtinuta este alterata);
+  exemple:
+  double d; d=8388609; atunci:
+  d: 01000001 01100000 00000000 00000000 00100000 00000000 00000000 00000000
+      (deci 8388609 = 2^23 + 1)
+  (float)d: 01001011 00000000 00000000 00000001
+  double d; d=8388609+1./4; atunci:
+  d: 01000001 01100000 00000000 00000000 00101000 00000000 00000000 00000000
+      (deci 8388609+1./4 = 2^23 + 1 + 2^(-2))
+  (float)d: 01001011 00000000 00000000 00000001
+  double d; d=8388609+1./2; atunci:
+  d: 01000001 01100000 00000000 00000000 00110000 00000000 00000000 00000000
+      (deci 8388609+1./2 = 2^23 + 1 + 2^(-1))
+  (float)d: 01001011 00000000 00000000 00000010
+  double d; d=8388610-1./536870912; atunci:
+  d: 01000001 01100000 00000000 00000000 00111111 11111111 11111111 11111111
+      (deci 8388610-1./536870912 = 2^23 + 1 + 1 - 2^(-29))
+  (float)d: 01001011 00000000 00000000 00000010
+  explicatii: cele 3 numere di (i=1,2,3,4) au fost scrise initial (pentru a
+  fi reprezentate ca double) sub forma mi * 2^24, unde mi in forma binara
+  sunt:
+    m1 = 0.100000000000000000000001
+    m1 = 0.10000000000000000000000101
+    m3 = 0.1000000000000000000000011
+    m4 = 0.10000000000000000000000111111111111111111111111111111
+  cand s-au convertit la float:
+    bitul 31 (de semn) a devenit 0
+    bitii 30 - 23 au devenit 10010110 (rep. binara a lui 24+126=150)
+    in bitii 22 - 0 s-a cautat punerea sirurilor de zecimale ale lui mi,
+     fara primul 1 (pt. ca 150>0); primul sir a incaput exact (avand 23
+     cifre), la al doilea s-au trunchiat ultimele zecimale 01, iar pentru
+     celelalte s-a facut intai rotunjire la 0.100000000000000000000010,
+     apoi s-a luat sirul 00000000000000000000010;
+  float f; f=10e38; ===> x == + infinit, reprezentat:
+                         01111111 10000000 00000000 00000001
+  explicatie: 10e38 este considerat de tip double (vezi sectiunea e) si
+  depaseste intervalul de valori al tipului float; de aceea se considera
+  +infinit;
+
+c) Conversii facute cu ocazia atribuirii:
+
+  O expresie de atribuire simpla are forma:
+				 v=e
+unde v este o variabila (sau in general o expresie lvalue, ex: a[i], cu
+a vector, *b, cu b pointer, (*(c+1))[3], cu c pointer la vectori, etc.) iar
+e este o expresie unde operatorul din varful arborelui e cel putin la fel
+de tare ca = (deci nu e virgula ,). Evaluarea consta in asignarea variabilei
+din stanga la valoarea produsa de expresia din dreapta (ordinea in care se
+evalueaza insa membrul stang si cel drept depind insa de implementare);
+expresia returneaza valoarea operandului stang de dupa atribuire, cu tipul
+acestui operand. Observam ca operatorul de atribuire produce efecte laterale
+(modificarea variabilei din stanga sa). Cu ocazia atribuirii val. atribuita
+poate suferi alterari, urmand exact aceleasi reguli comentate la b).
+ Exemple:
+ char c; int i; long l; i=384; l=(c=i);
+   atunci: i: 00000001 10000000                   (adica 384)
+	   c: 10000000                            (adica -128)
+	   l: 11111111 11111111 11111111 10000000 (adica -128)
+   explicatie: aplicand regulile de la b), in paranteza inferioara s-a
+   eliminat octetul semnificativ, paranteza a returnat -128 de tip char,
+   apoi la aceasta valoare s-a propagat bitul de semn 1 pe inca 24 biti;
+   expresia l=(c=i) este echivalenta cu l=c=i;
+ unsigned char uc; int i; i=-1; if((uc=i)==-1)printf("t");else printf("f");
+   ==> se va afisa f, deoarece in paranteza interioara valoarea lui i se va
+   converti intr-o valoare de tip unsigned, deci >= 0 (anume 255, care se
+   reprezinta: 11111111) si astfel paranteza interioara nu poate returna -1;
+   indiferent de val. lui i, paranteza interioara va produce o valoare >= 0;
+ float f; int i; f=3.14; i=f; ==> i va avea valoarea 3 (conform regulilor de
+   conversie de la float la int, vezi b)); deci, spre deosebire de Pascal,
+   in C putem atribui un flotant la in intreg;
+ int a,*p; a=1; p=&a;
+   *(printf(" s "),p)=*(printf(" d "),p); ==> in TC+=1.00 afisaza d  s, deci
+   s-a evaluat intai membrul drept, apoi stangul.
+  O expresie de forma
+			      v=e1,e2
+unde e1 nu are , in varful arborelui (deci toata expresia din dreapta lui =
+are , in varful arborelui) este echivalenta cu (v=e1),e2.
+  In TC++1.00, daca variabilei din dreapta atribuirii ii aplicam un operator
+de conversie explicita, valoarea se atribuie locatiei obtinuta dupa
+conversie (adica:  (tip)v=e  <=>  *(tip*)&v=e); de exemplu:
+   unsigned long ul; long l;
+   ul=0; l=0;
+   ul = (int)l = (char)-1;
+   atunci: l: 00000000 00000000 11111111 11111111 (adica 65535)
+	  ul: 11111111 11111111 11111111 11111111 (adica 4294967295)
+   explicatie: (char)-1 produce valoarea de tip char reprezentata 11111111;
+   ea este atribuita variabilei de tip int care s-ar putea forma cu primii
+   doi octeti ai locatiei lui l, iar in urma conversiei de la char la int
+   (vezi b)) acesti octeti vor contine 11111111 11111111, asa ca in total
+   l contine 00000000 00000000 11111111 11111111; aceasta valoare long se
+   converteste la unsigned long prin pastrarea aceleisai configuratii pe
+   biti (vezi iarasi b)) si se atribuie lui ul;
+   daca in schimb am fi avut:
+   ul=0; l=0;
+   ul = (int)(l = (char)-1);
+   atunci: l: 11111111 11111111 11111111 11111111 (adica -1)
+	  ul: 11111111 11111111 11111111 11111111 (adica 4294967295)
+   pentru ca valoarea de tip char reprezentata 11111111 (produsa de
+   (char)-1) se atribuie variabilei long l, deci se converteste la long nu
+   la int, obtinand 11111111 11111111 11111111 11111111; aceasta valoare
+   este pusa in l si returnata de paranteza interioara cu tipul long; mai
+   departe ea este convertita la int prin trunchiere, obtinand
+   11111111 11111111, iar aceasta ultima valoare este convertita la
+   unsigned long (prin propagarea bitului de semn 1) si atribuita lui ul;
+   daca in schimb am fi avut:
+   ul=0; l=0;
+   ul = (unsigned int)(l = (char)-1);
+   atunci: l: 11111111 11111111 11111111 11111111 (adica -1)
+	  ul: 00000000 00000000 11111111 11111111 (adica 65535)
+   deoarece valoarea long 11111111 11111111 11111111 11111111 returnata de
+   paranteza interioara se converteste la unsigned int prin trunchiere
+   obtinand 11111111 11111111, iar aceasta ultima valoare este convertita la
+   unsigned long prin propagarea lui 0, deoarece e de un tip intreg fara
+   semn si atribuita lui ul.
+
+  O expresie de atribuire compusa are forma:
+				v#=e
+unde v, e sunt ca mai sus, iar # este unul din operatorii:
+		       *   /   %   +   -   >>   <<   &   ^   |
+O asemenea expresie are acelasi efect cu
+				v=v#(e)
+cu diferenta ca v se evalueaza o singura data.
+  Exemplu:
+  int a[]={2,3,4,5},*p,x; p=a; x=1;
+  *(++x,p)/=2;           ==>   a: 1,3,4,5   x: 2
+  *(++x,p)=*(++x,p)/2;   ==>   a: 1,3,4,5   x: 3
+  explicatie: in al doilea caz *(++x,p) se evalueaza de doua ori, si de
+  aceea x creste de doua ori.
+Atentie: cu notatiile si mentiunea de mai sus privind evaluarea lui v,
+v#=e este echivalent cu v=v#(e), nu cu v=v#e; intr-adevar, de exemplu:
+  int i; i=2;
+  i+=3==4;  ==> i: 2 (deoarece expresia este echivalenta cu i=i+(3==4))
+  i=i+3==4; ==> i: 0 (deoarece expresia se imparantezeaza implicit
+		      i=((i+3)==4), intrucat + e mai tare ca ==);
+  Evident, i+=3,4 este echivalenta cu (i=i+3),4 si nu cu i=i+(3,4).
+
+  Operatorii de atribuire se asociaza de obicei de la dreapta la stanga,
+de exemplu:
+  char c; int i; long l; l=c=i=384; ==>  i: 384  c: -128  l: -128
+   (imparantezarea implicita a fost: l=(c=(i=384)))
+  int i,j,k; i=1; j=1; k=1; i+=j+=k+=1; ==>  i: 4  j: 3  k: 2
+   (imparantezarea implicita a fost: i+=(j+=(k+=1))).
+
+  Cu urmatorul program se pot studia conversiile facute cu ocazia
+conversiilor explicite (vezi b)) sau atribuirilor:
+
+#include<stdio.h>
+void afis(void *p, int dim){
+  int i; unsigned char *c;
+  for(i=0,c=(unsigned char *)p+dim-1; i<dim; ++i,--c)
+    printf("%d%d%d%d%d%d%d%d ",
+    *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+  printf("\n");
+}
+unsigned char uc;  char c;
+unsigned int ui;   int i;
+unsigned long ul; long l;
+float f; double d; long double ld;
+void main(){
+l=-1; ui=l;
+printf("%ld:\n ",l); afis(&l,sizeof(l));
+printf("%u:\n ",ui); afis(&ui,sizeof(ui));
+}
+
+(in loc de l, ui se pot alege alte combinatii impreuna cu %-le
+corespunzatoare la printf).
+
+d) Conversii facute cu ocazia apelarii functiilor:
+
+  Cand o expresie apare ca parametru actual al unei functii, ea mai intai
+este evaluata conform regulilor generale pentru expresii, producand o
+valoare al carui tip este determinat de aplicarea acestor reguli (de
+exemplu regula conversiilor implicite, un operator de cast, etc.), apoi
+valoarea respectiva este convertita la tipul parametrului formal
+corespunzator (aplicand regulile de la b)) si apoi este incarcata pe stiva
+pentru a fi transmisa acestuia. Cu ocazia conversiei la tipul parametrului
+formal pot aparea alterari suplimentare (pe langa cele survenite in
+procesul evaluarii expresiei). Cu urmatorul program se pot studia aceste
+transformari:
+
+#include<stdio.h>
+void afis(void *p, int dim){
+  int i; unsigned char *c;
+  for(i=0,c=(unsigned char *)p+dim-1; i<dim; ++i,--c)
+    printf("%d%d%d%d%d%d%d%d ",
+    *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+  printf("\n");
+}
+void fct(unsigned long ul){printf("%lu:\n ",ul);afis(&ul,sizeof(ul));}
+unsigned char uc;  char c;
+unsigned int ui;   int i;
+unsigned long ul; long l;
+float f; double d; long double ld;
+void main(){
+i=-1; printf("%d:\n ",i); afis(&i,sizeof(i));
+fct(i);
+}
+
+(si putem alege diverse combinatii pentru tipurile parametrilor formal
+ si actual ai lui fct).
+
+De exemplu, rularea programului de mai sus in TC++1.00 va produce:
+-1:
+ 11111111 11111111
+4294967295:
+ 11111111 11111111 11111111 11111111
+explicatie: expresia i data ca parametru actual lui fct se evalueaza
+producand valoarea -1 de tip int, reprezentata 11111111 11111111, apoi
+aceasta valoare este convertita la tipul parametrului formal unsigned long
+obtinand reprezentarea 11111111 11111111 11111111 11111111, aceasta este
+incarcata pe stiva (deci pe stiva se incarca 4 octeti), iar la intrarea
+in apelul lui f locatia parametrului ul a cuprins cei 4 octeti incarcati
+(pentru ca in TC++1.00 unsigned int e pe 4 octeti).
+
+  Cand o functie executa o instructiune de forma
+			  return e;
+unde e este o expresie, ea va returna valoarea produsa de e convertita apoi
+conform tipului returnat de functie; regulile aplicate sunt cele de la b).
+Cu aceasta ocazie pot aparea alterari ale valorii returnate. Cu urmatorul
+program pot fi testate aceste conversii:
+
+#include<stdio.h>
+void afis(void *p, int dim){
+  int i; unsigned char *c;
+  for(i=0,c=(unsigned char *)p+dim-1; i<dim; ++i,--c)
+    printf("%d%d%d%d%d%d%d%d ",
+    *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+  printf("\n");
+}
+unsigned char uc;  char c;
+unsigned int ui;   int i;
+unsigned long ul; long l;
+float f; double d; long double ld;
+unsigned long fct(){return i;}
+void main(){
+i=-1; ul=fct();
+printf("%d:\n ",i); afis(&i,sizeof(i));
+printf("%lu:\n ",ul); afis(&ul,sizeof(ul));
+}
+
+(si putem alege diverse combinatii pentru tipul valorii returnate de fct
+ si variabila care apare la return-ul ei).
+
+De exemplu, rularea programului de mai sus va produce:
+-1:
+ 11111111 11111111
+4294967295:
+ 11111111 11111111 11111111 11111111
+
+Atentie ca neprecizarea unor headere pentru functiile definite in alt fisier
+sursa (de exemplu pentru functiile predefinite) nu impiedica compilarea
+(cat timp fisierele cu definitiile functiilor sunt specificate spre a fi
+luate si ele in considerare la linkeditare), dar compilatorul va efectua
+doar conversiile necesare evaluarii expresiilor date ca parametri actuali
+(de exemplu regula conversiilor implicite, un operator de cast, etc.),
+cu urmatoarele adaugiri: daca rezultatul final este char sau unsigned char,
+el se mai converteste o data la int, iar daca rezultatul final este de tip
+float, el se mai cunverteste o data la double; practic, pe stiva vor fi
+incarcate valorile asa cum au fost furnizate de evaluarea expresiilor date
+ca parametri actuali (eventual cu conversiile suplimentare la int sau la
+double pe care le-am mentionat), fara o conversie suplimentara la tipul
+parametrului formal corespunzator. De exemplu, presupunem ca intr-un
+"project" Turbo C includem urmatoarele fisiere (ele se vor linkedita
+impreuna):
+============ primul fisier:
+#include<stdio.h>
+void afis(void *p, int dim){
+  int i; unsigned char *c;
+  for(i=0,c=(unsigned char *)p+dim-1; i<dim; ++i,--c)
+    printf("%d%d%d%d%d%d%d%d ",
+    *c/128%2,*c/64%2,*c/32%2,*c/16%2,*c/8%2,*c/4%2,*c/2%2,*c/1%2);
+  printf("\n");
+}
+void f(unsigned long ul, int i){
+ printf("%lu:\n ",ul); afis(&ul,sizeof(ul));
+ printf("%d:\n ",i); afis(&i,sizeof(i));
+}
+============ al doilea fisier:
+void main(){
+ f(1,1);
+}
+============
+Deci in fisierul unde apelam functia f nu exista un header pentru ea.
+Daca executam fisierul obtinut dupa compilarea separata si linkeditarea
+impreuna in TC++1.00, obtinem:
+65537:
+ 00000000 00000001 00000000 00000001
+0:
+ 00000000 00000000
+explicatie: in absenta headerului lui f la compilarea celui de-al doilea
+fisier, cei doi de 1 s-au convertit in baza regulii conversiilor implicite
+la int si s-au incarcat pe stiva asa; deci pe stiva s-a incarcat de doua
+ori reprezentarea 00000000 00000001 (pentru ca in TC++1.00 int e pe 2
+octeti); cand s-a aplat f, locatia parametrului ul a cuprins primii 4 octeti
+din cei incarcati (pentru ca in TC++1.00 unsigned long e pe 4 octeti), deci
+a continut 00000000 00000001 00000000 00000001 (adica 65537) iar locatia
+parametrului i a preluat urmatorii 2 octeti (pentru ca in TC++1.00 int e pe
+2 octeti); aici insa nu s-a incarcat nimic pe stiva si intamplator zona
+respectiva a continut 00000000 00000000 (adica 0).
+Daca in loc de f(1,1) am fi apelat f(1,1,1,1,1), pe stiva s-ar fi incarcat
+de 5 ori reprezentarea 00000000 00000001; parametrul ul ar fi preluat
+primii 4 octeti si ar fi continut tot 00000000 00000001 00000000 00000001
+(adica 65537) dar i ar fi preluat cei 2 octeti furnizati de al 3-lea 1 dat
+ca parametru actual si ar fi continut 00000001 00000001; astfel, executia
+ar fi afisat:
+65537:
+ 00000000 00000001 00000000 00000001
+1:
+ 00000000 00000001
+Observam ca functia poate fi apelata cu un numar variabil de parametri
+actuali. Daca avem grija sa nu dam prea multi parametri actuali iar tipul
+lor rezultat in urma regulii conversiilor implicite sa coincida cu tipul
+parametrilor actuali (de exemplu declaram multi parametri formali cu tipul
+int si dam ca parametri actuali expresii de tip int), acest lucru poate fi
+poate fi util. Pentru a lucra cu functii cu numar variabil de parametrii
+avem metoda mai eleganta data de entitatile din stdarg.h.
+
+Atentie ca nefolosirea unor parametrii actuali de tip adecvat, nefolosirea
+unor expresii adecvate la return si nefolosirea unor variabile de tip
+adecvat in care sa recuperam valoarea returnata de o anumita functie sunt
+surse frecvente de erori la executie (datorita valorilor alterate). De
+asemenea, uitarea de a mai include anumite fisiere header pentru functiile
+predefinite (ceea ce va avea drept consecinta conversii necorespunzatoare
+facute pentru parametrii actuali).
+
+e) Regula conversiilor implicite:
+
+  Pentru a evalua expresii aritmetice in care apar operanzi de tipuri
+diferite si nu am precizat conversii explicite (folosind operatori cast)
+compilatorul efectueaza niste conversii implicite. Cu aceasta ocazie pot
+aparea alterari ale valorilor calculata, vezi sectiunea b). Regula dupa
+care se fac aceste conversii implicite se numeste regula conversiilor
+implicite (engl: "usual arithmetic conversions"). Ea consta in urmatorii
+pasi:
+- fiecare char sau unsigned char se converteste la int ("integer
+  promotions") si fiecare float se converteste la double; apoi:
+- se verifica, in ordinea, asta daca unul dintre operanzi este:
+  long double, double, unsigned long, long, unsigned int, int
+  si prima data cand se constata ca da, se converteste celalalt operand in
+  acset tip si se face calculul in cadrul tipului respectiv.
+Pentru aplicarea oricareia din conversiile de mai sus se folosesc regulile
+de la b).
+
+Inainte de a arata alte cateva exemple, mentionam ca in TC++1.00 o constanta
+flotanta este considerata de tip double iar o constanda intraga cu valoarea
+cuprinsa intre -32768 si 32767 si fara l sau L la sfasit este considerata
+implicit de tipul int, altfel este considerata de tip long. De exemplu:
+ 3.14 ==> 3.14 de tip double
+ 10 ==> 10 de tip int
+ 100000 ==> 100000 de tip long
+ 10L sau 10l ==> 10 de tip long
+
+Exemple in TC++1.00:
+
+ 'A' sau (char)'A' sau (unsigned char)'A'
+  ==> 'A' este initial convertit la 65 de tip int, care apoi fie este lasat
+  asa, fie este convertit explicit la char, unsigned char;
+
+ 10L + 10
+  ==> 10L este considerat de tip long, al doilea 10 de tip int (pentru ca
+  este in intervalul -32768, ..., 32767); astfel al doilea 10 se converteste
+  la long, calculul se face in cadrul tipului long si se obtine 10 de tip
+  long;
+
+ char c;
+ 1. + (c = (32767 + ((unsigned char)191 + 'B')))
+  ==> se efectueaza urmatorii pasi:
+   - 1. se converteste implicit la double, 32767 si 191 sunt considerati
+     int, 'B' se converteste implicit la 66 de tip int;
+   - in paranteza interioara 191 se converteste explicit la unsigned char
+     (datorita operatorului de cast), apoi implicit iar la int (pentru ca
+     celalalt operand e int), apoi se calculeaza 191 + 66 in cadrul tipului
+     int, obtinand 257 de tip int;
+   - in paranteza intermediara se calculeaza 32767 + 257 in cadrul tipului
+     int si se obtine -32512 de tip int;
+   - -32512 se converteste la char (tipul lui c, conform mecanismelor
+     atribuirii), obtinand 0 de tip char iar aceasta valoare se atribuie lui
+     c; atribuirea returneaza 0 de tip char;
+   - in final 0 de tip char se converteste la double si se aduna cu 1 in
+     cadrul tipului double, iar toata expresia returneaza in final 1 de
+     tip double;
+
+ 32000 + 32000 + 1L;
+   ==> daca se asociaza 32000 + (32000 + 1L) se obtine in final 64001 de tip
+   long; daca se asociaza (32000 + 32000) + 1L, mai intai se efectueaza
+   32000 + 32000 in cadrul tipului int (32000 este considerat de tip int)
+   obtinand rezultatul alterat -1536, apoi acest rezultat se converteste la
+   long (datorita operandului 1L) si se aduna cu 1, obtinand -1535 de tip
+   long; deci modul de asociere a operatorilor este foarte important, iar
+   aceasta nu este precizata de standard; in TC++1.00 operatorii se asociaza
+   de la stanga (deci (32000 + 32000) + 1L), cu exceptia celor unari,
+   conditionali si de atribuire, care se asociaza de la dreapta;
+
+ 32000 + 32000 == 62000 + 2000
+   ==> produce 0 (fals), deoarece: mb. stang se evalueaza la -1536 (vezi
+   mai sus) iar in mb. drept 62000 se considera long deoarece nu este
+   cuprinsa intre -32768 si 32767 si astfel si 2000 se converteste la long
+   iar calculul se face in cadrul tipului long (obtinand 64000 de tip long)
+
+ char a[4000][10]; int m, n, i;
+ for(i=0;i<m*n;++i)printf(i%n?" %d":"\n%d",a[i/m][i%n]);
+ ==> daca m=4000 si n=10, atunci secventa de mai sus nu afisaza matricea,
+ deoarece expresia m*n se evalueaza implicit in cadrul int si produce
+ valoarea -25536 de tip int; de asemenea, i nu poate lua valori mai mari
+ de 32767; o secventa corecta ar fi:
+ char a[4000][10]; int m, n; long i;
+ for(i=0;i<m*(long)n;++i)printf(i%n?" %d":"\n%d",a[i/m][i%n]);
+
+ATENTIE: Daca o expresie apare ca argument al unui operator de conversie
+(vezi sectiunea b), in dreapta unei atribuiri (vezi sectiunea c), ca
+parametru actual al unei functii sau ca argument al unei instructiuni
+return (vezi sectiunea d), mai intai se efectueaza calculele si conversiile
+proprii expresiei (ex: regula conversiilor implicite, anumite conversii
+explicite in cadrul unor subexpresii, etc) si abia apoi se fac conversiile
+descrise in sectiunile b) - d); astfel, chiar de dinainte de a se apica
+aceste conversii valoarea expresiei poate fi alterata. Exemplu:
+
+  long l;
+  ..... f(long p){.....}
+  
+  (long)(4000*10);
+  l = 4000*10;
+  f(4000*10);
+  h(4000*10);
+  long g(.....){..... return 4000*10;}
+
+Atunci in TC++1.00:
+ - mai intai se evalueaza expresia 4000*10, astfel: cei doi operanzi sunt
+   considerati de tip int, calculul se face in cadrul tipului int obtinand
+   -25536 de tip int, reprezentat 10011100 01000000;
+ - APOI se efectueaza conversia la long, respectiv atribuirea la l, respectiv
+   transmiterea ca parametru actual lui f, respectiv transmiterea ca
+   parametru actual lui h, respectiv returnarea de catre g.
+In consecinta:
+ - expresia (long)(4000*10) va converti pe -25536 de tip int la long si va
+   produce valoarea -25536 de tip long, reprezentata
+   11111111 11111111 10011100 01000000;
+ - pentru atribuirea l = 4000*10, valoarea -25536 de tip int se va converti
+   la tipul variabilei l, adica long, obtinand -25536 de tip long, iar
+   aceasta valoare se va pune in locatia lui l;
+ - pentru realizarea apelului f(4000*10) valoarea -25536 de tip int se va
+   converti la tipul parametrului formal p, adica long, obtinand -25536 de
+   tip long, iar aceasta valoare este incarcata pe stiva (deci se incarca 4
+   octeti);
+ - pentru realizarea apelului h(4000*10) valoarea -25536 de tip int nu se va
+   converti spre nimic altceva, intrucat nu am specificat vreun antet pentru
+   h, iar pe stiva se va incarca -25536 de tip int (deci se incarca 2
+   octeti);
+ - pentru executarea instructiunii return 4000*10; valoarea -25536 de tip
+   int se va converti la tipul valorii returnate de g, adica long, obtinand
+   -25536 de tipul long, si aceasta valoare va fi furnizata in exterior (din
+   stiva se extrag 4 octeti).
+
+
+D. Completari:
+   -----------
+
+a) Operatori pe biti:
+
+Shiftari:   e1>>e2 sau e1<<e2
+- constrangeri: e1 si e2 trebuie sa fie de tipuri intregi;
+- efect: e1 si e2 se convertesc separat dupa regula conversiilor implicite
+  (deci nu se aduce unul la tipul celuilalt, ci doar daca unul e char sau
+  unsigned char, se converteste la int); apoi bitii lui e1 se deplaseaza
+  spre partea nesemnificativa (pentru >>), respectiv semnificativa
+  (pentru <<); cand se aplica <<, in bitii nesemnificativi ramasi "goliti"
+  se pune 0; cand se aplica >>, in bitii semnificativi ramasi "goliti" se
+  pune 0 daca e1 este (dupa conversia implicita) de un tip intreg cu semn
+  sau bitul de semn (1 sau 0) daca este de un tip intreg cu semn;
+- tipul rezultatului este tipul lui e1 (dupa conversia implicita);
+Observatii:
+1. Pana la un punct, <<n echivaleaza cu *2^n, iar >>n cu /(2^n).
+2. Standardul ANSI nu precizeaza ce trebuie sa se intample daca valoarea
+  produsa de e2 este negativa sau mai mare sau egala cu numarul de biti pe
+  care se reprezinta valoarea lui e1 dupa conversie.
+Exemple in TC++1.00:
+ 'A'<<3 ==> 'A' se converteste implicit la int, obtinand 65 de tip int,
+    reprezentat 00000000 01000001; 3 se converteste implicit la int,
+    cu reprezentarea 00000000 00000011; apoi bitii lui 65 int se deplaseaza
+    cu 3 pozitii spre partea semnificativa umpland cu 0 bitii ramasi
+    "goliti" si obtinand 520 (adica 65*2^3) de tip int, reprezentat
+    00000010 00001000
+ 'A'>>3 ==> ca mai sus, dar bitii se deplaseaza spre partea nesemnificativa,
+    umpland cu bitul de semn 0 bitii semnificativi ramasi "goliti"; in
+    final se obtine 8 (adica 65/(2^3)) de tip int, reprezentat
+    00000000 00001000;
+  'A'<<15 ==> dupa conversia implicita a lui 'A' la int, bitii se deplaseaza
+    cu 15 pozitii spre partea semnificativa; intrucat int e pe 2 octeti,
+    primul 1, care ar fi ajuns dincolo de bitul 15, se pierde, iar valoarea
+    obtinuta este -32768 de tip int, reprezentat 10000000 00000000;
+  -128>>3 ==> -128 se converteste implicit la int, obtinand -128 de tip int,
+    reprezentat 11111111 10000000; bitii sai se deplaseaza cu 3 pozitii spre
+    partea nesemnificativa, propagand bitul de semn 1, obtinand -16 de tip
+    int, reprezentat 11111111 11110000;
+  (unsigned)-128>>3 ==> -128 este convertit implicit la unsigned, deci
+    regula conversiilor implicite nu se mai aplica (ea se aplica doar ca
+    sa transforme un eventual char sau unsigned char in int), astfal ca
+    mb. stang este 65408 de tip unsigned, reprezentat 11111111 11110000;
+    bitii sai se deplaseaza cu 3 pozitii spre partea nesemnificativa,
+    umpland cu 0 bitii semnificativi "goliti" (pentru ca membrul stang
+    este acum considerat un intreg fara semn), obtinand 8176 de tip
+    unsigned, reprezentat 00011111 11110000;
+  (1<<16)>>16 ==> 1 se considera int, reprezentat 00000000 00000001;
+    prin shiftarea cu 16 pozitii spre partea semnificative 1 se pierde
+    (deoarece ar ajunge in bitul 16), obtinand 0 de tip int, reprezentat
+    00000000 00000000; apoi, in urma shiftarii in sens opus, obtinem tot
+    0 int, deoarece in reprezentare nu mai sunt biti 1;
+  (1L<<16)>>16 ==> 1 se considera long, reprezentat
+    00000000 00000000 00000000 00000001; in urma primeis shiftari se obtine
+    65536 de tip long, reprezentat 00000000 00000001 00000000 00000000,
+    apoi in urma celei de-a doua shiftari se obtine iar 1 de tip long
+    (bitul 1 nu s-a pierdut);
+   1<<100 ==> produce 0;
+   1<<-3  ==> produce 0;
+
+Operatii logice pe biti (bitwise): e1&e2 (si), e1|e2 (sau), e1^e2 (sau
+  exclusiv), ~e1 (negatie bit cu bit)
+- constrangeri: e1 si e2 trebuie sa fie de tipuri intregi;
+- efect: e1 si e2 se convertesc dupa regula conversiilor implicite
+  (deci nu separat ca inainte); deci mai intai daca vreunul este char sau
+  unsigned char, el se converteste la int, apoi daca unul este unsigned
+  long atunci si celalalt se converteste spre unsigned long, etc; apoi
+  se executa operatia logica implementata bit cu bit;
+- rezultatul este un intreg de tipul comun la care au ajuns operanzii;
+
+Exemple in TC++1.00:
+  3L & 'A'
+    ==>3L este de tip long, reprezentat 00000000 00000000 00000000 00000011;
+    conform regulii conversiilor implicite, mai intai 'A' se converteste la
+    65 de tip int reprezentat 00000000 01000001, apoi (pentru ca celalalt
+    operand e de tip long) se converteste la 65 de tip long reprezentat
+    00000000 00000000 00000000 01000001; intre cele doua reprezentari se
+    face "si" pe biti, obtinand 1 de tip long reprezentat
+    00000000 00000000 00000000 00000001;
+  65537 ^ -32768
+    ==> 65537 se considera long (deoarece nu incape in intervalul valorilor
+    pentru int) reprezentat 00000000 00000001 00000000 00000001, iar -32768
+    se considera de tip int, reprezentat 10000000 00000000; conform regulii
+    conversiilor implicite, -32768 se converteste la -32768 de tip long,
+    reprezentat 11111111 11111111 10000000 00000000; intre cele doua
+    reprezentari se face "xor" pe biti, obtinand -98303 de tip long,
+    reprezentat 11111111 11111110 10000000 00000001
+  65537 ^ (unsigned)-32768
+    ==> spre deosebire de exemplul anterior, -32768 de tip int se
+    converteste intai la 32768 de tip unsigned (datorita operatorului de
+    conversie explicita) reprezentat 10000000 00000000, apoi la 32768 de
+    tip long (datorita regulii conversiilor implicite, intrucat celalalt
+    operand e long) reprezentat 00000000 00000000 10000000 00000000;
+    in urma "xor"-ului pe biti se obtine 98305 de tip long, reprezentat
+    00000000 00000001 10000000 00000001;
+  'A' ^ 'B'
+    ==> conform regulii conversiilor implicite 'A' si 'B' se convertesc
+    la 65, respectiv 66, de tip int, reprezentate 00000000 01000001,
+    respectiv 00000000 01000010; in urma "xor"-ului pe biti, se obtine
+    3 de tip int, reprezentat 00000000 00000011;
+  int x; if(x & 0x0040){...}
+    ==> expresia testata e adevarata (i.e != 0) daca si numai daca bitul
+    6 (adica al 7-lea bit, numarand de la unitatile binare) este 1
+  int x,y; x |= 0x0040; y &= ~0x0040;
+    ==> seteaza bitul 6 la 1, respectiv la 0; intr-adevar, intregul 0x0040
+    are reprezentarea 00000000 01000000, iar intregul ~0x0040 are
+    reprezentarea 11111111 10111111;
+  int x;  if(x>>i & 0x0001){...}  x |= 1<<i;  x &= ~(1<<i);
+    ==> testeaza, respectiv seteaza la 1, respectiv seteaza la 0 bitul i
+    din reprezentarea lui x; intr-adevar, intregul 1<<i are 1 pe pozitia i
+    1 si-n rest 0, iar intregul ~(1<<i) are 0 pe pozitia i si-n rest 1;
+  unsigned char b[]={0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
+  unsigned char x; int i;
+  if(x & b[i]){...}  x |= b[i];  x &= ~b[i];
+    ==> testeaza, respectiv seteaza la 1, respectiv seteaza la 0  bitul i
+    (0 <= i <= 7) din reprezentarea lui x;
+  int x;  x>>8 & 0xff ==> returneaza valoarea octetului semnificativ al lui
+    x; de exemplu, daca x=-512, atunci el este un int avand reprezentarea
+    11111110 00000000, deci x>>8 este int-ul reprezentat
+    11111111 11111110; pe de alta parte 0xff este considerat de tip int
+    avand reprezentarea 00000000 11111111; in urma "si"-ului pe biti se
+    obtine 00000000 11111110, care inseamna 254, adica exact valoarea
+    octetului semnificativ al lui x;
+  int x; if(x & 1){...impar }
+    ==> testul da "adevarat" daca si numai daca x este impar (adica are
+    bitul cel mai nesemnificativ 1);
+  int x; x &= ~x; x^=x;
+    ==> ambele instructiuni anuleaza toti bitii lui x (ii seteaza la 0);
+  128 & 127 == 0
+  128 && 127 == 1
+  128 | 127 == 255
+  128 || 127 == 1
+  128 & 255 == 128
+  ~0 == -1
+  ~-1 == 0
+  ~0<<3 == - 8
+  1<<3 == 8
+  int n; ~0>>n == ~0;
+    ==> explicatiile sunt clare, tinand cont ca ~0 si -1 se reprezinta la
+    fel, adica 11111111 11111111;
+  int x;
+  x & -1 == x;  x & 0 == 0;
+  x | 0 == x; x | 1 == 1;
+  x ^ x == 0; x ^ ~x == -1;
+    ==> explicatiile sunt clare;
+  int x,y,t;
+  while(y){t=(x&y)<<1; x^=y; y=t;}
+    ==> calculeaza in x suma x+y (la fiecare iteratie t tine minte bitii de
+    transport); deci efectul este asemanator cu cel al instructiunii x=x+y.
+
+Reamintim tabelul prioritatilor operatorilor C:
+  ()  []   ->   .
+  !   ~    + (unar)  - (unar)  ++   --   &   *   sizeof
+  *   /    %
+  + (binar)  - (binar)
+  <<       >>
+  <   <=   >    >=
+  ==  !=
+  &
+  ^
+  |
+  &&
+  ||
+  ?:
+  =   *=   /=   %=   +=    -=    &=    ^=    |=    <<=    >>=
+  ,
+Atentie ca *a++ se parseaza la *(a++).
+
+b) Particularitati referitoare la structuri cu campuri pe biti si uniuni
+    in TC++1.00:
+
+  O structura poate avea membri intregi alocati pe un numar specificat de
+biti; un asemenea membru se declara sub forma:
+  tip nume:numar;
+unde "tip" poate fi unsigned char, char, unsigned int, int, iar "numar"
+este un intreg de la 0 la numarul de biti pe care se aloca int sau unsigned
+int (adica 16).
+  Atunci membrul "nume" este un intreg cu sau fara semn (in functie de"tip")
+care se aloca pe "numar" biti.
+  Particularitati in TC++1.00:
+- campurile pe biti se aloca in general adiacent, incapand de la bitii
+  nesemnificativi spre cei semnificativi;
+- nu se pot defini tablouri de campuri;
+- unui camp nu i se poate aplica operatorul adresa &
+- numele "nume" poate lipsi (daci sa am doar "tip:numar") si atunci se aloca
+  campul respectiv, dar nu poate fi accesat; asemenea campuri sunt folosite
+  pentru a forta lasarea unori biti intermediari nefolositi;
+- daca "numar" este 0, atunci si "nume" trebuie sa lipseasca, iar
+  semnificatia va fi ca urmatoarele campuri se vor aloca in octetul urmator;
+
+ Exemple:
+1. Daca avem: struct {
+		float f;
+		unsigned c1 : 3;
+		char c2 : 1;
+		char x,y;
+		int c3 : 9;
+		char : 3;
+		char c4 : 2;
+		char : 0;
+		unsigned : 1;
+		unsigned c5:3;
+	      } r;
+   Atunci r se aloca astfel:
+
+		    <---  creste adresa <---
+     ######## ######## ######## ######## ######## ######## <---
+	 \_/|   \/\_/\________/ \______/ \______/     |\_/
+	r.c5  r.c4      r.c3       r.y     r.x     r.c2 r.c1
+
+<--- ######## ######## ######## ########
+     \_________________________________/
+		    r.f
+
+   Va rezulta sizeof(r) == 10;
+2. O structura cu campuri pe biti este utila pentru a stoca date mai
+economic; de exemplu o structura "persoana" poate fi:
+   struct persoana{
+     char *nume; /* se aloca dinamic, in functie de lungimea numelui */
+     unsigned varsta : 7; /* e suficient, daca admitem ca varsta <= 127*/
+     unsigned sex : 1;    /* sexul e o data bivalenta si e suf. 1 bit*/
+   } p;
+Atunci p ocupa 3 octeti. Citirea/afisarea unei persoane se poate face cu
+urmatoarele functii:
+void citpers(struct persoana *p){
+  char s[256]; unsigned n;
+  printf("Numele: "); scanf("%s",s);
+  if((p->nume=(char *)malloc(strlen(s)+1))==NULL)return;  strcpy(p->nume,s);
+  printf("Varsta: "); scanf("%u",&n); p->varsta=n;
+  printf("Sex (1=masculin/0=feminin): "); scanf("%d",&n); p->sex=n;
+}
+void scrpers(struct persoana p){
+ printf("%s %u %c\n",p.nume,p.varsta,p.sex==1?'m':'f');
+}
+3. Folosind structuri cu campuri pe biti putem afla/afisa bitii din
+reprezentarea interna a unei date. Urmatoarea functie primeste adresa unei
+date si dimensiunea ei si afisaza bitii din reprezentarea sa interna:
+void afis(void *d, unsigned dim){
+struct byte{unsigned b0:1; unsigned b1:1; unsigned b2:1; unsigned b3:1;
+	    unsigned b4:1; unsigned b5:1; unsigned b6:1; unsigned b7:1;
+	   } *p;
+for(p=(struct byte *)d+dim-1; dim--; --p)
+printf("%d%d%d%d%d%d%d%d ",p->b7,p->b6,p->b5,p->b4,p->b3,p->b2,p->b1,p->b0);
+printf("\n");
+}
+Exemplu: int x=65; afis(&x,sizeof(x)) ==> afisaza: 00000000 01000001
+
+  O uniune se declara in acelasi feluri ca o structura, dar in loc de
+cuvantul "struct" folosim cuvantul "union". Diferenta majora fata de
+structuri este ca membrii se aloca suprapus (nu alaturat), incepand de la
+aceeasi adresa. Astfel, o configuratie de biti pusa in locatia comuna
+prin intermediul unui membru (si constituind reprezentarea sa interna),
+poate fi recuperata prin intermedeiul altui membru (fiind interpretata
+ca o reprezentare interna a acestuia) - evident, fiecare membru va
+interpreta aceeasi configuratie de biti in felul sau (putand insemna deci
+pentru fiecare membru o alta valoare). O aplicatie importanta a uniunilor
+este aflarea octetilor din reprezentarea interna a unei date. Urmatoarea
+functie primeste ca parametru un intreg si afisaza octetii din reprezentarea
+sa interna (scrisi hexa):
+void afis(int p){
+ int i;
+ union{int n; char c[sizeof(int)];} a;
+ a.n=p;
+ for(i=sizeof(int)-1; i>=0; --i)printf("%X ",a.c[i]);
+ printf("\n");
+}
+De exemplu: int x=65; afis(x); ==> afisaza: 0 41
+Putem transforma uniunea de mai sus astfel incat membrul c sa fie vector
+de structuri "byte" ca mai inainte; atunci vom putea afla bitii din
+reprezentarea intregilor si vom putea accesa oricand foarte usor unul din
+biti pentru a-l afla/modifica.
+
+
+============================= TEME: ========================================
+
+D1. (3 pct) Functie care primeste ca parametri o adresa de memorie, un numar
+  de bit (0-7), un numar n si returneaza 0 sau 1 in functie de valoarea
+  bitului n, numarand de la adresa si bitul indicat. Octetii se parcurg in
+  ordinea crescatoare a adresei iar bitii se parcurg in ordinea crescatoare
+  a semnificatiei; dupa bitul 7 al octetului i urmeaza bitul 0 al octetului
+  i+1. Nu se vor folosi operatii aritmetice decat pe biti si nu se vor
+  folosi structuri cu campuri pe biti. Program ilustrativ.
+  Ex: int n=16707; (deci n are in locatie: 11000010 10000010)
+      getbit(&n,2,14); ===> returneaza: 1
+      (deci returneaza valoarea bitului 2+12=14 de la adresa lui n).
+
+D2. (3 pct) Functie care primeste ca parametri o adresa de memorie, un numar
+  de bit (0-7), un numar n si un numar 0 sau 1 si seteaza bitul n, numarand
+  de la adresa si bitul indicat, conform ultimului parametru. Octetii se
+  parcurg in ordinea crescatoare a adresei iar bitii se parcurg in ordinea
+  crescatoare a semnificatiei; dupa bitul 7 al octetului i urmeaza bitul 0
+  al octetului i+1. Nu se vor folosi operatii aritmetice decat pe biti si nu
+  se vor folosi structuri cu campuri pe biti. Program  ilustrativ.
+  Ex: int n=16707; (deci n are in locatie: 11000010 10000010)
+      setbit(&n,2,9,1); ===> n are in locatie: 11000010 10010010
+      (deci se seteaza la 1 bitul 2+9=11 de la adresa lui n).
+
+D3. (4 pct) Functie care primeste ca parametri o adresa de memorie, un
+  numar de bit (0-7), un numar intreg n si un string si depune in stringul
+  respectiv (sub forma de caractere '0' sau '1') n biti din memorie,
+  incepand de la adresa si bitul indicat. Octetii se parcurg in ordinea
+  crescatoare a adresei iar bitii se parcurg in ordinea crescatoare a
+  semnificatiei; dupa bitul 7 al octetului i urmeaza bitul 0 al octetului
+  i+1. Nu se vor folosi operatii aritmetice decat pe biti si nu se vor
+  folosi structuri cu campuri pe biti. Functia returneaza adresa stringului.
+  Program  ilustrativ.
+  Ex: int n=16707; char s[100]; (deci n are in locatie: 11000010 10000010)
+      bintoa(&n,4,6,s); ===> s: "001010"
+      (deci in s se pun bitii 4,5,6,7,8,9 de la adresa lui n).
+
+D4. (4 pct) Functie care primeste ca parametri o adresa de memorie, un
+  numar de bit (0-7) si un string (care se presupune ca contine doar
+  caractere '0' si '1') si seteaza bitii din memorie, incepand de la adresa
+  si bitul indicat, conform cifrelor din string. Octetii se parcurg de
+  adresa indicata in ordinea crescatoare a adresei iar bitii se parcurg de
+  la bitul indicat in ordinea crescatoare a semnificatiei; dupa bitul 7 al
+  octetului i urmeaza bitul 0 al octetului i+1. Nu se vor folosi operatii
+  aritmetice decat pe biti si nu se vor folosi structuri cu campuri pe biti.
+  Program ilustrativ.
+  Ex: int n=16707; (deci n are in locatie: 11000010 10000010)
+      atobin(&n,4,"101101"); ===> n are in locatie: 11001011 01000010
+      (deci bitii 4,5,6,7,8,9 de la adresa lui n devin resp. 1,0,1,1,0,1).
+
+D5. (4 pct) Functie care primeste ca parametri: o adresa a1, in intreg i1, o
+  adresa a2, un intreg i2 si un intreg n si copiaza n biti de la adresa
+  a2, bitul i2, la adresa a1, bitul i1. Octetii se parcurg de la adresele
+  indicate in ordinea crescatoare a adresei iar bitii se parcurg de la bitii
+  indicati in ordinea crescatoare a semnificatiei; dupa bitul 7 al octetului
+  i urmeaza bitul 0 al octetului i+1. Nu se vor folosi operatii aritmetice
+  decat pe biti si nu se vor folosi structuri cu campuri pe biti. Program
+  ilustrativ.
+  Ex: int a=-1;    (deci a are in locatie: 11111111 11111111)
+      int b=16707; (deci n are in locatie: 11000010 10000010)
+      copybit(&a,2,&b,5,6); ===> a are in locatie: 11010100 11111111
+      (in a, de la bitul 2, s-a pus 010100).
+
+D6. (3 pct) Functie care primeste ca parametri adresa unei date oarecare si
+  dimensiunea ei si afisaza bitii din reprezentarea sa interna, grupati
+  in octeti; octetii se afisaza de la stanga la dreapta in ordinea
+  descrescatoare a adresei, bitii dintr-un octet se afisaza de la stanga
+  la dreapta in ordinea descrescatoare a semnificatiei. Nu se vor folosi
+  operatii aritmetice decat pe biti si nu se vor folosi structuri cu campuri
+  pe biti. Program ilustrativ.
+  Ex: int n=16707;
+      reprezentare(&n,sizeof(int)); ===> se afisaza: 01000001 01000011
+      (cu blank intre octeti).
+-----
+D7. (4 pct) Program care citeste un intreg si determina toti intregii
+  obtinuti din el prin permutarea circulara a bitilor. Acestia se vor afisa
+  cu reprezentarile lor zecimale si binare. Nu se vor folosi operatii
+  aritmetice decat pe biti si nu se vor folosi structuri cu campuri pe biti.
+
+D8. (4 pct) Program care citeste un intreg si determina intregul obtinut din
+  el prin inversarea ordinii bitilor. Cei doi intregi se vor afisa cu
+  reprezentarile lor zecimale si binare. Nu se vor folosi operatii
+  aritmetice decat pe biti si nu se vor folosi structuri cu campuri pe biti.
+
+D9. (3 pct) Program care citeste un intreg si calculeaza suma bitilor sai
+  (numara cati biti de 1 are). Se va afisa intregul respectiv cu
+  reprezentarea sa zecimala si binara si suma obtinuta. Nu se vor folosi
+  operatii aritmetice decat pe biti si nu se vor folosi structuri cu campuri
+  pe biti.
+
+D10. (3 pct) Functie avand urmatorul prototip:
+      int set4(unsigned char *c, int i, int val)
+  si care lucreaza astfel: daca val < 0, returneaza valoarea stocata in
+  4-uplul de biti cu numarul i (i=0,1) din octetul pointat de c; daca
+  0 <= val <= 15, seteaza 4-uplul i cu valoarea val si returneaza vechea
+  valoare stocata acolo; valorile i != 1,2 si valorile val din afara
+  intervalului 0...15 sunt invalide. In caz de esec, functia returneaza -1.
+  Nu se vor folosi operatii aritmetice decat pe biti si nu se vor folosi
+  structuri cu campuri pe biti. Program ilustrativ care va afisa atat
+  octetul initial cat si cel transformat, atat in reprezentare zecimala cat
+  si in reprezentare pe biti.
+
+D11. (3 pct) Functie avand urmatorul prototip:
+      unsigned char swap4(unsigned char *c)
+  si care interschimba 4-uplul de biti semnificativ cu cel nesemnificativ
+  in octetul pointat de c; returneaza octetul vechi. Nu se vor folosi
+  operatii aritmetice decat pe biti si nu se vor folosi structuri cu campuri
+  pe biti. Program ilustrativ care va afisa atat octetul initial cat si cel
+  transformat, atat in reprezentare zecimala cat si in reprezentare pe biti.
+
+D12. (2 + cate 2 pt. fiecare operatie implementata) Implementati tipul
+  "submultime a unei multimi de numere intregi date", in felul urmator:
+  - multimea totala este stocata intr-un vector de intregi alocat dinamic,
+    in functie de numarul de elemente pe care il va avea (aceste elemente
+    se citesc de la tastatura la inceputul programului);
+  - submultimile sunt implementate ca structuri continand cel putin
+    urmatorii membrii:
+     - un pointer la int, care va pointa in toate cazurile inceputul zonei
+       in care sunt stocate elementele multimii totale (deci structurile
+       corespunzatoare submultimilor unei aceesai multimi vor avea aceeasi
+       valoare in acest membru);
+     - un vector de unsigned char, alocat dinamic a.i. sa contina atatia
+       biti (deci nu bytes) cate elemente sunt in vectorul cu multimea
+       totala; daca acest numar nu este multiplu de 8, se va completa la
+       un multiplu de 8;
+    o submultime concreta va fi stocata sub forma unei configuratii de 0, 1
+    in vectorul de unsigned char, care va reprezenta vectorul caracteristic
+    al submultimii.
+  Scrieti functii care sa opereze asupra unor asemenea structuri date ca
+  parametrii si sa implementeze: citirea, afisarea, reuniunea, intersectia,
+  complementarea submultimilor si testarea apartenentei unui intreg la o
+  submultime. Program ilustrativ care citeste multimea totala, apoi cateva
+  submultimi si arata efectul acestor functii asupra lor. Nu este
+  obligatorie implementarea tuturor operatiilor de mai sus.
+
+D13. (2 + punctajul indicat in text) Implementati tipul intreg pe un numar
+  specificat de biti, in felul urmator: data propriuzisa este o structura
+  care are cel putin un membru vector de unsigned char, iar valorile ei se
+  reprezinta ca la sectiunea A, regula 2, pe bitii din acest vector (deci
+  daca vectorul are n componente, el are 8*n biti, deci imi va permite
+  reprezentarea numerelor intregi din intervalui
+		      -2^(8*n-1), ..., 2^(8*n-1)-1).
+  Scrieti functii care opereaza asupra unor asemenea intregi extinsi prin
+  intermediul parametrilor si valorii returnate si implementeaza adunarea
+  (5 pct), scaderea (5 pct), inmultirea (6 pct), aflarea catului intreg
+  (10 pct), aflarea restului (10 pct), luarea opusului (2 pct), testarea <
+  (4 pct), testarea <= (4 pct), testarea > (4 pct), testarea >= (4 pct),
+  testarea == (1 pct), testarea != (1 pct), atribuirea (1 pct), citirea
+  cu format de la consola (6 pct), scrierea cu format la consola (6 pct),
+  conversia spre int obisnuit (1 pct), conversia de la un int obisnuit
+  (3 pct). Program ilustrativ. Nu este obligatorie implementarea tuturor
+  operatiilor de mai sus.
+
+D14. (3 + punctajul indicat in text) Ca la problema anterioara, dar pentru
+  un tip in virgula mobila cu numar specificat de biti pentru toata
+  reprezentarea si pentru caracteristica. Functiile vor implementa:
+  adunarea (12 pct), scaderea (12 pct), inmultirea (15 pct), impartirea
+  (30 pct), luarea opusului (1 pct), testarea < (10 pct), testarea <=
+  (10 pct), testarea > (10 pct), testarea >= (10 pct), testarea == (1 pct),
+  testarea != (1 pct), atribuirea (1 pct), citirea cu format de la consola
+  folosind formatul %f (15 pct), scrierea cu format la consola folosind
+  formatul %f (15 pct), conversia spre float obisnuit (6 pct), conversia de
+  la un float obisnuit (6 pct). Program ilustrativ. Nu este obligatorie
+  implementarea tuturor operatiilor de mai sus.
+-----
+D15. (12 pct) Implementati tipul persoana ca o structura cu membrii
+  pentru nume, initiala tatalui, varsta, sex. Implementarea va fi cat mai
+  economica. Scrieti functii pentru citire/afisare o persoana. Program care
+  sa gestioneze o baza de date cu persoane, avand posibilitatea de a adauga
+  persoane noi, a sterge persoanele cu un nume dat, a sterge persoanele cu
+  varsta mai mare ca o varsta data, a sterge toate persoanele, a afisa
+  persoanele in ordine alfabetica, a afisa persoanele in ordinea
+  descrescatoare a varstei; operatiile de mai inainte vor fi realizate cu
+  cate o functie separata si se vor lansa dintr-un meniu principal.
+
+							DRAGULICI DANIEL
+                                                        2001

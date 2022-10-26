@@ -1,0 +1,387 @@
+*5.   Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    class B{
+    protected:
+      static int x;
+      int i;
+    public:
+      B() {x++; i = 1;}
+      ~B() {x--;}
+      static int get_x() {return x;}
+      int get_i() {return i;}
+    };
+    int B::x;
+    class D: public B {
+    public:
+      D() {x++;}
+      ~D() {x--;}
+    };
+    int f(B *q)
+      {return (q->get_x())+1;}
+    int main(){
+      B *p = new B[10];
+      cout << f(p) << " ";
+      delete []p;
+      p = new D;
+      cout << f(p) << " ";
+      delete p;
+      cout << D::get_x() << " ";
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+
+  Raspuns: Corect, afisaza: 11 3 1 
+  Obs: ultimul delete aplica '~B' unui obiect 'D', deci 'x' scade doar cu 1.
+
+
+
+
+
+
+
+
+
+
+*6.   Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    class B{
+    public:
+      int x;      
+      B(int i = 0) {x = i;}
+      virtual B minus() {return (1 - x);}
+    };
+    class D: public B {
+    public:
+      D(int i = 0) {x = i;}
+      ~D() {x--;}
+      void afisare() {cout << x;}
+    };
+    int main(){
+      B *p1 = new B(18);
+      *p1 = p1 -> minus();
+      dynamic_cast<D*> (p1) -> afisare();
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+  Raspuns: La compilare nu se raporteaza eroare, la rulare apare eroare
+            (Segmentation fault).
+  Dynamic cast-ul de la clasa de baza spre cea derivata este permis, deoarece
+  clasa de baza este polimorfica (i.e. declara sau mosteneste a metoda
+  virtuala), de aceea nu se semnaleaza eroare la compilare; 'p1' insa
+  pointeaza un obiect incomplet al clasei derivate, de aceea dynamic cast-ul
+  esueaza si returneaza NULL, apoi cu '->' se deferentiaza NULL si de aceea
+  apare eroare la rulare.
+    Nota (http://www.cplusplus.com/doc/tutorial/typecasting/): 
+  Compatibility note: dynamic_cast requires the Run-Time Type Information
+  (RTTI) to keep track of dynamic types. Some compilers support this feature
+  as an option which is disabled by default. This must be enabled for runtime
+  type checking using dynamic_cast to work properly.
+
+
+
+
+
+
+
+
+
+
+*8.   Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    class A{
+      int x;
+    public:
+      A(int i): x(i) {}
+      int get_x() {return x;}
+    };
+
+    class B: protected A {
+      int y;
+    public:
+      B(int i, int j): y(i), A(j) {}
+      int get_xy() {return get_x() + y;}
+    };
+    class C: protected B {
+      int z;
+    public:
+      C(int i, int j, int k): z(i), B(j, k) {}
+      int get_xyz() {return get_xy() + z;}
+    };
+    int main(){
+      C c(1, 2, 3);
+      cout << c.get_xyz();
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+  Raspuns: Corect, afisaza: 6
+  Obs: compilatorul afisaza warning, deoarece constructorii vor fi apelati
+   in alta ordine decat apar in listele de initializare.
+
+
+
+
+
+
+
+
+
+
+*9.  Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza pentru valoarea citita egala cu 2. In caz negativ,
+  spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    int f(float x) {
+      if (x ++ == 2) throw x;
+      return x/2;
+    }
+    int main(){
+      int x;
+      try {
+        cin >> x;
+        cout << f(x);
+      } catch (int x) {
+        cout << (x + 1)/2;
+      }
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+  Raspuns: Programul este corect sintactic (compilatorul nu afisaza rulare),
+    dar la rulare nu afisaza nimic si se termina fortat, deoarece 'f' arunca
+    exceptia 3.0 de tip float, care nu este prinsa de 'catch' intrucat acesta
+    prinde exceptii 'int'.
+
+
+
+
+
+
+
+
+
+
+*10.  Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    template<class T>
+    T f(T x, T y)
+     {return x + y;}
+    int main(){
+      int *x = new int(5), *y = new int(4);
+      cout << f(x,y);
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+  Raspuns: Gresit, 'f' se instantiaza cu parametri de tip 'int*' si nu are
+  sens suma a doi 'int *'.
+  (mesajul de eroare:
+   In function ‘T f(T, T) [with T = int*]’:
+     error: invalid operands of types ‘int*’ and ‘int*’ to binary ‘operator+’
+  )
+
+
+
+
+
+
+
+
+
+
+*11.  Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    class A {
+      int x;
+    public:
+      A(int i = 5): x(i) {}
+      int get_x() {return x;}
+      operator int () {return x;}
+      A operator+ (A);
+    };
+    ostream& operator<< (ostream &o, A a) {
+      o << a.get_x();
+      return o;
+    }
+    A A::operator+ (A i) {return x + i.x;}
+    int main(){
+      A a = 9; int b = 7;
+      cout << a + b << " " << b + a;
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+  Raspuns: Gresit, la 'a + b' se semnaleaza eroare de ambiguitate, deoarece
+  se poate aplica la fel de bine operatorul '+' al clasei 'A' cu parametrul
+  'b' sau operatorul de cast la 'int' al clasei 'A' urmat de operatorul '+'
+  predefinit intre doi 'int'.
+  (mesajul de eroare:
+   error: ambiguous overload for ‘operator+’ in ‘a + b’
+     note: candidates are: operator+(int, int) <built-in>
+     note:                 A A::operator+(A)
+  )
+
+
+
+
+
+
+
+
+
+
+*12.  Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    class A {
+    protected:
+      int x;
+    public:
+      A(int i): x(i) {}
+      virtual int f() {return x++;}
+    };
+    class B: public A {
+      int y;
+    public:
+      B(int i, int j): y(i), A(j) {}
+      int f() {return x + y;}
+    };
+    int main(){
+      A *p = new B(7, -3);
+      cout << p -> f();
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+  Raspuns: Corect, afisaza: 4
+  Obs: compilatorul afisaza warning, deoarece constructorii vor fi apelati
+   in alta ordine decat apar in listele de initializare.
+
+
+
+
+
+
+
+
+
+
+*13.  Spuneti daca programul de mai jos este corect. In caz afirmativ,
+  spuneti ce afisaza, in caz negativ spuneti de ce nu este corect.
+
+    #include<iostream>
+    using namespace std;
+    class A {
+      static int x;
+    public:
+      A(int i = 0) {x = i;}
+      int get_x() {return x;}
+      int & set_x(int i) {x = i;}
+      A operator= (A a1) {set_x(a1.get_x()); return a1;}
+    };
+    int main(){
+      A a(212), b;
+      cout << (b = a).get_x();
+      return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+  Raspuns: Gresit, atributul static 'x' nu este definit (el necesita o
+   definitie exterioara clasei), iar functia non void 'set_x' nu returneaza
+   nimic (la ultima eroare insa compilatorul raporteaza doar warning).
+   (mesajul de eroare:
+    In member function ‘int& A::set_x(int)’:
+      warning: no return statement in function returning non-void
+    In function `A::A(int)':
+      undefined reference to `A::x'
+    In function `A::get_x()':
+      undefined reference to `A::x'
+    In function `A::set_x(int)':
+      undefined reference to `A::x'
+    ld returned 1 exit status (adica eroare la linkeditare)
+   )
+

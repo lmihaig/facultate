@@ -1,0 +1,474 @@
+STRUCTURA PENTRU CARACTERISTICILE I-NODURILOR:
+
+#include<sys/stat.h>
+
+struct stat{
+ ...
+ mode_t st_mode;   /* tipul fisierului si drepturile de acces */
+ ...
+ uid_t  st_uid;    /* user ID-ul proprietarului fisierului */
+ ...
+ off_t  st_size;   /* dimensiunea fisierului (daca are sens) */
+ ...
+ time_t st_atime;  /* momentul ult. acces la fis. (citire, scriere) */
+ time_t st_mtime;  /* momentul ult. modificari a fis. (scriere) */
+ ...
+};
+
+Orientativ (a nu se tine seama) tipurile campurilor de mai sus sunt:
+mode_t = unsigned (16 biti), uid_t = unsigned, off_t = long, time_t = long
+
+======================================================================
+AFLAREA CARACTERISTICILOR UNUI I-NOD:
+
+#include<sys/stat.h>  (man -S 2 stat)
+#include<unistd.h>
+
+int stat(const char *nume, struct stat *ps);
+
+nume = numele (eventual si calea) fisierului (i.e. legatura fizica);
+ps =  adresa unei structuri stat declarata sau alocata in prealabil, 
+       unde se vor stoca informatiile din i-nodul asociat legaturii 
+       "nume";
+
+Nu necesita drepturi particulare asupra fisierului, dar ne trebuie
+ drept de parcurgere (executie) pe directoarele din calea data
+
+returneaza:  0 = succes,
+	    -1 = eroare, caz in care seteaza si variabila errno
+
+exemple de valori date lui errno in caz de eroare:
+ENOENT = o componenta a specificatorului nu exista sau specificatorul
+	  e vid
+ENOTDIR = o componenta a caii nu e director
+ENAMETOOLONG = numele e prea lung
+
+======================================================================
+VARIABILA errno SI FUNCTIA perror:
+(informatii: man errno, man -S 3 perror)
+
+errno = variabila interna setata automat de apelurile sistem si unele
+	 functii de biblioteca atunci cand esueaza (si returneaza -1);
+	 valorile date lui errno sunt intregi >0 care reprezinta codurile
+	 erorilor produse;
+	pentru specificarea acestor erori exista constante simbolice
+	 (ex: ENOENT, ENOTDIR, etc.)
+
+#include<stdio.h>
+void perror(const char *s);
+
+Tipareste la stderr sirul s, apoi ": ", apoi un mesaj standard care
+ corespunde codului de eroare aflat la momentul curent in variabila errno
+
+Daca vrem sa modificam explicit valoarea lui errno, trebuie sa includem
+#include<errno.h>
+extern int errno;
+
+======================================================================
+EXEMPLU DE UTILIZARE PENTRU FUNCTIA stat:
+
+#include<sys/stat.h>
+#include<unistd.h>
+#include<stdio.h>
+
+struct stat s;
+if(stat("/a/b/nae.txt", &s)==-1){
+  perror("nae.txt");
+  return; /* iesire din functia curenta */
+}
+
+Atunci, daca /a/b/nae.txt nu exista, functia stat seteaza errno la valoarea
+ENOENT (si returneaza -1) iar functia perror va afisa pe ecran:
+nae.txt: No such file or directory
+
+======================================================================
+CONTINUTUL CAMPULUI st_mode AL UNEI STRUCTURI stat SI CONSTANTE SIMBOLICE
+CARE AU SETATE LA 1 CAMPURILE INDICATE (definite in sys/stat.h):
+			 / --- \
+		       /  |   |  \
+		      |    ---    |
+		      |   |   |   |
+               S_IFMT |    ---    | tipul fisierului
+                      |   |   |   |
+		      |    ---    |
+		       \  |   |  /
+			 \ --- /
+			  |   |
+			   ---
+			  |   |
+			   ---
+			  |   |
+			   ---
+	     /S_IRUSR ----|   |---- (r) dreptul de citire pt. proprietar
+	   /               ---
+  S_IRWXU |   S_IWUSR ----|   |---- (w) dreptul de scriere pt. proprietar
+	   \     	   ---
+	     \S_IXUSR ----|   |---- (x) dreptul de executie pt. proprietar
+			   ---
+	     /S_IRGRP ----|   |---- (r) dreptul de citire pt. grupul prop.
+	   /    	   ---
+  S_IRWXG |   S_IWGRP ----|   |---- (w) dreptul de scriere pt. grupul prop.
+	   \    	   ---
+	     \S_IXGRP ----|   |---- (x) dreptul de executie pt. grupul prop.
+			   ---
+	     /S_IROTH ----|   |---- (r) dreptul de citire pt. ceilalti
+	   /	           ---
+  S_IRWXO |   S_IWOTH ----|   |---- (w) dreptul de scriere pt. ceilalti
+	   \    	   ---
+	     \S_IXOTH ----|   |---- (x) dreptul de executie pt. ceilalti
+			   ---
+ (constantele din stanga au 1 pe campurile indicate si 0 in rest)
+
+Exemple de utilizare:
+  struct stat s, s1;
+  stat("nae.txt", &s); stat("ion.pas", &s1);
+
+  if(s.st_mode & S_IRUSR !=0)
+    printf("prop. lui nae.txt are dr. de cit. asupra lui");
+  s.st_mode      S_IRUSR
+     ---           ---          ---
+    |   |         |   |        |   |
+    | ? |         | 0 |        | 0 |
+    |   |         |   |        |   |
+     ---           ---          ---
+    | a |         | 1 |        | a |
+     ---           ---          ---    ?
+    | ? |    &    | 0 |   =>   | 0 |   ==   0
+     ---           ---          ---
+    | ? |         | 0 |        | 0 |
+     ---           ---          ---
+    |   |         |   |        |   |
+    | ? |         | 0 |        | 0 |
+    |   |         |   |        |   |
+     ---           ---          ---
+
+  if(s.st_mode & S_IRWXU == s1.st_mode & S_IRWXU)
+    printf("nae.txt si ion.pas ofera aceleasi dr. proprietarilor lor");
+  s.st_mode    S_IRWXU                          S_IRWXU  s1.st_mode
+     ---         ---        ---        ---        ---       ---
+    |   |       |   |      |   |      |   |      |   |     |   |
+    | ? |       | 0 |      | 0 |      | 0 |      | 0 |     | ? |
+    |   |       |   |      |   |      |   |      |   |     |   |
+     ---         ---        ---        ---        ---       ---
+    | a |       | 1 |      | a |      | p |      | 1 |     | p |
+     ---         ---        ---   ?    ---        ---       ---
+    | b |   &   | 1 |  =>  | b |  ==  | q |  <=  | 1 |  &  | q |
+     ---         ---        ---        ---        ---       ---
+    | c |       | 1 |      | c |      | r |      | 1 |     | r |
+     ---         ---        ---        ---        ---       ---
+    |   |       |   |      |   |      |   |      |   |     |   |
+    | ? |       | 0 |      | 0 |      | 0 |      | 0 |     | ? |
+    |   |       |   |      |   |      |   |      |   |     |   |
+     ---         ---        ---        ---        ---       ---
+
+  if(s.st_mode & S_IFMT == s1.st_mode & S_IFMT)
+    printf("nae.txt si ion.pas sunt de acelasi tip");
+
+Pentru a indica tipurile posibile de fisiere exista urmatoatele constante
+ simbolice, definite in sys/stat.h (ele nu au neaparat doar un bit = 1):
+           S_IFREG                  Fisier obisnuit
+           S_IFDIR                  Director
+           S_IFBLK                  Fisier special bloc
+           S_IFCHR                  Fisier special caracter
+           S_IFIFO                  Tub cu nume
+	   S_IFSOCK                 Socket
+	   S_IFLNK                  Legatura simbolica
+ (informatii: man -S 3 stat)
+exemplu:
+  if(s.st_mode & S_IFMT == S_IFDIR)
+    printf("nae.txt este un director");
+  s.st_mode     S_IFMT               S_IFDIR (are 1 pe al 2-lea bit
+     ---         ---        ---        ---    si 0 in rest )
+    | a |       | 1 |      | a |      | 0 |
+     ---         ---        ---        ---
+    | b |       | 1 |      | b |      | 1 |
+     ---         ---        ---   ?    ---
+    | c |   &   | 1 |  =>  | c |  ==  | 0 |
+     ---         ---        ---        ---
+    | d |       | 1 |      | d |      | 0 |
+     ---         ---        ---        ---
+    |   |       |   |      |   |      |   |
+    | ? |       | 0 |      | 0 |      | 0 |
+    |   |       |   |      |   |      |   |
+     ---         ---        ---        ---
+
+Pentru testarea tipului fisierului se pot aplica campului st_mode
+ urmatoarele macro-uri, definite in sys/stst.h:
+  S_ISREG(.)  =>  este fisier obisnuit ?
+  S_ISDIR(.)  =>  este director ?
+  S_ISBLK(.)  =>  este fisier special bloc ?
+  S_ISCHR(.)  =>  este fisier special caracter ?
+  S_ISFIFO(.) =>  este tub ?
+  S_ISSOCK(.) =>  este socket ?
+  S_ISLNK(.)  =>  este legatura simbolica ?
+exemplu:
+  if(S_ISDIR(s.st_mode))printf("nae.txt este un director");
+
+======================================================================
+STRUCTURI SI FUNCTII PENTRU GESTIONAREA MOMENTELOR DE TIMP:
+
+time_t => contine momente sub forma impachetata (secunde de la 1/1/1970).
+
+Structura pentru manipularea momentelor sub forma despachetata
+(informatii: man -S 3 ctime):
+#include<time.h>
+struct tm{
+  int tm_sec;   /* secunde (0-59) */
+  int tm_min;   /* minute (0-59) */
+  int tm_hour;  /* ore (0-23) */
+  int tm_mday;  /* ziua lunii (1-31)*/
+  int tm_mon;   /* luna (0-11) (a se aduna 1) */
+  int tm_year;  /* ani trecuti de la 1900 (pt. anul curent se aduna 1900)*/
+  int tm_wday;  /* ziua saptamanii (0-6, de la Duminica)*/
+  int tm_yday;  /* ziua anului (0-365) */
+  int tm_isdst; /* daylight saving time*/
+}
+
+#include<time.h>
+struct tm *gmtime(const time_t *pt);
+=> despacheteaza momentul stocat in *pt intr-o structura interna tm (mereu
+    aceeasi) si returneaza adresa sa
+
+#include<time.h>
+time_t mktime(struct tm *pt);
+=> returneaza valoarea impachetata a momentului stocat in *pt
+
+#include<time.h>
+char *ctime(const time_t *pt);
+=> genereaza reprezentarea externa a momentului stocat in *pt, intr-un
+    string intern, mereu acelasi, si returneaza adresa sa
+
+#include<time.h>
+time_t time(time_t *pt);
+=> afla momentul curent din sistem si-l returneaza; daca pt != NULL,
+    il pune si in *pt; in caz de eroare returneaza -1 si seteaza errno
+
+======================================================================
+STRUCTURA SI FUNCTII PENTRU AFLAREA UNOR INFORMATII DESPRE UTILIZATORI
+(AFLATE IN FISIERUL /etc/passwd):
+
+(informatii: man getpwnam):
+
+#include<pwd.h>
+struct passwd {
+        char    *pw_name;       /* user name-ul utilizatorului */
+        ...
+        uid_t   pw_uid;         /* user ID-ul utilizatorului */
+        ...
+        char    *pw_dir;        /* directorul home al utilizatorlui */
+        char    *pw_shell;      /* specificatorul login shell-ului 
+                                   utilizatorului */
+};
+
+#include<pwd.h>
+#include<sys/types.h>
+struct passwd *getpwnam(const char *nume);
+
+#include<pwd.h>
+#include<sys/types.h>
+struct passwd *getpwuid(uid_t uid);
+
+=> functiile citesc din fisierul /etc/passwd informatiile referitoare 
+    la utilizatorul al carui user name, respectiv user ID, este dat ca 
+    parametru si le pun intr-o structura interna passwd (mereu aceeasi), 
+    apoi returneaza adresa acesteia; daca parametrul nu corespunde unui 
+    utilizator existent sau daca a aparut o eroare, returneaza NULL 
+
+ ======================================================================
+EXEMPLU DE FUNCTIE CARE AFISAZA O PARTE DIN CARACTERISTICILE UNUI FISIER
+(PARTE DIN LINIA AFISATA DE ls -l):
+==================== fisierul:   fileinfo.i
+#include<stdio.h>
+#include<sys/stat.h>
+#include<unistd.h>
+#include<pwd.h>
+#include<sys/types.h>
+#include<time.h>
+int fileinfo(const char *nf){
+  struct stat s; struct passwd *pp; struct tm *pt; 
+  if(stat(nf,&s)==-1)return -1;
+  if((pp=getpwuid(s.st_uid))==NULL)return -1;
+  switch(s.st_mode & S_IFMT){
+    case S_IFREG: printf("-"); break;
+    case S_IFDIR: printf("d"); break;
+    otherwise: printf("o");  
+  }
+  if(s.st_mode & S_IRUSR)printf("r");else printf("-");
+  if(s.st_mode & S_IWUSR)printf("w");else printf("-");
+  if(s.st_mode & S_IXUSR)printf("x");else printf("-");
+  if(s.st_mode & S_IRGRP)printf("r");else printf("-");
+  if(s.st_mode & S_IWGRP)printf("w");else printf("-");
+  if(s.st_mode & S_IXGRP)printf("x");else printf("-");
+  if(s.st_mode & S_IROTH)printf("r");else printf("-");
+  if(s.st_mode & S_IWOTH)printf("w");else printf("-");
+  if(s.st_mode & S_IXOTH)printf("x");else printf("-");
+  printf("     %-8s",pp->pw_name);
+  if((s.st_mode & S_IFMT) == S_IFREG)printf("%12ld",(long)s.st_size); else
+  if((s.st_mode & S_IFMT) == S_IFDIR)printf("       <DIR>");
+  pt=gmtime(&s.st_mtime); 
+  printf("     %02d/%02d/%4d",pt->tm_mday,pt->tm_mon+1,pt->tm_year+1900);
+  printf(" %s\n",nf);
+  return 0;
+}
+====================
+VARIANTE PENTRU SCRIEREA FUNCTIEI fileinfo:
+- pentru scrierea lui s.st_size sau <DIR> putem folosi:
+    if(S_ISREG(s.st_mode))printf("%12ld", (long)s.st_size);
+    else if(S_ISDIR(s.st_mode))printf("       <DIR>");
+-pentru scrierea momentului crearii/modificarii putem folosi:
+    printf("%13s", ctime(&s.st_mtime));
+
+======================================================================
+PRELUCRAREA DIRECTOARELOR (informatii: man -S 2 mkdir):
+
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<fcntl.h>
+#include<unistd.h>
+int mkdir(const char *nume, mode_t mod);
+=>creaza directorul nume cu drepturile mod;
+  returneaza: 0 = succes, -1 = esec (caz in care seteaza errno)
+exemplu:
+  mkdir("/a/b/ion", S_IFDIR |
+		    S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+  creaza direcorul /a/b/ion cu tipul si drepturile: drwxr-xr-x
+
+#include<unistd.h>
+int rmdir(const char *nume);
+=> sterge directorul nume (legatura fizica); trebuie sa fie gol;
+   returneaza: 0 = succes, -1 = esec (caz in care seteaza errno)
+
+Pentru gestionarea continutului unui director (sir de intrari) folosim
+ tipul "DIR" (definit in dirent.h); el este o structura care are si un
+ camp pentru indicarea intrarii curente. Pentru gestionarea unei intrari
+ folosim structura "struct dirent" (definita in dirent.h); ea are cel putin
+ un camp "char d_name[256]", care va fi initializat cu numele fiului
+ respectiv.
+
+(informatii: man opendir):
+#include<sys/types.h>
+#include<dirent.h>
+DIR *opendir(const char *nume);
+=> deschide directorul nume pentru citire, aloca o structura DIR, o
+    initializa cu informatiile din director, pune indicatorul pe prima
+    intrare, si returneaza adresa sa (in caz de eroare NULL si seteaza
+    errno)
+
+(informatii: man closedir):
+#include<sys/types.h>
+#include<dirent.h>
+int closedir(DIR *pd)
+=> inchide directorul gestionat de pd si dezaloca pd
+   returneaza: 0 = succes, -1 = eroare
+
+(informatii: man -S 3 readdir):
+#include<sys/types.h>
+#include<dirent.h>
+struct dirent *readdir(DIR *pd);
+=> initializeaza o structura dirent cu intrarea curenta din pd,
+    avanseaza indicatorul in pd, returneaza adresa structurii dirent
+    respective (NULL la sfarsitul directorului sau in caz de eroare, cand
+    seteaza si errno);
+   directorul trebuie deschis in prealabil;
+   in practica, am constatat ca structura dirent utilizata este un membru
+    al structurii DIR specificate de pd; de aceea, structura dirent
+    respectiva nu se poate dezaloca separat cu free (ci doar structura DIR
+    care o contine), apeluri readdir asupra aceluiasi DIR returneaza adresa
+    aceleiasi structuri dirent, iar apeluri readdir asupra unor DIR diferite
+    returneaza adresele unor structuri dirent diferite.
+
+(informatii: man -S 3 readdir):
+#include<sys/types.h>
+#include<dirent.h>
+void rewinddir(DIR *pd);
+=> pune indicatorul la inceput in *pd;
+   directorul trebuie sa fie deschis
+
+======================================================================
+EXEMPLU DE FUNCTIE CARE AFISAZA INFORMATII DESPRE FII UNUI DIRECTOR
+(ASEMANATOR COMENZII ls -l), FOLOSIND FUNCTIA fileinfo DE MAI INAINTE:
+==================== fisierul:   listdir.i
+#include<sys/types.h>
+#include<dirent.h>
+#include<string.h>
+#include"fileinfo.i"
+int listdir(const char *nf){
+ DIR *pd; struct dirent *pde;
+ char cale[256], specificator[256]; 
+ if((pd=opendir(nf))==NULL)return -1;
+ strcpy(cale, nf); strcat(cale,"/");
+ while((pde=readdir(pd))!=NULL){
+   strcpy(specificator, cale); strcat(specificator, pde->d_name);
+   if(fileinfo(specificator)==-1)perror(specificator);
+ }
+ closedir(pd);
+ return 0;
+}
+
+======================================================================
+APLICATII LA FUNCTIILE fileinfo SI listdir DE MAI INAINTE:
+1. PROGRAM CARE AFISAZA INFORMATII DESPRE UN FISIER DAT CA ARGUMENT IN 
+LINIA DE COMANDA:
+==================== fisierul:   p1.c
+#include<stdio.h>
+#include"fileinfo.i"
+int main(int na, char *a[]){
+  if(na==2)if(fileinfo(a[1])==-1)perror(a[1]);
+  return 0;
+}
+2. PROGRAM CARE AFISAZA INFORMATII DESPRE FII UNUI DIRECTOR DAT CA 
+ARGUMENT IN LINIA DE COMANDA (ASEMANATOR COMENZII ls -l):
+==================== fisierul:   p2.c
+#include<stdio.h>
+#include"listdir.i"
+int main(int na, char *a[]){
+  if(na==2)if(listdir(a[1])==-1)perror(a[1]);
+  return 0;
+}
+
+==================== TEME:
+
+D1. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si afisaza arborescenta de directoare si fisiere cu originea
+ in el (similar comenzii tree /f din DOS).
+
+D2. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si calculeaza suma dimensiunilor fisierelor din arborescenta cu
+ originea in el.
+
+D3. (4 puncte) Program care primeste ca argumente in linia de comanda un
+ fisier f si un director d si determina daca fisierul f se afla (ca nume)
+ in arborescenta cu originea in d; in caz afirmativ se va determina numarul
+ de aparitii.
+
+D4. (8 puncte) Program care primeste ca argumente in linia de comanda doua
+ directoare d1 si d2 si determina fisierele care apar (ca nume + cale)
+ intr-o arborescenta si nu apar in cealalta.
+
+D5. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si sterge (recursiv) toata arborescenta cu originea in el.
+
+D6. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director d si sterge toate fisierele terminate in ".out" care apar in
+ arborescenta cu originea in d.
+
+D7. (8 puncte) Program care primeste ca argumente in linia de comanda doua
+ directoare d1 si d2 (d1 exista, d2 nu) si copiaza recursiv toata
+ arborescenta cu originea in d1 intr-o arborescenta cu originea in d2
+ (intre cele doua arborescente difera doar numele directorului origine).
+
+D8. (2 puncte) Program care tipareste pe stderr toate mesajele de eroare ce 
+ se pot obtine cu functia "perror", precedate de valoarea corespunzatoare a
+ variabilei "errno". Cu ajutorul lui sa se obtina un fisier cu aceste mesaje.
+
+D9. (4 puncte) Sa se creeze un fisier "myperror.i", care sa contina
+ definitia unei functii "void myperror(const char *s)", care tipareste
+ pe stderr stringul "s", apoi ":", apoi mesajul de eroare corespunzator
+ valorii curente din variabila "errno" dar tradus in romana. In acest scop
+ se poate folosi fisierul creat la problema D8. Scrieti un program care sa
+ includa "myperror.i" si sa foloseasca functia "myperror" intr-un context
+ similar celui in care se foloseste "perror"; in urma rularii acestui
+ program sa se poata observa modul de functionare al funtiei "myperror".  
+
+							DRAGULICI DANIEL
+                                                   actualizat s22nov2008

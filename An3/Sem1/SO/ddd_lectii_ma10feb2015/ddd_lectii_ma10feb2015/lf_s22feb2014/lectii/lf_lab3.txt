@@ -1,0 +1,387 @@
+
+        Gramatici regulate si independente de context, automate stiva:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+A.Definitii:
+------------
+
+In cele ce urmeaza notam cu & pe lambda (cuvantul vid).
+
+Gramatici regulate si independente de context:
+
+1.  GR: G = (VN, VT, S, P), unde:
+	 VN, VT multimi finite nevide disjuncte
+	     (neterminale, respectiv terminale)
+	 S apartine lui VN (simbolul de start)
+	 P inclus in VN x (VN U VT)*
+	 P contine doar perechi (productii) de forma:
+	       A -> bB
+	       A -> a
+	     unde A,B in VN, b in VT, a in VT U {&}
+
+2.  GIC: G = (VN, VT, S, P), unde:
+	 VN, VT, S, P ca mai sus
+	 P contine doar productii de forma:
+	       A -> x
+	     unde A in VN, x in (VN U VT)*
+
+3. Fie G = (VN, VT, S, P) o GR sau GIC
+   Derivare:
+     x |-- y  (x,y in (VN U VT)*) daca:
+	      x=uAv, y=uzv, u,v in (VN U VT)* si (A,z) in P
+     fie |-*- inchiderea reflexiva si tranzitiva a lui |--
+   Limbajul generat de G este:
+     L(G) = {x in VT* | S |-*- x}
+
+Automate stiva (automate push-down):
+
+4.  AS: A = (Q, V, W, d, q0, Z0, F), unde:
+       Q, V, W multimi finite nevide
+	 (stari, alfabet, respectiv alfabetul stivei)
+       q0 apartine lui Q (starea initiala)
+       Z0 apartine lui W (simbolul initial din stiva)
+       F inclusa in Q (stari finale)
+       d : Q x (V U {&}) x W ----> Pf(Q x W*) functie (functia de tranzitie)
+  Descriere instantanee:
+      (q, x, y), unde q in Q, x in V*, y in W*
+  Miscare:
+      (q, ax, Zy) |-- (p, x, y'y) <==> (p, y') in d(q, a, Z)
+	  (a in V U {&}, Z in W)
+      fie |-*- inchiderea reflexiva si tranzitiva a lui |--
+  Limbajul acceptat de A cu stiva vida:
+      L&(A) = {x in V* | (q0, x, Z0) |-*- (q, &, &) cu q oarecare}
+  Limbajul acceptat de A cu stare finala:
+      L(A) = {x in V* | (q0, x, Z0) |-*- (q, &, y) cu q in F}
+
+
+B.Sugestii de implementare:
+---------------------------
+
+1. GIC in C++ cu metode de setare/consultare si functii de citire si afisare;
+  neterminalele/terminalele pot fi stringuri oarecare (nu doar simple
+  caractere) - ele se vor translata prin numere intregi negative/pozitive;
+  de aceea un cuvant dat ca input (care se presupune a fi un sir de
+  neterminele si terminale) trebuie impartit in prealabil in stringuri ce
+  corespund neterminalelor/terminalelor componente, de exemplu sa fie
+  output-ul unui analizor lexical.
+
+/**************************************************************************/
+
+class GIC{
+ int nrn;   // nr. neterminalelor (neterminalele sunt nr. -1,...,-nrn);
+ int sbs;   // simbolul de start;
+ char **vn; // vectorul numelor neterminalelor;
+ int nrt;   // nr. terminalelor (terminalele sunt nr. 1,...,nr);
+ char **vt; // vectorul numelor terminalelor;
+ int nrp;   // nr. productiilor;
+ int **p;
+  // vectorul productiilor;
+  // daca p[i] contine productia N -> c1...ck, atunci:
+  //   p[i][0]=lung partii drepte, k;
+  //   p[i][1]=neterminalul din stanga, N;
+  //   p[i][2], ..., p[i][1+p[i][0]] vectorul din partea dreapta c1,...,ck;
+ int cauta(char *s, char *v[], int n);
+  // cauta cuvantul s in vectorul de cuvinte v cu n elemente;
+  // daca este gasit, returneaza pozitia 0 <= i < n unde este gasit intai;
+  // daca nu este gasit, returneaza -1;
+  // este folosita pentru a gasi corespondentul ca sir de numere al unui sir
+  // de terminale si/sau neterminale date prin numele lor (cu ea se va cauta
+  // in vn si vt);
+public:
+ GIC();
+ ~GIC();
+ int sets(char *s);
+  // marcheaza ca simbol de start neterminalul cu numele s;
+  // ret. 1=succes, 0=esec;
+ int addn(char *s);
+  // adauga la gramatica un neterminal cu numele s;
+  // ret. 1=succes, 0=esec;
+ int addt(char *s);
+  // adauga la gramatica un terminal cu numele s;
+  // ret. 1=succes, 0=esec;
+ int addp(char *stg, int ndr, char *dr[]);
+  // adauga la gramatica o productie unde:
+  //   neterminalul din stanga are numele stg;
+  //   vectorul numelor simbolurilor din dreapta este dr
+  //     si are ndr elemente;
+  // ret. 1=succes, 0=esec;
+ int getnrn();
+  // ret. nr de neterminale;
+ int getnrt();
+  // ret. nr de terminale;
+ int getnrp();
+  // ret. nr de productii;
+ char * getnname(int i);
+  // ret. un string alocat dinamic cu numele celui de-al i-lea neterminal,
+  //   0 <= i < nrn;
+  // in caz de eroare ret. NULL;
+ char * gettname(int i);
+  // ret. un string alocat dinamic cu numele celui de-al i-lea terminal,
+  //   0 <= i < nrt;
+  // in caz de eroare ret. NULL;
+ char ** getpname(int i);
+  // ret. un vector de stringuri alocat dinamic continand a i-a productie,
+  //   0 <= i < nrp;
+  // vectorul returnat contine:
+  //   pe pozitia 0 numele neterminalului din stanga productiei;
+  //   pe pozitiile urmatoare numele simbolurilor din dreapta productiei;
+  //   pe ultima pozitie NULL;
+  // in caz de eroare ret. NULL;
+ int * getp(int i);       // vt. de int e alocat dinamic
+  // ret. un vector de intregi alocat dinamic continand a i-a productie,
+  //   0 <= i < nrp, asa cum apare ea intern in p[i];
+  // mai exact, componentele vectorului returnat contin respectiv:
+  //   p[i][1], ..., p[i][p[i][0]+1], NULL;
+  // in caz de eroare ret. NULL;
+ int gets();
+  // ret. nr. de ordine al simbolului de start printre neterminale
+  //   (de la 0 la nrn-1);
+};
+
+Functii de citire/afisare:
+
+int citGIC(GIC &g);  // citire interactiva; ret. 1=succes,0=esec
+
+int scrGIC(GIC &g);  // afisare;
+
+/**************************************************************************/
+
+2. AS in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare; in aceasta implementare, in stiva se pot
+ incarca si litere ale alfabetului de intrare (dar nu si &) si avem:
+
+      d : Q x (V U {&}) x (W U V) ----> Pf(Q x (W U V)*)
+
+ (presupunand V disjunct de W).
+  Notam ca, la fel ca in cazul GIC, literele din alfabetul de intrare si din
+ alfabetul stivei pot fi stringuri oarecare (nu doar simple caractere) iar
+ ele se vor translata prin numere intregi; de aceea un cuvant dat ca input
+ (care se presupune a fi un sir de litere ale alfabetului de intrare) trebuie
+ impartit in prealabil in stringuri ce corespund "literelor" componente,
+ de exemplu sa fie output-ul unui analizor lexical.
+  Separat am declarat o clasa INTSTACK (stiva de intregi) ale carui obiecte
+ pot fi folosite atat pentru a implementa stiva automatului cat si pentru a
+ realiza diverse prelucrari auxiliare.
+
+/**************************************************************************/
+
+#include<iostream.h>
+#include<string.h>
+
+class INTSTACK{ // stiva de intregi;
+ int flag; //este 1 sau 0 dupa cum stiva este corect construita sau nu;
+ int n;    // nr. de elemente;
+ int *v;   //varful stivei;
+public:
+ INTSTACK();
+ // constructor ce intializeaza stiva ca vida;
+ INTSTACK(INTSTACK &st);
+ // constructor de copiere;
+ ~INTSTACK();
+ // destructor;
+ int isempty();
+ // ret. 1 sau 0 dupa cum stiva este vida sau nu;
+ int push(int i);
+ // push pe i;
+ // ret. 1 sau 0 dupa cum operatia a reusit sau nu;
+ int pop(int &i);
+ // pop in d;
+ // ret. 1 sau 0 dupa cum operatia a reusit sau nu;
+ int operator!();
+ // ret. 1 sau 0 dupa cum flag este 0 sau 1;
+};
+
+class AS{
+ int nrs;
+   //nr. de stari; starea initiala este 0;
+ unsigned char *f;
+  //vectorul caracteristic al starilor finale;
+ int nrn, nrt, nra;
+  // cardinalul alfabetului stivei (literele sunt nr. 0,...,nrn-1),
+  // cardinalul alfabetului de intrare (literele sunt nrn,...,nrn+nrt-1),
+  // respectiv numarul total de litere; deci nra =  nrn+nrt;
+  // atentie ca in stiva putem incarca si litere din alfabetul de intrare,
+  //   dar nu si pe lambda;
+ int Z0;
+  // simbolul initial din stiva
+ char **va;
+  // vectorul numelor literelor (are nra componente);
+  // pe poz. 0,...,nrn-1 sunt numele literelor din alfabetul stivei,
+  // pe poz. nrn,...,nra-1 sunt numele literelor din alfabetul de intrare;
+ int *nt;
+  // pentru fiecare stare s, litera c, litera stiva z,
+  // nt[s*(nrt+1)*nra+c*nra+z] este nr. tranzitiilor din (s,c,z);
+ int ***t;
+  // tranzitiile;
+  // daca (s,c,z) -> (d,l1...lk) este tranzitia din (s,c,z) cu nr n,
+  //  0 <= n < nt[x], unde x:=s*(nrt+1)*nra+c*nra+z,
+  // atunci t[x][n][0]=d, t[x][n][1]=k, t[x][n][2]=l1, ..., t[x][n][k+1]=lk;
+ void creaza();
+  // initializeaza membrii data ai AS cu toti bitii 0;
+ int indice(char *s);
+  // cauta cuvantul s in vectorul de cuvinte va cu nra componente;
+  // ret.: pozitia 0 <= i < nra a lui s in va, sau -1 daca nu-l contine;
+ int rec(int sc, int *ix, INTSTACK st, int mod=1);
+  // testeaza daca cuvantul x (sir de numere de ordine ale unor litere din
+  //   alfabetul de intrare, de la 0 la nrt-1, terminat cu -1) este recunoscut
+  //   cf. mod, plecand din starea sc cu stiva curenta st;
+  // mod poate fi:
+  //   0 stare finala;
+  //   1 stiva vida;
+  //   2 stare finala si stiva vida;
+  // returneaza:
+  // -2 daca a aparut o eroare interna;
+  // -1 daca automatul s-a blocat inainte de consumarea lui ix;
+  // 0 daca ix a fost consumat, dar nu a fost recunoscut cf. lui mod;
+  // 1 daca ix a fost recunoscut cf. lui mod;
+public:
+ void distruge();
+  // dezaloca AS si-i reinitializeaza membrii data cu toti bitii 0
+  // (apeland eventual metoda creaza);
+  // se poate folosi in destructor sau in caz ca automatul a fost
+  // incomplet/incorect initializat (si trebuie sa eliberam resursele ocupate
+  // de el lasand insa automatul intr-o forma recunoscuta de alte metode,
+  // pentru a-l putea refolosi);
+ AS(); // apeleaza metoda creaza
+ ~AS();// apeleaza metoda distruge
+ int dimensionare(int pnrs, int pnrn, int pnrt);
+  // (re)aloca memorie pentru AS (in prealabil ii aplica metoda distruge);
+  // ret. 1=succes, 0=esec;
+  // in caz de esec aplica automatului metoda distruge;
+  // se poate folosi la (re)dimensionarea unui automat pentru o noua
+  // folosire (de exemplu la citire);
+ int getnrs();
+  // ret. nr. de stari;
+ int getnrn();
+  // ret. cardinalul alfabetului stivei;
+ int getnrt();
+  // ret. cardinalul alfabetului de intrare;
+ int getnra();
+  // ret. numarul total de litere;
+ int setf(int s);
+  // marcheaza starea s ca fiind finala;
+  // ret. 0 daca starea e invalida sau 1 la succes;
+ int isf(int s);
+  // testeaza daca s este stare finala;
+ int addn(char *s);
+  // adauga litera cu numele s la alfabetul stivei;
+  // ret. 1=succes, 0=esec;
+ int addt(char *s);
+  // adauga litera cu numele s la alfabetul de intrare;
+  // ret. 1=succes, 0=esec;
+ int setZ0(char *s);
+  // marcheaza litera-stiva cu numele s ca simbol initial al stivei;
+  // ret. 1=succes, 0=esec;
+ int getZ0();
+  // ret. simbolul initial al stivei ca indice;
+ char* getname(int i);
+  // ret. numele literei cu indicele i, 0 <= i < nra,
+  //   intr-un string alocat dinamic, sau NULL la eroare;
+ int getnind(int i);
+  // ret. indicele celei de-a i-a litera stiva, 0 <= i < nrn,
+  // sau -1 in caz de eroare;
+ int gettind(int i);
+  // ret. indicele celei de-a i-a litera din alf. de intrare, 0 <= i < nrt,
+  // sau -1 in caz de eroare;
+ int addp(int i, char *c, char *z, int q, int ny, char *y[]);
+  // adauga tranzitia (i,c,z) -> (q,y);
+  // y e vectorul numelor literelor (obisnuite sau stiva) adaugate la stiva,
+  //   si are ny elemente;
+  // ret. 1=succes, 0=esec;
+ int getnp(int i, char *c, char *z);
+  // ret. nr tranzitiilor din (i,c,z), sau -1 la eroare;
+ int getnp(int i, int ic, int iz);
+  // la fel, dar cu indici;
+ int* getp(int i, char *c, char *z, int no);
+  // ret. tranzitia cu nr. no din (i,c,z), intr-un vector alocat dinamic;
+  // vectorul contine o copie a lui t[x][no], unde x=i*(nrt+1)*nra+c*nra+z;
+  // in caz de eroare eroare ret. NULL;
+ int* getp(int i, int ic, int iz, int no);
+  // ca mai sus, dar se pleaca de la indici;
+ char** getpname(int i, char *c, char *z, int no, int &d);
+  // daca (i,c,z) -> (q,l1,...lk) este tranzitia cu nr. no din (i,c,z),
+  // aloca dinamic un vector de cuvinte ce contine numele literelor
+  // l1,...,lk, pune in d pe q si returneaza vectorul alocat sau NULL
+  // in caz de eroare;
+ char** getpname(int i,int ic, int iz, int no, int &d);
+  // ca mai sus, dar se pleaca de la indici
+ int recunoaste(char **x);
+  // testeaza daca cuvantul x (sir de nume de litere din alfabetul de intrare,
+  //   terminat cu NULL) este recunoscut;
+  // returneaza ca si rec;
+  int recunoaste(int *ix);
+  // la fel, dar x este sirul numerelor de ordine ale literelor din alfabetul
+  //   de intrare, de la 0 la nrt-1; la sfarsitul sirului este -1;
+};
+
+Functii de citire/afisare:
+
+int citAS(AS &a);  // citire interactiva; ret. 1=succes,0=esec
+
+int scrAS(AS &a);  // afisare;
+
+
+C.TEMA:
+-------
+
+1. (10 puncte)
+  Implementati complet clasa GIC si functiile de citire/afisare
+   corespunzatoare.
+  Se va construi un fisier header si unul de implementare.
+  Scrieti un program demonstrativ in care se citeste o GIC si se afisaza.
+ Varianta (punctajul se imparte la 2):
+  Definiti (oricum) tipul gramatica independenta de context (GIC) ca un tip
+   structura (in C) sau clasa (in C++), cu conditia ca neterminalele si
+   terminalele sa poata fi stringuri oarecare (nu doar caractere) - astfel
+   un cuvant (sir de terminale/neterminale) dat ca input va trebui descompus
+   in prealabil in unitati lexicale.
+  Scrieti functii/metode de citire si afisare.
+  Scrieti un program demonstrativ in care se citeste o GIC si se afisaza.
+ Varianta (punctajul se imparte la 4):
+  Definiti (oricum) tipul gramatica independenta de context (GIC) ca un tip
+   structura (in C) sau clasa (in C++), cu conditia ca neterminalele sa fie
+   litere mari iar terminalele litere mici.
+  Scrieti functii/metode de citire si afisare.
+  Scrieti un program demonstrativ in care se citeste o GIC si se afisaza.
+
+2. (5 puncte)
+  Implementati GR prin simplificarea clasei GIC - productiile au partea
+   dreapta de lungime <= 2 si pot fi retinute intr-un vector de forma
+
+	   int (*p)[3];
+
+   in productia p[i], componenta p[i][0] contine neterminalul din stanga,
+   iar componentele p[i][1], p[i][2] simbolurile din dreapta; daca partea
+   dreapta are lungime < 2, componentele p[i][1], p[i][2] necompletate vor
+   avea valoarea 0.
+  Scrieti functii/metode de citire si afisare.
+  Scrieti un program demonstrativ in care se citeste o GR si se afisaza.
+ Se accepta si variante mai simple (similare celor de la problema 1) cu
+  diminuarea corespunzatoare a punctajului.
+   
+3. (12 puncte)
+  Implementati complet clasele INTSTACK, AS si functiile de citire/afisare
+   corespunzatoare.
+  Se va construi un fisier header si unul de implementare.
+  Scrieti un program demonstrativ in care se citeste un AS, apoi se afisaza,
+   apoi intr-un ciclu se citesc diverse cuvinte (siruri de "litere" ale
+   alfabetului de intrare), se impart in unitati lexicale, apoi se verifica
+   daca sunt recunoscute cu stare finala si/sau cu stiva vida; eventual
+   input-ul automatului va fi output-ul unui analizor lexical; ciclul se
+   incheie la citirea si procesarea unui cuvant vid.
+ Varianta (punctajul se imparte la 2):
+  Definiti (oricum) tipul automat stiva (AS) ca un tip structura (in C) sau
+   clasa (in C++), cu conditia ca literele din alfabetul de intrare si cel al
+   stivei sa poata fi stringuri oarecare (nu doar caractere) - astfel
+   un cuvant dat ca input va trebui descompus in prealabil in unitati
+   lexicale. Se vor scrie 
+  Scrieti functii/metode de citire, afisare, recunoastere cu stare finala,
+   recunoastere cu stiva vida.
+  Scrieti un program demonstrativ ca mai inainte.
+ Varianta (punctajul se imparte la 4): ca mai sus, dar literele alfabetului
+  de intrare vor fi litere mici, iar cele ale alfabetului stivei litere mari.
+
+
+DANIEL DRAGULICI
+aprilie, 2007

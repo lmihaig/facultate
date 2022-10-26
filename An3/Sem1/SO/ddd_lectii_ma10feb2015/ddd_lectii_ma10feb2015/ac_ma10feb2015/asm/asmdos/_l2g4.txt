@@ -1,0 +1,1723 @@
+Assembler, lectia 2 - Diverse instructiuni:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1) Registrii procesorului (cei cu "E" sunt la 386+) (recapitulare):
+
+- general purpose registers:      - segment registers:
+    EAX, AX, AL, AH - accumulator     CS - code segment
+    EBX, BX, BL, BH - base            DS - data segment
+    ECX, CX, CL, CH - count           SS - stack segment
+    EDX, DX, DL, DH - data            ES - extra segment 
+                                      FS (386+), GS(386+)
+
+- pointer registers:              - index registers:
+    ESP, SP - stack pointer           ESI, SI - source index
+    EBP, BP - base pointer            EDI, DI - destination index
+
+- instruction pointer: EIP, IP
+
+- flags register:   |--|--|--|--|OF|DF|IF|TF|SF|ZF|--|AF|--|PF|--|CF|
+                    -------------------------------------------------
+                     15                                            0
+    CF - carry,  PF - parity,  AF - auxiliary flag,  ZF - zero,  SF - sign,
+    TF - trace,  IF - interrupt,  DF - direction,  OF - overflow
+
+
+2) Instructiuni referitoare la registrul de flaguri (recapitulare):
+
+  lahf    ;copiaza in AH octetul low al reg. de flaguri 
+  sahf    ;copiaza in octetul low al reg. de flaguri pe AH
+  pushf   ;salveaza in stiva (push) registrul de flaguri
+  popf    ;incarca din stiva (pop) registrul de flaguri
+
+
+3) Instructiuni de setat/sters flaguri individuale (nu au operanzi):
+
+  STC (face CF:=1),  CLC (face CF:=0), CMC (face CF:=1-CF),
+  STD (face DF:=1),  CLD (face DF:=0),
+  STI (face IF:=1), CLI (face IF:=0)
+  
+ Obs: pt. restul flagurilor nu avem instructiuni de setat/sters explicite;
+  putem face artificii, de ex. putem face AF:=1 executand:
+
+    mov ah,10h  ;bitul 4 din AH este 1 (si restul 0)
+    sahf        ;bitul 4 din reg. de flaguri, i.e. AF, este 1; 
+                ;  restul devin insa 0
+
+  sau mai elegant (fara a altera alte flaguri):
+
+    lahf        ;incarc flagurile in AH
+    or ah,10h   ;AH:=AH 0R 10h (bitul 4 din ah devine 1, restul raman la fel)
+    sahf        ;salvez AH in flaguri
+
+ Mentionam ca instr. "MOV", "XCHG", "LAHF", "LEA", "LDS", "LEs", "PUSH", 
+"POP" (prezentate in lectia 1) nu afecteaza flagurile.
+
+ In cele ce urmeaza vom nota flagurile modificate de o instructiune astfel:
+  ODITSZAPC  ==> inseamna: CF nedefinit, PF afectat, AF devine 1, ZF devine 0 
+       01XU
+
+
+4) Instructiuni aritmetice pentru intregi:
+
+ Instructiunile de incrementare/decrementare ("d" poate fi reg.sau din mem.):
+ 
+  INC d  ;efect: [d] := [d]+1 si nu afecteaza flagurile
+  DEC d  ;efect: [d] := [d]-1 si afecteaza: ODITSZAPC
+         ;                                  X   XXXXX
+         ;(practic insa, pe ex.simple am constatat ca "DEC" nu afecteaza CF)
+
+ Instructiunile aditive sunt de forma "mnemonic destinatie,sursa", unde 
+"destinatie" poate fi registru sau din memorie, "sursa" poate fi imediat,
+registru sau memorie; operanzii nu pot fi ambii din memorie si trebuie sa
+aibe aceeasi dimensiune; afecteaza ODITSZAPC
+                                   X   XXXXX
+  ADD s,d  ;face [s] := [s] + [d] 
+  ADC s,d  ;face [s] := [s] + [d] + CF
+  SUB s,d  ;face [s] := [s] - [d]
+  SBB s,d  ;face [s] := [s] - [d] - CF
+
+ Toate instructiunile de mai sus seteaza CF=1 daca are loc transport/imprumut
+la bitul cel mai semnificativ; "ADC" si "SBB" folosesc in calcularea
+rezultatului pe CF provenit de la instructiunile anterioare (si genereaza un 
+nou CF=0 sau CF=1).
+ Notam ca intre "INC d" si "ADD d,1" exista diferenta importanta ca prima
+nu afeceaza CF - astfel, putem aduna elementele unui vector (cu "ADD") fara
+ca incrementarea indicelui (cu "INC") sa afecteze transportul produs de ele.
+
+Exemplul 1 (la rularea sub TD se vor urmari registii si flagurile):
+~~~~~~~~~~
+ .model tiny
+ .stack
+ .data
+ .code
+ start:
+   mov ax,01f2h
+   add al,0ch   ;rezulta AL=feh, CF=0 (nu avem transport din b7 al lui AL)
+   add al,03h   ;rez.AL=01h,CF=1,dar AX=0101h (transp.din AL nu a mers in AH)
+   adc al,05h   ;rez.AL=07h (vechiul AL + 05h + vechiul CF), iar noul CF=0
+   sub al,05h   ;rez.AL=02h,CF=0 (nu avem imprumut la b7 al lui AL)
+   sub al,03h   ;rez.AL=FFh,CF=1 dar AX=01FFh (impr.pt.AL nu s-a luat din AH)
+   sbb al,0ffh  ;rez.AL=FFh, adica ffh(vechiul AL)-ffh-1(vechiul CF),
+                ; si cum am facut iar imprumut pt. b7, noul CF=1;
+                ;in instr. am scris "0ffh" deoarece daca am fi zis "ffh" 
+                ; ar fi dat err. la compilare - "ffh" e un identificator si
+                ; ar fi cautat o variabila numita "ffh"
+   mov ax,01feh ;"MOV" nu afecteaza flagurile deci CF ramane 1
+   inc al       ;rez.AL=ffh,CF=1 (nu avem transp.dar "INC" nu afect.flagurile
+                ; deci CF ramane 1 ca inainte)
+   inc al       ;rez.AL=00h, AX=0100h (transportul nu s-a transmis in AH), 
+                ; CF=1("INC"nu afecteaza flagurile ci CF a ramas 1 dinainte)
+   inc al       ;rez.AL=01h,CF=1 (ramas dinainte)
+   dec al       ;rez.AL=00h, CF=1 (n-avem imprumut pt. b7 din AL dar "DEC" 
+                ; nu afecteaza CF si ramane 1 dinainte)
+   dec al       ;rez.AL=ffh, AX=01ffh (imprumutul pt. AL nu s-a luat), CF=1 
+                ; (am avut imprumut pt. b7 din AL dar CF=1 pentru ca asa a
+                ; ramas dinainte, deoarece "DEC" nu afecteaza CF)
+   mov ax,4c00h
+   int 21h   
+ end start
+
+Instructiunile "ADC" si "SBB" folosesc pentru a aduna/scadea numere intregi
+de mai multi octeti - se aduna/scad byte cu byte (sau word cu word, dword
+cu dword), folosindu-se transportul de la o adunare/scadere la alta
+
+Exemplul 2:
+~~~~~~~~~~~
+ .model small
+ .stack
+ .data
+   a dw 0ff01h,0ff02h,0af03h ;octetii 01h ffh 02h ffh 03h afh
+                             ;adica nr. af03ff02ff01h in scr. little endian
+                             ; (daca scriem "ff01h" in loc de "0ff01h" etc.
+                             ; da err.la compilare,caci sunt identififcatori)
+   b dw 01aah,00aah,0000h    ;octetii aah 01h aah 00h 00h 00h
+                             ;adica nr. 000000aa01aah in scr. little endian
+   x dw ?,?,?                ;dupa x sunt 3 word-uri neinitializate
+       ;adunam a+b word cu word (3 word-uri) si punem rezultatul in x
+ .code
+ start:
+   mov ax,@data
+   mov ds,ax
+     ;copiem a in x (x:=a)
+   mov si,offset a
+   mov di,offset x
+   mov ax,[si]     ;la adresari indexate se fol. implicit registrul DS
+   mov [di],ax
+   inc si
+   inc si
+   inc di
+   inc di
+   mov ax,[si]
+   mov [di],ax
+   inc si
+   inc si
+   inc di
+   inc di
+   mov ax,[si]
+   mov [di],ax
+     ;adunam b la x (x:=x+b)
+   mov si,offset b
+   mov di,offset x
+   mov ax,[di]
+   add ax,[si]     ;la prima adunare nu adunam CF, dar ea poate genera CF
+   mov [di],ax     ;deocamdata x: 00abh ff02h af03h iar CF=1;"mov"nu afect.CF
+   inc si          ;              ===== <- pr. word a al sumei finale         
+   inc si          
+   inc di          ;"INC"-urile nu afecteaza CF (ram.ca dupa "ADD" dinainte)
+   inc di          ; daca faceam "add si,2", "add di,2" se strica CF
+   mov ax,[di]
+   adc ax,[si]     ;adun a doua per. de word si CF de la per. anterioara
+   mov [di],ax     ;acum x: 00abh ffadh af03h iar CF=0; "mov" nu afectaza CF
+   inc si          ;        =========== <- pr. doi word din suma finala
+   inc si
+   inc di
+   inc di
+   mov ax,[di]
+   adc ax,[si]     ;per. anterioara a gen. CF=0, dar lucram in general
+   mov [di],ax     ;acum x: 00abh ffadh af03h
+     ;un eventual ultim transport nu se mai salveaza in x, dar ramane in CF
+     ;  (ca in cazul adunarii intre registri)
+     ;in final obtinem de la pozitia x suma af03ffad00abh in little endian
+     ;operatiile se pot automatiza folosind instr. de ciclare
+   mov ax,4c00h
+   int 21h   
+ end start
+
+(la rularea cu TD a programului de mai sus se vor urmari in fereastra Watch:
+ a, [a+2], [a+4], b, [b+2], [b+4], x, [x+2], [x+4] iar in fereastra 
+ Registers: AX, CF si eventual SI, DI).
+
+ Instructiunea de luare a opusului este ("d" poate fi reg.sau din mem.):
+
+  NEG d  ;efect: [d] := 0-[d] si afecteaza: ODITSZAPC
+                                            X   XXXXX
+
+ Instructiunile multimplicative sunt ("s" este registru sau din memorie):
+
+ MUL s 
+   ;inm. acumulatorul cu [s]; operanzii sunt tratati ca intregi fara semn
+   ;daca "s" e byte: AX:=AL*[s] (AH:=(AL*[s])div 2^8, AL:=(AL*[s])mod 2^8)
+   ;daca "s" e word:  DX:=(AX*[s])div 2^16, AX:=(AX*[s])mod 2^16
+   ;daca "s" e dword: EDX:=(EAX*[s])div 2^32,EAX:=(EAX*[s])mod 2^32      
+   ;pe scurt: AX:=AL*[s], resp. (DX,AX):=AX*[s], resp. (EDX,EAX):=EAX*[s]
+   ;afecteaza ODITSZAPC 
+   ;          X   UUUUX                   
+   ;in final: 
+   ;  CF=OF=1 <=> partea hi a rezultatului este semnificativa 
+   ;          <=> AH<>0 ("s"byte),resp.DX<>0 ("s"word),resp.EDX<>0 ("s"dword)
+   ;  CF=OF=0 <=> partea hi a rez. este nesemnif. (rez. a incaput in p. low)
+   ;          <=> AH=0 ("s"byte),resp.DX=0 ("s"word),resp.EDX=0 ("s"dword)
+
+IMUL s 
+   ;similar, dar operanzii sunt tratati ca intregi cu semn iar in final:
+   ;  CF=OF=1 <=> partea hi a rezultatului este semnificativa
+   ;  CF=OF=0 <=> partea hi a rez. este nesemnif. (rez. a incaput in p. low)
+   ;          <=> AH este extensia de semn a lui AL ("s"byte),
+   ;        resp. DX este extensia de semn a lui AX ("s"word),
+   ;        resp. EDX este extensia de semn a lui EAX ("s"dword)   
+
+DIV s
+   ;impartire la [s]; operanzii sunt tratati ca intregi fara semn
+   ;daca "s" e byte:  AL:=AX div [s], AH:=AX mod [s]
+   ;daca "s" e word:  AX:=(DX*2^16+AX) div [s], DX:=(DX*2^16+AX) mod [s]
+   ;daca "s" e dword: EAX:=(EDX*2^32+EAX) div [s],EDX:=(EDX*2^32+EAX) mod [s]
+   ;pe scurt: impart Ax, resp. (DX,AX), resp. (EDX,EAX), la [s]
+   ;          catul se pune in partea low: AL, resp. AX, resp. EAX
+   ;          restul se pune in partea hi: AH, resp. DX, resp. EDX
+   ;afecteaza ODITSZAPC 
+   ;          U   UUUUU                   
+   ;in urmatoarele situatii rezultatul este nedef. (si se gen.o intrerupere):
+   ;  impartitorul este 0
+   ;  restul depaseste capacitatea partii hi a destinatiei
+   ;  catul depaseste capacitatea partii low a destinatiei (in cazul "IMUL"
+   ;    asta inseamna cat neg. < val. neg. min. sau cat poz. > val. poz.max.)
+
+IDIV s 
+   ;similar, dar operanzii sunt tratati ca intregi cu semn
+
+Exemplul 3: 
+~~~~~~~~~~~
+.model tiny
+.stack
+.data
+.code
+start:
+ mov ax,8123h
+ mov bx,0002h
+ mul bx      ;DX=0001h, AX=0246h, CF=OF=1 (partea hi, DX, este semnificativa)
+
+ mov ax,0102h
+ mov bl,02h
+ mul bl      ;AX=0004h (se pierde AH), CF=OF=0 (p.hi, AH, este nesemnif.)
+
+ mov ax,0080h
+ mov bl,01h
+ mul bl      ;AX=0080h, CF=OF=0 (partea hi, AH, este nesemnificativa)
+             ;produsul AL*BL este 128*1=128
+ mov ax,0080h
+ mov bl,01h
+ imul bl     ;AX=ff80h, CF=OF=0 (partea hi, AH, este nesemnificativa
+             ; dar s-a propagat b7 din AL, care este 1,deci AH a devenit ffh)
+             ;produsul AL*BL este -128*1=-128, care pe 8 biti era 80h,
+             ; dar pe 6 biti devine ff80h
+ mov ax,0080h
+ mov bl,02h
+ imul bl     ;AX=ff00h, CF=OF=1 (partea hi, AH, este semnificativa)
+             ; deci ffh din AH nu este extensie de semn ci parte a rezult.
+             ;produsul AL*BL este -128*2=-256, care pe 16 biti este ff00h
+             ;cu "MUL bl" rezulta AX=0100h, adica 128*2=256
+ mov ax,0078h
+ mov bl,02h
+ imul bl     ;AX=00f0h, CF=OF=1 (partea hi, AH, este semnificativa)
+             ; deci desi b7 din AL este 1 (AL este f0h), el nu s-a propagat
+             ; in AH, caci AH este semnificativ (parte a rezultatului) chiar
+             ; daca e nul; produsul AL*BL este 120*2=240
+ mov AX,0100h
+ mov bl,80h
+ div bl      ;AH=00h, AL=02h, deci AX=0002h
+             ;adica 256 div 128 = 2, 256 mod 128 = 0
+ mov AX,0100h
+ mov bl,80h
+ idiv bl     ;AH=00h, AL=feh, deci AX=00feh
+             ;adica 256 div -128 = -2, 256 mod -2 = 0
+ mov ax,4c00h
+ int 21h   
+end start
+
+(la rularea cu TD a programului de mai sus se vor urmari in fer. Registers:
+ AX, BX, DX si CF, OF).
+
+Exemplul 4: inmultirea unui numar lung (ce nu incape in 32 biti) cu un numar
+~~~~~~~~~~~  mai mic (ce incape in 32 biti) (cazul fara semn):
+
+.model small
+.386                 
+.stack               
+.data
+  a dd 20000000h, 1e1e1e1eh  ;ca numar a=1e1e1e1e20000000h
+  b dd 00000011h             ;ca numar b=11h
+  x dd ?,?,?                 ;prod. va fi in x si rezervam 3 dword
+.code
+start:
+ mov ax,@data
+ mov ds,ax
+ mov si,offset a
+ mov di,offset x
+ mov eax,dword ptr [si]
+ mul b                  ;EDX=00000002h, EAX=20000000h
+ mov x,eax              ;EAX e prima cifra a prod.in baza 2^32 (primul dword)
+                        ; iar EDX=transport (00000002h)
+                        ;acum x=20000000h ? ?
+ add si,4        ;avansez in poz. (dword-ul) 2 din a      
+ add di,4        ;avansez in poz. 2 din x
+ mov [di],edx           ;salvez transportul din poz. 1 in poz. 2 din x
+                        ;deci x=20000000h 00000002h ?
+ mov eax, dword ptr [si]
+ mul b                  ;inmultesc b cu a doua cifra in baza 2^32 din a
+                        ;deci EDX=00000001h, EAX=fffffffeh
+ add eax,dword ptr [di] ;adun transportul anterior
+                        ;EAX=fffffffeh + 00000002h = 00000000h + 1(pus in CF)
+ adc edx,00000000h      ;daca am transp., il ad.la transp.general din poz. 2
+                        ;EDX=00000001h + 0h + CF = 00000002h
+ mov [di],eax           ;acum x=20000000h 00000000h ?
+ add di,4
+ mov [di],edx           ;salvez ult. transport in poz. 3 din x
+                        ;acum x=20000000h 00000000h 00000002h
+                        ;ca numar x=20000000020000000h
+ mov ax,4c00h
+ int 21h   
+end start
+
+Comentarii:
+- ".386" permite folosirea instructiunilor neprivilegiate ale procesorului 
+ 80386 si a instructiunilor coprocesorului matematic 80387; noua ne trebuie 
+ ca sa putem accesa registrii de 32 biti (EAX,...);
+- la rularea cu TD vom urmari in fer. Watch: a, [a+4], b, x, [x+4], [x+8],
+ EAX, EDX (acesti reg. nu se vad in fer. Registers - acolo se vad doar reg. 
+ de 16 biti);
+- transporturile intre diverse pozitii (cifre in baza 2^32) putea fi salvat/
+ recuperat prin stiva (noi l-am salvat/recuperat prin locatia destinatie x),
+ de exemplu sa inlocuim secventa:
+
+   add si,4
+   add di,4
+   mov [di],edx
+   mov eax, dword ptr [si]
+   mul b
+   add eax,dword ptr [di]
+   adc edx,00000000h
+   mov [di],eax
+
+ cu sevcenta:
+
+   add si,4
+   add di,4
+   ror edx,16 ;rotim bitii din EDX cu 16 (vezi mai incolo) - practic se
+              ;  interschimba primii 16 cu ultimii 16 biti
+   push dx    ;incarc vechea parte hi a lui EDX (devenita acum low)
+   shr edx,16 ;deplasez bitii din EDX spre dreapta (vezi mai incolo) cu 16
+   push dx    ;incarc vechea parte low a lui EDX
+              ;acum in vf. stivei este vechiul EDX, in little endian
+   mov eax, dword ptr [si]
+   mul b
+   mov bx,sp
+   add eax, dword ptr [bx] ;nu putem adresa bazat/indexat direct cu SP
+   adc edx,00000000h
+   mov [di],eax
+   pop ax     ;scot dwordul din stiva
+   pop ax     ; (nu pot scoate in DX, caci imi trebuie val. de acolo)
+
+ atentie insa ca la inceputul programului sa initializam si SS (cu
+  "mov ax,@stack", "mov ss,ax").
+
+ Daca vrem sa facem o inmultire/impartire cu semn dar dim. operanzilor nu se
+potrivesc, putem folosi urmatoarele instructiuni de extindere a unui intreg
+cu semn la o dimensiune mai mare (practic se propaga bitul de semn); aceste
+instructiuni nu au operanzi si nu afecteaza flagurile:
+
+ CBW    ;efect: b7 din AL se propaga in cei 8 biti din AH
+ CWD    ;efect: b15 din AX se propaga in cei 16 biti din DX
+
+Exemplul 5: (la rularea cu TD se vor urmari AX (in fer. Registers)
+~~~~~~~~~~~    x, y, EAX (in fer. Watch))
+.model small
+.386
+.stack
+.data
+  a db 01h
+  b db 0f1h
+  c dw 0002h
+  x dd ?      ;vreau sa fac x:=a*c (fara semn)
+  y dd ?      ;vreau sa fac y:=b*c (cu semn)
+.code
+start:
+  mov ax,@data
+  mov ds,ax
+  mov al,a    ;AL=01h
+  cbw         ;AX=0001h (b7 din AL a fost 0)
+  mul c       ;EAX=AX*c
+  mov x,eax
+  mov al,b    ;AL=f1h
+  cbw         ;AX=fff1h (b7 din AL a fost 1)
+  imul c      ;EAX=AX*c
+  mov y,eax
+  mov ax,4c00h
+  int 21h   
+end start
+
+Procedand ca mai sus pot inmulti/imparti operanzi ai caror dimensiuni sunt in
+raport de max. 4 (byte si dword) - atunci fac succesiv "CBW" si "CWD"; daca 
+raportul dimensiunilor este mai mare, putem inmulti/imparti pe bucati, ca in 
+penultimul exemplu.
+
+Cu instr. aritmetice de mai sus putem face calcule elementare (o singura op.
+matematica/instructiune); daca vrem sa evaluam expresii mai complexe, le
+evaluam treptat - executam mai multe instructiuni, care evalueaza expresiile
+elementare componente, in ordinea in care sunt incuibate unele in altele,
+salvand rezultatele partiale de exemplu in stiva - a se vedea exercitiile de 
+la sfarsit.
+
+
+5) Instructiuni aritmetice pentru numere in virgula mobila - TODO
+
+
+6) Instructiuni logice, shiftari, rotiri:
+
+ Instructiunile de shiftare (deplasare) translateaza bitii din locatia unei
+destinatii "dest" (registru sau din memorie) cu un numar "depl" (constanta 
+byte sau CL) pozitii; unii biti parasesc locatia "dest"(si se pierd) iar ult.
+care a iesit din locatie e pastrat in CF; afecteaza ODITSZAPC; instructiunile
+sunt:                                               X   XXUXX                   
+ SHL dest, depl   ;depl.logica spre raguri mari (spre stanga); 
+                  ;completeaza in dreapta cu 0
+ SAL dest, depl   ;depl.aritmetica spre raguri mari (spre stanga); 
+                  ;completeaza in dreapta cu 0;
+                  ;practic e la fel ca SHL
+
+ SHR dest, depl   ;depl.logica spre raguri mici (spre dreapta);
+                  ;completeaza in stanga cu 0
+ SAR dest, depl   ;depl.aritmetica spre raguri mici (spre dreapta);
+                  ;completeaza in stanga cu bitul de semn (deplasat spre dr.)
+                  ;deci difera de SHR
+
+Exemplul 6: (la rularea cu TD se va urmari AL (in fer. Registers))
+~~~~~~~~~~~
+.model small
+.stack
+.data
+.code
+start:
+  mov al,11100111b
+  shr al,1          ;AL=01110011b (s-a propagat 0)
+  mov cl,2
+  sar al,cl         ;AL=00011100b (s-a propagat bitul de semn, care este 0)
+  shl al,3          ;AL=11100000b (s-a completat in stanga cu 0)
+  sal al,1          ;AL=11000000b (s-a completat in stanga cu 0)
+  sar al,3          ;AL=11111000b (s-a propagat bitul de semn, care este 1)
+mov ah,4ch
+int 21h
+end start
+
+Shiftarile echivaleaza cu inmultiri/impartiri cu puteri ale lui 2, dar care
+se fac mai rapid ca MUL,IMUL,DIV,IDIV.
+
+ Instructiunile de rotire translateaza bitii din locatia unei destinatii 
+"dest" (registru sau din memorie) cu un numar "depl" (constanta byte sau CL) 
+pozitii; biti care parasesc locatia "dest" printr-o parte intra in locatia
+lui "dest" prin cealalta parte, in aceeasi ordine (impreuna cu CF la RCL,
+RCR); ultimul bit care a iesit din locatie e pastrat si in CF; afecteaza 
+ODITSZAPC; instructiunile sunt:
+X       X
+
+ ROL dest, depl   ;rotire spre raguri mari (spre stanga); 
+                  ;bitii ce ies prin stg. intra prin dr., in aceeasi ordine;
+                  ;ult. bit iesit prin stg. e pastrat si in CF;
+                  ;ex. (ROL cu 3): abcd... --> d...abc, CF=c
+ RCL dest, depl   ;rotire spre raguri mari cu carry (spre stanga cu carry); 
+                  ;prin dreapta intra CF si apoi primii depl-1 biti ce ies 
+                  ;  prin stg.; CF devine ult. bit ce a iesit prin stg.
+                  ;ex. (RCL cu 3): CF=x, abcd... --> d...xab, CF=c
+
+ ROR dest, depl   ;rotire spre raguri mici (spre dreapta); 
+                  ;bitii ce ies prin dr. intra prin stg., in aceeasi ordine;
+                  ;ult. bit iesit prin dr. e pastrat si in CF;
+                  ;ex. (ROR cu 3): ...abcd --> bcd...a, CF=b
+ RCR dest, depl   ;rotire spre raguri mici cu carry (spre dreapta cu carry); 
+                  ;prin stg. intra primii depl-1 biti ce ies prin dr. (in
+                  ; aceeasi ord.) si apoi CF; CF devine ult. bit ce a iesit 
+                  ; prin dr.
+                  ;ex. (RCR cu 3): CF=x, ...abcd --> xcd...a CF=b
+
+Exemplul 7: (la rularea cu TD se va urmari AL si CF (in fer. Registers))
+~~~~~~~~~~~
+.model small
+.stack
+.data
+.code
+start:
+  mov al,11100111b
+  rol al,4          ;AL=01111110b, CF=0
+  ror al,6          ;AL=11111001b, CF=1
+  clc               ;CF=0
+  rcl al,2          ;AL=11100101b, CF=1 (scos 11, bagat 0 & 1, pastrat 1)
+  rcr al,5          ;AL=01011111b, CF=0 (scos 00101, bagat 1 & 0101, pastr.0)
+mov ah,4ch
+int 21h
+end start
+
+Cu "ROL", "ROR"  pot interschimba cele doua jumatati ale config. de biti a
+destinatiei; exemplu:
+
+ rol ax,8  ;interschimba continutul lui AL cu AH
+
+
+Instructiunea "RCL dest,1" are efectul dest := dest*2+CF; acest lucru ne 
+permite sa shiftam la stg. (i.e. dublam) rapid o valoarea multioctet: facem
+"RCL" cu 1 la primul octet, apoi la al doilea (si in el va intra, prin
+intermediul CF, bitul care a iesit din primul octet), etc. Un program de
+acest tip (dar care cere o rotire la stanga, nu o shiftare) este propus ca 
+exercitiu la sfarsit. Similar "RCR dest,1" permite shiftarea la dreapta (i.e.
+injumatatirea) rapida a unei valori multioctet. 
+
+ Instructiunile logice sunt de forma "mnemonic destinatie, sursa", sau
+"mnemonic destinatie" unde "destinatie" poate fi registru sau din memorie,
+"sursa" poate fi imediat, registru sau memorie; operanzii nu pot fi ambii din
+memorie si trebuie sa aibe aceeasi dimensiune; afecteaza ODITSZAPC
+instr. sunt:                                             0   XXUX0
+ 
+  AND s,d  ;face [s] := [s] and [d] (conjunctie bit cu bit)
+  OR  s,d  ;face [s] := [s] or [d]  (disjunctie bit cu bit)
+  xOR s,d  ;face [s] := [s] xor [d] (disjunctie exclusiva bit cu bit)
+  NOT d    ;face [d] := not [d] (neaga fiecare bit, i.e.complement fata de 1)
+
+tablele operatiilor pe biti:
+
+   x | y | x and y | x or y | x xor y      x | not x
+   ----------------------------------      ---------
+   0 | 0 |    0    |    0   |    0         0 | 1 
+   0 | 1 |    0    |    1   |    1         1 | 0
+   1 | 0 |    0    |    1   |    1
+   1 | 1 |    1    |    1   |    0
+
+Obs: "NOT" nu afecteaza PF, deoarece "destinatie" are un nr. par de pozitii, 
+ deci nr. de 1 si nr. de 0 au aceeasi paritate (iar"NOT"interschimba 1 cu 0).
+     
+Exemplul 8: (la rularea cu TD se vor urmari AL, BL (in fer. Registers))
+~~~~~~~~~~~
+.model small
+.stack
+.data
+  a db 00110000b
+.code
+start:
+mov ax,@data
+mov ds,ax
+  mov bl,01010000b
+  mov al,a
+  not al    ;AL=11001111b    
+  mov al,a
+  and al,bl ;AL=00010000b
+  mov al,a
+  or  al,bl ;AL=01110000b
+  mov al,a
+  xor al,bl ;AL=01100000b
+mov ah,4ch
+int 21h
+end start
+
+Instructiunile logice pot fi folosite pentru diverse artificii (castigam
+  viteza la executie), ca de exemplu:
+- stergerea continutului unui registru:
+
+    xor ax,ax ;AX:=0000h
+
+- setarea/stergerea/inversarea unor biti/flaguri:
+
+    lahf        ;incarc flagurile in AH
+    or  ah,00010000b  ;bitul 4 din AH devine 1, restul raman la fel
+    and ah,11111011b  ;bitul 2 din AH devine 0, restul raman la fel
+    sahf        ;salvez AH in flaguri; fata de situatia initiala
+                ; s-a schimbat AF:=1, PF:=0
+
+    mov al,0ffh ;AL=11111111b
+    and al,0aah ;AL=10101010b (am sters bitii de rang par)
+    and al,0fh  ;Al=00001010b (am sters tetrada superioara a lui AL)
+    or  al,0f0h ;AL=11111010b (am setat tetrada superioara a lui AL)
+    or  al,55h  ;AL=11111111b (am setat bitii de rang par)
+
+    mov al,0aah ;AL=10101010b
+    xor al,0ffh ;AL=01010101b; efect echivalent cu "not al"
+    xor al,al   ;AL=00000000b; efect echiv. cu "mov al,0", dar in plus
+                ; face CF=0, ZF=1 ("MOV" nu afecteaza flagurile)
+
+- "AND" poate fi folosit pt. stergerea CF si actualizarea SF:
+
+    ;presupunem ca initial CF=1, SF=0
+    mov al,0f1h;"MOV" nu modif. flagurile, deci CF=1, SF=0;
+               ;vrem CF=0 caci n-am facut inca nici o prelucrare, iar SF sa 
+               ; reflecte faptul ca AL, ca intreg cu semn, este negativ
+    and al,al  ;AL nu isi schimba valoarea, dar acum CF=0, SF=1
+               ; (operatia nu a provocat transport din b7, iar b7 este 1)
+    and al,0ffh;acelasi efect
+
+- simularea adunarii si inmultirii folosind op. logice si shiftari (a se
+ vedea exercitiile de la sfarsit).
+
+
+7) Instructiuni de comparatie:
+
+  CMP opd1, opd2  ;calculeaza opd1-opd2, nu salveaza rezultatul, si modifica
+                   flagurile ca la ADC:  ODITSZAPC
+                                         X   XXXXX
+  TEST opd1, opd2 ;calc. opd1 AND opd2, nu salveaza rezultatul, si modifica
+                   flagurile ca la AND:  ODITSZAPC
+                                         0   XXUX0
+
+ Operanzii trebuie sa aibe aceeasi dimensiune; nu pot fi ambii din memorie
+  iar opd1 nu poate fi imediat.
+ Obs. de ex. ca la "CMP" rezulta config. diferite de flaguri daca opd1<opd2,
+  opd1=opd2, etc. 
+
+8) Instructiuni de salt:
+
+ Au forma urmatoare ("xx" este un sufix al mnemonicului iar "adr" o adresa
+  (offset) ce poate fi imediat, registru, etc.):
+            
+  Jxx adr   ;efect: testeaza flagurile si daca au o anumita configuratie,
+            ; corespunzatoare lui "xx", se sare cu executia la adresa 
+            ; (offsetul) "adr" in cadrul segmentului de cod curent;
+            ;practic, se executa IP := IP+depl, unde "depl" este diferenta
+            ; dintre "adr" si offsetul instructiunii urmatoare lui "Jxx";
+            ;trebuie insa ca "depl" sa fie intre -128..127; exceptie: "jmp"
+            ; (vezi mai jos) poate face si salturi mai mari
+
+ Variantele de "Jxx" si config. flagurilor pentru care se face saltul sunt:
+
+JA/JNBE : CF=0 sau ZF=0    JG/JNLE : ZF=0 sau SF=OF
+JAE/JNB : CF=0             JGE/JNL : SF=OF
+JB/JNAE : CF=1             JL/JNGE : SF<>OF
+JBE/JNA : CF=1 sau ZF=1    JLE/JNG : ZF=1 sau SF<>OF
+
+JE/JZ : ZF=1      JP/JPE : PF=1      JO : OF=1     JNS : SF=0
+JNE/JNZ : ZF=0    JNP/JPO : PF=0    JNO : OF=0    JCXZ : (CX)=0
+
+JMP : este un salt neconditionat
+
+ Conditiile de salt pt. "Jxx" sunt in concordanta cu rezultatele posibile la
+"CMP", mai exact daca executam succesiunea:
+
+   CMP opd1,opd2
+   Jxx adr
+
+atunci in functie de "xx" avem:
+
+JB,JNAE (below/not above or equal): sare daca opd1 < opd2 ca valori fara semn
+JBE,JNA (below or equal/not above): sare daca opd1 <= opd2 ca valori fara semn
+JAE,JNB (above or equal/not below): sare daca opd1 >= opd2 ca valori fara semn
+JA,JNBE (above/not below or equal): sare daca opd1 > opd2 ca valori fara semn
+ (vedem ca "A" (above) si "B" (below) sunt folosite la compararea fara semn)
+
+JL,JNGE (less/not greater or equal): sare daca opd1 < opd2 ca valori cu semn
+JLE,JNG (less or equal/not greater): sare daca opd1 <= opd2 ca valori cu semn
+JGE,JNL (greater or equal/not less): sare daca opd1 >= opd2 ca valori cu semn
+JG,JNLE (greater/not less or equal): sare daca opd1 > opd2 ca valori cu semn
+ (vedem ca "G" (greater) si "L" (less) sunt folosite la compararea cu semn)
+
+JE,JZ (equal/zero): sare daca opd1 = opd2
+JNE,JNZ (not equal/not zero): sare daca opd1 <> opd2
+
+ De exemplu:
+   
+   mov al,10000010b
+   mov bl,00000001b
+   cmp al,bl  ;diferenta al-bl este 10000001 si rezulta: CF=0,SF=1,PF=1,OF=0
+   jl et1     ;sare, deoarece al<bl ca numere cu semn (-126 < 1)
+              ;  dealtfel vedem ca SF<>OF (conditia de salt la jl)
+   nop        ;instructiunea de efect nul (nu afect.nici flagurile); 
+              ;  am pus-o de umplutura
+ et1:
+   jb et2     ;nu sare, deoarece nu avem al<bl ca numere fara semn (128 >= 1)
+              ;  dealtfel vedem ca nu avem CF=1 (conditia de salt la jb)
+   nop
+ et2:
+   nop
+
+ Etichetele "et1" si "et2" sunt inlocuite la compilare cu adresele (offsetul)
+instructiunilor care le urmeaza; la intalnirea instructiunii "jl et1" 
+compilatorul calculeaza diferenta intre offsetul desemnat de "et1" si 
+offsetul instructiunii urmatoare lui "jl et1", iar aceasta va fi valoarea lui
+"depl" (valoarea care se aduna la IP); analog la "jb et2".
+
+ Putem simula instructiune structurata if-then-else astfel:
+
+ cmp (sau test, etc.)                cmp (sau test, etc.)
+ jxx et ;adica if xx then goto et    jxx et1
+   ... ramura else                   jmp et2
+   jmp sfarsit                       et1: 
+ et:                                   ... ramura then
+   ... ramura then                     jmp sfarsit
+ sfarsit:                            et2:
+ ...                                   ... ramura else
+                                     sfarsit:
+                                     ...
+
+Varianta din dreapta este mai buna in cazurile in care ramurile then sau else
+sunt prea mari (>128 octeti) si nu se poate sari peste ele cu instructiuni
+de salt conditionat ("Jxx" altele decat "JMP"); varianta din dreapta face
+salturi conditionate mici, iar peste ramurile then sau else sare cu "JMP",
+care poate face si salturi mai mari.
+
+ Notam ca la instructiunile de salt conditionat ("Jxx" altele decat "JMP")
+operandul "adr" trebuie sa fie o eticheta din program, in timp ca la "JMP"
+el poate fi dat si printr-un registru de 16 biti sau printr-o locatie de
+memorie de 16 biti.
+
+Exemplul 9: program care pune intr-o variabila x max. dintre 3 valori fara
+~~~~~~~~~~~   semn stocate in var. a, b, c (am indentat pt. lizibilitate):
+
+.model small
+.stack
+.data
+  a dw 3
+  b dw 5
+  c dw 2
+  x dw ?
+.code
+start:
+  mov ax,@data
+  mov ds,ax
+  mov ax,a  ;copiem variabilele in registri
+  mov bx,b  ;  caci nu putem face CMP cu ambii operanzi
+  mov cx,c  ;  in memorie
+  cmp ax,bx
+  jb e1       ;sare daca a<b
+    cmp ax,cx   ;acum stim b<=a
+    jb e2       ;sare daca a<c
+      mov x,ax    ;acum stim b<=a,c<=a
+      jmp sfarsit
+    e2:
+      mov x,cx    ;acum stim b<=a<c
+      jmp sfarsit
+  e1:
+    cmp bx,cx   ;acum stim a<b
+    jb e3       ;sare daca b<c
+      mov x,bx    ;acum stim a<b,c<=b   
+      jmp sfarsit
+    e3:
+      mov x,cx    ;acum stim a<b<c
+sfarsit:
+  mov ax,4c00h
+  int 21h
+end start
+
+(la rularea cu TD se vor urmari a, b, c, x (in fereastra Watch), AX, BX, CX
+ (in fereastra Registers)).
+
+Exemplul 10: Algoritmul lui Euclid cu diferente (cat timp nr. sunt diferite,
+~~~~~~~~~~~~  scad pe cel mic din cel mare; cand au deventi egale, valoarea
+              comuna este cmmdc numerelor initiale):
+.model small
+.stack
+.data
+  a dw 4d
+  b dw 6d
+  x dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+  mov ax,a
+  mov bx,b
+  inceput:
+    cmp ax,bx
+    je egale   
+      ja ab  ;jump-urile nu modifica flagurile,deci ele au ramas ca dupa"CMP"    
+        sub bx,ax  ;aici ajungem daca AX<BX
+        jmp inceput
+      ab:          ;aici ajungem daca AX>BX
+        sub ax,bx
+        jmp inceput
+  egale:           ;aici ajungem daca AX=BX
+  mov x,ax   ;aici X:=2d (adica cmmdc(4d,6d))
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD se vor urmari a, b, x (in fereastra Watch), AX, BX (in
+ fereastra Registers)).
+
+Exemplul 11: Suma a doi vectori:
+~~~~~~~~~~~~
+.model small
+.stack
+.data
+  a db 01h, 02h, 03h ;la compilare "a" se inloc. cu offsetul sau 0000h
+  b db 10h, 20h, 30h ;la compilare "b" se inloc. cu offsetul sau 0003h
+  x db ?, ?, ?       ;la compilare "x" se inloc. cu offsetul sau 0006h
+.code
+start:
+mov ax,@data
+mov ds,ax
+  mov si,0        ;initializez contorul cu care vom numara iteratiile
+  inceput:
+  cmp si,3
+  jae sfarsit   
+    mov al,[si+a] ;cand "a" apare intre [] inseamna constanta adresa 0000h
+    add al,[si+b] ;cand "b" apare intre [] inseamna constanta adresa 0003h
+    mov [si+x],al ;cand "x" apare intre [] inseamna constanta adresa 0006h
+  inc si
+  jmp inceput
+  sfarsit:
+  nop             ;acum x: 11h 22h 33h
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD se vor urmari in fer. Watch: a, [a+1], [a+2], b, [b+1],
+ [b+2], x, [x+1], [x+2], iar in fer. Registers: AL, SI).
+
+Ultimele trei exemple sunt si implementari ale unor structuri de tip if-else,
+while, for; implementarile nu sunt insa fidele (de ex. in ciclul while de la
+penultimul exemplu avem doua pct. din care sarim la inceputul ciclului); 
+putem realiza insa si implementari fidele (este un exercitiu la sfarsit).
+
+Exemplul 12: Transpunerea unei matrici liniarizate:
+~~~~~~~~~~~~
+.model small
+.stack
+.data
+  nlin db 3     ;nr. de linii
+  ncol db 3     ;nr. de coloane
+  a db 01h, 02h, 03h, 04h, 05h, 06h, 07h, 08h, 09h
+    ;matr. 3x3, cu liniile stocate in mem. una dupa alta
+    ;dpv. matematic, matricea este: 1 2 3
+    ;                               4 5 6
+    ;                               7 8 9
+.code
+start:
+mov ax,@data
+mov ds,ax
+  mov bx,offset a
+  mov cl,0    ;numaram liniile cu CL
+  linie:
+    mov ch,0  ;numaram coloanele cu CH
+    coloana:
+      mov al,cl
+      mul nlin  
+      mov si,ax ;acum SI=offsetul liniei de indice CL
+      mov al,ch
+      cbw       ;acum AX=CH (indicele coloanei) scris ca word 
+      add si,ax ;acum SI=offsetul elementului a[CL][CH] in locatia matricii
+      mov al,ch
+      mul nlin  
+      mov di,ax ;acum DI=offsetul liniei de indice CH
+      mov al,cl
+      cbw       ;acum AX=CL scris ca word 
+      add di,ax ;acum DI=offsetul elementului a[CH][CL] in locatia matricii
+      mov al,[bx+si]  ;AL:=a[CL][CH]
+      xchg al,[bx+di] ;interschimb AL cu a[CH][CL]
+      mov [bx+si],al  ;a[CL][CH]:=AL
+      inc ch      ;trec la coloana urmatoare
+      cmp ch,cl
+      jb coloana
+  inc cl          ;trec la linia urmatoare
+  cmp cl,nlin
+  jb linie
+    ;acum "a" are in locatie: 01h 04h 07h 02h 05h 08h 03h 06h 09h
+    ;adica este matricea: 1 4 7
+    ;                     2 5 8
+    ;                     3 6 9
+mov ah,4ch
+int 21h
+end start
+
+Comentarii:
+- puteam sa indexam cu doua variabile "i", "j" in loc de CL, CH;
+  puteam de asemenea folosi artificii pt. a face programul mai rapid;
+- pt. a aduna doua matrici e suf. sa parcurgem locatia lor ca pe un vector
+ (cu un singur indice), fara a imparti prelucrarea pe linii si coloane;
+- la rularea cu TD vom urmari in fer. Watches: a, [a+1], ..., [a+8]
+ iar in fer. Registers: CL, CH, SI, DI.
+
+Exemplul 13: Ex. ce arata ca operandul unui "JMP" poate fi si registru
+~~~~~~~~~~~~  sau din memorie
+.model small
+.stack
+.data
+  x dw ?
+  y dw ?
+.code
+start:
+mov ax,@data
+mov ds,ax
+  lea ax,et1 ;echivalent cu "mov ax, offset et1"
+  mov x,offset et2
+  mov y,offset et3
+  mov bx, offset y
+  jmp ax
+  nop      ;se sare peste asta
+ et1:
+  jmp [x]
+  nop      ;se sare peste asta
+ et2:
+  jmp [BX] ;deci salt la adr. stocata in mem. la adr. stocata in BX
+  nop      ;se sare peste asta
+ et3:
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD se va urmari la care/peste care linii sare indicatorul 
+ instructiunii curente - va sari "NOP"-urile, semn ca s-au executat acele
+ "JMP").
+
+
+9) Instructiuni de ciclare:
+ 
+ Implementeaza structuri de ciclare de tip "for", cu test la sfarsit; 
+nu afecteaza flagurile  si sunt de forma urmatoare (unde "adr" este ca la 
+"Jxx" conditionate, deci trebuie sa avem "depl" intre -128..128):
+
+  LOOP adr    ;decrem. CX cu 1 si daca obt. (Cx)<>0 se sare la "adr"
+  LOOPZ adr   ;decrem. CX cu 1 si daca obt. (Cx)<>0 si ZF=1 se sare la "adr"
+  LOOPE adr   ;idem
+  LOOPNZ adr  ;decrem. CX cu 1 si daca obt. (Cx)<>0 si ZF=0 se sare la "adr"
+  LOOPNE adr  ;idem
+
+Observatii: 
+- subliniem ca testul (CX)<>0 se face DUPA ce s-a decrementat CX (iar 
+ decrementarea ramane facuta chiar daca in urma testarii conditiei nu se face
+ saltul); 
+  in particular la LOOP daca initial (CX)=0, intai se decrem. CX si devine 
+ ffffh, apoi deoarece este <> 0 se sare;
+- daca "adr" este inainte (avem "depl" pozitiv), atunci nu avem un ciclu
+ ci doar un salt conditionat (doar daca "adr" este inapoia lui "LOOPxx" are
+ loc ciclarea, caci dupa saltul inapoi executia ajunge la un mom. dat iar la
+ "LOOPxx", iar salt, etc.) - evident, acest curs al executiei poate fi 
+ schimbat de prezenta altor "Jxx", "LOOPxx".
+
+Exemplul 14: Suma a doi vectori, varianta cu "LOOP":
+~~~~~~~~~~~~
+.model small
+.stack
+.data
+  a db 01h, 02h, 03h ;la compilare "a" se inloc. cu offsetul sau 0000h
+  b db 10h, 20h, 30h ;la compilare "b" se inloc. cu offsetul sau 0003h
+  x db ?, ?, ?       ;la compilare "x" se inloc. cu offsetul sau 0006h
+.code
+start:
+mov ax,@data
+mov ds,ax
+  mov cx,3        ;initializez contorul cu nr. iteratiilor de efectuat
+  mov si,0        ;initializez indicele in vectori
+  inceput:
+    mov al,[si+a] ;cand "a" apare intre [] inseamna constanta adresa 0000h
+    add al,[si+b] ;cand "b" apare intre [] inseamna constanta adresa 0003h
+    mov [si+x],al ;cand "x" apare intre [] inseamna constanta adresa 0006h
+    inc si
+  loop inceput
+     ;acum x: 11h 22h 33h
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD se vor urmari in fer. Watches: x, [x+1], [x+2] iar in fer.
+ Registers: CX, SI, AL).
+
+ Obs. ca ciclul "for" simulat de "LOOP" are testul la sfarsit si nu acopera
+cazul general cand nr. de iteratii poate fi si 0 (el face macar o iteratie).
+ Putem simula un ciclu "for" cu test la inceput astfel (dar atunci saltul
+este inainte si nu "LOOP" are rolul esential in ciclare ci un "JMP" pus la
+sfarsit):
+ 
+ mov cx,n   ;n = nr. de iteratii ce trebuie efectuate + 1
+ et1:
+ loop et2
+ jmp et3
+ et2:
+   ...
+ jmp et1 
+ et3:
+ ...
+
+Putem face ciclari numarate de CX si cu "inc cx", "dec cx", "jcxz et".
+
+Exemplul 15: Cautarea unui caracter intr-un string:
+~~~~~~~~~~~~
+.model small
+.stack
+.data
+  s db "abcaabc"
+  c db 'c'
+.code
+start:
+mov ax,@data
+mov ds,ax
+  mov cx,offset c 
+  sub cx,offset s ;CX = lung.sirului = 7
+  mov al,c
+  mov si,0ffffh
+  inceput:
+    inc si      ;la prima incrementare SI devine 0000h
+    cmp al,[si+s]
+  loopne inceput ;ies la prima intaln.a lui AL(i.e.'c') sau dupa term.sirului
+    ;acum SI este indicele primei aparitii a caracterului in sir, adica 2,
+    ;  iar offsetul aparitiei este SI + offsetul lui s, adica 0 + 2 = 2
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD se va urmari in fer. Watches: [byte ptr si+s], iar in fer. 
+ Registers: CX, SI, AL).
+
+
+10) Instructiuni pentru stringuri:
+
+ Toate instr. pt. siruri considera implicit ca sirul sursa este pointat de 
+DS:SI, iar sirul destinatie de ES:DI; pt. sirul sursa se poate folosi si un
+alt reg. segment, dar trebuie indicat explicit; sensul de parcurgere a 
+sirurilor este dat de flagul DF si este spre adrese mari (SI,DI cresc) daca 
+DF=0 si spre adrese mici daca DF=1;instructiunile nu au operanzi si au forma:
+
+  mnemonic
+
+sau
+
+  prefix mnemonic
+
+unde "mnemonic" indica operatia efectuata iar "prefix" indica faptul ca 
+operatia respectiva se va face repetat pana la indeplinirea unei conditii;
+flagurile sunt modif. doar de executarea instr. "mnemonic", nu de "prefix";
+"mnemonic" poate fi:
+
+MOVSB/MOVSW/MOVSD 
+ ;transfera un octet/word/dword de la sursa la destinatie, apoi
+ ; modifica SI si DI cu 1/2/4, resp. -1/-2/-4 (in functie de DF);
+ ;nu modifica flagurile
+
+LODSB/LODSW/LODSD 
+ ;transfera un octet/word/dwprd de la sursa in AL/AX/EAX, apoi
+ ; modifica SI cu 1/2/4, resp. -1/-2/-4 (in functie de DF);
+ ;nu modifica flagurile
+
+STOSB/STOSW/STOSD 
+ ;transfera un octet/word/dword din AL/AX/EAX la destinatie, apoi
+ ; modifica DI cu 1/2/4, resp. -1/-2/-4 (in functie de DF);
+ ;nu modifica flagurile
+
+CMPSB/CMPSW/CMPSD 
+ ;compara octetul/wordul/dwordul de la sursa si destinatie ca la
+ ;  instr. "CMP" (deci face sursa-destinatie fara a salva rezultatul)
+ ;  si seteaza corespunzator flagurile: ODITSZAPC apoi
+ ;                                      X   XXXXX
+ ;modifica SI si DI cu 1/2/4, resp. -1/-2/-4 (in functie de DF);
+
+SCASB/SCASW/SCASD 
+ ;compara AL/AX/EAX cu byteul/wordul/dwordul de la destinatie ca la instr. 
+ ; "CMP"  (deci face AL/AX/EAX - destinatie fara a salva rezult.)            
+ ;  si seteaza corespunzator flagurile: ODITSZAPC apoi
+ ;                                      X   XXXXX
+ ;modifica DI cu 1/2/4, resp.-1/-2/-4 (in functie de DF);
+
+"prefix" poate fi:
+
+REP         ;repeta pana cand (CX)=0; 
+            ;  dupa fiecare rep. se decrementeaza CX cu 1
+
+REPZ/REPE   ;repeta pana cand (CX)=0 sau ZF=0; 
+            ;  dupa fiecare rep. se decrementeaza CX cu 1
+
+REPNZ/REPNE ;repeta pana cand (CX)=0 sau ZF=1; 
+            ;  dupa fiecare rep. se decrementeaza CX cu 1
+
+O iteratie decurge astfel: operatia "mnemonic", decrementare CX, test; daca
+ insa de la bun inceput CX=0, nu se face nici o iteratie. 
+Practic, CX initial este nr. de iteratii pe care isi propune sa-l faca 
+ "REPxx", iar la sfarsitul fiecarei iteratii se testeaza conditia ref. la ZF
+ (in cazul REPZ/REPE/REPNZ/REPNE) si daca este satisfacuta se iese.
+
+Exemplul 16:
+~~~~~~~~~~~~
+.model small
+.stack
+.data
+  nul equ 00h         
+     ;simbolul "nul" se va inlocui cu val. 00h oriunde va aparea in program;
+     ; aici "nul" nu se aloca ca o variabila
+  a db "abcdef", nul 
+     ;sir terminat cu caracterul nul (puteam pune si direct "..., 00h");
+     ;"a" este prima variabila alocata (are deci offsetul 0), iar de la
+     ;  offsetul sau se pun in memorie 7 caractere: 'a', ..., 'f', 00h
+     ;  (deci acest nul se aloca)
+  b db "abcef",nul
+     ;"b" are offsetul 7
+  x dw ?
+.code
+start:
+assume es:@data   ;pozitionarea implicita a lui DS e tot pe segm. de date
+mov ax,@data
+mov ds,ax
+mov es,ax    ;avem un singur segm. de date, care va fi si sursa si destinatie
+
+  ;aflu lungimea lui "a" (un fel de "strlen" din lbj C)
+  mov di,offset a
+  mov cx,0ffffh
+  mov al,nul
+  cld          ;DF:=0 si astfel sirul se va parcurge spre adr. mari
+  repnz scasb  ;cum CX pleaca de la o val. mare, inainte ca el sa atinga 0
+               ; "scasb" va ajunge sa conchida ca octetul curent din sir
+               ; este egal cu nul (din AL), va pune ZF:=1 si se va iesi; 
+               ;in acel moment CX privit ca nr. cu semn este egal cu
+               ; -lungimea sirului "a" (fara nul)-2
+  neg cx
+  dec cx
+  dec cx
+  mov x,cx     ;acum x = lungimea sirului "a" (fara nul)
+   ;puteam afla acum lungimea sirului "a" si cu:
+   ;mov ax,di
+   ;sub ax,offset a
+   ;dec ax
+   ;mov x,ax
+
+  ;aflam prima pozitie unde difera "a" si "b"
+  mov si,offset a
+  mov di,offset b
+  mov cx,x        ;lungimea lui "a"
+  cld
+  repz cmpsb      ;merg pana parcurg toata lungimea lui "a" (CX devine 0) sau
+                  ; gasesc o diferenta ("cmpsb" pune ZF:=0)
+    ;prima poz. unde difera este la SI + offset a - 1
+
+  ;inlocuim toate literele mici din "a" cu litere mari
+  mov si,offset a ;operam pe acelasi string ca sursa si destinatie;
+  mov di,offset a ;  reamintim si ca DS are aici acelasi continut ca ES
+  mov cx,x        ;lungimea lui "a"
+  cld
+  ciclu:
+    lodsb           ;incarc oct. curent din "a" in AL si increm. SI
+    cmp al,'a'
+    jb altceva      ;daca oct. curent < 'a' atunci nu e litera mica
+    cmp al,'z'
+    ja altceva      ;daca oct. curent > 'z' atunci nu e litera mica
+    sub al,20h      ;intotdeauna dif. lit.mica-lit.mare corespunzatoare e 20h
+    stosb           ;salv.AL in oct.curent din "a" si increm DI (acum SI=DI)
+    altceva:
+  loop ciclu        ;decrem. CX si daca inca nu e 0 mai prelucrez un car.
+    ;acum "a" contine "ABCDEF",nul
+
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD urmarim in fer. Regsters: CX, SI, DI, AL iar in fer. 
+ Watches: a, [byte ptr si], [byte ptr di]).
+
+Exemplul 17: Identificarea numelui fisierului (cu ext.) dintr-o cale completa
+~~~~~~~~~~~~
+.model small
+.stack
+.data
+  nul equ 00h         
+  p db "c:\borlandc\bin\tasm.exe", nul 
+  f db 100 dup(?)    ;buffer de 100 octeti neinitializati
+  x dw ?
+.code
+start:
+assume es:@data
+mov ax,@data
+mov ds,ax
+mov es,ax
+ 
+;caut sfarsitul sirului "p"
+  mov di,offset p
+  mov al,nul
+  mov cx,0ffffh
+  cld
+  repnz scasb
+  dec di
+  dec di
+;acum DI pointeaza ultimul caracter din "p" de dinainte de nul;
+;merg inapoi pana gasesc '\'
+  mov x,di
+  mov al,'\'
+  mov cx,0ffffh
+  std       ;fac DF:=1 ca sa se parcurga sirurile spre adr. mici
+  repnz scasb
+  inc di
+;acum DI pointeaza '\' din "p"
+;copiez de la DI pana la nul (inclusiv)
+  sub x,di  ;acum x=lungimea numelui.ext al fisierului, adica (aici) 8
+  inc x     ;numar in lungime si un nul
+  mov si,di
+  inc si    ;acum SI pointeaza primul caracter de dupa '\'
+  mov di,offset f
+  mov cx,x
+  cld       ;acum copiez spre dreapta
+  rep movsb
+;acum "f" contine "tasm.exe",nul
+
+mov ah,4ch
+int 21h
+end start
+
+(la rularea cu TD se vor urmari in fer. Registers: AL, SI, DI
+ iar in fer. Watches: p, f, x, [byte ptr si-2],[byte ptr si-1],[byte ptr si],
+ [byte ptr di-2], [byte ptr di-1], [byte ptr di], [byte ptr di+1]).
+
+Exemplul 18: Program care isi duplica o parte a sa, apoi executa noul cod:
+~~~~~~~~~~~~
+.model tiny
+.stack
+.data
+.code
+org 100h
+start:
+mov ax,cs
+mov ds,ax
+mov es,ax
+  mov ax,0
+ et1:
+  inc ax
+ et2:
+  mov cx,offset et2
+  sub cx,offset et1
+  mov si,offset et1
+  mov di,offset x
+  rep movsb
+  x db 100 dup(90h) ;"90h" este codul unei instr. "nop"
+ ;cand se ajunge aici s-au executat in total doua "inc ax", deci AX este 2
+mov ah,4ch
+int 21h
+end start
+
+Comentarii:
+- "x" este o variabila declarata in segmentul de cod si initializata cu un 
+ numar de 90h-uri (codul lui "nop"); ea se aloca chiar in acel loc si astfel
+ intre "rep movsb" si "mov ah,4ch" apar in zona de cod 100 de instructiuni 
+ "nop";
+- "rep movsb" copiaza zona de cod dintre "et1" si "et2" (zona ce contine o
+ instructiune "inc ax") de la offsetul "x"; deoarece "x" a fost initializata
+ cu un numar suficient de mare de 90h-uri, nu exista riscul ca aceasta copie
+ sa ajunga peste instructiunea "mov ah,4ch"; in plus, in urma suprascrierii 
+ primilor octeti de dupa "x" cu copia lui "inc ax" raman in continuare niste
+ instr. "nop" intregi (caci fiecare are doar un octet), deci cand ajunge 
+ executia aici gaseste cod valid;
+- in ansamblu rularea va exec.primele instructiuni "mov ax,cs", ..., "inc ax"
+ (cel dintre "et1" si "et2"), ..., "rep movsb", apoi copia lui "inc ax" de la
+ inceputul lui "x", apoi "nop"-urile ramase, si in final "mov ah,4ch",
+ "int 21h"; deci in total se vor executa doua "inc ax" si astfel AX va fi 2;
+- la rularea cu TD se va urmari in fer. Registers AX; eventual se va urmari 
+ in fer. CPU (se deschide cu View/CPU) zona de cod si cum se inlocuieste
+ primul "nop" cu copia lui "inc ax" (instr."inc ax" are tot un singur octet).
+
+11) Accesarea argumentelor din linia de comanda:
+
+ Stim ca un program se poate lansa de pe prompterul interpretorului de 
+comenzi ("command.com") cu argumente in linia de comanda - prin ele putem
+transmite diverse date de intrare programului; de exemplu:
+
+  c:\work>c:\borlandc\bin\tasm /zi fis.asm
+
+aici:
+- "c:\borlandc\bin\tasm /zi fis.asm" este linia de comada (presc. "ldc");
+- "c:\borlandc\bin\tasm" este specificatorul programului lansat;
+- "/zi" si "fis.asm" sunt argumentele in ldc (siruri maximale de caractere 
+ nealbe, separate prin caractere albe); 
+- sirul " /zi fis.asm" (obtinut din ldc prin eliminarea specificatorului 
+ prog. executat) s.n. "coada" ldc (si obs. ca de regula incepe cu un blank).
+ Eventualele redirectari incluse in ldc nu sunt considerate argumente (ele
+sunt tratate de interpretor si nu devin date de intrare ale prog. lansat); 
+de exemplu in ldc:
+
+  c:\work>type fis.txt > fis1.txt
+
+singurul argument este "fis.txt".
+ Ne punem problema cum putem accesa dintr-un program asm argumentele in ldc
+cu care a fost lansat (dintr-un prog. C se pot accesa cu ajutorul primilor 2
+parametri ai lui "main", numiti de regula "argc", "argv").
+
+ Cand sistemul incarca un program (indiferent daca este ".com" sau ".exe") 
+pentru a fi executat, ii aloca o zona de memorie ce contine la inceput un
+preambul de 256 (100h) octeti numit PSP ("program segment prefix") si in
+continuare imaginea din memorie a programului (cu zona cod, de date statice, 
+stiva, etc.). La inceputul rularii programului DS si ES contin implicit 
+adresa de segment a PSP (iar ulterior ii putem face sa pointeze zona de date 
+cu instructiuni de forma "mov ax,@data", "mov ds,ax").
+ PSP contine diverse inf. asociate de sistem procesului respectiv (rularii 
+respective a programului), printre care coada ldc (terminata cu un caracter
+CR, avand codul ASCII 13d, resp. 0dh) si lungimea ei. Mai exact:
+- la offsetul 80h in PSP este un octet ce contine lungimea cozii ldc (in care
+ nu se numara si CR de la sfarsit);
+- de la offsetul 81h la offsetul 0ffh in PSP este stocata coada ldc, cu tot 
+ cu CR de la sfarsit (deci pe o lungime de max. 127 octeti).
+
+ Recomandam ca programatorul sa copieze coada ldc din PSP intr-un string
+alocat in zona de date a programului iar eventualele prelucrari ulterioare
+ale argumentelor sa le faca plecand de la acest string.
+
+Exemplul 19: Program care isi afisaza coada ldc, apoi fiecare argument in
+~~~~~~~~~~~~   parte.
+ Programul isi va copia mai intai coada ldc intr-un string din zona de date,
+apoi iterativ va copia de aici cate un argument in alt string si-l va afisa.
+ Pt. afisare vom folosi tot intreruperea 21h, dar cu alti parametri, anume:
+
+ AH = 9 (functia "display string" a intreruperii 21h)
+ DS = adr. de segment a stringului afisat
+ DX = offsetul stringului afisat (in segmentul sau)
+ apoi apelam "int 21h"
+
+ Stringul de afisat trebuie sa se termine cu '$' (afisarea caracterelor va 
+incepe de la adresa DS:DX si se va opri la intalnirea primului '$'); acest
+'$' nu va fi afisat.
+
+.model small
+.stack
+.data
+  seg_psp dw ?
+  ldc_n dw ?
+  ldc db 127 dup(?)  ; sa incapa ldc fara <CR>, dar cu un 0 adaugat de noi
+  buff db 1000 dup (?)
+.code
+start:
+mov ax,@data
+mov es,ax           ; acum ES pointeaza datele, dar DS inca pointeaza PSP
+  mov cl,ds:[80h]   ; lungimea cozii ldc (fara CR de la sfarsit)
+  mov ch,0
+  mov es:[ldc_n],cx ; salvam lungimea cozii ldc pt. eventuale alte folosiri
+  mov si,81h        ; acum DS:SI pointeaza coada ldc din PSP
+  lea di,ldc        ; acum ES:DI pointeaza stringul "ldc" din zona de date
+  rep movsb         ; copiez coada ldc (fara <CR>) in stringul "ldc"
+  mov byte ptr es:[di],0 ; adaug un caracter 0 la sfarsitul stringului "ldc"
+  mov es:[seg_psp],ds    ; salv.DS (adr.de seg.a PSP) pt.event. alte folosiri
+mov ds,ax           ; acum si DS pointeaza datele
+ ;copiez "ldc" in "buff" si pun <CR><LF>'$' la sfarsitul copiei (in loc de 0)
+  mov cx,ldc_n
+  lea si,ldc
+  lea di,buff
+  rep movsb
+  mov al,13        ; caracterul <CR>
+  stosb
+  mov al,10        ; caracterul <LF>
+  stosb
+  mov al,'$'
+  stosb
+ ;afisez "buff" (care acum contine coada ldc,terminata cu '$' in loc de <CR>)
+  lea dx,buff      ; DS pointeaza deja segmentul lui "buff"
+  mov ah,9
+  int 21h 
+ ;copiez iterativ cate un argument din "ldc" in "buff" si-l afisez
+  lea si,ldc
+  lea di,buff
+ et:
+  lodsb
+  cmp al,' '
+  je et
+  cmp al,0
+  je sf
+ et1:    ; a inceput un argument si-l copiem in "buff"
+  stosb
+  lodsb
+  cmp al,' '
+  je et2
+  cmp al,0
+  je et2
+  jmp et1
+ et2:    ; s-a terminat un argument si-l afisam (din "buff")
+  mov al,13
+  stosb
+  mov al,10
+  stosb
+  mov al,'$'
+  stosb
+  mov ah,9
+  lea dx,buff
+  int 21h
+  lea di,buff
+  jmp et
+ sf:
+mov ah,4ch
+int 21h
+end start
+
+Comentarii:
+- inainte de a initializa DS cu val. lui "@data" a trebuit sa accesez 
+ variabilele "ldc_n" si "seg_psp" declarate in segmentul de date cu 
+ precizarea explicita a registrului segment, anume ES; intr-adevar, daca
+ nu asi fi precizat reg. segment, compilatorul ar fi folosit implicit DS,
+ dar acesta inca nu pointa segmentul de date;
+- la sfarsitul sirurilor afisate am adaugat caracterele <CR> (cod ASCII 13d)
+ si <LF> (cod ASCII 10d), care formeaza capul de linie in MS-DOS; fara ele
+ nu s-ar fi trecut la linie noua intre afisari (totul s-ar fi afisat pe o 
+ singura linie);
+- putem compila, linkedita si rula programul direct de pe prompter, fara sa-l
+ incarcam in TD; in total vom vedea pe ecran ceva de tipul:
+
+C:\WORK>c:\borlandc\bin\tasm prog.asm
+Turbo Assembler  Version 3.1  Copyright (c) 1988, 1992 Borland International
+
+Assembling file:   1.asm
+Error messages:    None
+Warning messages:  None
+Passes:            1
+Remaining memory:  455k
+
+
+C:\WORK>c:\borlandc\bin\tlink prog.obj
+Turbo Link  Version 5.1 Copyright (c) 1992 Borland International
+
+C:\WORK>prog.exe a  bb   ccc
+ a  bb   ccc 
+a
+bb
+ccc
+
+C:\WORK>_
+
+ obs. ca in linia de comanda putem lasa oricate blank-uri intre argumente 
+ (programul de mai sus este facut a.i. sa le identifice corect oricum);
+- si din TD putem rula programul cu argumente in linia de comanda; pentru
+ aceasta incarcam programul in TD normal, apoi setam argumentele din meniul
+ "Run/Arguments...", apoi rulam ca de obicei; putem vedea rezultatele 
+ afisate in diverse momente vizualizand ecranul utilizatorului cu Alt-F5
+ (sau din meniul "Window/User Screen"), din care revenim cu orice tasta.
+- la rularea cu TD putem seta de ex. argumentele (din "Run/Arguments...")
+ la "a  bb   ccc", in fer. Registers vom urmari: CX, AL iar in fer. Watches 
+ vom urmari: ldc_n, ldc, buff, [byte ptr SI-1], [byte ptr SI], 
+ [byte ptr SI+1], [byte ptr DI-1], [byte ptr DI], [byte ptr DI+1].
+
+
+Exercitii:
+----------
+
+ In general programele se vor rula cu TD; cele referitoare la argumente in
+linia de comanda se vor lansa de pe prompter (cu argumente).
+ Programele marcate cu (*) se vor realiza in clasa.
+
+II.1) (cate 1 punct pentru fiecare structura simulata)
+ Scrieti programe demonstrative in care sunt simulate cu "CMP" si "Jxx" 
+  structurile de control while, do (din lbj. C), repeat (din lbj. Pascal), 
+  switch (din lbj. C) resp. case (din lbj. Pascal).
+
+II.2) (2.5 puncte) (*)
+ Program de ordonare a trei variabile byte x,y,z, declarate cu initializare 
+  in program (in final Se va verifica CU TD ca x<=y<=z).
+
+II.3) (3 puncte)   (*)
+ Program pentru calcularea z:=cmmdc(x,y) (x,y,z variabile byte declarate
+  in program, x,y initializate la declarare cu 4, resp. 6) folosind alg. lui
+  Euclid cu impartiri (in final Se va verifica CU TD ca z=2).
+
+II.4) (2.5 puncte) (*)
+ Program pentru calcularea celui de-al n-lea termen al sirului lui Fibonacci
+  (t1:=1, t2:=1, tn:=t(n-1)+t(n-2), pt. orice n>=3). Numarul n este dat
+  printr-o variabila declarata cu initializare in program. In plus, pentru
+  calcularea termenilor se vor folosi maxim trei alte variabile x,y,z 
+  declarate in program si nu se va folosi stiva. In final valoarea ceruta
+  va fi stocata in z. Variabilele vor fi de tip word.
+
+II.5) (2.5 puncte) (*)
+ La fel ca la problema II.4, dar pentru calcularea termenilor se va folosi
+  stiva. In program vor fi declarate doar variabilele n (cu initializare)
+  si z. Variabila n va fi folosita doar pentru a da si eventual numara 
+  iteratiile iar variabila z doar pentru a pune in ea la sfarsit termenul
+  cerut (toti termenii intermediari vor fi stocati in stiva).
+
+II.6) (3 puncte)   (*)
+ Program care verifica daca un numar natural este prim. Numarul este dat 
+  intr-o variabila n de tip word declarata cu initializare in program; 
+  raspunsul va fi stocat intr-o variabila x de tip byte sub forma 0=neprim,
+  1=prim.
+
+II.7) (3 puncte)
+ Program care calculeaza suma divizorilor unui numar natural. Numarul este 
+  dat intr-o variabila n de tip word declarata cu initializare in program;
+  suma va fi stocata in final intr-o variabila s de tip word.
+
+II.8) (3 puncte)   (*)
+ Program care calculeaza suma cifrelor in baza 10 ale  unui numar natural. 
+  Numarul este dat intr-o variabila n de tip word declarata cu initializare 
+  in program; suma va fi stocata in final intr-o variabila s de tip word.
+
+II.9) (2.5 puncte) (*)
+ Program care calculeaza factorialul unui numar natural. Numarul este 
+  dat intr-o variabila n de tip word declarata cu initializare in program;
+  factorialul va fi stocata in final intr-o variabila s de tip word.
+
+II.10) (2.5 puncte)(*)
+ Program care calculeaza 1+2+...+n, unde n este o variabila word declarata 
+  cu initializare (numar natural) in program. Suma va fi stocata in final 
+  intr-o variabila s de tip word.
+
+II.11) (cate 2 puncte pentru fiecare din cele doua operatii) (*)
+ Programe care calculeaza suma/diferenta a doua numera naturale multioctet
+  folosind cicluri LOOP. Numerele vor fi date prin cod, sub forma a doua
+  variabile a,b de tip byte initializate cu cate un sir de 5 octeti - ele
+  se vor aduna/scadea byte cu byte, cate o pereche la fiecare iteratie, cu
+  transport/imprumut corespunzator pentru perechea urmatoare. Pentru
+  stocarea rezultatului se va declara o variabila c de tip byte urmata de
+  5 octeti neinitializati. Numarul de bytes (5) va fi dat intr-o variabila
+  n declarata cu initializare si va fi luat de acolo (si eventual incarcat 
+  in CX).
+
+II.12) (cate 10 puncte pentru fiecare din cele doua operatii)
+ La fel ca la problema II.11, dar cu inmultire si impartire.
+
+II.13) (2.5 puncte) (*)
+ Program pentru evaluarea expresiei ((a+b)-(a+c))-(d-e), a,b,c,d,e fiind
+  variabile de tip word declarate cu initializare in program cu respectiv
+  valorile 10, 20, 15, 4, 3. Se va folosi urmatorul algoritm:
+  (a) push a, push b
+     (acum stiva contine (convenim varful spre stanga): 20, 10)
+  (c) pop doua valori, calculez suma lor si push aceasta suma
+     (acum stiva contine valoare primei paranteze, adica: 30)
+  (d) push a, push c
+     (acum stiva contine opz. parantezei 2 si val. parantezei 1: 15, 10, 30)
+  (d) la fel ca (c)
+     (acum stiva contine val. parantezelor 1, 2, adica: 25, 30
+      acestia sunt opz. pt. paranteza 3, cea care include parantezele 1,2)
+  (e) pop doua valori, calculez diferenta lor si push aceasta difernta
+     (acum stiva contine valoare parantezei mari 3, adica: 5
+      obs. ca (e) difera de (C) doar prin faptul ca se face scadere, nu 
+      adunare)
+  (f) push d, push e
+     (acum stiva contine opz. parantezei 4 si val. parantezei 3: 3, 4, 5)
+  (g) la fel ca (e)
+     (acum stiva contine val. parantezelor 3, 4, adica: 1, 5
+      acestia sunt opz. ultimei op. din expresia mare)
+  (h) la fel ca (e)
+      (acum stiva contine valoarea finala: 4)
+  In final valoarea expresiei (4) se va stoca intr-o variabila x.
+
+II.14) (4 puncte) (*)
+ Program pentru evaluarea unei expresii oarecare in forma postfixata (forma
+  postfixata pleaca de la reprezentarea operatiei ca functie cu numele 
+  functiei la sfarsit x+y = (x,y)+ si eliminarea parantezelor si virgulei; 
+  astfel (a+b)*c = ab+c* iar a*c+b*c = ac*bc*+).
+ Expresia are ca operanzi numere byte si ca operatori "+" si "-" binari.
+ Ea va fi data sub forma unei variabile initializata la declarare cu un 
+  string ce contine expresia si se termina cu "$", de exemplu expresia din
+  problema II.13 va fi data astfel:
+ 
+    e db 10, 20, '+', 10, 15, '+', '-', 4, 3, '-', '-', '$'
+
+ Algoritmul de evaluare generalizeaza cel din problema II.13, si anume:
+  (0) Notam cu i poz. curenta in e si cu e(i) byte-ul de la aceasta pozitie;
+  (a) i:=0
+  (b) Daca e(i)='$' salt la (f)
+  (c) Daca e(i)<>'+','-' (adica e operand) atunci push e(i)
+       si salt la (e)
+  (d) Daca e(i)='+' atunci pop doua valori, calc. suma lor, push rezultatul
+       si salt la (e)
+      Daca e(i)='-' atunci pop doua valori, calc. dif. lor, push rezultatul
+       si salt la (e)
+  (e) i:=i+1 si salt la (b)
+  (f) Pop o valoare (este rezultatul final al expresiei) si o salvez in x.
+
+II.15) (2.5 puncte) (*)
+ Program care calculeaza suma bitilor (numarul bitilor egali cu 1) din
+  reprezentarea interna a unui numar natural. Numarul este dat intr-o 
+  variabila n de tip word declarata cu initializare in program; suma va fi 
+  stocata in final intr-o variabila s de tip word. Se vor folosi op. de
+  shiftare si op. logice pentru a muta/selecta bitii.
+ Ex: nr. 11001000 00001111 --> suma bitilor = 7
+
+II.16) (2.5 puncte)
+ Program care construieste imaginea in oglinda a configuratiei din locatia
+  unei variabile word declarata cu initializare in program; imaginea se va
+  construi in aceeasi locatie. Se vor folosi op. de shiftare, rotire,
+  logice.
+ Ex: nr. 11001000 00001111 --> 11110000 00010011
+
+II.17) (3 puncte) (*)
+ Program care roteste cu 1 la stanga in mod uniform bitii dintr-un sir de
+  octeti declarat si initializat in program (bitul semnificativ care iese
+  din octetul aflat la adresa n sa intre in bitul zero al octetului aflat
+  la adresa n+1). Indicatie: folosirea repetata de "RCL octet,1".
+          rang 7      0 7      0 7      0
+ Exemplu:      10000001 10000010 11000100 --> 00000011 00000101 10001001
+           adr.1        2        3
+
+II.18) (3 puncte) (*)
+ Program care realizeaza adunarea a+b (de 16 biti) folosind op.logice si
+  shiftari, conform urmatorului algoritm:
+  (a) fac c := a xor b si obtin cele 16 cifre ale sumei daca n-am tine cont
+       de transporturile de pe fiecare pozitie;
+  (b) fac d := a and b si obtin transporturile de la cele 16 poz. ale sumei
+       (acestea trebuie adunate la pozitii shiftate la stg. cu 1, dar pot
+        aparea noi transporturi)
+  (c) daca d=0...0, STOP (avem c=a+b)
+  (e) fac e := d shiftat la stg cu 1
+  (f) fac a:=c, b:=e si salt la (a)
+ Pentru simplitate putem considera a=AX, b=BX, suma=CX; vom folosi cat mai 
+  putine locatii suplimentare (c, d, e), iar acestea pot fi registrii, din 
+  memorie sau din stiva.
+
+II.19) (3 puncte) (*)
+ Program care realizeaza inmultirea a*b (fara semn, de 16 biti) folosind
+  shiftari si adunari, conform urmatorului algoritm (care se bazeaza pe
+  scrierea lui a ca polinom in puterile lui 2 si apl. distributivitatii, de
+  ex. 10 * b = (2^3 + 2^1)*b = b*2^3 + b* 2^1):
+  (a) fac c := 0
+  (b) daca a=0, STOP (avem c=a*b)
+  (c) daca a impar (a and 0001h <> 0) fac c := c+b
+  (d) fac a:=a shiftat la dr. cu 1 (i.e. impart la 2), 
+      fac b:=b shiftat la stg. cu 1 (i.e. inmultesc cu 2), 
+      si salt la (b)
+ Pentru simplitate putem considera a=AX, b=BX, produsul=CX, si ca AL=BL=0 
+  (pentru ca rez. sa incapa in 16 biti); vom folosi cat mai putine locatii
+  suplimentare, iar acestea pot fi registrii, din memorie sau din stiva.
+
+II.20) (2 puncte) (*)
+ Program care calculeaza maximumul elementelor unui vector de bytes folosind
+  un ciclu LOOP. Vectorul va fi dat sub forma unei variabile initializata la 
+  declarare cu un sir de bytes, iar lungimea lui printr-o variabila 
+  initializata de asemenea la declarare.
+
+II.21 (2 puncte)
+ Ca la problema II.20, dar programul va determina numarul elementelor nule
+  din vector.
+
+II.22) (2 puncte)
+ Program care calculeaza produsul scalar a doi vector de byte (vectorii sunt
+  dati sub forma a doua variabile initializate la declarare cu cate un sir 
+  de bytes, iar lungimea lor printr-o variabila initializata de asemenea la
+  declarare).
+
+II.23) (5 puncte)
+ Program pentru sortarea unui vector de bytes. Vectorul va fi dat sub forma 
+  unei variabile initializata la declarare cu un sir de bytes, iar lungimea
+  lui printr-o variabila initializata de asemenea la declarare. Vectorul
+  sortat se va constru in aceeasi locatie ca vectorul sursa.
+ 
+II.24) (5 puncte)
+ Program care determina elementele distincte dintr-un vector de bytes si
+  le pune intr-un nou vector. Vectorul sursa va fi dat sub forma unei 
+  variabile initializata la declarare cu un sir de bytes, iar lungimea
+  lui printr-o variabila initializata de asemenea la declarare. Pentru
+  vectorul rezultat se va declara o variabila byte urmata de niste bytes
+  neinitializati.
+ Ex: 4, 2, 1, 2, 2, 1, 3 --> 4, 2, 1, 3
+
+II.25) (5 puncte)
+ Program care caluleaza combinari de n luate cate k, folosind triunghiul
+  lui Pascal (construit intr-un vector de n+1 locatii transformat succesiv).
+ Numerele n si K sunt date sub forma a doua variabile declarate cu 
+  initializare, iar pentru vectorul de lucru se va declara o variabila 
+  urmata de un numar rezonabil de octeti neinitailizati.
+ Toate numerele vor fi de tip byte.
+
+II.26) (3 puncte)
+ Program care determina valoare unui polinom intr-un punct, folosind schema
+  lui Horner. Vectorul coeficientilor se va da sub forma unei variabile
+  byte initializata la declarare cu un sir de bytes, gradul si punctul se
+  vor da sub forma unor variabile byte declarate cu initializare.
+
+II.27) (15 puncte)
+ Program de inmultire a doua matrici liniarizate. Matricile sursa se dau
+  sub forma unor variabile initializate la declarare cu siruri de bytes,
+  dimensiunile lor se dau sub forma a trei variabile byte declarate cu
+  initializare, pentru matricea rezultat se va declara o variabila byte
+  urmata de un numar corespunzator de bytes neinitializati.
+
+II.28) (8 puncte)
+ Program care calculeaza suma elementelor maxime ale col unei matrici 
+  liniarizate (din fiecare coloana se ia cate un singur element maxim).
+  Matricea se da sub forma unei variabile initializate la declarare cu un
+  sir de bytes, dimensiunile ei se dau sub forma a doua variabile byte 
+  declarate cu initializare.
+ Ex: 1 2 3
+     8 1 5 --> 8 + 2 + 5 = 15
+     1 2 4
+
+II.29) (5 puncte) (*)
+ Program care simuleaza functia "strncmp" din limbajul C.
+ Operatia se va aplica unor stringuri declarate cu initializare in program
+  (si terminate cu 0) iar raspunsul va fi stocat intr-o variabila x de tip byte 
+  sub forma: 1=mai mic, 0=egal, 2=mai mare.
+
+II.30) (5 puncte)
+ Program care numara toate aparitiile unui sir ca subcuvant in alt sir.
+ Operatia se va aplica unor stringuri declarate cu initializare in program
+  (si terminat cu 0) iar raspunsul va fi stocat intr-o var. n de tip byte.
+
+II.31) (4 puncte) (*)
+ Program care construieste imaginea in oglinda a unui sir (imaginea se va
+  construi in aceeasi locatie). Operatia se va aplica unui string declarat
+  cu initializare in program si terminat cu 0.
+ Ex: "abadc" --> "cdaba"
+
+II.32) (6 puncte) (*)
+ Program care se lanseaza cu niste numere naturale date ca argumente in
+  linia de comanda si afisaza suma lor.
+ Exemplu: prog 12 0 3 45 ==> afisaza: 60
+ Indicatie: fiecare argument (care este string) va fi convertit la word,
+  se aduna word-urile, apoi suma se converteste la string si se afiseaza
+  cu "int 21h", functia 9; diferenta intre codul ASCII al unei cifre si
+  numarul pe care il reprezinta este 48d (ex: "123" => ('1'-48)*100 +
+  ('2'-48)*10 + ('3'-48) = 1*100 + 2*10 + 3 = 123).
+
+II.33) (4 puncte)
+ Program care calculeaza "combinari de n luate cate k" ("n" si "k" variabile
+  declarate cu initializare) folosind triunghiul lui Pascal. Programul va
+  folosi un singur vector, in care va genera succesiv liniile din triunghi.
+  Rezultatul final va fi stocat intr-o alta variabila din program.
+
+
+Bibliografie:
+~~~~~~~~~~~~~
+1. "Gavin's Guide to 80x86 Assembly",
+  Intrenet: http://www.redbrick.dcu.ie/~creech/assembly/asm.html
+2. "x86 Assembly Language FAQ - General"
+  Internet: http://www.faqs.org/faqs/assembly-language/x86/general/
+3. "Microprocesoarele 8086/80286/80386 Programarea in limbaj de asamblare"
+  Irina Athanasiu, Alexandru Panoiu, ed. Teora, 1992
+4. "Limbaje si calculator"
+  Vlad Bazon, ed. Petrion
+5. "Programarea in assembler"
+  Dan Somnea, Teodor Vladut, ed. Tehnica, 1992
+
+
+DANIEL DRAGULICI
+octombrie, 2005
+actualizat: 21 noiembrie 2005

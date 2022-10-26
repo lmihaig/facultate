@@ -1,0 +1,1042 @@
+PROCES = executie a unui program (un acelasi program se poate excuta in mai
+ multe procese, care se pot desfasura in paralel sau nu). In legatura cu un
+ proces se retin mai multe informatii decat programul rulat: datele cu care
+ se ruleaza, instructiunea curenta, environement-ul, etc.
+Fiecare proces este identificat printr-un intreg (PID) si este gestionat cu
+ ajutorul unei structuri numita bloc de control (BCP).
+Gestiunea proceselor este facuta de kernel (nucleul sistemului). Una din
+ operatiile pe care le face este scheduling-ul (stabilirea ordinii de
+ executare prin interleaving).
+Una din caracteristicile unui proces este spatiul de adresare, care consta
+ din ansamblul datelor care ii sunt proprii. In general procesele sunt
+ reentrante, adica daca mai multe procese ruleaza acelasi program, o singura
+ copie a programului este incarcata in memorie si partajata intre aceste
+ procese. Spatiile de adresare sunt in general disjuncte (fiecare proces are
+ datele lui, chiar daca ruleaza acelasi program) dar putem programa zone de
+ memorie partajata intre mai multe procese, a.i. unele sa aibe acces la
+ datele altora.
+Pe parcursul executiei, un proces se poate afla:
+ - in "user mode" - cand executa instructiuni obisnuite ale programului
+    rulat si manipuleaza doar date din spatiul sau de adresare;
+ - in "kernel mode" - cand executa instructiuni privilegiate, care nu
+    apartin programului rulat ci nucleului, si are acces la datele
+    sistemului; in aceasta situatie se afla atunci cand executa un apel
+    sistem (exemplu: functia "stat") sau un handler implicit asociat unui
+    semnal pe care l-a primit (a se vedea mai departe).
+Un proces poate fi blocat temporar din executie, pentru ca mai apoi sa fie
+ continuat. Exista doua feluri de blocaj temporar:
+ - proces adormit: este in asteptarea unui eveniment (de exemplu asteapta
+    eliberarea unor resurse de care are nevoie), iar atunci cand acesta se
+    produce el este reluat; de exemplu daca incearca sa citeasca un intreg
+    de la tastatura si bufferul de intrare este gol, adoarme pana ii vom
+    tasta un intreg + ENTER, dupa care va continua;
+ - proces suspendat: este blocat explicit, la primirea unui semnal SIGSTOP,
+    fara sa astepte neaparat eliberarea unor resurse; el va continua atunci
+    cand va fi deblocat explicit, printr-un semnal SIGCONT.
+Procesele pot comunica intre ele prin fisiere pipe, zone de memorie
+ partajate, socket-uri, semnale, etc. Semnalele sunt numere naturale, avand
+ diverse semnificatii. Ele pot fi identificate si cu ajutorul unor constante
+ simbolice: SIGSTOP, SIGCONT, SIGKILL, etc. La primirea unui semnal procesul
+ executa cate o functie specifica (handler asociat semnalului respectiv);
+ aceasta poate fi cea implicita pentru semnalul respectiv, sau una stabilita
+ de noi (a se vedea mai departe).
+Un proces poate genera alte procese fiu. Un fiu se poate desfasura in
+ paralel cu tatal, sau tatal poate astepta ca fiul sa se termine pentru a
+ continua. Cand un fiu se termina, tatal lui primeste un semnal SIGCHLD. De
+ asemenea, cand un proces se termina, el furnizeaza un cod de retur (exit
+ status), la care tatal lui are acces. In cazul programelor C codul de
+ retur este valoarea returnata de "main". De regula codul de retur este
+ folosit de un program pentru a indica tatalui daca s-a terminat corect
+ (conventia uzuala este: 0 = succes, diferit de 0 = esec). In cazul
+ proceselor lansate cu comenzi shell (deci avand shell-ul ca tata), codul
+ de retur poate fi afisat cu comanda "echo $?" - ea afisaza codul de retur
+ al ultimei comenzi executate.
+Aplicatie: scriem programul "a": "int main(){return 2;}";
+           lansam "a";
+           dam comanda "echo $?" -> afisaza 2 (codul de retur al lui "a");
+           dam iar comanda "echo $?" -> afisaza 0 (ultimul proces terminat
+            este "echo", care a returnat 0).
+Din punct de vedere al modului de generare a proces unul din altul, acestea
+ se organizeaza intr-o arborescenta. La sistemele vechi, cu terminale
+ alfanumerice clasice, ea arata astfel:
+                              * exista un proces cu PID = 0; el are un fiu
+                                 "init", avand PID = 1; unul din rolurile
+              (0)                lui "init" este sa supravegheze terminalele
+               |                 conectate in sistem si acolo unde nu este
+            init (1)             logat nimeni sa lanseze cate un proces
+          /    |    \            "getty", care cere cont si parola;
+        /      |      \       * cand cineva se loginizeaza la un terminal,
+      /        |        \        se initiaza un proces shell ("login shell"),
+ login sh  login sh  login sh    care devine fiu al lui "init" in locul lui
+     |       /   \       |       "getty" (la sistemele mai noi nu este 
+    ls      p1   p2      sh      descendent direct ci se mai interpun si alte 
+                  |      |       procese);
+                 p3      p4   * cand utilizatorul da login shell-ului
+                         |       comenzi, sunt initiate alte procese, care
+                         p5      devin fii lui; aceste procese pot fi
+                                 asociate unor diverse programe, pot fi
+                                 chiar alte procese shell; ele pot avea la
+                                 randul lor fii.
+Aplicatie: dam comanda "ps" -> vedem procesele aflate in executie la 
+            terminalul curent; printre ele "bash" (login shell-ul) si "ps" 
+            (care nu se terminase la momentul cand a cautat procesele);
+           dam comanda "sh" -> se lanseaza un nou shell, fiu al login
+            shell-ului (care se blocheaza temporar, asteptand sa se termine
+            acest fiu), si in continuare dialogam cu el; cu un nou "ps"
+            vedem cele 3 procese;
+           dam "exit" -> se iese din shell-ul fiu si se revine in shell-ul
+            tata (login shell-ul); cu "ps" vedem doar 2 procese; daca am mai
+            da un "exit", ne-am deloga;
+Obs: cu "ps -l" vedem informatii detaliate despre procese; cu "ps -e" vedem
+ toate procesele; putem cumula cele 2 optiuni ("ps -el");
+Procesele se organizeaza in sesiuni si grupuri (o sesiune poate avea mai
+ multe grupuri); aceasta organizare n-are nici o legatura cu organizarea
+ programelor (ca fisiere) in directoare. Fiecare sesiune are un proces lider
+ de sesiune, fiecare grup are un proces lider de grup. Sesiunea / grupul
+ sunt identificate prin PID-ul liderului sau. De regula un proces este la
+ inceput in aceeasi sesiune si grup ca tatal sau, dar ulterior prin comenzi
+ interne isi poate schimba grupul sau poate initia o sesiune / un grup nou,
+ unde devine lider.
+Cand un utilizator se loginizeaza la un terminal, se initiaza o sesiune noua
+ (asociata terminalului respectiv), iar login shell-ul este liderul sau.
+ Sesiunea este caracterizata prin terminalul de la care s-a loginizat
+ utilizatorul si care devine terminalul sau de control. Procesele lansate in
+ continuare de utilizator (care sunt descendentii login-shell-ului) vor
+ mosteni terminalul de control. O sesiune / un proces poate sa nu aiba nici
+ un terminal de control, dar ulterior sa deschida unul (terminalele sunt
+ privite de sistem ca niste fisiere speciale, avand un specificator de tip
+ "/dev/tty1",...; un proces poate avea acces la terminalul sau de control
+ prin sirul generic "/dev/tty"). Un terminal poate fi terminal de control
+ pentru o singura sesiune.
+Cand un proces lider de sesiune se termina, toate procesele din acea sesiune
+ primesc semnalul SIGHUP; comportamentul implicit la primirea acestui semnal
+ este terminarea - de aceea cand ne delogam (deci login shell-ul, care era
+ lider de sesiune se termina), toate procesele lansate de noi se termina
+ automat. Putem insa lansa un program "pg" cu comanda "nohup pg" si atunci
+ el va fi "vaccinat" la semnalul SIGHUP iar cand il va primi nu se va
+ termina - astfel putem lansa programe care sa ruleze si dupa ce ne-am
+ delogat (de exemplu de pe-o zi pe alta). Iesirea standard si iesirea
+ standard de eroare ale unui program lansat cu "nohup" sunt redirectate
+ automat spre un fisier "nohup.out" aflat in directorul curet (sau in
+ directorul home, daca cel curent nu ofera drept de scriere), cu exceptia
+ faptului cand s-a indicat explicit o alta redirectare (de exemplu dam: 
+ "nohup pg > f"), caz in care se respecta aceasta redirectare.
+Cateva caracteristici ale unui proces (in general ele se mostenesc, dar pe
+ majoritatea un proces si le poate schimba prin comenzi interne):
+* Proprietarul real: pentru un login shell este utilizatorul care s-a logat;
+   pentru un proces in general este proprietarul real al procesului tata.
+* Proprietarul efectiv (cel ale carui drepturi se iau in consideratie atunci
+   cand un proces vrea sa acceseze diverse resurse): de regula este acelasi
+   ca proprietarul real; daca insa fisierul executat (continand programul)
+   are bitul set-uid setat, proprieatrul efectiv al procesului este
+   proprietarul fisierului.
+  Exemplu: programul "passwd" (care schimba parola) trebuie sa scrie in
+   fisierul cu parole "/etc/passwd"; proprietarul acestui fisier este "root"
+   si numai el are drept de scriere in el (altfel s-ar pierde siguranta
+   sistemului); proprietatul lui "passwd" (ca fisier) este tot "root", dar
+   toti au drept de executie asupra lui si in plus are bitul set-uid setat;
+   cand un utilizator il lanseaza, proprietarul efectiv al procesului
+   va fi deci "root" (nu utilizatorul respectiv, caci altfel procesul n-ar
+   putea scrie in "/etc/passwd"); siguranta sistemului nu e amenintata,
+   deoarece modul de executare a programului "passwd" nu va permite
+   utilizatorului care l-a lansat (proprietarul real al procesului "passwd")
+   sa modifice fisierul "/etc/passwd" decat pentru parola lui (iar un
+   utilizator oarecare nu poate modifica acest program ca sa execute
+   altceva, deoarece nu are drept de scriere asupra sa ci doar de executie).
+* Directorul de lucru (directorul curent): este directorul unde sunt cautate
+   fisierele specificate fara cale si la care se raporteaza caile relative
+   (in particular cele care incep cu "." si ".."); functii utilizate de un 
+   program pentru gestiunea directorului curent:
+     #include<unistd.h>
+     char * getcwd(char *buf, size_t dim);
+     => pune in zona "*buf" un string continand specificatorul directorului
+         curent, cu cale absoluta, a.i. sa nu umple mai mult de "dim"
+         caractere in "*buf";
+        returneaza: buf=succes, NULL=esec (si seteaza errno); un motiv de
+         esec: specificatorul directorului curent necesita mai mult de "dim"
+         pozitii (in acest caz zona "*buf" ramane cu continutul anterior)
+     #include<unistd.h>
+     int chdir(const char *specificator);
+     => directorul curent al procesului devine cel specificat de
+        "specificator"; returneaza: 0=succes, -1=esec (si seteaza errno).
+* Terminalul de control: in principiu este cel de unde citeste de la 
+   tastatura si afisaza pe ecran in mod implicit (initial majoritatea 
+   proceselor au stdin, stdout si stderr conectate la terminalul de 
+   control).
+* Prioritatea: este data de un numar 0 - 39; cu cat numarul este mai mare,
+   prioritatea este mai mica si atunci in cadrul scheduling-ului procentul 
+   din timpul de calcul alocat procesului respectiv este mai mic; in 
+   consecinta procesul se va executa mai lent (si astfel va dura mai mult), 
+   dar va incetini mai putin celelalte procese. Un proces lansat de un 
+   utilizator obisnuit are prioritatea implicita 20, dar utilizatorul poate 
+   folosi comanda "nice" (vezi mai jos) pentru a lansa procesul cu prioritate
+   mai mica; "root" poate lansa si procese cu prioritate mai mare.
+  Exemple de lansare a unui program "pg" cu "nice":
+   "nice pg" -> "pg" este lansat cu prioritate 30 (=20+10);
+   "nice -3 pg" -> "pg" este lansat cu prioritate 23 (=20+3);
+   "nice --3 pg" -> "pg" este lansat cu prioritate 17 (=20-3) (doar "root"
+     poate face asta);
+  Argumentul lul "nice" este intre 1 - 19 pentru un utilizator obisnuit si
+   intre -20 - 19 pentru root;
+Din punct de vedere al controlului asupra terminalului de control, un proces
+ poate fi:
+ - in foreground: el poate citi de la tastatura si poate scrie pe ecran, la
+    terminalul sau de control;
+ - in background: el nu poate citi de la tastatura terminalului sau de
+    control; scrierea pe ecranul acestuia este posibila doar daca terminalul
+    are o anumita setare; cand un proces din background incearca sa faca o
+    citire sau o scriere imposibila la terminalul de control, el va fi
+    suspendat; cu comanda "stty tostop" setam terminalul a.i. procesele din
+    background sa nu poata scrie pe ecran; cu "stty -tostop" anulam aceasta
+    setare; cu comanda "stty" vedem cum este setata aceasta caracteristica
+    (si altele);
+In cadrul sesiunii asociate unui terminal putem avea un grup al proceselor
+ aflate in foreground si mai multe grupri de procese aflate in background.
+ Initial in foreground este un grup al carui lider este shell-ul. Daca 
+ lansam o comanda in mod obisnuit, procesul este lansat in foreground, mai 
+ exact se creaza un grup nou, al carui lider este procesul, iar acest grup 
+ devine grupul din foreground la terminalul respectiv (grupul shell-ului se
+ muta in background iar shell-ul insusi se blocheaza temporar asteptand ca 
+ procesul sa se termine); dupa terminarea acestui proces, in foreground revine
+ grupul shell-ului, shell-ul se trezeste si reprimim prompterul (eventualii 
+ fii neterminati ai procesului se muta in background). Daca vrem sa lansam un
+ proces in background, la sfarsitul liniei sale de comanda punem un "&" - 
+ atunci shell-ul va ramane in continuare activ in foreground si vom primi 
+ imediat un nou prompter, chiar daca procesul lansat nu s-a terminat.
+Aplicatie: avem nevoie de functia:
+(informatii: man -S 3 sleep)
+#include<unistd.h>
+unsigned int sleep(unsigned int sec);
+=> procesul adoarme pentru "sec" secunde sau pana primeste un semnal
+     neignorat - deci neblocat si cu alt handler decat SIG_IGN (procesul se
+     trezeste chiar si daca handlerul este o functie a utilizatorului cu
+     corp vid);
+   returneaza: 0 daca s-au scurs cele "sec" secunde
+               cate secunde n-au fost consumate, in al doilea caz
+Scriem programele "a0a", "a0b":
+|a0a.c:
+|   #include<stdio.h>
+|   #include<unistd.h>
+|   int main(){int i;
+|      sleep(5);
+|      for(i=0;i<10;++i){printf("A"); fflush(stdout); sleep(1);}
+|      return 0;
+|   }
+|a0b.c: ca la a0a.c, dar cu printf("B");
+Utilizare: dam comanda "stty -tostop";
+           dam repede "a0a &", apoi "a0b &"; cele 2 procese s-au lansat
+            in background iar noi reprimim prompterul (si putem da alte
+            comenzi);
+           dupa cca. 5 secunde procesele incep sa scrie pe ecran cele 10
+            litere "A", "B", la interval de 1 secunda, intercalat;
+Putem da shell-ului mai multe comenzi inlantuite prin ";" - atunci
+ procesele se vor lansa secvential, ca si cand am fi dat comenzile pe
+ rand (de exemplu puteam lansa mai sus cele doua programe printr-o singura
+ comanda: "a0a & ; a0b &"); putem aplica "&" sau redirectari "<", ">", ">>"
+ intregului grup de comenzi daca le punem intre paranteze:
+ "a0a ; a0b &" -> "a0a" se lanseaza in foreground, "a0b" se lanseaza in
+                    background;
+ "(a0a ; a0b) &" -> ambele se lanseaza in background;
+ "a0a ; a0b > f" -> "a0a" va scrie cei 10 "A" pe ecran, "a0b" va scrie cei
+                      10 "B" in fisierul "f";
+ "(a0a ; a0b) > f" -> ambele programe vor scrie in "f"; fisierul va contine
+                        10 "A", apoi 10 "B";
+============================================================================
+COMPORTAMENTUL PROCESELOR IN RAPORT CU SEMNALELE:
+* Orice semnal are un cod numeric 1 -> NSIG-1 (pentru NSIG putem include
+   signal.h; in principiu este 64).
+  Semnalele pot fi indicate prin constante simbolice: SIGINT = 2,
+   SIGQUIT = 3, SIGKILL = 9, etc. (pentru ele putem include signal.h).
+* Un semnal poate fi emis:
+  - de la un terminal, prin combinatii de taste: ^c = SIGINT, ^\ = SIGQUIT,
+     etc.; semnalul este emis spre toate procesele aflate in foreground la
+     acel terminal;
+  - de un eveniment intern;
+    exemple: cand un proces se termina, sistemul emite catre procesul sau
+               tata semnalul SIGCHLD (= 17)
+             cand un proces incearca sa utilizeze o zona de memorie unde
+               n-are drept de acces, el primeste semnalul SIGSEGV (= 11)
+  - explicit (fara ca evenimentul asociat sa se fi produs):
+    = de comanda shell "kill", de exemplu:
+         kill   -2     150
+         kill   -INT   150
+      (atunci procesul shell genereaza un proces shell fiu care emite
+       semnalul SIGINT procesului cu PID-ul 150);
+      putem obtine o lista a numelor semnalelor cu:
+         kill   -l
+      putem trimite unui proces un semnal cu comanda kill doar daca suntem
+       proprietarul acelui proces sau root;
+    = de functiile:
+         (informatii: man -S 2 kill)
+         #include<sys/types.h>
+         #include<signal.h>
+         int kill(pid_t pid, int sig);
+         => procesul curent emite semnalul "sig" procesului cu PID-ul "pid";
+            returneaza: 0=succes, -1=esec (caz in care seteaza errno);
+            putem da sig=0 si atunci nu se emite semnal dar se poate testa
+              existenta procesului cu PID-ul "pid" dupa valoarea returnata;
+         putem trimite unui proces un semnal cu comanda kill doar daca
+           suntem proprietarul acelui proces sau root;
+         tipul "pid_t" e furnizat de "sys/types.h" (in principiu e "int");
+
+         (informatii: man raise)
+         #include<signal.h>
+         int raise(int sig);
+         => procesul curent isi emite siesi semnalul "sig";
+            returneaza: 0=succes, -1=esec;
+Aplicatie: dam comanda "stty tostop", lansam "a0a &" (el se lanseaza in
+ background si cand va incerca sa scrie pe ecran va fi suspendat), cu "ps"
+ vedem printre altele procesul "a0a" si PID-ul sau, apoi cu "kill -9" sau
+ "kill -KILL" il terminam.
+* Pentru a prelucra semnalele, un proces are in BCP o structura avand cel
+   putin urmatoarele campuri:
+
+           ................  3   2   1   ---> toate semnalele valide
+         -------------------------------
+         |   |   |         |   |   |   | ---> indicatorul semnalelor in
+         -------------------------------       asteptare (pending)
+         |   |   |         |   |   |   | ---> indicatorul semnalelor
+         -------------------------------       blocate
+           |   |             |   |   |   ---> legaturi la handlerele de
+           V   V             V   V   V         tratare a semnalelor
+        (pentru un semnal, indicatorul de pending si cel de blocare sunt
+         biti, iar handlerul este o functie)
+* Cand la un proces ajunge un semnal n:
+  - bitul de pending al lui n devine 1; daca pe perioada cat acest bit este
+     1 mai vine un semnal n, acesta se va pierde (din fiecare semnal poate
+     fi la un moment dat in pending doar un singur exemplar);
+  - daca bitul de blocaj al lui n este 1, semnalul n nu va fi tratat (el
+     ramane in pending); daca acest bit e 0, semnalul n va fi tratat atunci
+     cand va fi posibil (vezi mai jos);
+  - in general un proces trateaza semnalele aflate in pending doar atunci
+     cand este in "user mode", deci atunci cand executa instructiuni ale
+     utilizatorului; astfel, cand procesul executa un apel sistem (de
+     exemplu functia "stat"), el nu trateaza semnalele (toate sunt blocate
+     temporar);
+  - tratarea unui semnal n aflat in pending consta in apelarea handlerului
+     asociat; chiar de la inceputul executarii handlerului bitul de pending
+     al lui n se repozitioneaza pe 0 (deci procesul poate primi imediat un
+     alt n, care va intra in pending); pe parcursul executarii handlerului
+     bitul de blocaj al lui n este in principiu pozitionat fortat la 1, iar
+     la sfarsitul acestuia el revine la starea anterioara (1 sau 0) (astfel,
+     daca intre timp a venit un nou n, el va fi blocat in pending pana la
+     sfarsitul executarii handlerului, cand va putea fi tratat lansand din
+     nou handlerul); un handler poate fi insa instalat si astfel incat acest
+     blocaj suplimentar sa nu mai apara (vom vedea cum); 
+* Pentru fiecare semnal exista handlere implicite (ale sistemului), dar
+   pentru majoritatea putem instala handlere proprii (exceptii: SIGKILL,
+   SIGSTOP, uneori SIGCONT);
+  Pentru un semnal putem reinstala handlerul implicit (desemnat prin
+   SIG_DFL, care insa pentru fiecare semnal poate inseamna altceva) sau un
+   handler de ingorare (el poate fi o functie a utilizatorului cu corp vid
+   sau un handler al sistemului, desemnat prin SIG_IGN); pentru cele doua
+   constante simbolice putem include signal.h;
+* SUBLINIEM:
+  - daca un proces primeste un semnal neblocat n si este intr-o zona unde
+     executa instructiuni ale utilizatorului (indiferent unde), el va fi
+     intrerupt si se va executa handlerul h asociat lui n; apoi, daca h
+     nu a cerut terminarea programului, acesta se reia de unde s-a
+     intrerupt;
+  - pe parcursul executarii lui h mai poate veni un semnal neblocat p si
+     atunci sunt posibile cazurile:
+     = daca h este un handler al sistemului (SIG_DFL sau SIG_IGN):
+       atunci p ramane in pending pana la sfarsitul lui h, deoarece pe
+       perioada lui h procesul este in "kernel mode" si toate semnalele sunt
+       blocate temporar; dupa terminarea lui h blocajul suplimentar dispare
+       si p va fi tratat - se va lansa handlerul f al lui p
+     = daca h este un handler al utilizatorului (chiar si functia cu corp
+       vid, folosita ca handler de ignorare), atunci sunt posibile
+       subcazurile:
+       @ daca p = n:
+         atunci noul n nu se pierde (pentru ca bitul de pending al lui n s-a
+         repozitional pe 0 chiar de la inceputul lui h), dar ramane in
+         pending pe toata perioada lui h (pentru ca n este blocat temporar);
+         dupa terminarea lui h blocajul suplimentar asupra lui n dispare si
+         noul n va fi tratat (se va lansa iar h); am presupus insa ca h nu a
+         fost instalat cu eliminarea blocajului suplimentar, cum am spus mai
+         sus ca se poate;
+       @ daca p <> n:
+         atunci h se intrerupe temporar (pentru ca sunt instructiuni ale
+         utilizatorului), se executa f, apoi se continua h de unde a ramas;
+  (in cele de mai sus am presupus ca h si f nu produc terminarea programului).
+  Astfel, presupunand ca n si p nu sunt blocate iar h si f sunt handlere ale
+   utilizatorului care nu termina programul si blocheaza semnalul pentru
+   care au fost lansate pe perioada executiei lor, daca procesul primeste 
+   foarte repede secventa n, n, p, va executa: un inceput de h, apoi un f, 
+   apoi sfarsitul primului h, apoi un alt h.
+============================================================================
+CONSTRUIREA/INSTALAREA/AFLAREA MASTII PROCESULUI DE BLOCARE A SEMNALELOR,
+AFLAREA SEMNALELOR AFLATE IN PENDING LA UN MOMENT DAT:
+
+sigset_t = tipul "multime de semnale", furnizat de signal.h
+
+(informatii: man sigemptyset) 
+Pentru urmatoarele 5 functii trebuie inclus signal.h; in fiecare caz *pms 
+  este multimea de semnale asupra careia se actioneaza:
+int sigemptyset(sigset_t *pms); => seteaza *pms := {};
+                             returneaza: 0=succes,-1=esec (si seteaza errno)
+int sigfillset(sigset_t *pms); => seteaza *pms := {1, ..., NSIG-1};
+                             returneaza: 0=succes,-1=esec (si seteaza errno)
+int sigaddset(sigset_t *pms, int sig); => adauga *pms := *pms U {sig};
+                             returneaza: 0=succes,-1=esec (si seteaza errno)
+int sigdelset(sigset_t *pms, int sig); => elimina *pms := *pms \ {sig};
+                             returneaza: 0=succes,-1=esec (si seteaza errno)
+int sigismember(sigset_t *pms, int sig); => testeaza daca sig apartine *pms;
+                             returneaza: 0=nu apartine,1=apartine,
+                                         -1=esec (si seteaza errno)
+
+#include<signal.h>  (informatii: man sigprocmask)
+int sigprocmask(int op, const sigset_t *pms, sigset_t *pmsv);
+=> seteaza/afla masca procesului de blocare a semnalelor;
+   *pms=noua masca (daca pms=NULL, nu se schimba masca);
+   *pmsv=aici se recupereaza vechea masca (daca pmsv=NULL, nu se mai
+         recupereaza);
+   op=poate fi indicat prin urmatoarele constante simbolice (furnizate de
+      signal.h): SIG_SETMASK => noua masca devine *pms
+                 SIG_BLOCK => noua masca devine *pmsv U *pms
+                 SIG_UNBLOCK => noua masca devine *pmsv \ *pms
+   returneaza: 0=succes, -1=esec(caz in care seteaza errno);
+   nu pot fi blocate SIGKILL si SIGSTOP
+
+#include<signal.h>  (informatii: man sigpending)
+int sigpending(sigset_t *pms);
+=> pune in *pms multimea semnalelor aflate in pending in acel moment;
+   returneaza: 0=succes, -1=esec(caz in care seteaza errno);
+============================================================================
+In urmatorul program blocam pentru 5 secunde SIGINT, SIGQUIT, SIGUSR1 si
+ afisam semnalele primite in acest timp:
+|a1.c:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   sigset_t ms; int sig;
+|   int main(){
+|     sigemptyset(&ms);
+|     sigaddset(&ms,SIGINT); sigaddset(&ms,SIGQUIT); sigaddset(&ms,SIGUSR1);
+|     sigprocmask(SIG_SETMASK,&ms,NULL);
+|     sleep(5);
+|     sigpending(&ms);
+|     for(sig=1;sig<NSIG;++sig)if(sigismember(&ms,sig))printf("%d ",sig);
+|     printf("\n");
+|     return 0;
+|   }
+Utilizare: lansam, tastam imediat ^c ^\, dupa cateva secunde se va afisa:
+           2 3
+Comentarii: cel mai probabil, semnalele vor ajunge la proces in perioada
+ cand face "sleep(5)"; intrucat ele sunt blocate, "sleep"-ul nu va fi
+ intrerupt; remarcam ca aceste semnale raman blocate pana la sfarsitul 
+ procesului.
+============================================================================
+ASOCIEREA UNUI NOU HANDLER PENTRU UN SEMNAL:
+
+Pentru a putea fi folosita ca handler, o functie trebuie sa fie de forma:
+    void h(int n);   (numele functiei si parametrului nu conteaza)
+Cand proces va primi semnalul asociat, el va fi transmis ca parametru
+ acestei functii.
+
+#include<signal.h>  (informatii: man signal)
+void (*signal(int sig, void (*ph)(int)))(int);
+=> instaleaza "*ph" ca handler pentru semnalul "sig";
+   pentru "ph" pot da si SIG_IGN sau SIG_DFL;
+   returneaza adresa vechiului handler asociat lui "sig" sau SIG_ERR in caz
+    de eroare (constanta SIG_ERR e furnizata de signal.h);
+Nu putem asocia handlere semnalelor SIGKILL, SIGSTOP.
+In unele implementari, dupa o executie a noului handler se reinstaleaza
+ automat handlerul implicit; reinstalarea se face chiar de la inceputul
+ executiei noului handler. In aceste cazuri, pentru a evita revenirea la
+ handlerul implicit, corpul noului handler trebuie sa inceapa cu o
+ reinstalare a sa.
+====================
+Urmatorul program este o modificare a lui a1.c, in care asociem lui SIGINT
+ si SIGQUIT un handler nou (acelasi la ambele); efectul handlerului va fi
+ scrierea pe ecran a semnalului pentru care s-a lansat:
+|a2.c:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   void h(int n){
+|     signal(n,h);
+|     printf("Se trateaza semnalul: %d\n",n);
+|   }
+|   sigset_t ms; int sig;
+|   int main(){
+|     signal(SIGINT,h); signal(SIGQUIT,h);
+|     sigemptyset(&ms);
+|     sigaddset(&ms,SIGINT); sigaddset(&ms,SIGQUIT); sigaddset(&ms,SIGUSR1);
+|     sigprocmask(SIG_SETMASK,&ms,NULL);
+|     sleep(5);
+|     sigpending(&ms);
+|     for(sig=1;sig<NSIG;++sig)if(sigismember(&ms,sig))printf("%d ",sig);
+|     printf("\n");
+|     sigemptyset(&ms); sigprocmask(SIG_SETMASK,&ms,NULL);
+|     return 0;
+|   }
+Utilizare: ca pentru a1.c; dupa cateva secunde se va afisa "2 3", apoi
+ "Se trateaza semnalul 3", "Se trateaza semnalul 2".
+Comentarii: cel mai probabil, semnalele vor ajunge la proces in perioada
+ cand face "sleep(5)"; intrucat ele sunt blocate, "sleep"-ul nu va fi
+ intrerupt iar semnalele vor ramane in pending; dupa deblocarea semnalelor
+ cu noul "sigprocmask" incepe imediat tratarea lor, in ordinea valorilor
+ lor - deci intai se lanseaza h pentru 2, apoi h pentru 3; intrucat 
+ 2 si 3 erau simultan in pending, lansarea lui h pentru 3 a urmat atat de
+ repede lansarii lui h pentru 2 incat inainte ca h-ul pentru 2 sa-si afiseze
+ mesajul, el a fost intrerupt de h-ul pentru 3 si a asteptat ca acesta sa se
+ execute complet - de aceea pe ecran s-a afisat "Se trateaza semnalul 3",
+ "Se trateaza semnalul 2" si nu invers.
+====================
+Cu urmatorul program putem studia modul de lansare a handlerelor:
+|a3.c
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   void h(int n){
+|     signal(n,h);
+|     printf("Se trateaza semnalul: %d\n",n);
+|     sleep(3);
+|     printf("Sfarsitul handlerului pentru semnalul: %d\n",n);
+|   }
+|   int i;
+|   int main(){
+|     signal(SIGINT,h); signal(SIGQUIT,h);
+|     for(i=0;i<20;++i){printf("A\n");sleep(1);}
+|     return 0;
+|   }
+Utilizare: 
+ lansam, tastam repede ^c ^c ^c => se trateaza complet un 2, apoi se trateaza 
+       complet un alt 2
+ lansam, tastam repede ^c ^\ ^c => incepe primul 2, se intrerupe
+       si se trateaza complet 3, se termina primul 2, se trateaza complet 
+       al doilea 2
+Comentarii:
+In primul caz: cel mai probabil, primul semnal 2 ajunge la proces in timpul
+  unuia dintre "sleep"-uri (intrerupand-ul, deoarece nu este blocat); chiar 
+  de la inceputul lui h pentru acest 2, bitul de pending al lui 2 se pune pe 
+  0 iar bitul de blocaj pe 1; in continuare h afisaza "Se trateaza semnalul:
+  2", apoi intra in "sleep(3)"; cel mai probabil urmatoarele doua semnale 2 
+  ajung la proces in timpul acestui "sleep"; primul dintre ele intra in 
+  pending dar nu se lanseza un nou h pentru el (deoarece primul h a blocat 
+  2-ul pe perioada executiei lui), in timp ce al doilea se pierde (intrucat 
+  atunci cand a venit mai era un 2 in pending); astfel, dupa terminarea 
+  primului h, cand bitul de blocaj al lui 2 se pune pe iar 0, intrucat exista 
+  un 2 in pending, se lanseaza un nou h; deci in total se executa de doua ori 
+  h, iar executiile sunt succesive, nu se intrerup una pe alta.
+In al doilea caz: cel mai probabil primul semnal 2 ajunge la proces in timpul
+  unuia dintre "sleep"-uri (intrerupand-ul, deoarece nu este blocat); chiar
+  de la inceputul lui h pentru acest 2, bitul de pending al lui 2 se pune pe 
+  0 iar bitul de blocaj pe 1; in continuare h afisaza "Se trateaza semnalul:
+  2", apoi intra in "sleep(3)"; cel mai probabil urmatorul semal (3) ajunge
+  la proces in timpul acestui "sleep"; intrucat 3 nu este blocat (ci doar 2)
+  primul h se intrerupe temporar si se lanseaza un nou h, pentru 3; acesta
+  afisaza "Se trateaza semnalul: 3", apoi intra in "sleep(3)"; cel mai 
+  probabil ultimul semnal (2) ajunge la proces in timpul acestui "sleep";
+  intrucat primul h (cel pentru primul 2) a pus bitul de pending al lui 2
+  pe 0 si bitul de blocaj al lui 2 pe 1, ultimul 2 intra in pending dar
+  nu se intrerupe h-ul pentru 3 ca sa se lanseza un h pentru noul 2; de
+  aceea h-ul pentru 3 se executa complet si afisaza "Sfarsitul handlerului 
+  pentru semnalul: 3"; dupa revenirea in h-ul pentru primul 2, bitul de blocaj
+  al lui 2 ramane in continuare pe 1, asa ca ultimul 2 ramane in continuare in
+  pending iar h-ul pentru primul 2 se executa pana la capat afisand "Sfarsitul
+  handlerului pentru semnalul: 2"; dupa terminarea h-ului pentru primul 2, 
+  bitul de blocaj al lui 2 se pune iar pe 0 iar ultimul 2, aflat in pending, 
+  este tratat - se lanseaza un nou h, care se executa complet afisand "Se 
+  trateaza semnalul: 2", "Sfarsitul handlerului pentru semnalul 2"; in total 
+  deci s-a lansat de trei ori h (pentru fiecare din cele trei semnale), h-ul 
+  pentru 3 a fost incuibat in h-ul pentru primul 2 iar h-ul pentru ultimul 2 
+  a fost succesiv h-ului pentru primul 2.
+In al doilea caz, spre deosebire de a1.c, mesajele de inceput "Se trateaza
+  semnalul..." pentru primele semnale 2 si 3 au aparut in ordinea in care au 
+  ajuns aceste semnale la proces si nu in ordine inversa, deoarece acum 
+  semnalele nu au fost blocate la inceput si au putut fi tratate imediat ce au
+  fost primite, iar fractiunea de secunda lasata de utilizator intre cele
+  doua tastari ^c si ^\ a fost suficient de mare ca sa permita primului h sa
+  execute primul printf inainte de a fi intrerupt de al doilea h.
+============================================================================
+Cateva functii utile:
+#include<stdlib.h>  (informatii: man -S 3 exit)
+void exit(int stare);
+=> procesul se termina si returneaza procesului parinte valoarea "stare" (ca
+    valoare returnata de main, care din shell se vede cu "echo $?"); in
+    prealabil toate fisierele deschise sunt flush-ate si apoi inchise
+    automat; este cea mai sigura si mai curata metoda de a termina fortat
+    un program;
+#include<unistd.h>  (informatii: man getpid)
+pid_t getpid();
+=> returneaza PID-ul procesului curent
+#include<unistd.h>
+pid_t getppid();
+=> returneaza PID-ul tatalui procesului curent
+============================================================================
+ASTEPTAREA UNUI SEMNAL:
+
+O functie mai slaba este:
+#include<unistd.h>  (informatii: man pause)
+int pause();
+=> procesul adoarme pana primeste un semnal neignorat - deci neblocat si cu
+     alt handler decat SIG_IGN (procesul se trezeste chiar si daca handlerul
+     este o functie a utilizatorului cu corp vid); exceptie: daca semnalul
+     este SIGCONT cu handlerul SIG_DFL, procesul ramane adormit;
+   returneaza mereu -1 (si seteaza errno);
+====================
+Aplicatie: un program b care emite 2000 semnale spre un program a; a numara
+ cate a primit, b numara cate a trimis:
+|a4a.c: programul receptor:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   #include<stdlib.h>
+|   #include<sys/types.h>
+|   int nr=0; pid_t pa;
+|   void h1(int n){signal(n,h1); kill(pa,SIGUSR1);}
+|   void h2(int n){printf("Am primit: %d\n",nr); exit(0);}
+|   int main(){
+|     signal(SIGUSR1,h1); signal(SIGINT,h2);
+|     printf("PID propriu: %d\n",getpid());
+|     printf("PID advers: "); scanf("%d",&pa);
+|     while(1){pause(); ++nr;}
+|     return 0;
+|   }
+|a4b.c: programul emitator:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   #include<stdlib.h>
+|   #include<sys/types.h>
+|   int nr=0; pid_t pa;
+|   void h1(int n){signal(n,h1);}
+|   void h2(int n){printf("Am trimis: %d\n",nr); exit(0);}
+|   int main(){int i;
+|     signal(SIGUSR1,h1); signal(SIGINT, h2);
+|     printf("PID propriu: %d\n",getpid());
+|     printf("PID advers: "); scanf("%d",&pa);
+|     for(i=0;i<2000;++i){kill(pa,SIGUSR1); ++nr; pause();}
+|     printf("Am trimis: %d\n",nr);
+|     return 0;
+|   }
+Utilizare: procesele "a" si "b" trebuie lansate de la terminale (virtuale)
+ diferite, de acelasi utilizator; lansam "a", apoi "b"; dam lui "a" PID-ul 
+ lui "b", apoi lui "b" PID-ul lui "a"; asteptam putin; daca "b" nu s-a 
+ terminat, il terminam cu ^c; apoi terminam "a" cu ^c.
+Concluzii: uneori "b" se termina singur, alteori trebuie dat ^c (ambele
+ procese se blocheaza la un "pause"); numerele afisate de cele doua nu sunt
+ neaparat 2000.
+Comentarii: rezultatele diferite si interblocajele se datoreaza faptului ca
+ uneori semnalele SIGUSR1 sunt primite inaintea momentului cand sunt
+ asteptate (la "pause") iar "pause" va stepta inutil; exemple de "scenarii"
+ posibile:
+ - "a" primeste un SIGUSR1, iese din "pause" si executa "h1", ocazie cu care
+   trimite lui "b" un SIGUSR1, confirmandu-i astfel ca mai poate trimite 
+   unul; inainte insa ca "a" sa ajunga la un nou "pause", "b" mai trimite un 
+   SIGUSR1, "a" il trateaza trimitand inapoi un SIGSUR1 pentru confirmare, 
+   "b" iar mai trimite unul s.a.m.d. de cateva ori; totusi, intre cele doua 
+   "pause" "a" si-a incrementat o singura data contorul "nr"; astfel, o parte 
+   din semnalele trimise de "b" nu sunt numarate de "a";
+ - "b" trimite un SIGUSR1, dar inainte de a ajunge la "pause" ii vine 
+   semnalul de confirmare de la "a" (si executa "h1", care nu face nimic
+   deosebit); astfel, cand "b" ajunge la "pause", semnalul de confirmare pe 
+   care ar trebui sa-l astepte a fost primit si tratat deja, deci "b" va
+   astepta inutil ("a" nu va trimite un nou semnal pana cand "b" nu va 
+   trimite un nou semnal); pe de alta parte, "a" dupa ce a tratat SIGUSR1
+   trimis de "b" intra si el intr-un "pause", asteptand un nou semnal, care
+   insa nu mai vine; astfel, ambele procese se blocheaza intr-un "pause".
+ Pentru a proteja procesele de primirea unui semnal inainte locului unde
+este asteptat, am putea incerca sa blocam permanent SIGUSR1 si sa-l deblocam 
+temporar doar in zona unui "pause", cu "sigprocmask":
+ sigset_t ms,mst;
+ sigemptyset(&ms);sigaddset(&ms,SIGUSR1);sigprocmask(SIG_SETMASK,&ms,NULL);
+ sigemptyset(&mst);
+ ...
+ sigprocmask(SIG_SETMASK,&mst,NULL);
+ pause();
+ sigprocmask(SIG_SETMASK,&ms,NULL);
+ ...
+dar daca semnalul a venit inainte de primul "sigprocmask", el va fi tratat 
+(se va lansa handlerul) imediat dupa acesta, inainte poate de a se ajunge la 
+"pause"; de asemenea, nu vom avea garantia ca un semnal nu va veni INTRE 
+primul "sigprocmask" si "pause".
+====================
+O functie mai puternica este:
+#include<signal.h>
+int sigsuspend(const sigset_t *pms);
+=> instaleaza temporar (pana la iesirea din apel) *pms ca masca de blocare
+    a semnalelor si adoarme procesul pana la primirea unui semnal neblocat
+    de *pms; actiunea este ATOMICA (cele doua efecte sunt realizate printr-o
+    singura operatie, deci nu exista riscul sa se trateze un semnal neblocat
+    de *pms intre momentul instalarii acestei masti si adormirea procesului);
+    la primirea unui semnal neblocat de *pms comentariile sunt ca la functia 
+    "pause";
+   returneaza: 0=succes, -1=eroare (si seteaza errno).
+====================
+Aplicatie: cele doua programe de mai sus se pot rescrie a.i. sa functioneze
+ corect:
+|a5a.c: programul receptor:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   #include<stdlib.h>
+|   #include<sys/types.h>
+|   int nr=0; pid_t pa; sigset_t ms;
+|   void h1(int n){signal(n,h1); kill(pa,SIGUSR1);}
+|   void h2(int n){printf("Am primit %d\n",nr); exit(0);}
+|   int main(){
+|     signal(SIGUSR1,h1); signal(SIGINT,h2);
+|     sigemptyset(&ms); sigaddset(&ms,SIGUSR1);
+|       sigprocmask(SIG_SETMASK,&ms,NULL);
+|     printf("PID propriu: %d\n",getpid());
+|     printf("PID advers: "); scanf("%d",&pa);
+|     sigfillset(&ms); sigdelset(&ms,SIGUSR1); sigdelset(&ms,SIGINT);
+|     while(1){sigsuspend(&ms); ++nr;}
+|     return 0;
+|   }
+|a5b.c: programul emitator:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   #include<stdlib.h>
+|   #include<sys/types.h>
+|   int nr=0; pid_t pa; sigset_t ms;
+|   void h1(int n){signal(n,h1);}
+|   void h2(int n){printf("Am trimis: %d\n",nr); exit(0);}
+|   int main(){int i;
+|     signal(SIGUSR1,h1); signal(SIGINT, h2);
+|     sigemptyset(&ms); sigaddset(&ms,SIGUSR1);
+|       sigprocmask(SIG_SETMASK,&ms,NULL);
+|     printf("PID propriu: %d\n",getpid());
+|     printf("PID advers: "); scanf("%d",&pa);
+|     sigfillset(&ms); sigdelset(&ms,SIGUSR1);
+|     for(i=0;i<2000;++i){kill(pa,SIGUSR1); ++nr; sigsuspend(&ms);}
+|     printf("Am trimis: %d\n",nr);
+|     return 0;
+|   }
+Utilizare: ca la "a4a", "a4b"; aici insa procesul "b" se va termina mereu 
+ (in timp ce procesul "a" trebuie terminat cu ^c).
+Concluzie: procesele nu se mai interblocheaza si ambele afisaza 2000.
+Comentarii: motivele functionarii corecte:
+ - in afara locului unde este asteptat (la "sigsuspend") semnalul SIGUSR1
+     este blocat; "etanseitatea" blocajului e asigurata de atomicitatea
+     actiunii lui "sigsuspend";
+ - structura programelor garanteaza ca intre doua executari succesive ale
+     lui "sigsusped" nici unul dintre procese nu poate primi mai mult de un
+     semnal SIGUSR1;
+ Astfel nu exista riscul ca anumite SIGUSR1 sa se piarda.
+====================
+Aplicatie la un program simplu de talk:
+|a6.c:
+|   #include<stdio.h>
+|   #include<sys/types.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   #include<string.h>
+|   #include<stdlib.h>
+|   char buf[256], nfp[256], nfa[256];
+|   sigset_t ms;
+|   FILE *fp, *fa;
+|   pid_t pa;
+|   void h1(int n){
+|     signal(SIGUSR1,h1);
+|     fa=fopen(nfa,"rb");fgets(buf,256,fa);puts(buf);fclose(fa);
+|     kill(pa,SIGUSR2);
+|   }
+|   void h2(int n){signal(SIGUSR2,h2);}
+|   void h3(int n){unlink(nfp); exit(0);}
+|   sigset_t ms; int sig,i;
+|   int main(){
+|     signal(SIGUSR1,h1); signal(SIGUSR2,h2); signal(SIGINT,h3);
+|     sigemptyset(&ms); sigaddset(&ms,SIGUSR2);
+|       sigprocmask(SIG_SETMASK,&ms,NULL);
+|     printf("PID propriu: %d\n",getpid());
+|     printf("Numele fis. propriu: ");scanf("%s",nfp);
+|     printf("Specificatorul fis. propriu: %s/%s\n",getcwd(buf,256),nfp);
+|     printf("PID advers: ");scanf("%d",&pa);
+|     printf("Specificatorul fis. advers: ");scanf("%s",nfa);
+|     sigemptyset(&ms); sigaddset(&ms,SIGUSR1);
+|     while(1){
+|       do gets(buf);while(!strlen(buf));
+|       fp=fopen(nfp,"wb"); fputs(buf,fp); fclose(fp);
+|       kill(pa,SIGUSR1);
+|       sigsuspend(&ms);
+|     }
+|     return 0;
+|   }
+Utilizare: programul se lanseaza in paralel de la doua terminale (virtuale)
+ diferite, de acelasi utilizator - obtinem doua procese diferite; fiecare
+ isi afisaza PID-ul; dam fiecaruia cate un nume de fisier (ex: f1 si f2);
+ fiecare va afisa specificatorul fisierului dat (ex: /home/ion/f1); dam
+ fiecaruia PID-ul si specificatorul afisate de celalalt; in continuare
+ are loc talk-ul respectiv: la fiecare proces operatorul va introduce linii
+ de text (terminate prim ENTER), iar acestea vor fi afisate imediat de
+ procesul advers, operatiile fiind efectuate in mod independent; in final
+ fiecare proces va fi terminat cu ^c.
+Comentariu: in afara lui "sigsuspend" a fost blocat SIGUSR2, pentru a nu fi
+ primit atunci cand nu este asteptat (vezi programele "a5a", "a5b"); in
+ timpul lui "sigsuspend" a fost blocat SIGUSR1, pentru a nu se trezi
+ procesul din cauza acestuia (procesul trebuie sa se trezeasca din
+ "sigsuspend" doar la primirea unui SIGUSR2, altfel exista riscul sa 
+ suprascrie sirul din fisierul propriu inainte ca sirul anterior sa fie
+ afisat de procesul advers).
+============================================================================
+O modalitate mai complexa de a asocia un handler unui semnal este sa
+ folosim o structura de tipul urmator (pentru ea este suficient sa
+ includem signal.h):
+struct sigaction{
+  void (*sa_handler)(int);
+   ...
+  sigset_t sa_mask;
+  int sa_flags;
+   ...
+};
+structura se va initializa astel:
+  sa_handler = pointer la functia care se va instala ca handler;
+  sa_mask = o masca de semnale ce vor fi adaugate la masca de semnale
+             blocate a procesului, pe perioada executiei handlerului;
+  sa_flags = 0 sau mai multe optiuni legate prin |; cateva optiuni si
+             semnificatiile lor:
+             SA_ONESHOT, SA_RESETHAND = dupa o singura executie a noului
+               handler se va reinstala automat handlerul implicit;
+               reinstalarea va avea loc chiar de la inceputul executarii
+               noului handler (vezi functia "signal");
+             SA_NOMASK, SA_NODEFER = semnalul caruia i s-a asociat
+               handlerul nu va mai fi blocat pe perioada executiei sale
+               (deci handlerul se va putea intrerupe de catre el insusi);
+             (pentru aceste constante simbolice este suficient sa includem
+             signal.h)
+
+Instalarea unui handler pentru un semnal folosind structura anterioara se
+face cu:
+#include<signal.h>  (informatii: man sigaction)
+int sigaction(int sig, const struct sigaction *pa, struct sigaction *pav);
+=> seteaza/afla structura sigaction de asociere a unui handler pentru un
+    semnal
+   sig = semnalul in cauza
+   pa = adresa structurii sigaction (initializate in prealabil) pe care
+         vrem sa o instalam; daca este NULL, nu se schimba starea curenta;
+   pav = adresa unde vom salva structura veche; daca este NULL, nu se
+          salveaza nimic;
+   returneaza: 0=succes, -1=esec (caz in care seteaza errno);
+Nu putem asocia handlere semnalelor SIGKILL, SIGSTOP.
+====================
+Urmatorul program ilustreaza cum putem asocia handlere unor semnale folosind
+sigaction:
+|a7.c:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   sigset_t ms; struct sigaction a;
+|   void h(int n){int i;
+|     printf("Se trateaza semnalul: %d\n",n);
+|     sleep(1);
+|     sigprocmask(SIG_BLOCK,NULL,&ms);
+|     printf("Semnale blocate: ");
+|     for(i=1;i<NSIG;++i)if(sigismember(&ms,i))printf("%d ",i);printf("\n");
+|     sigpending(&ms);
+|     printf("Semnale in pending: ");
+|     for(i=1;i<NSIG;++i)if(sigismember(&ms,i))printf("%d ",i);printf("\n");
+|     if(n==SIGINT){a.sa_handler=SIG_DFL; sigaction(SIGINT,&a,NULL);}
+|     printf("Sfarsitul handlerului pentru: %d\n",n);
+|   }
+|   int main(){int i;
+|     a.sa_handler=h; sigemptyset(&a.sa_mask); a.sa_flags=0;
+|     sigaction(SIGQUIT,&a,NULL);
+|     sigaddset(&a.sa_mask,SIGQUIT); sigaction(SIGINT,&a,NULL);
+|     for(i=0;i<100;++i){printf("A\n");sleep(1);}
+|     return 0;
+|   }
+Utilizare si observatii: lansam; tastam repede ^c ^\; observam ca se
+ trateaza complet SIGINT, apoi SIGQUIT (el era blocat cand s-a tratat 
+ SIGINT); apoi tastam ^\; observam ca se trateaza SIGQUIT si nu se termina 
+ procesul; apoi tastam ^c si observam ca se termina procesul; motivul: doar 
+ pentru SIGINT s-a reinstalat handlerul implicit (care produce terminarea 
+ procesului).
+Alte comentarii: Pe perioada executiei fiecarui "h", semnalul pentru care
+ s-a lansat este blocat (n-am folosit SA_NOMASK), deci apare la "Semnale
+ blocate". Cand am dat prima data ^c ^\, s-a lansat "h" pentru 2 si cel
+ mai probabil 3 a venit cand acest "h" facea "sleep"; el este blocat, deci 
+ ramane in pending (nu va intrerupe "h"), iar pe ecran apare "Semnale 
+ blocate: 2 3", "Semnale in pending: 3"; dupa "h"-ul pentru 2 se lanseaza
+ "h"-ul pentru 3, care va afisa "Semnale blocate: 3", "Semnale in pending:".
+ In fine mai mentionam ca daca al doilea ^\ este urmat repede de al doilea
+ ^c (deci 2 vine in timpul "h"-ului pentru 3, cel mai probabil in timpul
+ "sleep"-ului), "h"-ul pentru 3 va fi intrerupt de handlerul (implicit de
+ data aceasta) pentru 2, care va termina procesul (si astfel "h"-ul pentru 3
+ nu se va executa complet).  
+====================
+Functia "sigaction" ne permite sa instalam handlerul SIG_IGN si in sistemele
+ unde functia "signal" instaleaza handlerele doar pentru o singura executie.
+ Acolo, intrucat nu putem planta un apel "signal" la inceputul lui SIG_IGN
+ (deoarece nu avem acces la codul sau), singura posibilitate de a instala
+ un handler de ignorare cu "signal" este folosirea unei functii a
+ utilizatorului care sa nu faca altceva decat sa se reinstaleze ca handler.
+ Aceasta nu va avea insa toate proprietatile lui SIG_IGN (de exemplu este
+ intreruptibila, pentru ca este executata partial in "user mode").
+Urmatoarele programe ilustreaza modul cum putem instala handlere de ignorare
+ cu "signal" si "sigaction":
+|a8.c:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   void ignorare(int n){signal(n,ignorare);}
+|   int main(){int i;
+|     for(i=1;i<NSIG;++i)signal(i,ignorare);
+|     printf("Acum semnalele sunt ignorate.\n");
+|     for(i=0;i<10;++i){printf("A\n");sleep(1);}
+|     printf("Acum semnalele nu mai sunt ignorate\n");
+|     for(i=1;i<NSIG;++i)signal(i,SIG_DFL);
+|     for(i=0;i<10;++i){printf("A\n");sleep(1);}
+|     return 0;
+|   }
+|a9.c:
+|   #include<stdio.h>
+|   #include<signal.h>
+|   #include<unistd.h>
+|   struct sigaction a;
+|   int main(){int i;
+|     sigemptyset(&a.sa_mask);
+|     a.sa_handler=SIG_IGN; for(i=1;i<NSIG;++i)sigaction(i,&a,NULL);
+|     printf("Acum semnalele sunt ignorate.\n");
+|     for(i=0;i<10;++i){printf("A\n");sleep(1);}
+|     printf("Acum semnalele nu mai sunt ignorate\n");
+|     a.sa_handler=SIG_DFL; for(i=1;i<NSIG;++i)sigaction(i,&a,NULL);
+|     for(i=0;i<10;++i){printf("A\n");sleep(1);}
+|     return 0;
+|   }
+Utilizare (in ambele cazuri) si observatii: lansam; dupa primul mesaj tastam
+ ^c ^c ^c si vedem ca nu se intrerupe programul, dar:
+ - in primul caz A-urile se afisaza mai repede (pentru ca SIGINT va
+    intrerupe sleep-ul);
+ - in al doilea caz A-urile se afisaza la fel de repede (pentru ca SIGINT nu
+    va intrerupe sleep-ul); deci abia aici ignorarea este autentica;
+ dupa al doilea mesaj tastam ^c si procesul se va termina, deci acum pentru
+ SIGINT s-a reinstalat handlerul implicit.
+Comentariu: SIG_DFL poate fi instalat cu "signal", deoarece dupa o executie
+ se revine automat tot la el.
+============================================================================
+CATEVA SEMNALE PARTICULARE SI UTILIZAREA LOR:
+1) SIGHUP = 1
+ Cand procesul lider al unei sesiuni se termina, acest semnal este trimis
+  automat tuturor proceselor din sesiunea respectiva. Comportamentul
+  implicit: terminarea.
+ Un program poate fi "vaccinat" la acest semnal daca este lansat cu "nohup"
+  (a se vedea mai sus).
+
+2) SIGINT = 2, SIGQUIT = 3
+ Cand tastam de la un terminal ^c, respectiv ^\, primul, respectiv al
+  doilea semnal este trimis catre toate procesele aflate in foreground
+  la terminalul respectiv.
+ Comportamentul implicit: terminarea (in cazul lui SIGQUIT se face si un
+  fisier "core" cu imaginea memoriei).
+
+3) SIGKILL = 9
+ Este neblocabil si nu ii putem asocia alt handler decat cel implicit.
+ Comportamentul implicit: terminarea.
+ Acest semnal este folosit de regula pentru a termina explicit un proces dat.
+
+4) SIGUSR1 = 10, SIGUSR2 =12
+ Comportament implicit: terminarea.
+ De regula sunt folosite de programatori pentru scopuri particulare.
+
+5) SIGALRM = 14
+ Comportament implicit: terminarea.
+ De regula este folosit de catre un program pentru a-si planifica un
+  comportament anume dupa un anumit interval de timp, indiferent de momentul
+  unde se afla cu executia. Este folosita functia:
+  #include<unistd.h>
+  unsigned int alarm(unsigned int sec);
+  => dupa "sec" secunde de la executarea acestui apel procesul va primi un
+      semnal SIGALRM; daca anterior a mai fost efectuat un apel al lui
+      "alarm", el este anulat (numaratoarea descrescatoare se reia de la
+      "sec"); daca apelam functia cu parametrul "sec"=0 doar se anuleaza
+      orice apel anterior; valoarea maxima pentru "sec" este MAX_ALARM
+      (constanta simbolica definita in sys/param.h);
+     returneaza numarul de secunde ramase de numarat in urma apelului
+      anterior.
+ Aplicatie: program care pune o intrebare si asteapta un raspuns 10 secunde;
+  daca nu vine raspunsul in timp util, procesul primeste un semnal SIGALARM,
+  iar handlerul asociat va afisa un mesaj adecvat si il va termina; daca
+  raspunsul vine in timp util, numaratoarea este anulata, si se afisaza un
+  mesaj de multumire:
+|a10.c: 
+|   #include<signal.h>
+|   #include<stdio.h>
+|   #include<stdlib.h>
+|   #include<unistd.h>
+|   void h(int n){
+|     signal(n,h); printf("Timpul a expirat\n"); exit(1);
+|   }
+|   int main(){int c;
+|    signal(SIGALRM,h);
+|    printf("Asa e ? (d/n): "); alarm(10);
+|    scanf("%c",&c);
+|    alarm(0);
+|    printf("Multumesc pentru raspuns !\n");
+|    return 0;
+|   }
+
+6) SIGTERM = 15
+ Comportament implicit: terminare
+
+7) SIGCHLD = 17
+ Cand un proces se termina, tatal sau primeste un semnal SIGCHLD.
+ Comportament implicit: ignorare
+
+8) SIGSTOP = 19, SIGCONT = 18
+ Semnale folosite la suspendarea / reluarea explicita a unor procese
+  (mecanisme de job control).
+ Comportament implicit: suspendare, respectiv reluare.
+ SIGSTOP nu poate fi blocat si nu i se poate asocia alt handler ca cel
+  implicit; lui SIGCONT pe anumite sisteme nu-i putem asocia alt handler ca
+  cel implicit.
+
+================================== TEME: ===================================
+
+TEME LA CAPITOLUL DE SEMNALE:
+
+La majoritatea problemelor se cere:
+(a) 2 programe, care se lanseaza de la terminale diferite de catre acelasi
+    utilizator, obtinand astfel 2 procese; fiecare proces va citi de la
+    tastatura PID-ul celuilalt.
+1. (4.5 puncte) Cerinta (a). Procesul 1 trimite aleator diverse semnale != 
+    SIGKILL, SIGSTOP, SIGCONT procesului 2, iar la sfarsit ii trimite un 
+    SIGKILL. Procesul 2 face o statistica, numarand cate semnale a primit 
+    din fiecare tip, iar la sfarsit o afisaza (procesul 2 se termina cand 
+    primeste SIGKILL-ul). Se va asigura protectia la pierderea unor semnale.
+2. (4.5 puncte) Ca la problema 1, dar procesul 2 determina semnalul de 
+    valoare maxima si-l scrie.
+3. (6 puncte) Ca la problema 1, dar procesul 2, de fiecare data cand primeste 
+    un semnal, ii scrie valoarea si timpul scurs de la inceputul executiei (in
+    secunde), apoi blocheaza semnalul respectiv - astfel nu sunt tratate
+    semnalele repetate.
+4. (2 puncte) Program care armeaza ceasul ("alarm") pentru 2 secunde, apoi 
+    intra intr-un ciclu infinit. La primirea lui SIGALRM nu se va termina 
+    procesul ci se va iesi din ciclu (se va continua programul dupa ciclul 
+    respectiv).
+5. (4.5 puncte) Cerinta (a). Procesul 1 trimite un numar oarecare (aleator) de
+    semnale SIGUSR1 procesului 2, apoi scrie cate i-a trimis. Procesul 2 
+    armeaza ceasul (alarm) pentru 4 secunde, apoi incepe sa numere semnalele 
+    SIGUSR1 primite. Dupa primirea lui SIGALRM scrie cate a primit si trimite
+    procesului 1 SIGKILL (asa se va termina procesul 1). Se va asigura
+    protectia la pierderea unor semnale.
+6. (2 puncte) Cerinta (a). Fiecare proces trimite celuilalt 2000 SIGUSR1, apoi
+    un SIGINT (care va determina terminarea procesului advers). Inainte de
+    terminare, fiecare proces scrie cate semnale a trimis si cate a primit.
+7. (30 puncte) Talk bazat doar pe semnale: un acelasi program este lansat de 
+    la 2 terminale diferite de acelasi utilizator,obtinand 2 procese diferite.
+    Fiecare proces citeste de la tastatura PID-ul celuilalt. Fiecare proces
+    are un tabel care asociaza cate un semnal != SIGKILL, SIGCONT, SIGSTOP
+    celor 26 litere, blank-ului si capului de linie. Fiecare proces citeste
+    intr-un ciclu cate o linie de la tastatura, apoi o parcurge si trimite
+    celuilalt proces semnalul asociat fiecarui caracter din ea (inclusiv
+    blank-urile si capul de linie). De asemenea, fiecare proces, la primirea
+    unui asemenea semnal, va afla caracterul corespunzator si-l va scrie pe
+    ecran. Se va asigura protectia la pierderea unor semnale si se va
+    asigura ca semnalele trimise de un proces sa fie primite de celalalt in
+    aceeasi ordine (de exemplu un proces nu va emite semnalul corespunzator
+    unui caracter decat daca a primit confirmarea ca celalalt proces a
+    tratat semnalul pentru caracterul precedent).
+8. (1.5 puncte) Simularea comenzii "ps": programul apeleaza "kill(0,...)" 
+    pentru toate PID-urile mai mici ca ale lui, iar acolo unde valoarea 
+    returnata este != 1 afisaza acel PID (pentru ca va corespunde unui proces 
+    existent). Se va testa dupa ce se vor lansa cateva procese in background.
+
+							DRAGULICI DANIEL
+                                                        2001
+                                                        Actualizat: 2002
+

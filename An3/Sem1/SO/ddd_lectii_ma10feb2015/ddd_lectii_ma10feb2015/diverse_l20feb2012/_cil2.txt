@@ -1,0 +1,777 @@
+Incursiune in Linux - Fisiere (completarea cursului tinut la tabla):
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Prezentam cateva comenzi shell, legate in special de directoare si fisiere;
+in cele ce urmeaza prin "fisier", "director", "masca" vom intelege un
+specificator de fisier, resp. de director, resp. o masca, scrise dupa toate
+regulile prezentate la curs, in particular pot contine cai.
+
+* Comenzi de ajutor:
+
+ Linux are un sistem de ajutor, care poate furniza informatii atat despre
+comenzile shell cat si despre functiile C (atat apelurile sistem cat si
+functiile de biblioteca). El poate fi invocat din linia de comanda shell cu:
+
+  man nume
+
+unde "nume" este numele unei comenzi shell sau functii C; de exemplu:
+
+  man ls
+
+  man fopen
+
+in toate cazurile se vor afisa informatii despre comanda/functia respectiva.
+Informatia este afisata paginat - dupa umplerea unei pagini "man" asteapta
+apasarea unei taste pentru a continua; daca tastam "ENTER" se mai afisaza o
+linie, daca tastam "SPACE" se mai afisaza o pagina, daca tastam "q" se
+abandoneaza comanda "man".
+
+ Unele nume desemneaza atat comenzi shell cat si functii C si atunci o
+simpla comanda "man nume" ne va afisa doar una dintre semnificatii (prima).
+Pentru a afla si celelalte semnificatii, trebuie sa cerem comenzii "man" sa
+caute in alta sectiune cu informatii (sunt cca. 7 sectiuni). De exemplu
+"open" este atat numele unei comenzi shell cat si al unei functii C (un
+apel sistem); atunci comanda:
+
+  man open
+
+se va referi la semnificatia lui "open" de comanda shell; pentru cealalta
+semnificatie trebuie sa cerem lui "man" sa caute in sectiunea sa nr. 2, dand
+comanda:
+
+  man 2 open
+
+ Comanda "man" are si alte optiuni, de exemplu pentru a afisa informatiile
+sub forma de text ASCII (implicit afisaza hipertext) - textul ASCII, daca este
+salvat intr-un fisier, poate fi ulterior prelucrat mai usor de catre diverse
+alte programe.
+ Daca vrem sa aflam toate detaliile legate de folosirea comenzii "man" putem
+da comanda:
+
+  man man
+
+ O comanda asemanatoare cu "man" este comanda "info", cu care putem afla mai
+multe informatii; de exemplu dam:
+
+  info ls
+ 
+* Comenzi referitoare la directoare:
+
+ Putem crea un director nou (si gol) cu comanda "mkdir" (make directory):
+
+ mkdir director
+
+si putem sterge un director gol cu comanda "rmdir" (remove directory):
+
+ rmdir director
+
+Notam ca un director care nu este gol nu poate fi sters cu "rmdir", ci trebuie
+sa folosim o comanda mai puternica, de ex. "rm -r" (a se vedea mai jos).
+
+Exemplu: presupunem ca avem urmatorul arbore de directoare si fisiere:
+--------
+                                 (rad)
+                                  / \
+                                 /   \
+                                a     b
+                               / \ 
+                              /   \
+                             c     d
+                             |
+                             |
+                            f.txt
+
+ atunci, cu comanda:
+
+   mkdir /a/d/x
+
+ se creaza subdirectorul (gol) "x" al lui "d", iar arborele arata astfel:
+
+                                 (rad)
+                                  / \
+                                 /   \
+                                a     b
+                               / \ 
+                              /   \
+                             c     d
+                             |      \
+                             |       \
+                            f.txt     x
+
+ apoi, cu comanda:
+
+   rmdir /a/d/x
+
+ stergem acest director, iar arborele arata ca mai inainte.
+
+ Putem afisa fii unui director cu comanda "ls" (list directory contents).
+
+ Pentru exemplificarea comenzii "ls", vom considera urmatorul arbore de
+directoare si fisiere, pentru care am explicitat si implementarea
+directoarelor (conform modului de reprezentare descris la curs):
+
+                                                zona de date
+                                                fisierului/directorului
+                             i-nod              -----------
+                             ----               | .   | 2 |
+          (rad) -------------| ---------------->|---------|
+            |                ----               | ..  | 2 |
+            |                2 (nr.de i-nod)    |---------|
+            |                                   | a   | 7 |
+            |                                   -----------
+            |
+            |                                   -----------
+            v                ----               | .   | 7 |
+     (d.c.) a ---------------| ---------------->|---------|
+            |                ----               | ..  | 2 |
+            |                7                  |---------|
+            |                                   | b   | 5 |
+            |                                   -----------
+            |
+            |                                   -----------
+            v                ----               | .   | 5 |
+            b ---------------| ---------------->|---------|
+           /|\               ----               | ..  | 7 |
+          / | \              5                  |---------|
+         /  |  \                                |f.txt| 9 |
+        /   |   \                               |---------|
+       /    |    \                              |g.txt| 10|
+      /     |     \                             |---------|
+    f.txt  g.txt  g.c                           |g.c  | 8 |
+     |      |      |                            -----------
+     |      |      |
+     |      |      |
+     |      |    ----      
+     |      |    | ------->| a | b | c |
+     |      |    ----      -------------
+     |      |    8
+     |    ----
+     |    | ------->| x | y | z | t |
+     |    ----      -----------------
+     |    10
+   ----
+   | ------->| u | v | w |
+   ----      -------------
+   9
+
+ Presupunem ca pentru procesele pe care le avem in vedere director curent
+este "a".
+
+ Cel mai simplu, comanda "ls" se poate da sub forma:
+
+ ls
+ ls director
+ ls masca
+ ls fisier
+
+ in cazul "ls" fara argumente, se afisaza fii directorului curent (procesul
+"ls" apare ca proces copil al procesului shell caruia i-am dat comanda,
+mostenind de la acesta directorul curent - deci este vorba de directorul
+curent pe care il consideram "al nostru");
+ in cazul "ls director" se afisaza fii directorului specificat; in particular,
+cu "ls ~" se afisaza fii directorului home al user-ului (mai exact ai
+proprietarului procesului "ls", dar acesta este mostenit de la procesul
+shell, deci este user-ul care a dat comanda);
+ in cazul "ls masca" se afisaza doar fii desemnati de masca (ai directorului
+spre care duce calea mastii);
+ in cazul "ls fisier" se afisaza doar fisierul respectiv.
+
+ In absenta altor optiuni, toate formele lui "ls" de mai sus vor afisa doar
+numele entitatilor, pe aceeasi linie (daca se umple linia, se trece la linia
+urmatoare).
+
+ Exemplu:
+ --------
+
+$ ls b
+f.txt  g.c  g.txt
+$ ls b/*.txt
+b/f.txt  b/g.txt
+$ ls b/f.txt
+b/f.txt
+
+ La toate formele lui "ls" de mai sus se pot pune optiuni, sub forma unui "-"
+urmat de un grup de caractere (fara spatii), fiecare din ele insemnand o
+optiune (nu conteaza ordinea); prezentam cateva optiuni:
+
+ Cu optiunea "-l" entitatile se afisaza fiecare pe cate un rand separat,
+continand pe langa numele acesteia si alte informatii, cum ar fi: tipul,
+drepturile de acces, proprietarul si grupul proprietar, dimensiunea, data
+si ora ultimei modificari (detalii - la laborator).
+
+ Exemplu:
+ --------
+
+$ ls -l b
+total 12
+-rw-r--r--  1 dra funinf 3 2010-03-23 22:34 f.txt
+-rw-r--r--  1 dra funinf 3 2010-03-23 22:30 g.c
+-rw-r--r--  1 dra funinf 4 2010-03-23 22:30 g.txt
+$ ls -l b/*.txt
+-rw-r--r--  1 dra funinf 3 2010-03-23 22:34 b/f.txt
+-rw-r--r--  1 dra funinf 4 2010-03-23 22:30 b/g.txt
+$ ls -l b/f.txt
+-rw-r--r--  1 dra funinf 3 2010-03-23 22:34 b/f.txt
+
+ Cu optiunea "-i", se afisaza si numarul de i-nod.
+
+ Exemplu:
+ --------
+
+$ ls -i b
+9 f.txt  8 g.c  10 g.txt
+$ ls -i b/*.txt
+9 b/f.txt  10 b/g.txt
+$ ls -i b/f.txt
+9 b/f.txt
+
+ Cu optiunea "-a", se afisaza toti fii directorului vizat, inclusiv cei al
+caror nume incepe cu "." (desi tot timpul aceasta informatie este accesibila
+programului "ls", el nu o afisaza decat daca il fortam prin optiunea "-a");
+asa putem vedea si intrarile "." si "..".
+
+ Exemplu:
+ --------
+
+$ ls -a b
+.  ..  f.txt  g.c  g.txt
+$ ls -l b/*.txt
+-rw-r--r--  1 dra funinf 3 2010-03-23 22:34 b/f.txt
+-rw-r--r--  1 dra funinf 4 2010-03-23 22:30 b/g.txt
+
+ Cu optiunea "-d" putem forta o comanda "ls director" sa fie interpretata ca
+o comanda "ls fisier" - adica in loc sa vedem fii directorului, sa il vedem
+pe el; comanda este utila cand este combinata cu alte optiuni.
+
+ Exemplu:
+ --------
+
+$ ls b
+f.txt  g.c  g.txt
+$ ls -d b
+b
+
+ Alte optiuni: cu "-R" se afisaza recursiv arborescenta cu originea in
+directorul vizat, cu "-1" se afisaza strict numele fiilor,  cate unul pe
+linie (este util daca vrem ca output-ul acestei comenzi sa-l dam ca input
+alteia, deoarece o asemenea lista e mai usor de prelucrat).
+
+ Putem combina optiunile (nu conteaza ordinea), rezultand cumularea efectelor.
+
+ Exemplu:
+ --------
+
+$ ls -il b
+total 12
+9 -rw-r--r--  1 dra funinf 3 2010-03-23 22:34 f.txt
+8 -rw-r--r--  1 dra funinf 3 2010-03-23 22:30 g.c
+10 -rw-r--r--  1 dra funinf 4 2010-03-23 22:30 g.txt
+$ ls -li b
+total 12
+9 -rw-r--r--  1 dra funinf 3 2010-03-23 22:34 f.txt
+8 -rw-r--r--  1 dra funinf 3 2010-03-23 22:30 g.c
+10 -rw-r--r--  1 dra funinf 4 2010-03-23 22:30 g.txt
+$ ls -ila b
+total 20
+5 drwxr-xr-x  2 dra funinf 4096 2010-03-23 22:33 .
+7 drwxr-xr-x  3 dra funinf 4096 2010-03-23 22:29 ..
+9 -rw-r--r--  1 dra funinf    3 2010-03-23 22:34 f.txt
+8 -rw-r--r--  1 dra funinf    3 2010-03-23 22:30 g.c
+10 -rw-r--r--  1 dra funinf    4 2010-03-23 22:30 g.txt
+$ ls -ld b
+drwxr-xr-x  2 dra funinf 4096 2010-03-23 22:33 b
+
+ Obs. ca este optiunea "-d" este utila combinata cu "-l" si/sau "-i",
+permitandu-ne ca in loc sa vedem fii unui director cu detalii despre ei
+sa il vedem pe acel director cu detalii despre el.
+
+ Constatam ca formele lui "ls" fara "-l" de mai sus solicita doar informatii
+aflate in directoare (anume numele fiilor si eventual numarul de i-nod) si de
+aceea pentru implementarea lor sunt suficiente apelurile "opendir()" si
+"readdir()" (cu care se deschide in citire, respectiv se citeste fiu cu fiu,
+un director). In schimb, formele lui "ls" cu "-l" solicita si informatii
+aflate in i-nod-uri (drepturi, UID, GID, etc.) si informatii aflate in
+fisierul "/etc/passwd" (intr-un i-nod apare doar UID-ul si GID-ul
+proprietarului, nu username-ul, groupname-ul, ca stringuri - acestea sunt
+stocate in fisierul "/etc/passwd"); de aceea, pentru implementarea lor sunt
+necesare si apelurile "opendir()", "readdir()" (cu care se consulta un
+director), si apelul "stat()" (cu care se consulta un i-nod), si apelul
+"getpwuid()" (cu care se consulta "/etc/passwd" pentru a afla informatii
+despre un user cu un UID dat ca parametru).
+
+ Putem schimba directorul curent al shell-ului cu comanda "cd" (change
+directory):
+
+  cd director
+
+atunci directorul "director" devine curent.
+ Notam ca "cd" nu poate fi o comanda externa (i.e. numele unui executabil,
+pe care shell-ul sa il lanseze ca proces copil), deoarece atunci procesul
+copil rezultat si-ar schimba directorul curent, neafectandu-l pe cel al
+shell-ului; ea trebuie sa fie o comanda interna (i.e. sa o execute shell-ul
+prin propriile lui instructiuni), pentru ca shell-ul ca proces sa-si schimbe
+propriul director curent.
+ Din program, un proces isi poate schimba directorul curent cu apelul
+"chdir(director)"; deci, cand primeste comanda "cd director", shell-ul va
+executa apelul "chdir(director)".
+
+* Comenzi referitoare la fisiere:
+
+  Pentru comenzile referitoare la fisiere vom presupune urmatorul arbore
+(pentru care explicitam partial implementarea):
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a         b -------------------- | ---->|---------|
+  | ..  |   |   ----     |                                ----   | ..  |   |
+  |---------|            |                                       -----------
+  |f.txt| 5 |            |
+  -----------           f.txt
+                         |
+                         |
+                        ----
+                        | ----->| a | b | c |
+                        ----    -------------
+                        5
+
+ Putem afisa continutul unui fisier pe ecran cu comanda "cat" (concatenate
+files and print on the standard output):
+
+ cat fisier
+
+de fapt comanda afiseaza fisierul indicat pe stdout.
+
+ Daca fisierul este prea mare, la afisarea cu "cat" el defileaza repede si
+nu reusim sa-i vedem decat sfarsitul. Putem sa afisam fisierul paginat cu
+comenzile "more" sau "less":
+
+ more fisier
+ less fisier
+
+dupa umplerea unui ecran ele asteapta o tasta; atunci, cu "ENTER" se mai
+afisaza un rand, cu "SPACE" se mai afisaza o pagina, cu "q" se iese; "less"
+permite si miscarea inapoi (cu sageti).
+
+ Putem crea o noua legatura fizica (hard link) unui fisier existent, cu
+comanda "ln":
+
+ ln sursa destinatie
+
+ unde "sursa" este specificatorul unui fisier existent iar "destinatie"
+un specificator nou, unde doar calea corespunde corespunde unor directoare
+existente; ca efect, se va crea numele destinatie, in directorul destinatie,
+la legatura fizica la i-nodul la care se refera specificatorul sursa; in
+continuare i-nodul respectiv va putea fi acceast prin ambele legaturi fizice;
+deci nu se creaza un i-nod nou.
+
+ Exemplu:
+ --------
+
+ Daca dam comanda:
+
+ ln /a/f.txt /b/g.c
+
+arborele de mai sus se schimba in:
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a         b -------------------- | ---->|---------|
+  | ..  |   |   ----     |        /                       ----   | ..  |   |
+  |---------|            |       /                               |---------|
+  |f.txt| 5 |            |     g.c                               | g.c | 5 |
+  -----------           f.txt   |                                -----------
+                         |      v
+                         |<------
+                        ----
+                        | ----->| a | b | c |
+                        ----    -------------
+                        5
+ 
+deci se adauga in directorul "b" intrarea "g.c" legata la acelasi i-nod 5
+ca si intrarea "f.txt" din directorul "a"; atunci, daca dam comanda:
+
+ vi /a/f.txt
+
+si modificam (cu editorul de texte "vi") primul caracter din fisier din "a" in
+"x", apoi dam comanda de afisare:
+
+ cat /b/g.c
+
+se va afisa continutul modificat:
+
+ xbc
+
+ Daca la comanda "ln" folosim optiunea "-s" se creaza o legatura simbolica
+(symbolic link) in locul uneia fizice.
+ O legatura simbolica este un fisier de sine statator (cu i-nod si zona de
+date proprii) de un tip special, continand o referinta completa catre un
+alt fisier. Comenzile shell (de fapt apelurile sistem prin care sunt
+implementate) sunt construite in asa fel incat daca le aplicam unei legaturi
+simbolice, ele detecteaza acest lucru (detectand tipul fisierului, care este
+stocat in i-nod) si nu se aplica fisierului care este legatura simbolica ci
+se transfera prin tranzitivitate fisierului referit de aceasta.
+
+ Exemplu:
+ --------
+
+ Daca dam comanda:
+
+ ln -s /a/f.txt /b/h.k
+
+arborele de mai sus se schimba in:
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a         b -------------------- | ---->|---------|
+  | ..  |   |   ----     |        /|                      ----   | ..  |   |
+  |---------|            |       / |                             |---------|
+  |f.txt| 5 |            |     g.c h.k                           | g.c | 5 |
+  -----------           f.txt   |  |                             |---------|
+                         |      v  v                             | h.k | 7 |
+                         |<------  ----------->|                 -----------
+                        ----                   |
+                        | ----->| x | b | c |  |
+                        ----    -------------  |
+                        5 |                    |
+                          |    ---------       |
+                          |    |       |      ----
+                          |<-----5,n.d.|<------- |
+                               |       |      ----    
+                               ---------         7
+                             zona de date     i-nodul
+                             a legaturii      legaturii 
+                             simbolice        simbolice
+
+ Legaturile simbolice sunt analoagele shortcut-urilor din Windows, care sunt
+niste fisiere de sine statatoare dar speciale, cu extensia ".lnk", care contin
+o referinta completa catre un alt fisier, iar daca dam click pe unul, rutina
+declansata ii interpreteaza continutul si se transfera prin tranzitivitate
+fisierului/folder-ului referit.
+
+ Legaturile simbolice sunt utile in diverse imprejurari; de exemplu:
+ - intrucat o intrare intr-un director contine doar un nume (legatura fizica)
+  si un numar de i-nod (nu si un numar de disc), rezulta ca intr-un director
+  nu se pot se retine decat legaturi fizice catre entitati aflate pe aceeasi
+  partitie cu el; in schimb, se pot retine legaturi simbolice si catre
+  entitati aflate pe alte partitii - de fapt in director se retine o
+  legatura fizica spre un i-nod aflat pe acelasi disc cu directorul si
+  care corspunde unui fisier legatura simbolica ce memoreaza o referinta
+  catre fisierul aflat pe alta partitie;
+
+   Exemplu si desen .... ???????
+
+ - folosind legaturi simbolice putem asocia mai multe setari de drepturi
+  unui acelasi i-nod - i-nod-ului ii facem mai multe legaturi simbolice,
+  continand fiecare in i-nodul sau o alta cobinatie de drepturi si fiind
+  accesibila unei alte categorii de utilizatori.
+
+   Exemplu si desen .... ???????
+
+ Pentru simplitatea exemplului, presupunem ca nu am dat comanda "ln -s" de
+mai sus, asa ca arborele arata inca astfel:
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a         b -------------------- | ---->|---------|
+  | ..  |   |   ----     |        /                       ----   | ..  |   |
+  |---------|            |       /                               |---------|
+  |f.txt| 5 |            |     g.c                               | g.c | 5 |
+  -----------           f.txt   |                                -----------
+                         |      v
+                         |<------
+                        ----
+                        | ----->| x | b | c |
+                        ----    -------------
+                        5
+
+ Putem copia unul/mai multe fisiere cu comanda "cp" (copy):
+
+ cp sursa destinatie
+
+unde "sursa", "destinatie" pot fi de mai multe feluri; de exemplu:
+ - "cp fisier1 fisier2" copiaza fisierul 1 in fisierul 2 (daca fisier2 nu
+  exista, il creaza, iar daca exista, il suprascrie);
+ - "cp masca director" copiaza toate fisierele desemnate de masca in
+  directorul destinatie, cu acelasi nume.
+Atentie deci ca "cp" creaza i-nod nou (sau i-noduri noi) iar numele de la
+destinatie sunt asociate acestora (nu i-nodurilor de la sursa, ca in cazul
+comenzii "ln").
+
+ Exemplu:
+ --------
+
+ Daca dam comanda:
+
+ cp /a/f.txt /b/i.j
+
+arborele de mai sus se schimba in:
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a         b -------------------- | ---->|---------|
+  | ..  |   |   ----     |        /|                      ----   | ..  |   |
+  |---------|            |       / |                             |---------|
+  |f.txt| 5 |            |     g.c i.j                           | g.c | 5 |
+  -----------           f.txt   |  |                             |---------|
+                         |      v  |                             | i.j | 9 |
+                         |<------  |                             -----------
+                        ----      ----  
+       | x | b | c |<----- |      | ----->| x | b | c |
+       -------------    ----      ----    -------------
+                        5         9
+ Atunci, daca in continuare dam comanda:
+
+ vi /a/f.txt
+
+si modificam (cu editorul de texte "vi") primul caracter din fisier in "y",
+apoi dam comanda de afisare:
+
+ cat /b/g.c
+
+vom vedea in continuare modificarea:
+
+ ybc
+
+(deoarece "g.c" este legatura la acelasi i-nod), dar daca dam comanda:
+
+ cat /b/i.j
+
+nu o vom mai vedea:
+
+ xbc
+
+(evident, "i.j" este legatura fizica la un i-nod nou, referind o alta zona de
+date, care contine o copie primei zone asa cum era inaintea modificarii).
+
+ Si lui "cp" ii putem pune o optiune de recursie, anume "-r" (detalii se pot
+afla cu "man").s
+
+ Putem inlocui o legatura fizica cu alta (pentru un acelasi i-nod), folosind
+comanda "mv" (move):
+
+ mv sursa destinatie
+
+unde "sursa" si "destinatie" iarasi pot fi de mai multe feluri; de exemplu
+comanda:
+
+ mv fisier1 fisier2
+
+elimina legatura fizica "fisier1" si creaza legatura fizica "fisier2", catre
+acelasi i-nod la care se referea "fisier1"; i-nodul respectiv va avea acelasi
+numar de legaturi fizice.
+
+ Exemplu:
+ --------
+
+ Daca dam comanda:
+
+ mv /a/f.txt /b/p.q
+
+arborele de mai sus se schimba in:
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a    -----b -------------------- | ---->|---------|
+  | ..  |   |   ----         /    /|                      ----   | ..  |   |
+  -----------               /    / |                             |---------|
+                           /   g.c i.j                           | g.c | 5 |
+                         p.q    |  |                             |---------|
+                          |     |  |                             | i.j | 9 |
+                          |     |  |                             |---------|
+                        ----    | ----                           | p.q | 5 |
+       | y | b | c |<----- |<---- | ----->| x | b | c |          -----------
+       -------------    ----      ----    -------------
+                        5         9
+
+ Deci, in continuare, comanda:
+
+ cat /a/f.txt
+
+va esua (nu va gasi un asemenea fisier), comenzile:
+
+ cat /b/g.c
+ cat /b/p.q
+
+vor afisa:
+
+ ybc
+
+iar comanda:
+
+ cat /b/i.j
+
+va afisa:
+
+ xbc
+
+ Observam ca daca privim doar arborele de nume, pare ca fisierul "f.txt" s-a
+mutat in alt director, schimbandu-si in acelasi timp numele; in fapt fisierul
+propriuzis a ramas tot acolo, cu aceeasi adresa si acelasi i-nod, doar o 
+legatura fizica a sa a fost inlocuita cu alta.
+
+ Exista o situatie cand la comanda "mv" se muta si fisierul (zona sa de date),
+anume atunci cand directorul destinatie se afla pe alta partitie decat cel
+sursa; intr-adevar, intr-un director pot figura doar legaturi fizice spre
+entitati de pe aceeasi partitie cu el, deci in acest caz zona de date trebuie
+sa se mute si ea pe partitia destinatie, alocandu-i-se un i-nod acolo.
+
+ Desen + exemplu .... ?????
+
+ Putem sterge o legatura fizica (sau mai multe) cu comanda "rm" (remove):
+
+ rm fisier
+ rm masca
+ rm -r director
+
+in primul caz se elimina legatura fizica "fisier" a i-nodului la care se
+refera aceasta; daca i-nodul mai are si alte legaturi fizice, va putea fi
+accesat in continuare prin acestea; in al doilea caz, se elimina similar
+toate legaturile fizice desemnate de masca; in ultimul caz se elimina
+toate legaturile fizice din arborescenta cu originea in "director" (optiunea
+"-r" este pentru recursie si se mai poate adauga si optiunea "-i", de ex.
+"-ri", pentru a nu sterge totul automat si a cere confirmare (interogare)
+pentru fiecare legatura fizica stearsa).
+
+ Exemplu:
+ --------
+
+ Daca dam comanda:
+
+ rm /b/g.c
+
+arborele de mai sus se schimba in:
+
+                            (rad)
+                             / \
+                            /   \
+  -----------              /     \                               -----------
+  |  .  |   |   ----      /       \                       ----   |  .  |   |
+  |---------|<---- |---- a    -----b -------------------- | ---->|---------|
+  | ..  |   |   ----         /     |                      ----   | ..  |   |
+  -----------               /      |                             |---------|
+                           /      i.j                            | i.j | 9 |
+                         p.q       |                             |---------|
+                          |        |                             | p.q | 5 |
+                          |        |                             -----------
+                        ----      ----                           
+       | y | b | c |<----- |      | ----->| x | b | c |          
+       -------------    ----      ----    -------------
+                        5         9
+
+deci in continuare nu va mai functiona comanda:
+
+ cat /b/g.c
+
+dar va functiona comanda:
+
+ cat /b/p.q
+
+(pentru a afisa fisierul cu i-nodul 5).
+
+ Constatam deci ca in general "rm" elimina doar legaturi fizice, nu si
+fisierele propriuzise. Exista insa si situatii cand se sterg fisierele, anume:
+pentru ca un fisier sa fie eliminat, trebuie sa intruneasca simultan doua
+conditii:
+ - sa nu mai aibe legaturi fizice;
+ - sa nu mai fie deschis de vreun proces (de ex. un proces l-a deschis
+  cu "open()" si nu l-a inchis inca cu "close()", avand deci inca un
+  descriptor activ pe el);
+cand cele doua conditii s-au intrunit, fisierul este eleiminat (zona sa de
+date este adaugata spatiului liber, iar i-nodul sau se elimereaza si poate fi
+folosit la alte fisiere).
+ Astfel, daca cu "rm" am sters ultima legatura fizica a unui fisier iar acesta
+nu era curent deschis de vreun proces, acest fiser este eliminat.
+
+ Din program, eliminarea unei legaturi fizice se poate face cu apelul
+"unlink()" (utilitarul "rm" poate fi scris sa apeleze "unlink()").
+
+ Pentru a determina daca unui fisier caruia i s-a aplicat "rm" (de fapt
+"unlink()") mai are legaturi fizice ar fi neperformant ca sistemul sa caute
+in toate directoarele arborescentei spre a vedea daca mai apare i-nodul
+respectiv in dreptul vreunui nume.
+ In acest scop, in i-nodul fisierului mai exista un membru, un contor cu
+numarul curent de legaturi fizice (deci i-nodul "stie" cate legaturi fizice
+are, nu si care sunt acestea, in timp ce directoarele "stiu" la ce i-nod se
+refera diverse legaturi fizice, dar nu si cate alte legaturi fizice mai are
+i-nodul respectiv). De asemenea, i-nodurile accesate au un contor cu numarul
+acceselor curente.
+ Orice apel care mai creaza o legatura fizica (de ex. "link()", pe care se
+bazeaza comanda "ln") incrementeaza contorul legaturilor fizice, iar orice
+apel care elimina o legatura fizica (de ex. "unlink()", pe care se bazeaza
+comanda "rm") decremeneteaza acest contor, iar daca a ajuns la 0 verifica
+si contorul acceselor - daca ambele contoare sunt 0, declansaza procedura
+de eliminare a fisierului. Similar, orice apel care descide fisierul (de
+ex. "open()") incrementeaza contorul acceselor, iar orice apel care inchide
+fisierul (anume "close()") decremeneaza acest contor, iar daca a ajuns la 0
+verifica si contorul legaturilor fizice - daca ambele contoare sunt 0,
+declansaza procedura de eliminare a fisierului.
+
+ In final, comentam doua aspecte generale:
+
+* Unix/Linux au un mod unitar de a implementa operatiile - concepte sau
+ activitati asemanatoare logic sunt implementate prin aceleasi mecanisme.
+  De aceea, multe surse de informatie sunt privite ca fisiere: fisierele
+ obisnuite (regular), directoarele, terminalele, discurile fizice, partitiile,
+ etc. - astfel, toate au i-noduri, cu proprietar, drepturi, etc., si se
+ supun aceleiasi discutii generale de mai sus.
+  Ne putem pune problema ce se intampla daca deschidem un fisier - disc pentru
+ accesul la nivel de caracter, cu apelul "open()" folosit in cazul fisierelor
+ obisnuite, apoi modificam primele caractere cu apelul "write()"; in felul
+ acesta riscam sa stricam zona de boot a discului.
+  Sistemul este protejat de asemenea operatii prin faptul ca in fiecare i-nod
+ mai exista o informatie, semnificand tipul fisierului, iar apelurile sistem
+ testeaza acest tip si nu reusesc decat daca tipul este unul adecvat; astfel,
+ "open()" nu va merge decat pentru fisiere obisnuite, iar "opendir()" doar
+ pentru fisiere director. In cosnecinta si utilitarele scrise deasupra
+ acestora nu vor functiona decat pentru fisiere de un tip adecvat - de ex.
+ "cat" nu va functiona decat pentru fisiere obisnuite, iar "ls" doar pentru
+ directoare.
+  Tipul fisierului este stocat in i-nod in primii 4 din cei 16 biti ai
+ membrului intreg in care 9 biti specifica drepturile de acces.
+
+* Intrucat si directoarele sunt fisiere, dei au i-nod cu proprietar si
+ drepturi, se pune problema ce inseamna drepturile de citire, scriere,
+ executie, in cazulu unui director.
+  Dreptul de citire este necesar pentru a-i consulta intrarile - de ex.
+ "opendir()" necesita acest drept; astfel, o comanda de forma "ls /a/b/c"
+ (unde "a", "b", "c" sunt directoare) necesita drept de citire pe directorul
+ "c";
+  Dreptul de scriere este necesar pentru a-i putea adauga sau sterge o
+ intrare - de ex. comanda "ln /a/b/f.txt /x/y/g.pas" necesita drept de scriere
+ pe directorul "y", comanda "mv /a/b/f.txt /x/y/g.pas" necesita drept de
+ scriere atat pe directorul "b" cat si pe directorul "y", iar comanda
+ "rm /a/b/c/f.txt" necesita drept de scriere pe directorul "c" (nu necesita
+ nici un drept pe fisierul "f.txt"!).
+  Dreptul de executie pe un director este nenesar pentru a-l parcurge cand
+ se urmareste o cale; de ex. comanda "ls /a/b/c" necesita drept de executie
+ pe directorul radacina si pe directoarele "a" si "b" (si drept de citire pe
+ directorul "c").
+  Drepturile pe un director se pot schimba tot cu apelul/comanda "chmod" si
+ notam ca niste drepturi neatent puse pot crea gauri de securitate; de ex.
+ putem elimina toate drepturile asupra unor fisiere pentru altii, in ideea
+ de a le proteja de accesul acestora, dar daca am uitat pentru ei dreptul de
+ scriere pe directorul tata al acestor fisiere, ei desi nu le pot citi sau
+ modifica le pot sterge (cu "rm" pe directorul lor tata).
+
+
+Daniel Dragulici
+
+martie 2010

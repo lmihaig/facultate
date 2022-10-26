@@ -1,0 +1,32 @@
+16706 = 66 + 65 * 256:
+                  octet 0  octet 1  octet 2  octet 3
+   rep. interna: |01000010|10000010|00000000|00000000|   deci: BA(NUL)(NUL)
+                  ^------^ ^------^ ^------^ ^------^
+                 b0     b7 b0    b7 b0    b7 b0     b7
+                   66='B'   65='A'   0=NUL    0=NUL
+
+   rep. externe: 16706 (baza 10), 40502 (baza 8), 4142 (baza 16).
+===========================================================================
+FILE *f; f=fopen("nae.txt","rb");
+
+FILE *f; if((f=fopen("nae.txt","rb"))==NULL){
+           printf("eroare..."); exit(1);
+         }
+===========================================================================
+int a[10];  fread(a,sizeof(int),10,f);
+===========================================================================
+                   int n;
+                   fread(&n,sizeof(int),1,f);
+                   fprintf(g,"%d",n)
+| B | A |NUL|NUL|  =================================> | 1 | 6 | 7 | 0 | 6 |
+-----------------  <================================= ---------------------
+        f          int n;                                       g
+                   fscanf(g,"%d",&n);
+                   fwrite(&n,sizeof(int),1,f);
+===========================================================================
+ long poz, dim;
+ poz=ftell(f);
+ fseek(f,0l,SEEK_END);
+ dim=ftell(f);          /* acum pozitia = dimensiunea fisierului*/
+ fseek(f,poz,SEEK_SET); /* aducem indicatorul inapoi */
+ printf("%ld",dim);

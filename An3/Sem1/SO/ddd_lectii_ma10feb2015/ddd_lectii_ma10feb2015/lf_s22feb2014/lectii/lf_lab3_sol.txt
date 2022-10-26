@@ -1,0 +1,907 @@
+
+            Solutii de implementare a claselor GIC, INTSTACK, AS:
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GIC in C++ cu metode de setare/consultare si functii de citire si afisare:
+
+/**************************************************************************/
+class GIC{
+ int nrn;   // nr. neterminalelor (neterminalele sunt nr. -1,...,-nrn);
+ int sbs;   // simbolul de start;
+ char **vn; // vectorul numelor neterminalelor;
+ int nrt;   // nr. terminalelor (terminalele sunt nr. 1,...,nr);
+ char **vt; // vectorul numelor terminalelor;
+ int nrp;   // nr. productiilor;
+ int **p;
+  // vectorul productiilor;
+  // daca p[i] contine productia N -> c1...ck, atunci:
+  //   p[i][0]=lung partii drepte, k;
+  //   p[i][1]=neterminalul din stanga, N;
+  //   p[i][2], ..., p[i][1+p[i][0]] vectorul din partea dreapta c1,...,ck;
+ int cauta(char *s, char *v[], int n);
+  // cauta cuvantul s in vectorul de cuvinte v cu n elemente;
+  // daca este gasit, returneaza pozitia 0 <= i < n unde este gasit intai;
+  // daca nu este gasit, returneaza -1;
+public:
+ GIC();
+ ~GIC();
+ int sets(char *s);
+  // marcheaza ca simbol de start neterminalul cu numele s;
+  // ret. 1=succes, 0=esec;
+ int addn(char *s);
+  // adauga la gramatica un neterminal cu numele s;
+  // ret. 1=succes, 0=esec;
+ int addt(char *s);
+  // adauga la gramatica un terminal cu numele s;
+  // ret. 1=succes, 0=esec;
+ int addp(char *stg, int ndr, char *dr[]);
+  // adauga la gramatica o productie unde:
+  //   neterminalul din stanga are numele stg;
+  //   vectorul numelor simbolurilor din dreapta este dr
+  //     si are ndr elemente;
+  // ret. 1=succes, 0=esec;
+ int getnrn();
+  // ret. nr de neterminale;
+ int getnrt();
+  // ret. nr de terminale;
+ int getnrp();
+  // ret. nr de productii;
+ char * getnname(int i);
+  // ret. un string alocat dinamic cu numele celui de-al i-lea neterminal,
+  //   0 <= i < nrn;
+  // in caz de eroare ret. NULL;
+ char * gettname(int i);
+  // ret. un string alocat dinamic cu numele celui de-al i-lea terminal,
+  //   0 <= i < nrt;
+  // in caz de eroare ret. NULL;
+ char ** getpname(int i);
+  // ret. un vector de stringuri alocat dinamic continand a i-a productie,
+  //   0 <= i < nrp;
+  // vectorul returnat contine:
+  //   pe pozitia 0 numele neterminalului din stanga productiei;
+  //   pe pozitiile urmatoare numele simbolurilor din dreapta productiei;
+  //   pe ultima pozitie NULL;
+  // in caz de eroare ret. NULL;
+ int * getp(int i);       // vt. de int e alocat dinamic
+  // ret. un vector de intregi alocat dinamic continand a i-a productie,
+  //   0 <= i < nrp, asa cum apare ea intern in p[i];
+  // mai exact, componentele vectorului returnat contin respectiv:
+  //   p[i][1], ..., p[i][p[i][0]+1], NULL;
+  // in caz de eroare ret. NULL;
+ int gets();
+  // ret. nr. de ordine al simbolului de start printre neterminale
+  //   (de la 0 la nrn-1);
+};
+
+GIC::GIC():nrn(0),vn(NULL),nrt(0),vt(NULL),nrp(0),p(NULL),sbs(0){}
+
+GIC::~GIC(){
+ int i;
+ for(i=0;i<nrn;++i)delete vn[i];
+ delete vn;
+ nrn=0;
+ for(i=0;i<nrt;++i)delete vt[i];
+ delete vt;
+ nrt=0;
+ for(i=0;i<nrp;++i)delete p[i];
+ delete p;
+ nrp=0;
+}
+
+int GIC::sets(char *s){
+ int i;
+ if((i=cauta(s,vn,nrn))==-1)return 0;
+ sbs=-i-1;
+ return 1;
+}
+
+int GIC::addn(char *s){
+ int i; char *tmp1; char **tmp2;
+ for(i=0;i<nrn;++i)if(!strcmp(s,vn[i]))return 0;
+ if((tmp1=new char[strlen(s)+1])==NULL)return 0;
+ if((tmp2=new char*[nrn+1])==NULL){delete tmp1; return 0;}
+ strcpy(tmp1,s);
+ for(i=0;i<nrn;++i)tmp2[i]=vn[i];
+ delete vn; vn=tmp2;
+ vn[nrn]=tmp1; ++nrn;
+ return 1;
+}
+
+int GIC::addt(char *s){
+ int i; char *tmp1; char **tmp2;
+ for(i=0;i<nrt;++i)if(!strcmp(s,vt[i]))return 0;
+ if((tmp1=new char[strlen(s)+1])==NULL)return 0;
+ if((tmp2=new char*[nrt+1])==NULL){delete tmp1; return 0;}
+ strcpy(tmp1,s);
+ for(i=0;i<nrt;++i)tmp2[i]=vt[i];
+ delete vt; vt=tmp2;
+ vt[nrt]=tmp1; ++nrt;
+ return 1;
+}
+
+int GIC::cauta(char *s, char *v[], int n){
+ for(int i=0; i<n; ++i)if(!strcmp(s,v[i]))return i;
+ return -1;
+}
+int GIC::addp(char *stg, int ndr, char *dr[]){
+ int s,*d,a,**tmp,i;
+ if((s=cauta(stg,vn,nrn))==-1)return 0;
+ if((d=new int[ndr+2])==NULL)return 0;
+ d[0]=ndr; d[1]=-s-1;
+ for(i=0;i<ndr;++i){
+   a=cauta(dr[i],vn,nrn);
+   if(a!=-1){d[i+2]=-a-1; continue;}
+   a=cauta(dr[i],vt,nrt);
+   if(a==-1){delete d; return 0;}
+   d[i+2]=a+1;
+ }
+ if((tmp=new int*[nrp+1])==NULL){delete d; return 0;}
+ for(i=0;i<nrp;++i)tmp[i]=p[i];
+ delete p; p=tmp;
+ p[nrp]=d; ++nrp;
+ return 1;
+}
+
+int GIC::getnrn(){return nrn;}
+
+int GIC::getnrt(){return nrt;}
+
+int GIC::getnrp(){return nrp;}
+
+char * GIC::getnname(int i){
+ char *tmp;
+ if(i<0 || i>=nrn)return NULL;
+ if((tmp=new char[strlen(vn[i])+1])==NULL)return NULL;
+ strcpy(tmp,vn[i]); return tmp;
+}
+
+char * GIC::gettname(int i){
+ char *tmp;
+ if(i<0 || i>=nrt)return NULL;
+ if((tmp=new char[strlen(vt[i])+1])==NULL)return NULL;
+ strcpy(tmp,vt[i]); return tmp;
+}
+
+char ** GIC::getpname(int i){
+ char **tmp; int j,k;
+ if(i<0 || i>=nrp)return NULL;
+ if((tmp=new char*[p[i][0]+2])==NULL)return NULL;
+ for(j=0;j<=p[i][0];++j)
+   if(p[i][j+1]<0){
+     if((tmp[j]=new char[strlen(vn[-p[i][j+1]-1])+1])==NULL){
+       for(k=0;k<j;++k) delete tmp[k];
+       return 0;
+     }
+     strcpy(tmp[j],vn[-p[i][j+1]-1]);
+   }else{
+     if((tmp[j]=new char[strlen(vt[p[i][j+1]-1])+1])==NULL){
+       for(k=0;k<j;++k) delete tmp[k];
+       return 0;
+     }
+     strcpy(tmp[j],vt[p[i][j+1]-1]);
+   }
+ tmp[p[i][0]+1]=NULL;
+ return tmp;
+}
+
+int * GIC::getp(int i){
+ int *tmp; int j;
+ if(i<0 || i>=nrp)return NULL;
+ if((tmp=new int[p[i][0]+2])==NULL)return NULL;
+ for(j=0;j<=p[i][0];++j)tmp[j]=p[i][j+1];
+ tmp[p[i][0]+1]=NULL;
+ return tmp;
+}
+
+int GIC::gets(){return -sbs-1;}
+
+int citGIC(GIC &g){  // citire interactiva; ret. 1=succes,0=esec
+ int n,i,j,k,l; char buf[100], *buf1[100];
+ cout<<"Nr. de neterminale = "; cin>>n;
+ cout<<"Dati neterminalele (cuvinte fara caractere albe, "
+     <<"primul e sb. de start):\n";
+ cin>>buf; if(!g.addn(buf))return 0; g.sets(buf);
+ for(i=1;i<n;++i){cin>>buf; if(!g.addn(buf))return 0;}
+ cout<<"Nr. de terminale = "; cin>>n;
+ cout<<"Dati terminalele (cuvinte fara caractere albe):\n";
+ for(i=0;i<n;++i){cin>>buf; if(!g.addt(buf))return 0;}
+ cout<<"Nr. de productii = "; cin>>n;
+ cout<<"Dati productiile (lung_dr  stg  drn1 ... drn ):\n";
+ for(i=0;i<n;++i){
+  cin>>k>>buf;
+  if((buf1[0]=new char[strlen(buf)+1])==NULL)return 0;
+  strcpy(buf1[0],buf);
+  for(j=0;j<k;++j){
+    cin>>buf;
+    if((buf1[j+1]=new char[strlen(buf)+1])==NULL){
+      for(l=0;l<j;++l)delete buf1[l+1];
+      return 0;
+    }
+    strcpy(buf1[j+1],buf);
+  }
+  g.addp(buf1[0],k,buf1+1);
+  for(j=0;j<=k;++j)delete buf1[j];
+ }
+ return 1;
+}
+/* Exemplu de input:
+2
+S A
+2
+a b
+3
+2 S a A
+0 S
+2 A S b
+*/
+
+int scrGIC(GIC &g){  // afisare;
+ int i,j,k;
+ cout<<"Neterminale:";
+ for(i=0;i<g.getnrn();++i){
+   char *s=g.getnname(i);
+   if(!s)return 0;
+   cout<<" "<<s;
+   delete s;
+ }
+ cout<<"\nSimbolul de start: "<<g.getnname(g.gets())<<endl;
+ cout<<"Terminale:";
+ for(i=0;i<g.getnrt();++i){
+   char *s=g.gettname(i);
+   if(!s)return 0;
+   cout<<" "<<s;
+   delete s;
+ }
+ cout<<"\nProductii:\n";
+ for(i=0;i<g.getnrp();++i){
+   char **s=g.getpname(i);
+   if(!s)return 0;
+   cout<<s[0]<<" -> ";
+   for(char **p=s+1; *p; ++p) cout<<*p;
+   cout<<endl;
+ }
+ return 1;
+}
+/* Exemplu de output (daca g este initializata ca la functia citGIC):
+Neterminale: S A
+Simbolul de start: S
+Terminale: a b
+Productii:
+S -> aA
+S ->
+A -> Sb
+*/
+
+/**************************************************************************/
+
+AS in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare; in aceasta implementare, in stiva se pot
+ incarca si litere ale alfabetului de intrare (dar nu si &) si avem:
+
+      d : Q x (V U {&}) x (W U V) ----> Pf(Q x (W U V)*)
+
+ (presupunand V disjunct de W).
+
+/**************************************************************************/
+
+#include<iostream.h>
+#include<string.h>
+
+class INTSTACK{ // stiva de intregi;
+ int flag; //este 1 sau 0 dupa cum stiva este corect construita sau nu;
+ int n;    // nr. de elemente;
+ int *v;   //varful stivei;
+public:
+ INTSTACK();
+ // constructor ce intializeaza stiva ca vida;
+ INTSTACK(INTSTACK &st);
+ // constructor de copiere;
+ ~INTSTACK();
+ // destructor;
+ int isempty();
+ // ret. 1 sau 0 dupa cum stiva este vida sau nu;
+ int push(int i);
+ // push pe i;
+ // ret. 1 sau 0 dupa cum operatia a reusit sau nu;
+ int pop(int &i);
+ // pop in d;
+ // ret. 1 sau 0 dupa cum operatia a reusit sau nu;
+ int operator!();
+ // ret. 1 sau 0 dupa cum flag este 0 sau 1;
+};
+
+INTSTACK::INTSTACK():v(NULL),n(0),flag(1){}
+
+INTSTACK::INTSTACK(INTSTACK &st){
+ if((v=new int[st.n])==NULL){flag=0; return;}
+ for(n=0;n<st.n;++n)v[n]=st.v[n];
+ flag=1;
+}
+
+INTSTACK::~INTSTACK(){
+ if(flag==1){delete v; v=NULL; n=0;}
+}
+
+int INTSTACK::isempty(){
+ return flag==1 && n==0;
+}
+
+int INTSTACK::push(int i){
+ if(flag==0)return 0;
+ int *tmp=new int[n+1];
+ if(tmp==NULL)return 0;
+ for(int k=0;k<n;++k)tmp[k]=v[k];
+ tmp[n]=i;
+ delete v; v=tmp;
+ ++n;
+ return 1;
+}
+
+int INTSTACK::pop(int &i){
+ if(flag==0)return 0;
+ if(isempty())return 0;
+ int *tmp=new int[n-1];
+ if(tmp==NULL)return 0;
+ i=v[n-1];
+ --n;
+ for(int k=0;k<n;++k)tmp[k]=v[k];
+ delete v; if(n==0)v=NULL; else v=tmp;
+ return 1;
+}
+
+int INTSTACK::operator!(){
+ return flag==0;
+}
+
+#define getbit(s,i) ((s)[(i)/8] & 0x01<<(i)%8)
+#define setbit(s,i) ((s)[(i)/8] |= 0x01<<(i)%8)
+#define killbit(s,i) ((s)[(i)/8] &= ~(0x01<<(i)%8))
+
+class AS{
+ int nrs;
+   //nr. de stari; starea initiala este 0;
+ unsigned char *f;
+  //vectorul caracteristic al starilor finale;
+ int nrn, nrt, nra;
+  // cardinalul alfabetului stivei (literele sunt nr. 0,...,nrn-1),
+  // cardinalul alfabetului de intrare (literele sunt nrn,...,nrn+nrt-1),
+  // respectiv numarul total de litere; deci nra =  nrn+nrt;
+  // atentie ca in stiva putem incarca si litere din alfabetul de intrare,
+  //   dar nu si pe lambda;
+ int Z0;
+  // simbolul initial din stiva
+ char **va;
+  // vectorul numelor literelor (are nra componente);
+  // pe poz. 0,...,nrn-1 sunt numele literelor din alfabetul stivei,
+  // pe poz. nrn,...,nra-1 sunt numele literelor din alfabetul de intrare;
+ int *nt;
+  // pentru fiecare stare s, litera c, litera stiva z,
+  // nt[s*(nrt+1)*nra+c*nra+z] este nr. tranzitiilor din (s,c,z);
+ int ***t;
+  // tranzitiile;
+  // daca (s,c,z) -> (d,l1...lk) este tranzitia din (s,c,z) cu nr n,
+  //  0 <= n < nt[x], unde x:=s*(nrt+1)*nra+c*nra+z,
+  // atunci t[x][n][0]=d, t[x][n][1]=k, t[x][n][2]=l1, ..., t[x][n][k+1]=lk;
+ void creaza();
+  // initializeaza membrii data ai AS cu toti bitii 0;
+ int indice(char *s);
+  // cauta cuvantul s in vectorul de cuvinte va cu nra componente;
+  // ret.: pozitia 0 <= i < nra a lui s in va, sau -1 daca nu-l contine;
+ int rec(int sc, int *ix, INTSTACK st, int mod=1);
+  // testeaza daca cuvantul x (sir de numere de ordine ale unor litere din
+  //   alfabetul de intrare, de la 0 la nrt-1, terminat cu -1) este recunoscut
+  //   cf. mod, plecand din starea sc cu stiva curenta st;
+  // mod poate fi:
+  //   0 stare finala;
+  //   1 stiva vida;
+  //   2 stare finala si stiva vida;
+  // returneaza:
+  // -2 daca a aparut o eroare interna;
+  // -1 daca automatul s-a blocat inainte de consumarea lui ix;
+  // 0 daca ix a fost consumat, dar nu a fost recunoscut cf. lui mod;
+  // 1 daca ix a fost recunoscut cf. lui mod;
+public:
+ void distruge();
+  // dezaloca AS si-i reinitializeaza membrii data cu toti bitii 0;
+ AS();
+ ~AS();
+ int dimensionare(int pnrs, int pnrn, int pnrt);
+  // aloca memorie pentru AS;
+  // ret. 1=succes, 0=esec;
+ int getnrs();
+  // ret. nr. de stari;
+ int getnrn();
+  // ret. cardinalul alfabetului stivei;
+ int getnrt();
+  // ret. cardinalul alfabetului de intrare;
+ int getnra();
+  // ret. numarul total de litere;
+ int setf(int s);
+  // marcheaza starea s ca fiind finala;
+  // ret. 0 daca starea e invalida sau 1 la succes;
+ int isf(int s);
+  // testeaza daca s este stare finala;
+ int addn(char *s);
+  // adauga litera cu numele s la alfabetul stivei;
+  // ret. 1=succes, 0=esec;
+ int addt(char *s);
+  // adauga litera cu numele s la alfabetul de intrare;
+  // ret. 1=succes, 0=esec;
+ int setZ0(char *s);
+  // marcheaza litera-stiva cu numele s ca simbol initial al stivei;
+  // ret. 1=succes, 0=esec;
+ int getZ0();
+  // ret. simbolul initial al stivei ca indice;
+ char* getname(int i);
+  // ret. numele literei cu indicele i, 0 <= i < nra,
+  //   intr-un string alocat dinamic, sau NULL la eroare;
+ int getnind(int i);
+  // ret. indicele celei de-a i-a litera stiva, 0 <= i < nrn,
+  // sau -1 in caz de eroare;
+ int gettind(int i);
+  // ret. indicele celei de-a i-a litera din alf. de intrare, 0 <= i < nrt,
+  // sau -1 in caz de eroare;
+ int addp(int i, char *c, char *z, int q, int ny, char *y[]);
+  // adauga tranzitia (i,c,z) -> (q,y);
+  // y e vectorul numelor literelor (obisnuite sau stiva) adaugate la stiva,
+  //   si are ny elemente;
+  // ret. 1=succes, 0=esec;
+ int getnp(int i, char *c, char *z);
+  // ret. nr tranzitiilor din (i,c,z), sau -1 la eroare;
+ int getnp(int i, int ic, int iz);
+  // la fel, dar cu indici;
+ int* getp(int i, char *c, char *z, int no);
+  // ret. tranzitia cu nr. no din (i,c,z), intr-un vector alocat dinamic;
+  // vectorul contine o copie a lui t[x][no], unde x=i*(nrt+1)*nra+c*nra+z;
+  // in caz de eroare eroare ret. NULL;
+ int* getp(int i, int ic, int iz, int no);
+  // ca mai sus, dar se pleaca de la indici;
+ char** getpname(int i, char *c, char *z, int no, int &d);
+  // daca (i,c,z) -> (q,l1,...lk) este tranzitia cu nr. no din (i,c,z),
+  // aloca dinamic un vector de cuvinte ce contine numele literelor
+  // l1,...,lk, pune in d pe q si returneaza vectorul alocat sau NULL
+  // in caz de eroare;
+ char** getpname(int i,int ic, int iz, int no, int &d);
+  // ca mai sus, dar se pleaca de la indici
+ int recunoaste(char **x);
+  // testeaza daca cuvantul x (sir de nume de litere din alfabetul de intrare,
+  //   terminat cu NULL) este recunoscut;
+  // returneaza ca si rec;
+  int recunoaste(int *ix);
+  // la fel, dar x este sirul numerelor de ordine ale literelor din alfabetul
+  //   de intrare, de la 0 la nrt-1; la sfarsitul sirului este -1;
+};
+
+void AS::creaza(){
+ nrs=0; f=NULL; nrn=nrt=nra=0; Z0=0; va=NULL; t=NULL; nt=NULL;
+}
+
+void AS::distruge(){
+ long i,j;
+ delete f;
+ for(i=0;i<nra;++i)delete va[i];
+ delete va;
+ for(i=0; i<nrs*(nrt+1L)*nra; ++i) {
+   for(j=0; j<nt[i]; ++j) delete t[i][j];
+   delete t[i];
+ }
+ delete t;
+ delete nt;
+ creaza();
+}
+
+int AS::indice(char *s){
+ for(int i=0; i<nra; ++i)if(!strcmp(s,va[i]))return i;
+ return -1;
+}
+
+AS::AS(){creaza();}
+
+AS::~AS(){distruge();}
+
+int AS::dimensionare(int pnrs, int pnrn, int pnrt){
+ long i;
+ distruge();
+ nrs=pnrs; nrn=pnrn; nrt=pnrt; nra=nrn+nrt;
+ i=sizeof(unsigned char) * (nrs+7)/8;
+ if((f=new unsigned char[i])==NULL){distruge(); return 0;}
+ while(i--)f[i]=0x00;
+ i=nra;
+ if((va=new char*[i])==NULL) {distruge(); return 0;}
+ while(i--)va[i]=NULL;
+ i=nrs * (nrt+1l) * nra;
+ if((t=new int**[i])==NULL) {distruge(); return 0;}
+ if((nt=new int[i])==NULL) {distruge(); return 0;}
+ while(i--){t[i]=NULL; nt[i]=0;}
+ return 1;
+}
+
+int AS::getnrs(){return nrs;}
+
+int AS::getnrn(){return nrn;}
+
+int AS::getnrt(){return nrt;}
+
+int AS::getnra(){return nra;}
+
+int AS::setf(int s){
+   if(s<0 || s>=nrs)return 0;
+   setbit(f,s);
+   return 1;
+ }
+
+int AS::isf(int s){return getbit(f,s)!=0;}
+
+int AS::addn(char *s){
+ int i,p; char *tmp;
+ for(p=0;p<nrn;++p)if(va[p]==NULL)break;
+ if(p==nrn)return 0;
+ for(i=0;i<p;++i)if(!strcmp(s,va[i]))return 0;
+ if((tmp=new char[strlen(s)+1])==NULL)return 0;
+ strcpy(tmp,s);
+ va[p]=tmp;
+ return 1;
+}
+
+int AS::addt(char *s){
+ int i,p; char *tmp;
+ for(p=nrn;p<nra;++p)if(va[p]==NULL)break;
+ if(p==nra)return 0;
+ for(i=nrn;i<p;++i)if(!strcmp(s,va[i]))return 0;
+ if((tmp=new char[strlen(s)+1])==NULL)return 0;
+ strcpy(tmp,s);
+ va[p]=tmp;
+ return 1;
+}
+
+int AS::setZ0(char *s){
+ int i;
+ if((i=indice(s))==-1)return 0;
+ Z0=i;
+ return 1;
+}
+
+int AS::getZ0(){return Z0;}
+
+char* AS::getname(int i){
+ char *tmp;
+ if(0<=i && i<nra){
+   if((tmp=new char[strlen(va[i])+1])==NULL)return NULL;
+   strcpy(tmp,va[i]); return tmp;
+ }else if(i==nra){
+   if((tmp=new char[1])==NULL)return NULL;
+   strcpy(tmp,""); return tmp;
+ }else return NULL;
+}
+
+int AS::getnind(int i){
+ if(0<=i && i<nrn)return i;
+ return -1;
+}
+
+int AS::gettind(int i){
+ if(0<=i && i<=nrt)return nrn+i;
+ return -1;
+}
+
+int AS::addp(int i, char *c, char *z, int q, int ny, char *y[]){
+ int ic, iz, *tmp, **tmp1, j, a; long x;
+ if(i<0 || nrs<=i || q<0 || nrs<=q)return 0;
+ if(!strcmp(c,""))ic=nra;
+ else if((ic=indice(c))==-1)return 0;
+ ic-=nrn;
+ if((iz=indice(z))==-1)return 0;
+ if((tmp=new int[ny+2])==NULL)return 0;
+ tmp[0]=q; tmp[1]=ny;
+ for(j=0;j<ny;++j){
+   if((a=indice(y[j]))==-1){delete tmp; return 0;}
+   tmp[j+2]=a;
+ }
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ if((tmp1=new int*[nt[x]+1])==NULL){delete tmp; return 0;}
+ for(i=0;i<nt[x];++i)tmp1[i]=t[x][i];
+ delete t[x]; t[x]=tmp1;
+ t[x][nt[x]]=tmp; ++nt[x];
+ return 1;
+}
+
+int AS::getnp(int i, char *c, char *z){
+ int ic, iz; long x;
+ if(i<0 || nrs<=i)return -1;
+ if(!strcmp(c,""))ic=nra;
+ else if((ic=indice(c))==-1)return -1;
+ ic-=nrn;
+ if((iz=indice(z))==-1)return -1;
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ return nt[x];
+}
+
+int AS::getnp(int i, int ic, int iz){
+ long x;
+ if(i<0 || nrs<=i || ic<nrn || nra<ic || iz<0 || nra<=iz) return -1;
+ ic-=nrn;
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ return nt[x];
+}
+
+int* AS::getp(int i, char *c, char *z, int no){
+ int ic, iz, *p, j; long x;
+ if(i<0 || nrs<=i)return NULL;
+ if(!strcmp(c,""))ic=nra;
+ else if((ic=indice(c))==-1)return NULL;
+ ic-=nrn;
+ if((iz=indice(z))==-1)return NULL;
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ if(no<0 || nt[x]<=no)return NULL;
+ if((p=new int[t[x][no][1]+2])==NULL)return NULL;
+ p[0]=t[x][no][0]; p[1]=t[x][no][1];
+ for(j=1;j<=p[1];++j) p[j+1]=t[x][no][j+1];
+ return p;
+}
+
+int* AS::getp(int i, int ic, int iz, int no){
+ int *p, j; long x;
+ if(i<0 || nrs<=i || ic<nrn || nra<ic || iz<0 || nra<=iz) return NULL;
+ ic-=nrn;
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ if(no<0 || nt[x]<=no)return NULL;
+ if((p=new int[t[x][no][1]+2])==NULL)return NULL;
+ p[0]=t[x][no][0]; p[1]=t[x][no][1];
+ for(j=1;j<=p[1];++j) p[j+1]=t[x][no][j+1];
+ return p;
+}
+
+char** AS::getpname(int i, char *c, char *z, int no, int &d){
+ int ic, iz, j, k; char **tmp; long x;
+ if(i<0 || nrs<=i)return NULL;
+ if(!strcmp(c,""))ic=nra;
+ else if((ic=indice(c))==-1)return NULL;
+ ic-=nrn;
+ if((iz=indice(z))==NULL)return NULL;
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ if(no<0 || nt[x]<=no)return NULL;
+ if((tmp=new char*[t[x][no][1]+2])==NULL)return 0;
+ for(j=0;j<t[x][no][1];++j) {
+   if((tmp[j]=new char[strlen(va[t[x][no][j+2]])+1])==NULL)
+     {for(k=0;k<j;++k)delete tmp[k]; delete tmp; return NULL;}
+   strcpy(tmp[j],va[t[x][no][j+2]]);
+ }
+ tmp[j]=NULL;
+ d=t[x][no][0];
+ return tmp;
+}
+
+char** AS::getpname(int i,int ic, int iz, int no, int &d){
+ int j, k; char **tmp; long x;
+ if(i<0 || nrs<=i || ic<nrn || nra<ic || iz<0 || nra<=iz) return NULL;
+ ic-=nrn;
+ x=i*(nrt+1L)*nra + ic*(long)nra + (long)iz;
+ if(no<0 || nt[x]<=no)return NULL;
+ if((tmp=new char*[t[x][no][1]+2])==NULL)return 0;
+ for(j=0;j<t[x][no][1];++j) {
+   if((tmp[j]=new char[strlen(va[t[x][no][j+2]])+1])==NULL)
+     {for(k=0;k<j;++k)delete tmp[k]; delete tmp; return NULL;}
+   strcpy(tmp[j],va[t[x][no][j+2]]);
+ }
+ tmp[j]=NULL;
+ d=t[x][no][0];
+ return tmp;
+}
+
+int AS::rec(int sc, int *ix, INTSTACK st, int mod){
+ long x; int iz, n, i, r;
+ if(ix[0]==-1) switch(mod){
+  case 0: if(isf(sc))return 1;
+  case 1: if(st.isempty())return 1;
+  case 2: if(st.isempty() && isf(sc))return 1;
+ }
+ if(ix[0]!=-1){
+   if(st.isempty())return -1;
+   if(!st.pop(iz))return -2;
+   x=sc*(nrt+1L)*nra + ix[0]*(long)nra + (long)iz;
+   if(nt[x]!=0) for(n=0;n<nt[x];++n){
+     INTSTACK st1(st);
+     if(!st1)return -2;
+     for(i=t[x][n][1]-1;i>=0;--i)if(!st1.push(t[x][n][i+2]))return -2;
+     r=rec(t[x][n][0],ix+1,st1,mod);
+     if(r==1)return 1;
+   }
+ }
+ if(ix[0]==-1){
+   if(st.isempty())return -1;
+   if(!st.pop(iz))return -2;
+ }
+ x=sc*(nrt+1L)*nra + nrt*(long)nra + (long)iz;
+ if(nt[x]==0)
+   if(ix[0]==-1)return 0;
+   else return -1;
+ for(n=0;n<nt[x];++n){
+   INTSTACK st1(st);
+   if(!st1)return -2;
+   for(i=t[x][n][1]-1;i>=0;--i)if(!st1.push(t[x][n][i+2]))return -2;
+   r=rec(t[x][n][0],ix,st1,mod);
+   if(r==1)return 1;
+ }
+ if(ix[0]==-1)return 0;
+ return -1;
+}
+
+int AS::recunoaste(char **x){
+ int *ix, n, r; INTSTACK st;
+ if(!st.push(getZ0()))return -2;
+ for(n=0; x[n]!=NULL; ++n);
+ if((ix=new int[n+1])==NULL)return -2;
+ ix[n]=-1;
+ while(n--) {
+   ix[n]=indice(x[n]);
+   if(ix[n]<nrn || nra<=ix[n]){delete ix; return -2;}
+   ix[n]-=nrn;
+ }
+ r=rec(0,ix,st);
+ delete ix;
+ return r;
+}
+/* Daca a este un AS initializat ca mai jos la functiile citAS si scrAS
+    (automatul respectiv recunoaste a^nb^n, n>=1)  atunci la rularea
+    secventei de cod:
+
+char *cuv0[]={"a","a","a","b","b","b",NULL};
+char *cuv1[]={"a","a","b","b","b",NULL};
+char *cuv2[]={"a","a","a","b","b",NULL};
+char *cuv3[]={"a","a","a","b","a","b",NULL};
+char *cuv4[]={"a","b",NULL};
+char *cuv5[]={NULL};
+char **v[]={cuv0,cuv1,cuv2,cuv3,cuv4,cuv5}; int nv=sizeof(v)/sizeof(char**);
+for(int i=0; i<nv; ++i)
+  cout<<a.recunoaste(v[i])<<endl;
+
+se afisaza:
+
+1
+-1
+-1
+-1
+1
+0
+*/
+
+int AS::recunoaste(int *ix){
+ int i; INTSTACK st;
+ if(!st.push(getZ0()))return -2;
+ for(i=0;ix[i]!=-1;++i) if(ix[i]<0 || nrt<=ix[i])return -2;
+ i=rec(0,ix,st);
+ return i;
+}
+
+int citAS(AS &a){
+ int nrs,nrt,nrn,i,j,s,d,n; char buf[100], bufa[100], *buf1[100];
+ cout<<"Nr. de stari = "; cin>>nrs;
+ cout<<"Nr. de litere din alfabet = "; cin>>nrt;
+ cout<<"Nr. de litere din alfabetul stivei = "; cin>>nrn;
+ if(!a.dimensionare(nrs,nrn,nrt))return 0;
+ cout<<"Dati numele literelor din alfabet (cuvinte fara caractere albe):\n";
+ for(i=0;i<nrt;++i){cin>>buf; if(!a.addt(buf)){a.distruge(); return 0;}}
+ cout<<"Dati numele literelor din alfabetul stivei\n"<<
+  " (cuvinte fara caractere albe, primul e simbolul initial din stiva):\n";
+ cin>>buf; if(!a.addn(buf)){a.distruge(); return 0;} a.setZ0(buf);
+ for(i=1;i<nrn;++i){cin>>buf; if(!a.addn(buf)){a.distruge(); return 0;}}
+ cout<<"Starea initiala este 0\n";
+ cout<<"Dati starile finale (-1 dupa ultima): ";
+ cin>>s; while(s!=-1){if(!a.setf(s)){a.distruge(); return 0;} cin>>s;}
+ cout<<"Dati tranzitiile fara lambda sub forma\n"<<
+ " st_src  nume_lit  nume_lit_st  st_dest  nr_lit_st_adaugate  nume_lit_st ...\n"<<
+ "(dupa ultima linie semnificativa introduceti -1)\n";
+  do{cin>>s; if(s==-1)break;
+     cin>>buf>>bufa>>d>>n;
+     for(i=0;i<n;++i){
+       if((buf1[i]=new char[100])==NULL)
+	 {for(j=0;j<i;++j)delete buf1[j]; return 0;}
+       cin>>buf1[i];
+     }
+     if(!a.addp(s,buf,bufa,d,n,buf1))
+       {for(j=0;j<n;++j)delete buf1[j]; return 0;}
+     for(j=0;j<n;++j)delete buf1[j];
+  }while(1);
+ cout<<"Dati lambda-tranzitiile sub forma\n"<<
+ " st_src  nume_lit_st  st_dest  nr_lit_st_adaugate  nume_lit_st ...\n"<<
+ "(dupa ultima linie semnificativa introduceti -1)\n";
+  do{cin>>s; if(s==-1)break;
+     cin>>bufa>>d>>n;
+     for(i=0;i<n;++i){
+       if((buf1[i]=new char[100])==NULL)
+	 {for(j=0;j<i;++j)delete buf1[j]; return 0;}
+       cin>>buf1[i];
+     }
+     if(!a.addp(s,"",bufa,d,n,buf1))
+       {for(j=0;j<n;++j)delete buf1[j]; return 0;}
+     for(j=0;j<n;++j)delete buf1[j];
+  }while(1);
+ return 1;
+}
+/* Exemplu de input:
+2
+2
+2
+a b
+Z0 A
+-1
+0 a Z0 0 1 A
+0 a A 0 2 A A
+0 b A 1 0
+1 b A 1 0
+-1
+-1
+*/
+
+int scrAS(AS &a){
+ int nrs, s, d, i, j, ic, iz;
+ nrs=a.getnrs();
+ cout<<"Numarul de stari: "<<nrs<<"\n";
+ cout<<"Starea initiala: 0\n";
+ cout<<"Stari finale:";
+ for(i=0; i<nrs; ++i)if(a.isf(i))cout<<" "<<i;
+ cout<<"\n";
+ cout<<"Alfabetul de intrare:";
+ for(i=0;i<a.getnrt();++i){
+   char *s=a.getname(a.gettind(i));
+   if(!s)return 0;
+   cout<<" "<<s;
+   delete s;
+ }
+ cout<<endl;
+ cout<<"Alfabetul stivei:";
+ for(i=0;i<a.getnrn();++i){
+   char *s=a.getname(a.getnind(i));
+   if(!s)return 0;
+   cout<<" "<<s;
+   delete s;
+ }
+ cout<<endl;
+ cout<<"Simbolul initial din stiva: "<<a.getname(a.getZ0())<<endl;
+ cout<<"Tranzitii:\n";
+ for(s=0;s<nrs;++s)
+   for(ic=0;ic<=a.getnrt();++ic)
+     for(iz=0;iz<a.getnra();++iz)
+       for(i=0;i<a.getnp(s,a.gettind(ic),iz);++i){
+	 char *buf;
+	 if(ic==a.getnrt())
+	   {if((buf=new char[9])==NULL)return 0; strcpy(buf,"<lambda>");}
+	 else
+	   if((buf=a.getname(a.gettind(ic)))==NULL)return 0;
+	 char *buf1;
+	 if((buf1=a.getname(iz))==NULL){delete buf; return 0;}
+	 char **p=a.getpname(s,a.gettind(ic),iz,i,d);
+	 if(!p){delete buf; delete buf1; return 0;}
+	 cout<<"("<<s<<","<<buf<<","<<buf1<<") -> ("<<d<<",";
+	 if(!p[0])cout<<"<lambda>";
+	 else {
+	   cout<<p[0];
+	   for(j=1; p[j]; ++j)cout<<" "<<p[j];
+	 }
+	 cout<<")\n";
+	 delete buf;
+	 delete buf1;
+	 for(j=0; p[j]; ++j)delete p[j];
+	 delete p;
+       }
+ return 1;
+}
+/* Exemplu de output (daca a este initializat ca la functia citAS):
+Numarul de stari: 2
+Starea initiala: 0
+Stari finale:
+Alfabetul de intrare: a b
+Alfabetul stivei: Z0 A
+Simbolul initial din stiva: Z0
+Tranzitii:
+(0,a,Z0) -> (0,A)
+(0,a,A) -> (0,A A)
+(0,b,A) -> (1,<lambda>)
+(1,b,A) -> (1,<lambda>)
+*/
+
+/**************************************************************************/
+
+
+DANIEL DRAGULICI
+aprilie, 2007

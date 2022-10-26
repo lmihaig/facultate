@@ -1,0 +1,223 @@
+        Limbaje formale, teme limbaje regulate si independente de context
+        =================================================================
+
+ Presupunem definite urmatoarele tipuri de date: GR (gramatica regulata),
+GIC (gramatica independenta de context), AS (automat stiva), AFD (automat
+finit determinist), AFN (automat finit nedeterminist), AFNL (automat finit
+nedeterminist cu lambda miscari).
+ Urmatoarele probleme vor cere implementarea unor algoritmi ce lucreaza cu
+gramatici si automate, pe care le vor primi ca parametri de iesire (pointeri
+in limbajul C, referinte in limbajul C++), de exemplu:
+             void f(GIC *gs, AS *ad){...}
+respectiv:
+             void f(GIC &gs, AS &ad){...}
+Enunturile vor folosi C++, dar se poate lucra si in C.
+ In cazul cand se cere construirea unor automate sau gramatici noi din unele
+vechi, cele noi va respecta aceleasi conventii de implementare ca si cele
+vechi - de exemplu daca la automatele vechi starile sunt numere naturale
+succesive 0, 1, 2, ... iar starea initiala este 0, atunci si la automatele
+noi starile sunt numere naturale succesive 0, 1, 2, ... iar starea initiala
+este 0; astfel va fi posibila compunerea functiilor scrise la diverse
+probleme pentru a aplica transformari succesive unor automate sau gramatici
+date (deci pentru a compune algoritmii).
+ In cele ce urmeaza notam cu & pe lambda (cuvantul vid).
+
+1. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int gr2afn(GR &gs, AFN &ad);    (3 puncte)
+  int afd2gr(AFD &as, GR &gd);    (2 puncte)
+Functia "gr2afn" construieste automatul "ad" echivalent cu gramatica "gs",
+iar functia "afd2gr" construieste gramatica "gd" echivalenta cu automatul
+"as"; functiile returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste o gramatica si afisaza
+automatul echivalent, apoi citeste un automat si afisaza gramatica
+echivalenta.
+ Observatii:
+ - in functie de algoritmul folosit, se pot scrie variante ale functiilor de
+  mai sus in care parametrul-automat sa fie de oricare din tipurile AFD, AFN,
+  AFNL;
+ - daca automatele au fost implementate cu stari = numere naturale si alfabet
+  de intrare = setulul ASCII, iar gramaticile au fost implementate cu
+  terminale si neterminale stringuri, trebuie adoptata o corespondenta
+  intre o multime de cuvinte (reprezentand multimea neterminalelor sau cea a
+  terminalelor) si o multime de numere de forma 0, ..., n sau o multime de
+  caractere ASCII;
+
+2. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int gic2asv(GIC &gs, AS &ad);    (3 punct)
+  int asv2gic(AS &as, GIC &gd);    (7 puncte)
+Functia "gic2asv" construieste automatul "ad" a.i. L&(ad)=L(gs), iar functia
+"asv2gic" construieste gramatica "gd" a.i. L(gd)=L&(as); functiile returneaza
+1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste o gramatica si afisaza
+automatul rezultat, apoi citeste un automat si afisaza gramatica rezultata.
+ Observatie: in functie de algoritmul folosit, se pot scrie variante ale
+functiilor de mai sus in care limbajul se considera acceptat de automat cu
+stare finala (functiile se vor numi atunci "gic2asf", respectiv "asf2gic").
+
+3. (puncte: 4)
+ Scrieti functiile:
+  int gr_op(GR &gs1, GR &gs2, GR &gd, int op);
+  int gr_s(GR &gs, GR &gd);
+ Functia "gr_op", in functie de "op", construieste gramatica "gd" ce
+recunoaste reuniunea ("op"=1), intersectia ("op"=2), respectiv concatenarea
+("op"=3) limbajelor recunoscute de gramaticile "gs1", "gs2". Ea returneaza
+1=succes, 0=esec.
+ Functia "gr_s" construieste gramatica "gd" ce recunoaste stelarea limbajului
+recunoscut de "gs". Ea returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste gramaticile necesare, le aplica
+functiile si afisaza gramaticile rezultate.
+ Nota: in C++ in locul acestor functii se pot supraincarca operatori.
+
+4. (puncte: 3)
+ Scrieti functiile:
+  int gic_op(GIC &gs1, GIC &gs2, GIC &gd, int op);
+  int gic_s(GIC &gs, GIC &gd);
+ Functia "gic_op", in functie de "op", construieste gramatica "gd" ce
+recunoaste reuniunea ("op"=1), respectiv concatenarea ("op"=2) limbajelor
+recunoscute de gramaticile "gs1", "gs2". Ea returneaza 1=succes, 0=esec.
+ Functia "gic_s" construieste gramatica "gd" ce recunoaste stelarea
+limbajului recunoscut de "gs". Ea returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste gramaticile necesare, le aplica
+functiile si afisaza gramaticile rezultate.
+ Nota: in C++ in locul acestor functii se pot supraincarca operatori.
+
+5. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int gic_v(GIC &gs, GIC &gd);     (1 punct)
+  int gic_ei(GIC &gs, GIC &gd);    (1.5 puncte)
+  int gic_en(GIC &gs, GIC &gd);    (0.5 puncte)
+ Functia "gic_nd" efectueaza urmatoarele:
+  - in caz de eroare returneaza 0;
+  - daca L(gs)=vid: returneaza 1;
+  - daca L(gs) este nevid:
+      construieste "gd" a.i. L(gd)=L(gs) si orice neterminal al lui "gd"
+       se deriveaza intr-un sir format doar din terminale (eventual vid);
+      returneaza 2.
+ Functia "gic_ei" efectueaza urmatoarele:
+  - in caz de eroare returneaza 0;
+  - daca L(gs)=vid: returneaza 1;
+  - daca L(gs) este nevid:
+      construieste gramatica "gd" echivalenta cu "gs" obtinuta prin
+       eliminarea simbolurilor inaccesibile;
+      returneaza 2.
+ Functia "gic_en" efectueaza urmatoarele:
+  - in caz de eroare returneaza 0;
+  - daca L(gs)=vid: returneaza 1;
+  - daca L(gs) este nevid:
+      construieste gramatica "gd" echivalenta cu "gs" obtinuta prin
+       eliminarea simbolurilor neutilizate;
+      returneaza 2.
+
+6. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int gic_el(GIC &gs, GIC &gd);    (3 puncte)
+  int gic_er(GIC &gs, GIC &gd);    (2 puncte)
+ Functia "gic_el" construieste gramatica "gd" echivalenta cu "gs" obtinuta
+prin eliminarea &-productiilor; functia "gic_er" construieste gramatica "gd"
+echivalenta cu "gs" obtinuta prin eliminarea redenumirilor; functiile
+returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste gramaticile necesare, le aplica
+functiile si afisaza gramaticile rezultate.
+
+7. (puncte: 0.5)
+ Scrieti functia:
+  int gic_p(GIC &gs, GIC &gd);
+care efectueaza urmatoarele:
+ - in caz de eroare returneaza 0;
+ - daca L(gs)=vid: returneaza 1;
+ - daca L(gs) este nevid:
+      construieste gramatica "gd" proprie echivalenta cu "gs";
+      returneaza 2.
+ Scrieti un program demonstrativ care citeste gramatica sursa, ii aplica
+functia si afisaza gramatica rezultata.
+
+8. (puncte: 4)
+ Scrieti functia:
+  int gic_fnc(GIC &gs, GIC &gd);
+care efectueaza urmatoarele:
+ - in caz de eroare returneaza 0;
+ - daca L(gs)=vid: returneaza 1;
+ - daca & in L(gs): returneaza 2;
+ - daca L(gs) este nevid si not & in L(G):
+      construieste gramatica "gd" in FNC echivalenta cu "gs";
+      returneaza 3.
+ Scrieti un program demonstrativ care citeste gramatica sursa, ii aplica
+functia si afisaza gramatica rezultata.
+
+9. (puncte: a se vedea in text)
+ Scrieti functiile:
+  int gic_erci(GIC &gs, GIC &gd);    (3 puncte)
+  int gic_erc(GIC &gs, GIC &gd);     (3 puncte)
+ Functia "gic_erci" construieste gramatica "gd" echivalenta cu "gs" obtinuta
+prin eliminarea recursivitatii imediate; functia "gic_erc" construieste
+gramatica "gd" echivalenta cu "gs" obtinuta prin eliminarea recursivitatii;
+putem presupune ca L(gs) este nevid si nu contine &; functiile returneaza
+1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste gramaticile necesare, le aplica
+functiile si afisaza gramaticile rezultate.
+
+10. (puncte: 3)
+ Scrieti functia:
+  int gic_fng(GIC &gs, GIC &gd);
+care construieste gramatica "gd" in FNG echivalenta cu "gs"; putem presupune
+ca L(gs) este nevid si nu contine &; returneaza 1=succes, 0=esec.
+ Scrieti un program demonstrativ care citeste gramatica sursa, ii aplica
+functia si afisaza gramatica rezultata.
+
+11. (puncte: 5)
+ Scrieti o functie de analiza sintactica:
+  int gic_rtd(GIC &g, char **s);
+care returneaza 1/0 dupa cum "s" apartine/nu apartine limbajului generat de
+"g"; putem presupune "g" nerecursiva la stanga; se va folosi metoda top-down
+(clasica sau un backtracking recursiv: se incearca toate derivarile intr-un
+pas ale simbolului de start, pentru fiecare secventa de terminale si
+neterminale obtinuta se incearca pe rand toate derivarile intr-un pas ale
+fiecarui neterminal continut, etc., pana regasim "s" sau constatam ca traseul
+curent nu poate duce la "s" - deoarece "g" este nerecursiva la stanga, putem
+aplica metoda incercand derivarea neterminalelor de la stanga spre dreapta).
+ Scrieti un program demonstrativ care va citi o gramatica, o va afisa, apoi
+intr-un ciclu va citi secvente "s" si va spune daca apartin sau nu limbajului
+generat de gramatica; din ciclu se va iesi la citirea secventei vide (care se
+va procesa inainte de iesire).
+ Observatii:
+- pentru inca un punct: daca se foloseste algoritmul top-down clasic, functia
+ poate avea parametrii int gic_rtd(GIC &g, char **s, int *a, int &n) si
+ va furniza in vectorul "a" analiza stanga obtinuta (sirul indicilor
+ productiilor) iar in "n" lungimea acesteia;
+- daca tipul GIC este implementat simplist cu simboluri caractere, nu
+ cuvinte, de exemplu neterminale = litere mari, terminale = litere mici,
+ functia va avea parametrii int gic_rtd(GIC &g, char *s) (sau
+ int gic_rtd(GIC &g, char *s, int *a, int &n)) iar secventele "s" citite
+ si procesate vor fi stringuri.
+
+12. (puncte: 5)
+ Scrieti o functie de analiza sintactica:
+  int gic_rbu(GIC &g, char **s);
+care returneaza 1/0 dupa cum "s" apartine/nu apartine limbajului generat de
+"g"; putem presupune gramatica "g" proprie (i.e. fara simboluri neutilizate,
+lambda-productii, redenumiri); se va folosi metoda bottom-up (clasica sau un
+backtracking recursiv: se cauta toate aparitiile membrului drept al vreunei
+productii in "s", pentru fiecare aparitie se inlocuieste cu membrul stang,
+apoi se reia cautarea/inlocuirea cu noua secventa, pana obtinem simbolul de
+start sau constatam ca pe traseul curent nu se poate obtine simbolul de
+start).
+ Scrieti un program demonstrativ care va citi o gramatica, o va afisa, apoi
+intr-un ciclu va citi secvente "s" si va spune daca apartin sau nu limbajului
+generat de gramatica; din ciclu se va iesi la citirea secventei vide (care se
+va procesa inainte de iesire).
+ Observatii:
+- pentru inca un punct: daca se foloseste algoritmul bottom-up clasic,
+ functia poate avea parametrii int gic_rbu(GIC &g, char **s, int *a, int &n)
+ si va furniza in vectorul "a" analiza dreapta obtinuta (sirul indicilor
+ productiilor) iar in "n" lungimea acesteia;
+- daca tipul GIC este implementat simplist cu simboluri caractere, nu
+ cuvinte, de exemplu neterminale = litere mari, terminale = litere mici,
+ functia va avea parametrii int gic_rbu(GIC &g, char *s) (sau
+ int gic_rbu(GIC &g, char *s, int *a, int &n)) iar secventele "s"
+ citite si procesate vor fi stringuri.
+
+
+DANIEL DRAGULICI
+mai, 2007

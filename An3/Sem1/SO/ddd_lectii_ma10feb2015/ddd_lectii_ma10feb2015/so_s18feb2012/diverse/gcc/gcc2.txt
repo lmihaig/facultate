@@ -1,0 +1,2078 @@
+a. Compilarea fisierelor C cu gcc (pentru fisiere C++ se foloseste
+   ---------------------------------------------------------------
+    asemanator g++):
+    ----------------
+
+Etapele compilarii (este o schema de principiu, fisierele intermediare
+  exista conceptual, nu apar neaparat ca atare):
+
+   fis1.c ... fisn.c   (fisiere sursa C nepreprocesate)
+    |
+    | fisiere header (.h) incluse in surse cu "#include"
+    |  |
+    |  | preprocesare
+    |  |
+    V  V
+   fis1.i ... fisn.i   (fisiere sursa C preprocesate)
+    |
+    | translatare in assembler
+    |
+    V
+   fis1.S ... fisn.S   (fisiere sursa assembler nepreprocesate)
+    |
+    | preprocesare assembler
+    |
+    V
+   fis1.s ... fisn.s   (fisiere sursa assembler preprocesate)
+    |
+    | compilare propriuzisa (asamblare)
+    |
+    V
+   fis1.o ... fisn.o  (fisiere obiect)
+    |
+    | biblioteci
+    |  | 
+    |  |  linkeditare
+    |  |
+    V  V
+    fisier  (a.out)  (un singur fisier executabil)
+    
+Compilarea cu gcc:
+
+   gcc   optiuni...   fisiere_intrare...
+
+Fisierele de intrare pot fi de mai multe tipuri, recunoscute dupa extensie,
+ si pentru fiecare compilarea va incepe de la etapa corespunzatoare tipului
+ respectiv (tipul fisierului de intrare se poate preciza si prin optiuni):
+  fic.c ==> sursa C ce trebuie preprocesata;
+  fis.i ==> sursa C ce nu trebuie preprocesata;
+  fis.S ==> sursa assembler ce trebuie preprocesata;
+  fis.s ==> sursa assembler;
+  fis.o ==> cod obiect
+fisierele cu extensii nerecunoscute vor participa direct la linkeditare;
+
+Optiuni uzuale:
+ -o fisier  ===>  fisierul executabil rezultat se va numi "fisier"
+                   (in absenta acestei optiuni, se va numi "a.out")
+ -Wall      ===>  afisaza toate avertismentele uzuale (warning) in timpul
+                   compilarii (altfel, doar pe cele mai importante);
+ -g         ===>  insereaza informatii pentru debugging (ultrior
+                   programul se poate depana cu gdb);
+ -fsyntax-only ===> doar verifica corectitudinea sintactica a codului
+                     (si nu compileaza);
+ -Onr  ===> optimizeaza codul rezultat; "nr" poate fi 0, 1, 2, 3 si indica
+             nivelul de optimizare; cu cat "nr" e mai mic, optimizarea e
+             mai slaba; pentru nr=0 nu se optimizeaza;
+
+Compilarea se poate face doar pana la o etapa intermediara, folosind
+ una din optiunile:
+ -c   ===> se opreste inainte de linkeditare; produce fisierele .o;
+ -S   ===> se opreste inainte de asamblare; produce fisierele .s;
+ -E   ===> se opreste dupa prima etapa, de preprocesare; rezultatul
+             (cod sursa preprocesat) este trimis spre stdout (se poate
+             redirecta spre un fisier adaugand la sfarsitul liniei de
+             comanda "> fisier");
+de fiecare data, fisierele de intrare ce nu necesita parcurgerea etapelor
+ efectuate (deoarece sunt necesare abia la etape ulterioare, de exemplu
+ fisierele de intrare .o) sunt ignorate.
+
+In toate cazurile, la finalul compilarii nu raman si fisierele intermediare.
+
+In exemplele urmatoare, prin "$" la inceputul liniei am reprezentat
+ prompterul Linux.
+
+Exemplul a1:
+===========
+
+$ ls
+f1.c
+$ cat f1.c
+#include<stdio.h>
+int a,b,c;
+int main(){
+ printf("a = "); scanf("%d",&a);
+ printf("b = "); scanf("%d",&b);
+ c=(a*a+b*b)*2;
+ printf("rezultat = %d\n",c);
+ return 0;
+}
+
+$ gcc f1.c
+$ ls
+a.out*  f1.c
+$ ./a.out
+a = 1
+b = 2
+rezultat = 10
+$ gcc -o prog f1.c
+$ ls
+a.out*  f1.c  prog*
+$ ./prog
+a = 1
+b = 2
+rezultat = 10
+$
+
+Comentariu: la a doua comanda "ls", cand ni s-au afisat fisierele
+"a.out*" si "f1.c", caracterul "*" a fost adaugat de "ls" la afisare
+pentru a marca ca e vorba de un fisier avand setat dreptul de executie,
+el de fapt nu face parte din nume (numele este "a.out").
+
+Exemplul a2:
+===========
+
+$ ls
+f2.c
+$ cat f2.c
+#define VALOARE 10
+int x;
+int main(){
+ x=VALOARE;
+ return 0;
+}
+
+$ gcc -E f2.c
+# 1 "f2.c"
+# 1 "<built-in>"
+# 1 "<command line>"
+# 1 "f2.c"
+
+int x;
+int main(){
+ x=10;
+ return 0;
+}
+$ ls
+f2.c
+$ gcc -E f2.c > f2.i
+$ ls
+f2.c  f2.i
+$ cat f2.i
+# 1 "f2.c"
+# 1 "<built-in>"
+# 1 "<command line>"
+# 1 "f2.c"
+
+int x;
+int main(){
+ x=10;
+ return 0;
+}
+$ gcc -S f2.c
+$ ls
+f2.c  f2.i  f2.s
+$ cat f2.s
+        .file   "f2.c"
+        .text
+.globl main
+        .type   main, @function
+main:
+        pushl   %ebp
+        movl    %esp, %ebp
+        subl    $8, %esp
+        andl    $-16, %esp
+        movl    $0, %eax
+        addl    $15, %eax
+        addl    $15, %eax
+        shrl    $4, %eax
+        sall    $4, %eax
+        subl    %eax, %esp
+        movl    $10, x
+        movl    $0, %eax
+        leave
+        ret
+        .size   main, .-main
+        .comm   x,4,4
+        .ident  "GCC: (GNU) 4.0.1 (4.0.1-5mdk for Mandriva Linux release 2006.0)"
+        .section        .note.GNU-stack,"",@progbits
+$ gcc -c f2.c
+$ ls
+f2.c  f2.i  f2.o  f2.s
+$ gcc -c -o fff f2.c
+$ ls
+f2.c  f2.i  f2.o  f2.s  fff
+$ diff fff f2.o
+$
+
+Comentarii:
+- deci, chiar daca facem doar compilare fara linkeditare (optiunea "-c"),
+   putem schimba numele fisierului obiect rezultat cu "-o";
+  totodata vedem ca lui gcc ii putem pune mai multe optiuni;
+- comanda "diff fff f2.o" compara continutul fisierelor "fff" si "f2.o",
+   semnaland diferentele; faptul ca nu a afisat nimic inseamna ca fisierele
+   au continuturi identice.
+
+Exemplul a3:
+===========
+
+Presupunem ca avem in directorul curent fisierele:
+
+patrat.h:
+   int patrat(int);
+
+patrat.c:
+   #include"patrat.h"
+   int patrat(int n){
+     return n*n;
+   }
+
+sumapatrate.h:
+   int sumapatrate(int);
+
+sumapatrate.c:
+   #include"patrat.h"
+   #include"sumapatrate.h"
+   int sumapatrate(int n){
+     int i,s;
+     s=0; for(i=1;i<=n;++i) s+=patrat(i);
+     return s;
+   }
+
+dublu.h:
+   int dublu(int);
+
+dublu.c:
+   #include"dublu.h"
+   int dublu(int n){
+     return 2*n;
+   }
+
+prog1.c:
+   #include<stdio.h>
+   #include "sumapatrate.h"
+   #include "dublu.h"
+   int a,b,c;
+   int main(){
+     printf("a = "); scanf("%d",&a);
+     printf("b = "); scanf("%d",&b);
+     c=dublu(sumapatrate(a)+sumapatrate(b));
+     printf("rezultat = %d\n",c);
+     return 0;
+   }
+
+prog2.c:
+   #include<stdio.h>
+   #include "sumapatrate.h"
+   int a,c;
+   int main(){
+     printf("a = "); scanf("%d",&a);
+     c=sumapatrate(a);
+     printf("rezultat = %d\n",c);
+     return 0;
+   }
+
+Aceste fisiere depind unele de altele dupa schema:
+
+      patrat ---> sumapatrate ---> prog2
+                       |
+                       V
+          dublu ---> prog1
+
+Vedem fisierele din directorul curent:
+
+$ ls
+dublu.c  patrat.c  prog1.c  sumapatrate.c
+dublu.h  patrat.h  prog2.c  sumapatrate.h
+
+In continuare cream executabilul "prog1" dand comanda:
+
+$ gcc -o prog1 patrat.c sumapatrate.c \
+> dublu.c prog1.c
+
+comanda era prea lunga ca sa incapa pe un singur rand, iar pentru trecerea
+ la rand nou a trebuit sa tastam intai "\";
+In aceasta comanda a fost suficient sa indicam doar fisierele ".c" care
+ participa, nu si pe cele ".h", deoarece acestea sunt preluate automat din
+ directorul curent si incluse in sursele rezultate in urma preprocesarii,
+ pe baza indicatiilor "  #include"....h"  " din fisierele ".c".
+
+Vedem ce fisiere avem in acest moment, notand ca a ramas in plus doar
+ fisierul final produs de "gcc", anume "prog1", nu si fisiere intermediare
+ continand transformarile succesive ale acestuia din timpul compilarii
+ ("prog1.s", "prog1.o", ...):
+
+$ ls
+dublu.c  patrat.c  prog1*   prog2.c        sumapatrate.h
+dublu.h  patrat.h  prog1.c  sumapatrate.c
+
+Rulam executabilul "prog1":
+
+$ ./prog1
+a = 1
+b = 2
+rezultat = 12
+
+Apoi dam comanda urmatoare:
+
+$ gcc -c patrat.c sumapatrate.c dublu.c
+
+in felul acesta s-a facut doar compilarea pana la nivel de fisier obiect
+ (deci fara linkeditare) pentru fisierele "patrat.c", "sumapatrate.c",
+ "dublu.c", obtinandu-se fisierele "patrat.o", "sumapatrate.o", "dublu.o";
+ acestea pot fi vazute dand comanda "ls":
+
+$ ls
+dublu.c  patrat.c  prog1*   sumapatrate.c
+dublu.h  patrat.h  prog1.c  sumapatrate.h
+dublu.o  patrat.o  prog2.c  sumapatrate.o
+
+Ne intereseaza ora la care au fost create fisierele ".o"; pentru aceasta dam
+ comanda urmatoare ("-l" este pentru a vedea mai multe detalii, "*.o" este
+ o masca pentru a ne arata doar fisierele terminate in ".o"):
+
+$ ls -l *.o
+-rw-r--r--  1 dra funinf 703 Oct  3 13:21 dublu.o
+-rw-r--r--  1 dra funinf 705 Oct  3 13:21 patrat.o
+-rw-r--r--  1 dra funinf 840 Oct  3 13:21 sumapatrate.o
+
+In continuare dam comanda:
+
+$ gcc -o prog2 patrat.o sumapatrate.c prog2.c
+
+astfel s-a obtinut executabilul "prog2", folosind fisierele referitoare la
+ functiile "patrat" si "sumapatrate" ("dublu" nu a fost necesara);
+ pentru fisierele "sumapatrate.c" si "prog2.c" se face compilarea
+ obtinandu-se fisiere obiect corespunzatoare, pentru "patrat.o" nu se mai
+ face (el este deja fisier obiect), apoi cele 3 fisiere obiect se
+ linkediteaza impreuna (si impreuna cu bibliotecile implicite ale
+ compilatorului, de unde se ia de exemplu definitia functiei "printf")
+ obtinandu-se executabilul "prog2";
+Deci fisierele de intrare ale lui "gcc" pot fi de tipuri diferite, iar
+ pentru fiecare se fac doar operatiile ramase;
+Notam ca daca ulterior crearii fisierului "patrat.o" se modifica sursa
+ "patrat.c" si nu se recompileaza (pentru a se obtine un fisier "patrat.o"
+ actualizat), comanda "gcc -o prog2 patrat.o sumapatrate.c prog2.c" nu
+ ia in consideratie aceste modificari (foloseste vechiul "patrat.o").
+
+Vedem care sunt fisierele existente in acest moment (observam ca a aparut
+ in plus "prog2"):
+
+$ ls
+dublu.c  patrat.c  prog1*   prog2.c        sumapatrate.o
+dublu.h  patrat.h  prog1.c  sumapatrate.c
+dublu.o  patrat.o  prog2*   sumapatrate.h
+
+De asemenea, verificam din nou ora fisierelor ".o":
+
+$ ls -l *.o
+-rw-r--r--  1 dra funinf 703 Oct  3 13:21 dublu.o
+-rw-r--r--  1 dra funinf 705 Oct  3 13:21 patrat.o
+-rw-r--r--  1 dra funinf 840 Oct  3 13:21 sumapatrate.o
+
+Constatam ca este aceeasi (13:21); deci, recompilarea lui "sumapatrate.c"
+ in cadrul comenzii "gcc -o prog2 patrat.o sumapatrate.c prog2.c" nu a
+ condus la modificarea fisierului "sumapatrate.o" creat mai inainte, cu
+ comanda "gcc -c patrat.c sumapatrate.c dublu.c"; pur si simplu, noul
+ obiect a fost creat temporar, folosit la crearea lui "prog2", apoi sters.
+Asadar, in urma unei compilari cu gcc raman doar fisierele finale, celelalte
+ fisiere, intermediare (figurate in schema de la inceputul sectiunii), apar
+ doar virtual si nu raman in final pe disc.
+
+Rulam executabilul "prog2":
+
+$ ./prog2
+a = 2
+rezultat = 5
+$
+
+ Alte optiuni gcc:
+  -lnume  ===> ia in consideratie la linkeditare si biblioteca "libnume.a"
+         (deci adauga implicit prefixul "lib" si extensia ".a"), aflata in
+         directoarele de cautare implicite sau specificate explicit cu "-L";
+           in linia de comanda gcc putem specifica mai multe biblioteci,
+         fiecare avand cate un "-l";
+           atentie: obiectele aflate intr-o biblioteca sunt vazute doar de
+         entitatile aflate inaintea ei in linia de comanda gcc;
+  -Ldirector  ===> ia in consideratie si directorul "director" pentru
+         cautarea bibliotecilor specificate cu "-l";
+           in linia de comanda gcc putem specifica mai multe asemenea
+         directoare, fiecare cu cate un "-L"; directoarele sunt scanate in
+         ordinea specificarii;
+           in principiu, directorul este folosesit doar la specificarile cu
+         "-l" aflate dupa el in linia de comanda gcc;
+  -Idirector ===> ia in consideratie si directorul "director" pentru
+         cautarea fisierelor incluse in surse cu "#include";
+           in linia de comanda gcc putem specifica mai multe asemenea
+         directoare, fiecare cu cate un "-I"; directoarele sunt scanate
+         inaintea celor standard si in ordinea specificarii;
+
+Exemplul a4:
+===========
+
+Presupunem ca avem in directorul curent
+   fisierele: "erori.c",  "functii.c",  "prog.c"
+   si subdirectorul: "includeri"
+
+iar in subdirectorul "includeri" avem
+   fisierele: "erori.h",  "functii.h"
+
+(acestea se pot observa dand comanda "ls -R").
+
+Presupunem ca aceste fisiere contin:
+
+includeri/erori.h:
+   extern int numar_eroare;
+   void afisaza_eroare(double);
+
+erori.c:
+   #include<stdio.h>
+   #include"erori.h"
+   int numar_eroare;
+   void afisaza_eroare(double n){
+     printf("%lf: ",n);
+     switch(numar_eroare){
+       case 0: printf("corect\n"); break;
+       case 1: printf("negativ\n"); break;
+       case 2: printf("nu este intreg\n"); break;
+       default: printf("incorect din motive necunoscute\n");
+     }
+   }
+
+includeri/functii.h:
+   double factorial(double);
+   double radical(double);
+
+functii.c:
+   #include<math.h>
+   #include"functii.h"
+   #include"erori.h"
+   double factorial(double x){
+     int i,f;
+     if(x<0){numar_eroare=1; return -1;}
+     if(x!=(int)x){numar_eroare=2; return -1;}
+     f=1; for(i=1;i<=x;++i)f*=i;
+     numar_eroare=0;
+     return f;
+   }
+   double radical(double x){
+     if(x<0){numar_eroare=1; return -1;}
+     numar_eroare=0;
+     return sqrt(x);
+   }
+
+prog.c:
+   #include<stdio.h>
+   #include"functii.h"
+   int main(){
+     double a, b;
+     do{
+       printf("a = "); scanf("%lf",&a);
+       if((b=factorial(a))==-1)afisaza_eroare(a);
+         else printf("%d factorial este %d\n",(int)a,(int)b);
+       if((b=radical(a))==-1)afisaza_eroare(a);
+         else printf("radical din %lf este %lf\n",a,b);
+     }while(a!=0);
+     return 0;
+   }
+
+
+Atunci cream executabilul "prog", apoi il rulam, dand comenzile urmatoare:
+
+$ gcc -o prog -Iincluderi -lm erori.c functii.c prog.c
+$ ./prog
+a = -10
+-10.000000: negativ
+-10.000000: negativ
+a = 2.5
+2.500000: nu este intreg
+radical din 2.500000 este 1.581139
+a = 4
+4 factorial este 24
+radical din 4.000000 este 2.000000
+a = 0
+0 factorial este 1
+radical din 0.000000 este 0.000000
+$
+
+Comentarii:
+- fisierele header (incluse in sirsele ".c" cu "#include") au fost puse
+   in subdirectorul "includeri" al directorului curent; pentru a putea fi
+   gasite, am inclus in linia de comanda gcc optiunea "-Iincluderi";
+- functia "sqrt" este definita in biblioteca standard de functii matematice
+   "libm.a", care se afla in directorul standard de biblioteci, dar nu este
+   luata in considerare implicit la compilare; pentru a fi luata in
+   considerare, am inclus in linia de comanda gcc optiunea "-lm";
+- variabila globala "int numar_eroare" este definita in fisierul "erori.c",
+   dar este folosita si in fisierul "functii.c"; pentru a putea fi compilat
+   si transformat in fisier obiect, "functii.c" trebuie sa contina o
+   declaratie a lui "numar_eroare" care nu este definitie; intr-adevar,
+   "functii.c" nu-l include pe "erori.c" cu "#include" ca sa-i preia
+   continutul la preprocesare (deci inainte de compilarea la fisier obiect),
+   deci continutul provenit din "erori.c" va fi luat in consideratie abia la
+   linkeditare (deci dupa compilarea la fisier obiect); o asememenea
+   declaratie care nu este definitie este "extern int numar_variabila;",
+   care este preluata in "functii.c" din "erori.h", pe care-l include la
+   preprocesare (deci inainte de compilarea la fisier obiect).
+
+b. Compilarea pe baza unui makefile: - TODO
+------------------------------------
+
+c. Biblioteci:
+--------------
+
+ O biblioteca este un fisier continand o colectie de obiecte compilate ce
+pot participa la o linkeditare.
+ Exista biblioteci predefinite (situate de regula in directoarele "/lib",
+"/usr/lib" si "/usr/local/lib") - la compilarea cu gcc unele sunt luate in
+considerare implicit, altele doar daca sunt invocate in linia de comanda cu
+"-l" (a se vedea exemplul a4).
+ De asemenea se pot crea biblioteci utilizator, care se pot invoca in linia
+de comanda gcc cu "-l"; in cazul in care bibliotecile nu se afla in
+directoarele standard, directoarele in care se afla trebuie precizate cu
+"-L".
+
+ Bibliotecile pot fi cu legare statica (static library) sau dinamica
+(shared library).
+
+ Cand cream cu gcc un produs (de exemplu un executabil) si invocam o
+biblioteca cu legare statica, continutul cerut din aceasta este inclus in
+produs. Astfel produsul poate fi folosit (de exemplu rulat) ulterior
+independent de prezenta in sistem a bibliotecii, deoarece contine in el tot
+ce-i trebuie, dar are o dimensiune mai mare.
+ Cand cream cu gcc un produs (de exemplu un executabil) si invocam o
+biblioteca cu legare dinamica, continutul cerut din aceasta nu este inclus
+in produs, dar produsul este creat a.i. sa poata apela continutul
+bibliotecii la momentul folosirii (de exemplu rularii). Astfel produsul nu
+poate fi folosit (de exemplu rulat) ulterior decat daca in sistem este
+incarcata si biblioteca, iar continutul cerut din aceasta este utilizat
+direct de acolo. In felul acesta produsul are dimensiune mai mica (nu
+contine in el continutul folosit din biblioteca), dar nu se poate utiliza
+decat daca in sistem este incarcata si biblioteca. Ca un avantaj, daca mai
+multe produse folosesc aceeasi biblioteca cu legare dinamica, aceasta este
+incarcata intr-un singur exemplar in memorie (folosit in comun). Practic,
+daca in sistem este prezenta o anumita biblioteca cu legare dinamica dar nu
+este incarcata in memorie, in momentul cand executam un prim program care o
+necesita biblioteca este automat incarcata si ea; programele lansate
+ulterior care au nevoie de ea vor utiliza automat exemplarul deja incarcat
+in memorie.
+ Bibliotecile cu legare dinamica sunt analoage dll-urilor din sistemul
+Windows.
+
+ De regula, bibliotecile cu legare statica au un nume de forma "libnume.a",
+iar cele cu legare dinamica au un nume de forma "libnume.so".
+
+Exemplul c1:
+===========
+
+Presupunem ca avem in directorul curent fisierele:
+
+fa.h:
+   void a();
+
+fa.c:
+   #include<stdio.h>
+   void a(){printf("a ");}
+
+fb.h:
+   void b();
+
+fb.c:
+   #include<stdio.h>
+   void b(){printf("b ");}
+
+fc.h:
+   void c();
+
+fc.c:
+   #include<stdio.h>
+   void c(){printf("c ");}
+
+fd.h:
+   void d();
+
+fd.c:
+   #include<stdio.h>
+   #include"fa.h"
+   #include"fb.h"
+   #include"fd.h"
+   void d(){a(); b(); printf("d ");}
+
+fe.h:
+   void e();
+
+fe.c:
+   #include<stdio.h>
+   #include"fe.h"
+   void e(){printf("e ");}
+
+prog.c:
+   #include<stdio.h>
+   #include"fd.h"
+   #include"fe.h"
+   int main(){
+     d(); printf("\n");
+     e(); printf("\n");
+     return 0;
+   }
+
+Aceste fisiere depind unele de altele dupa schema:
+
+      fa, fb ---> fd ---> prog <--- fe
+          fc
+
+ fisierele "fa", "fb", "fc", "fd", "fe" contin functii ce afisaza respectiv
+ "a", "b", "c", "a b d", "e"; programul "prog" apeleaza functiile "d()" si
+ "e()" pentru a afisa "a b d" si respectiv "e";
+
+Cu comanda urmatoare se compileaza fisierele sursa "fa.c", "fb.c", "fc.c" si
+ "fd.c", obtinand fisierele obiect "fa.o", "fb.o", "fc.o" si "fd.o":
+
+$ gcc -c fa.c fb.c fc.c fd.c
+
+Apoi, cu comanda urmatoare se creaza biblioteca cu legare statica "libabc.a"
+ din continuturile reunite ale fisierelor obiect "fa.o", "fb.o", "fc.o":
+
+$ ar rcs libabc.a fa.o fb.o fc.o
+
+In aceasta comanda, "ar" este numele unui program de arhivare (o biblioteca
+ ".a" este practic o arhiva facuta cu "ar" de obiecte ".o"), "libabc.a" este
+ numele arhivei iar "fa.o fb.o fc.o" fisierele obiect de intrare (care vor
+ fi cuprinse in arhiva); "rcs" sunt optiuni care spun lui "ar" sa insereze
+ fisierele de intrare ca  membri in arhiva suprascriind eventual versiunile
+ lor mai vechi deja existente in ea (r), sa nu mai afiseze un avertisment
+ daca arhiva se creaza ca arhiva noua (c) si sa adauge (sau sa actualizeze,
+ daca exista deja) un index arhivei (s) - prezenta indexului va accelera
+ legarea la biblioteca si va permite rutinelor din biblioteca sa se apeleze
+ unele pe altele indiferent de ordinea in care sunt amplasate in arhiva.
+
+Apoi cu urmatoarea comanda cream fisierul executabil "prog":
+
+$ gcc -o prog -L. fd.o -labc fe.c prog.c
+
+Aceasta comanda spune ca se creaza executabilul "prog" compiland mai intai
+ pana la fisier obiect sursele "fe.c" si "prog.c" si apoi linkeditand
+ obiectele din biblioteca "abc" si obiectele "fd", "fe" si "prog"; optiunea
+ "-labc" face compilatorul sa considere implicit prefixul "lib" si extensia
+ ".a" (adica biblioteca "libabc.a").
+Daca schimbam ordinea si scriam "gcc -o prog -L. -labc fd.o fe.c prog.c"
+ se semnala eroare, deoarece continutul lui "fd.o" invoca continutul
+ bibliotecii "libabc.a" (anume functia "d()" din "fd.o" apeleaza functiile
+ "a()" si "b()" din "libabc.a"), iar "fd.o" este scris dupa "-labc" in linia
+ de comanda gcc.
+In absenta lui "-L." (care adauga directorul curent "." la lista
+ directoarelor in care se cauta bibliotecile la compilarea curenta) se
+ semnaleaza eroare, deoarece gcc nu stie implicit sa caute bibliotecile si
+ in directorul curent.
+
+Apoi rulam programul:
+
+$ ./prog
+a b d
+e
+
+ O biblioteca cu legare dinamica are un nume real ("real name", numele de
+fisier) si un nume special (il vom numi "soname").
+ Numele special (soname) este de forma "libnume.so.nr" (are prefixul "lib",
+apoi un nume, apoi extensia ".so", apoi un numar de versiune ".nr" care se
+schimba de fiecare data cand se schimba interfata (?)); exceptie:
+bibliotecile C de nivelul cel mai inferior nu incep cu "lib". El poate
+figura intr-un director si se poate specifica complet adaugand in fata calea
+catre directorul respectiv. Ca implementare, soname-ul este de fapt o
+legatura simbolica catre numele real (intr-un sistem Linux o legatura
+simbolica este un fisier distinct dar special, care contine o referinta
+catre un alt fisier a.i. actiunile efectuate asupra sa sunt transmise
+automat fisierului referit - este analogul shortcut-ului din Windows, care
+este de fapt un fisier distinct cu extensia ".lnk" ce refera alt fisier).
+ Numele real (numele fisierului ce contine codul propriuzis) este format
+din soname, dupa care urmeaza un alt ".nr" (un numar minor de versiune),
+apoi eventual un alt ".nr" (un numar de release). Deci numele real este de
+forma "libnume.so.nr1.nr2" sau "libnume.so.nr1.nr2.nr3", unde
+"libnume.so.nr1" este so-name-ul.
+ De asemenea, bibliotecile cu legare dinamica mai au un nume
+("linker name"), care este folosit in liniile de comanda gcc atunci cand
+sunt invocate; acesta este de fapt soname-ul fara numerele de versiune si
+release.
+
+ Concret, o biblioteca cu legare dinamica este creata cu un "real name".
+ Apoi ea trebuie instalata intr-un director standard (de regula
+"/usr/local/lib") cu utilitarul "ldconfig" (o comanda de forma
+"ldconfig  -n  directorul_cu_biblioteci_cu_legare_dinamica"), care ii
+creaza un "soname" ca legatura simbolica la "real name".
+ Totodata se creaza un "linker name" ca legatura simbolica la "soname" sau
+la "real name"-ul unei versiuni date explicit (de exemplu o versiune mai
+veche).
+ In final, liniile de comanda gcc vor invoca biblioteca prin "linker name",
+iar programele create vor invoca intern biblioteca prin "soname".
+ In felul acesta este posibila gestionarea eficienta a mai multor versiuni
+ale aceleiasi biblioteci. Programele vor rula mereu cu cea mai recenta
+versiune, iar compilarile pot fi setate sa foloseasca versiuni fixate
+(eventual mai vechi).
+
+ De exemplu un "soname" complet calificat (cu cale) poate fi:
+
+   /usr/lib/libreadline.so.3
+
+pe el ldconfig il poate crea ca legatura simbolica spre un "real name" gen:
+
+  /usr/lib/libreadline.so.3.0
+
+de asemenea, va fi si un "linker name":
+
+  /usr/lib/libreadline.so
+
+care poate fi o legatura simbolica la /usr/lib/libreadline.so.3
+
+ Daca vrem sa utilizam niste biblioteci cu legare dinamica si nu vrem (sau
+n-avem drept) sa le instalam in directoarele standard, le putem pune intr-un
+director propriu, dar atunci va trebui sa memoram calea catre directorul
+respectiv intr-o variabila de environment exportabila a shell-ului
+(interpretorului de comenzi); in acest scop sunt folosite variabilele de
+environment urmatoare, care trebuie setate cu un sir de cai separate prin
+":":
+
+LD_LIBRARY_PATH  ===>  directoarele in care sunt cautate bibliotecile
+ inaintea directoarelor standard;
+
+LD_PRELOAD  ===>  directoarele ce contin biblioteci cu legare dinamica cu
+ functii care prevaleaza (override) in fata celor standard.
+
+setarea acestor variabile de environment va face posibila legarea dinamica
+automata a programelor la ele la momentul executiei; nu va influienta insa
+liniile de comanda gcc, unde va trebui in continuare sa specificam cu "-L"
+directorul in care se afla bibliotecile si cu "-l" bibliotecile.
+
+ Pentru a crea o biblioteca cu legare dinamica, intai trebuie sa cream
+niste fisiere obiect ".o" pe care sa le punem in ea. In acest scop vom
+folosi gcc, cu optiunea "-c" (am vazut deja), dar si cu optiunea "-fPIC"
+(care instruieste gcc sa creeze "position independent code", o cerinta
+obligatorie in cazul bibliotecilor cu legare dinamica).
+ Apoi se creaza biblioteca cu legare dinamica folosind gcc cu optiunile:
+   -shared
+       ===>   pentru a crea o entitate ce se poate lega dinamic la alte
+        entitati;
+   -Wl,-soname,my_soname
+       ===>  pentru a specifica soname-ul (sub forma acelui "my_soname");
+        notam ca in toata sintagma "-Wl,-soname,my_soname" nu exista
+        blank-uri; daca totusi vrem sa avem blank-uri in soname, le
+        despecializam cu "\";
+   -o numele_real
+       ===> pentru a preciza numele real al bibliotecii (conform
+        conventiilor de mai sus); optiunea "-o" a mai fost discutata;
+Evident, linia de comanda gcc va mai contine fisierele obiect ".o" cuprinse
+in biblioteca si eventual alte biblioteci folosite la linkeditare (cu "-L"
+si "-l"); de multe ori se foloseste biblioteca standard C ("libc.so.N", unde
+N este >= 6), motiv pentru care se adauga la lina de comanda "-lc".
+Obs: "man gcc" recomanda ca la crearea bibliotecii cu "-shared" sa se
+adauge aceleasi optiuni de compilare ca la obiectele componente, in
+particular "-fPIC".
+ Daca vrem ca biblioteca sa suporte si dependente inverse, adica sa poata
+invoca simboluri nedefinite in ea ci in programele care o apeleaza, vom
+include in linia de comanda gcc si optiunea urmatoare(fara blank-uri in ea):
+   -Wl,-export-dynamic
+       ===> adauga la tabela de simboluri dinamice a bibliotecii toate
+        simbolurile invocate in ea, nu numai simbolurile folosite de
+        obiectele dinamice;
+Pentru ca dependintele inverse sa functioneze, trebuie insa ca si
+ programul apelant sa isi aibe simbolurile accesibile dinamic (deci
+ sa fie compilat cu "-Wl,-export-dynamic" (?)).
+
+ Pentru a instala biblioteca, daca nu dorim (sau n-avem dreptul) sa o
+instalam intr-un director standard, efectuam urmatorii pasi:
+- punem biblioteca intr-un director oarecare;
+- ii cream manual soname-ul si linkername-ul, ca legaturi simbolice, cu
+ comanda "ln" (a se vedea exemplul c2);
+- pentru a putea linkedita cu ea, vom mentiona in linia de comanda gcc
+ directorul linkername-lui cu "-L" si biblioteca propriuzisa cu "-l" (ca
+ si la bibliotecile cu legare statica);
+- pentru a putea rula programe legate la ea, adaugam directorul soname-lui
+ la variabila de environment "LD_LIBRARY_PATH" cu comanda urmatoare
+ ("director" este calea catre directorul respectiv):
+
+ export LD_LIBRARY_PATH=director:$LD_LIBRARY_PATH
+
+ dupa care putem rula obisnuit programele care folosesc biblioteca.
+
+ Putem vedea de ce biblioteci cu legare dinamica are nevoie un executabil
+"fisexe" dand comanda:
+
+ldd fisexe
+
+Atentie insa sa nu aplicam ldd asupra unor programe in care nu avem
+ incredere, deoarece comanda de mai sus executa efectiv fisierul "fisexe".
+
+Exemplu c2:
+==========
+
+Consideram aceleasi fisiere de inceput ca in exemplul c1.
+Reamintim ca aceste fisiere depind unele de altele dupa schema:
+
+      fa, fb ---> fd ---> prog <--- fe
+          fc
+
+ fisierele "fa", "fb", "fc", "fd", "fe" contin functii ce afisaza respectiv
+ "a", "b", "c", "a b d", "e"; programul "prog" apeleaza functiile "d()" si
+ "e()" pentru a afisa "a b d" si respectiv "e".
+
+ Vedem aceste fisiere:
+
+$ ls
+fa.c  fb.c  fc.c  fd.c  fe.c  prog.c
+fa.h  fb.h  fc.h  fd.h  fe.h
+
+ Cream directoarele "dirr", "dirs", "dirl" (subdirectoare al directorului
+curent) in care vom pune respectiv bibliotecile cu legare dinamica
+(realname), soname-urile si linkername-urile (in principiu poate fi si
+acelasi director sau chiar directorul curent):
+
+$ mkdir dirr
+$ mkdir dirs
+$ mkdir dirl
+
+ Vedem continutul directorului curent:
+
+$ ls
+dirl/  dirs/  fa.h  fb.h  fc.h  fd.h  fe.h
+dirr/  fa.c   fb.c  fc.c  fd.c  fe.c  prog.c
+
+("ls" afisaza numele directoarelor urmat de "/", dar acest caracter nu face
+parte efectiv din nume).
+
+ Compilam la stadiul de obiect fisierele (independente) "fa" si "fb", in
+vederea reunirii lor intr-o biblioteca cu legare dinamica (deci cu "-fPIC"):
+
+$ gcc -fPIC -c fa.c fb.c
+
+apoi vedem fisierele obiect rezultate:
+
+$  ls *.o
+fa.o  fb.o
+
+ Reunim fisierele obiect "fa.o" si "fb.o" intr-o biblioteca cu legare
+dinamica aflata ca fisier (realname-ul) in directorul "dirr":
+
+$ gcc -fPIC -shared -Wl,-soname,libab.so.1 -o dirr/libab.so.1.1 fa.o fb.o
+
+aceasta comanda creaza biblioteca cu legare dinamica avand soname-ul
+"libab.so.1" si numele real "libab.so.1.1" aflat in directorul "dirr"
+(conform specificarii "-o dirr/libab.so.1.1"). Biblioteca contine corpurile
+functiilor "a()" si "b()".
+
+ Vedem fisierele nou aparute:
+
+$ ls
+dirl/  fa.c  fb.c  fc.c  fd.h  prog.c
+dirr/  fa.h  fb.h  fc.h  fe.c
+dirs/  fa.o  fb.o  fd.c  fe.h
+
+$ ls dirr
+libab.so.1.1*
+
+constatam ca practic s-a creat doar fisierul fizic al bibliotecii avand
+realname-ul "libab.so.1.1" (soname-ul "libab.so.1" e codificat in interiorul
+acestui fisier (?)).
+
+ Cream manual cele doua legaturi simbolice soname si linkername,
+in cele doua directoare create special pentru asta, folosind comanda
+"ln -s sursa destinatie", care creaza fisierul "destinatie" ca o
+legatura simbolica la fisierul "sursa" (fara "-s" s-ar crea o legatura
+fizica, care este doar un nou nume pentru fisierul "sursa", nu un fisier
+de sine statator):
+
+$ ln -s $PWD/dirr/libab.so.1.1 dirs/libab.so.1
+$ ln -s $PWD/dirs/libab.so.1 dirl/libab.so
+
+Notam prezenta lui "$PWD" la inceputul caii sursa; "PWD" este o variabila de
+environment a shell-ului setata automat cu calea catre directorul curent; in
+orice linie de comanda shell constructia "$PWD" se expandeaza la continutul
+sau (calea catre directorul curent); astfel, in comenzile "ln -s" sursa este
+specificata cu cale absoluta - fara o asemenea specificare legatura simbolica
+rezultata s-ar putea sa nu fie functionala.
+
+ Observam fisierele nou create:
+
+$ ls
+dirl/  fa.c  fb.c  fc.c  fd.h  prog.c
+dirr/  fa.h  fb.h  fc.h  fe.c
+dirs/  fa.o  fb.o  fd.c  fe.h
+
+$ ls dirr
+libab.so.1.1*
+
+$ ls dirs
+libab.so.1@
+
+$ ls dirl
+libab.so@
+
+"libab.so" este linkername-ul iar "libab.so.1" este soname-ul; caracterul
+"@" este adaugat de "ls" la afisare pentru a marca ca e vorba de un fisier
+legatura simbolica, el de fapt nu face parte din nume.
+
+ Cream acum intr-o maniera similara o noua biblioteca cu legare dinamica ce
+contine functia "d()"; intai cream fisierul obiect ce va fi introdus in
+biblioteca:
+
+$ gcc -fPIC -c fd.c
+
+Vedem ca a aparut:
+
+$ ls *.o
+fa.o  fb.o  fd.o
+
+ Cream acum biblioteca cu legare dinamica:
+
+$ gcc -fPIC -shared -Wl,-soname,libd.so.1 -o dirr/libd.so.1.1 -L./dirl -lab fd.o
+
+Practic am creat doar fisierul fizic (cu realname) "libd.so.1.1" din
+directorul "dirr"; intrucat noua biblioteca depinde de "libab" (deoarece
+functia "d()" din "fd.o" apeleaza functiile "a()" si "b()" din "libab"), am
+precizat in linia de comanda calea catre directorul unde se afla
+linkername-ul ei folosind "-L./dirl" si apoi pe ea insasi cu "-lab".
+Noua biblioteca "libd" contine efectiv doar corpul functiei "d()" (preluat
+din "fd.o") si doar refera (nu contine) functiile "a()" si "b()" din
+"libab". Deci, pentru a putea rula un program linkeditat dinamic cu
+"libd.so" trebuie sa fie prezente in sistem (si incarcate in memorie) atat
+"libd.so" cat si "libab.so", dar nu mai e nevoie sa fie prezent "fd.o"
+(continutul necesar din el a fost copiat deja "libd").
+
+ Cream si acum manual legaturile simbolice soname si linkername ale noii
+biblioteci:
+
+$ ln -s $PWD/dirr/libd.so.1.1 dirs/libd.so.1
+$ ln -s $PWD/dirs/libd.so.1 dirl/libd.so
+
+ Observam fisierele nou create:
+
+$ ls
+dirl/  fa.c  fb.c  fc.c  fd.h  fe.h
+dirr/  fa.h  fb.h  fc.h  fd.o  prog.c
+dirs/  fa.o  fb.o  fd.c  fe.c
+
+$ ls dirr
+libab.so.1.1*  libd.so.1.1*
+
+$ ls dirs
+libab.so.1@  libd.so.1@
+
+$ ls dirl
+libab.so@  libd.so@
+
+Observam ca bibliotecile cu legare dinamica sunt create cu dreptul de
+executie setat.
+
+ Cream acum dupa tehnica deja cunoscuta o biblioteca cu legare statica
+continand functiile "c()" si "e()"; intai compilam fisierele (independente)
+"fc.c" si "fe.c":
+
+$ gcc -c fc.c fe.c
+
+ Vedem cele doua fisiere obiect "fc.o" si "fe.o" nou aparute:
+
+$ ls *.o
+fa.o  fb.o  fc.o  fd.o  fe.o
+
+ Acum cream biblioteca, numita "libce.a":
+
+$ ar rcs libce.a fc.o fe.o
+
+apoi vedem fisierul ".a" rezultat:
+
+$ ls *.a
+libce.a
+
+acest fisier contine corpurile functiilor "c()" si "e()".
+
+ Sa cream un executabil "prog1" ce foloseste "libce.a" si "libd.so" (si
+implicit "libab.so"):
+
+$ gcc -o prog1 -L./dirl -L. -lab -ld prog.c -lce
+
+Executabilul "prog1" se obtine din "prog.c" (care se si compileaza cu
+ocazia aceasta, dar fisierul obiect nu ramane efectiv pe disc), "libce",
+"libd" si "libab" (de unde isi ia functiile); in executabil este inclus
+efectiv doar corpul functiilor "main" (provenit din "prog.c") si "e()"
+(provenit din biblioteca cu legare statica "libce"), functia "d()" fiind
+doar referita (nu inclusa) intrucat se afla intr-o biblioteca cu legare
+dinamica; intrucat bibliotecile "libab" si "libd" se afla in directorul
+"dirl" (linkername-ul) iar biblioteca "libce" se afla in directorul curent
+".", cele doua directoare de cautare trebuie specificate in linia de comanda
+gcc cu "-L./dirl", respectiv "-L."; bibliotecile prorpiuzise (linkername-ul)
+sunt specificate cu "-lab", "-ld", respectiv "-lce". Notam ca "-lce" trebuie
+pus dupa "prog.c" (altfel da eroare) deoarece "prog.c" invoca o functie din
+"libce" (anume "e()") si nu invers, iar "libce" este cu legare statica (a se
+vedea comentariile facute mai inainte, cand am spus prima data de optiunea
+"-l" a lui gcc).
+
+ Pentru a putea rula executabilul "prog1", calea catre directorul "dirs" ce
+contine soname-ul bibliotecilor cu legare dinamica invocate de el trebuie
+adaugat cu ":" la variabila de environment "LD_LIBRARY_PATH", care trebuie
+sa ramana exportabila; in acest scop dam comanda:
+
+$ export LD_LIBRARY_PATH=$PWD/dirs:$LD_LIBRARY_PATH
+
+(ca si mai inainte, constructiile de forma "$variabila" din linia de comanda
+shell sunt expandate automat la valoarea curenta a lui "variabila").
+
+ Acum putem rula programul, obtinand:
+
+$ ./prog1
+a b d
+e
+
+TODO: legare statica la biblioteci dinamice (cu "-Wl,-static"); biblioteci
+ dinamice obtinute prin legare statice (cu "-shared -Wl,-static").
+
+ Sa verificam dependentele executabilului "prog1":
+
+$ ldd prog1
+        linux-gate.so.1 =>  (0xffffe000)
+        libab.so.1 => /export/home/funinf/dra/test/c2/dirs/libab.so.1 (0xb7f9d000)
+        libd.so.1 => /export/home/funinf/dra/test/c2/dirs/libd.so.1 (0xb7f9b000)
+        libc.so.6 => /lib/tls/libc.so.6 (0xb7e5a000)
+        /lib/ld-linux.so.2 (0xb7fa1000)
+
+(observam ca depinde de "libab" si "libd"; "libc" este biblioteca standard
+ C).
+
+Exemplul c3:
+===========
+
+ In acest exemplu vom crea o biblioteca cu legare dinamica si dependente
+inverse.
+ Presupunem ca avem in directorul curent fisierele:
+
+functii.h:
+   void afisare_suma();
+   void afisare_produs();
+
+functii.c:
+   #include<stdio.h>
+   #include"prog.h"
+   #include"functii.h"
+   void afisaza_suma(){printf("Suma este: %d\n",operand1+operand2);}
+   void afisaza_produs(){printf("Produsul este: %d\n",operand1*operand2);}
+
+prog.h:
+   extern int operand1, operand2;
+
+prog.c:
+   #include<stdio.h>
+   #include"prog.h"
+   #include"functii.h"
+   int operand1, operand2;
+   int main(){
+     printf("Primul operand = "); scanf("%d",&operand1);
+     printf("Al 2-lea operand = "); scanf("%d",&operand2);
+     afisaza_suma();
+     afisaza_produs();
+     return 0;
+   }
+
+(deci biblioteca de functii refera variabilele "operand1" si "operand2"
+definite in program).
+
+ Vedem cele 4 fisiere:
+
+$ ls
+functii.c  functii.h  prog.c  prog.h
+
+ Cream biblioteca cu legare dinamica "libfunctii" (realname-ul, soname-ul,
+linkname-ul sunt toate in directorul curent):
+
+$ gcc -fPIC -shared -Wl,-export-dynamic -Wl,-soname,libfunctii.so.1 -o libfunctii.so.1.1 functii.c
+$ ln -s $PWD/libfunctii.so.1.1 libfunctii.so.1
+$ ln -s $PWD/libfunctii.so.1 libfunctii.so
+
+Notam prezenta optiunii "-Wl,-export-dynamic" care face ca biblioteca sa
+poata referi simboluri din programul care se va lega la ea; biblioteca se
+obtine direct din sursa "functii.c", care se va compila in prealabil cu
+"-fPIC".
+
+ Cream un executabil "prog" din "prog.c" si biblioteca "libfunctii"
+
+$ gcc -Wl,-export-dynamic -o prog prog.c -L. -lfunctii 
+
+Notam din nou prezenta optiunii "-Wl,-export-dynamic"; linkname-ul
+bibliotecii "libfunctii" este in directorul curent, deci a trebuit precizat
+"-L." si "-lfunctii".
+
+ Stocam directorul curent (puteam doar sa-l adaugam, ca mai inainte) in
+variabila de environment "LD_LIBRARY_PATH" (aici se afla soname-ul
+bibliotecii):
+
+$ export LD_LIBRARY_PATH=.
+
+ Acum putem rula programul:
+
+$  ./prog
+Primul operand = 10
+Al 2-lea operand = 20
+Suma este: 30
+Produsul este: 200
+
+Obs: practic, am vazut ca operatiile din exemplul acesta se pot face si fara
+ "-Wl,-export-dynamic"; "man ld" (manualul linkeditorului folosit de gcc)
+ zice despre aceasta optiune urmatoarele:
+
+   "When creating a dynamically linked executable, add all  symbols  to
+    the  dynamic  symbol table.  The dynamic symbol table is the set of
+    symbols which are visible from dynamic objects at run time.
+
+    If you do not use this option, the dynamic symbol table  will  nor-
+    mally  contain  only  those  symbols  which  are referenced by some
+    dynamic object mentioned in the link.
+
+    If you use "dlopen" to load a dynamic object which needs  to  refer
+    back  to the symbols defined by the program, rather than some other
+    dynamic object, then you will probably need to use this option when
+    linking the program itself."
+
+ Bibliotecile cu legare dinamica sunt utile pentru a implementa conceptul de
+plugin; un plugin este o biblioteca compilata, care se poate adauga unui
+program deja compilat, iar acesta sa o vada si sa utilizeze obiectele din
+ea fara sa fie nevoie sa-l recompilam.
+ In acest scop sunt utile apelurile:
+
+#include <dlfcn.h>
+
+void *dlopen(const char *filename, int flag);
+   ===> incarca biblioteca cu legare dinamica avand linkername-ul
+    "filename" (daca este dat fara cale, este cautat in directoarele
+    standard si in cele memorate in "LD_LIBRARY_PATH") si o deschide
+    intr-unul dintre modurile "flag", care poate fi "RTLD_NOW" (si atunci
+    simbolurile nedefinite din biblioteca sunt rezolvate inainte de returnul
+    din "dlopen") sau "RTLD_LAZY" (si atunci simbolurile sunt rezolvate cand
+    este nevoie); functia returneaza adresa unei entitati handler care va
+    referi in continuare biblioteca (sau NULL in caz de eroare) - acest
+    handler va fi folosit in continuare de celelalte functii pentru a referi
+    biblioteca;
+
+void *dlsym(void *handle, const char *symbol);
+   ===> returneaza adresa unde se afla incarcat in memorie simbolul cu
+     numele "symbol" din biblioteca referita de "handle" (care este o
+     valoare returnata anterior de un apel "dlopen"); in caz de eroare
+     returneaza NULL;
+
+int dlclose(void *handle);
+   ===> inchide biblioteca referita de "handle" (care este o valoare
+     returnata anterior de un apel "dlopen"), scazand numarul de referinte
+     la ea; daca numarul de referinte ajunge la 0 si nici o alta biblioteca
+     incarcata nu mai foloseste simboluri din ea, biblioteca este
+     descarcata; returneaza 0 la succes si o valoare nenula la esec;
+
+char *dlerror(void);
+   ===> returneaza adresa unui string intern continand un mesaj ce descrie
+     ultima eroare produsa la un apel "dlopen", "dlclose" sau "dlsym";
+     totodata sterge consemnarea acelei erori; returneaza NULL daca nu s-a
+     produs nici o eroare de la initializare sau daca ultima functie
+     apelata a fost tot "dlerror" (care a sters consemnarea erorii
+     anterioare);
+
+Exemplul c4: exemplu luat din "man dlopen", in care se incarca biblioteca
+===========    matematica si se invoca din ea functia "cos" pentru a afisa
+               valoarea cos(2):
+
+Avem un singur fisier, "prog.c" continand:
+
+  #include<stdlib.h>
+  #include <stdio.h>
+  #include <dlfcn.h>
+
+  int main(int argc, char **argv) {
+    void *handle;
+    double (*cosine)(double);
+    char *error;
+
+    handle = dlopen ("libm.so", RTLD_LAZY);
+    if (!handle) {
+      fprintf (stderr, "%s\n", dlerror());
+      exit(1);
+    }
+
+    dlerror();    /* Clear any existing error */
+    *(void **) (&cosine) = dlsym(handle, "cos");
+    if ((error = dlerror()) != NULL)  {
+      fprintf (stderr, "%s\n", error);
+      exit(1);
+    }
+
+    printf ("%f\n", (*cosine)(2.0));
+    dlclose(handle);
+    return 0;
+  }
+
+El se compileaza cu:
+
+$ gcc -Wl,-export-dynamic -o prog prog.c -ldl
+
+(optiunea "-ldl" este necesara pentru a se face linkeditarea cu biblioteca
+standard "libdl" unde sunt definite functiile "dlopen", "dlclose", "dlsym",
+"dlerror" si care altfel nu este luata in consideratie; constatam ca nu este
+necesara linkeditarea cu biblioteca standard de matematica "libm", deoarece
+aceasta este deschisa explicit in program).
+
+La rulare obtinem:
+
+$ ./prog
+-0.416147
+
+Exemplul c5: Ilustrarea lucrului cu plugin-uri: - TODO
+===========
+
+d. Depanarea aplicatiilor cu gdb: - TODO
+---------------------------------
+
+ Depanarea programelor in Linux se face cu gdb.
+ La compilarea cu gcc, daca vrem sa putem investiga ulterior executabilul
+cu gdb, trebuie sa folosim optiunea "-g".
+
+ Depanarea unui executabil "fisier" se lanseaza cu:
+
+gdb fisier
+
+Depanatorul afisaza un prompter propriu:
+
+(gdb)
+
+pe care se pot da linii de comanda specifice.
+
+Cateva comenzi gdb (partea dintre () se poate omite din scriere):
+
+h(elp)
+h(elp) comanda
+  ==> afisaza informatii generale/informatii despre comanda "comanda";
+      comanda se poate scrie si prescurtat;
+
+q(uit)
+  ==> iesire din gdb;
+
+file fisier
+  ==> incarca fisierul "fisier" (in locul celui curent);
+      gdb se poate lansa si fara a indica un fisier, iar acesta se poate
+    incarca ulterior cu "file";
+
+l(ist)
+  ==> afisaza inca 10 linii aflate dupa sau in jurul ceea ce a afisat
+    anterior;
+
+l(ist) -
+  ==> afisaza 10 linii aflate inaintea unei afisari anterioare de 10 linii;
+
+l(ist) nr
+  ==> afisaza 10 linii in jurul liniei cu numarul "nr";
+
+l(ist) nr1,nr2
+  ==> afisaza liniile cu numerele de la "nr1" la "nr2";
+
+l(ist) functie
+  ==> afisaza 10 linii in jurul inceputului functiei cu numele "functie";
+
+set args argument1 argument2 ... argumentn
+  ==> specifica argumentele in linia de comanda (chiar si nici unul)
+    cu care se va rula programul depanat atunci cand este pornit;
+
+show args
+  ==> afisaza argumentele in linia de comanda curent setate;
+
+set environment variabila valoare
+  ==> atribuie valoarea "valoare" variabilei de environment "variabila"
+    a programul depanat; "valoare" un string oarecare (poate fi vid) (?);
+      aceasta nu va afecta programul pana la urmatoarea comanda "run";
+
+unset environment variabila
+  ==> elimina variabila "variabila" din environment-ul curent setat;
+      aceasta nu va afecta programul pana la urmatoarea comanda "run";
+
+r(un)
+r(un) argumente
+  ==> incepe rularea (continua a) programului depanat, de la inceput;
+      "argumente", daca este prezent, este o lista de argumente in linia
+    de comanda cu care se va rula programul (succesiune de stringuri
+    separate prin blank-uri); lista poate contine inclusiv redirectari
+    ">", ">>", "<";
+      daca "argumente" lipseste, se vor folosi ultimele argumente
+    specificate anterior cu "run" sau "set args"; pentru anularea folosirii
+    vechilor argumente se foloseste "set args" fara argumente;
+
+star(t)
+  ==> ruleaza programul pana la inceputul lui "main" (dupa care intra in
+    regim pas cu pas);
+      se pot specifica argumente in linia de comanda ca la "run";
+
+s(tep)
+  ==> executa instructiunile de pe linia curenta, pana la noua linie ce
+    trebuie executata; daca se intalneste un apel de functie, ea este supusa
+    aceleiasi detalieri pas cu pas (deci executia se poate opri la prima
+    linie a functiei);
+
+s(tep) nr
+  ==> executa de "nr" ori "step" (sau pana cand programul se opreste din
+    alte cauze);
+
+stepi
+  ==> executa step pentru exact o instructiune (deci, daca o linie contine
+    mai multe instructiuni, parcurgerea ei necesita mai multe "stepi");
+      atentie: este vorba de o instructiune masina, nu instructiune C;
+      "stepi" se poate prescurta "si";
+
+stepi nr
+  ==> executa de "nr" ori "stepi" (sau pana cand programul se opreste din
+    alte cauze); "stepi" se poate prescurta "si";
+
+n(ext)
+  ==> asemanator cu "step", dar daca se intalneste un apel de functie ea nu
+    este supus detalierii pas cu pas (functia se executa ca si cand ar fi o
+    singura instructiune);
+
+n(ext) nr
+  ==> executa de "nr" ori "next" (sau pana cand programul se opreste din
+    alte cauze);
+
+nexti
+  ==> executa "next" pentru exact o instructiune (masina, nu C);
+      "nexti" se poate prescurta "ni";
+
+nexti nr
+  ==> executa de "nr" ori "nexti" (sau pana cand programul se opreste din
+    alte cauze); "nexti" se poate prescurta "ni";
+
+fin(ish)
+  ==> executa "next" pana la sfarsitul functiei curente (iar atunci valoarea
+    returnata este afisata si adaugata la istoricul valorilor);
+
+c(ontinue)
+  ==> continua executia normala (continua) a programului, pana ce programul
+    se opreste din diverse cauze sau pana la intalnirea unui breakpoint;
+      daca executia normala s-a reluat de la un breakpoint, se poate folosi
+    un argument nr, care va determina setarea contorului de ignorare al
+    breakpoint-ului la nr-1 (a.i. breakpoint-ul nu va intrerupe rularea
+    decat a nr-a oara cand este intalnit) (?);
+
+j(ump) nr
+  ==> sare pana la linia cu numarul "nr" (fara a executa instructiunile
+    intermediare si ruleaza (continuu) programul de acolo in continuare;
+
+k(ill)
+  ==> abandoneaza executia curenta a programului (se poate incepe alta
+    cu "run");
+
+backtrace
+backtrace full
+backtrace -nr
+backtrace full -nr
+backtrace -nr full
+  ==> afisaza cadrele de apel ale tuturor apelurilor de functii aflate in
+    curs (incepute si inca neterminate) din stiva; ordinea este de la
+    ultimul apel inceput (varful stivei) spre inapoi;
+      ca terminologie: in stiva, "jos" inseamna spre varf iar "sus" spre
+    baza; cu cat se merge in jos, sunt apeluri mai recente; ultimul apel
+    inceput este jos de tot, in varful stivei; "dedesubt" inseamna mai jos,
+    deci mai recent, "deasupra" inseamna mai sus, deci mai vechi;
+      cu "full" se afisaza si valorile variabilelor locale corespunzatoare
+    apelurilor respective;
+      cu "-nr" afisaza cel mult -nr cadre;
+      "backtrace" se poate prescurta "bt";
+
+Cu urmatoarele comenzi putem selecta un cadru aflat in stiva; el devine
+tinta implicita a anumitor comenzi, daca nu specificam altceva; acest
+cadru va fi numit cadrul "curent selectat":
+
+do(wn)
+do(wn) nr
+  ==> selecteaza si afisaza cadrul pe care l-a apelat cadrul curent
+    selectat (practic este cadrul aflat imediat dedesubtul celui curent
+    selectat);
+      cu "nr" este vorba de cadrul aflat cu "nr" niveluri mai jos de
+    cel curent selectat;
+
+up
+up nr
+  ==> selecteaza si afisaza cadrul care a apelat cadrul curent
+    selectat (practic este cadrul aflat imediat deasupra celui curent
+    selectat);
+      cu "nr" este vorba de cadrul aflat cu "nr" niveluri mai sus de
+    cel curent selectat;
+
+sel(ect-frame) nr
+  ==> selecteaza cadrul cu numarul "nr" (in loc de numar se poate da si
+    adresa cadrului) fara sa afiseze ceva;
+
+f(rame)
+f(rame) nr
+  ==> fara argument, afisaza cadrul curent selectat; cu argument "nr"
+   selecteaza si afisaza cadrul cu numarul respectiv (in loc de numar se
+   poate da si adresa cadrului);
+
+ret(urn)
+ret(urn) expresie
+  ==> determina cadrul curent selectat sa execute return catre apelantul
+   sau (executia ramane in regim pas cu pas, dar la urmatorul pas se va
+   executa ceva din cadrul aflat deasupra celui curent selectat);
+     daca este prezenta, expresia precizeaza valoarea returnata in apelant;
+
+p(rint) expresie
+  ==> afisaza valoarea expresiei la momentul curent;
+      expresia poate sa nu apara ca atare in program, dar sa aibe sens
+    in acel punct;
+      expresia poate fi "$nr" si atunci este a nr-a valoare afisata deja;
+      expresia poate fi "$" sau "$$" si atunci este ultima/penultima valoare
+    afisata;
+
+info r(egs)
+  ==> afisaza valorile curente ale registrilor intregi;
+
+
+x/format adresa
+  ==> afisaza continutul memoriei, incepand de la adresa "adresa";
+      "format" este format din urmatoarele constructii (lipite intre ele):
+          un numar de repetari;
+          o litera care specifica formatul de afisare:
+               o(octal), x(hex), d(decimal), u(unsigned decimal),
+               t(binary), f(float), a(address), i(instruction),
+               c(char) si s(string);
+          o litera care specifica cantitatea repetata:
+               b(byte), h(halfword), w(word), g(giant, 8 bytes);
+   efectul este afisarea conform formatului specificat a numarului
+   specificat de obiecte de dimensiunea specificata, incepand de la "adresa";
+
+Observatii: un program incarcat in gdb si aflat in rulare normala (continua)
+  se poate intrerupe (si trece in rulare pas cu pas) cu Ctrl-C.
+
+Exemplul d1:
+===========
+
+$ ls
+f1.c
+$ cat f1.c
+#include<stdio.h>
+int fct(int x){
+  int y;
+  y=x+1; y=x+2; y=x+3;
+  y=x+4;
+  y=x+5;
+  return y;
+}
+int main(){
+  int i;
+  i=10; printf("%d\n",i);
+  i=20; printf("%d\n",i);
+  i=30; printf("%d\n",i);
+  i=40; printf("%d\n",i);
+  i=50; printf("%d\n",i);
+  while(1){
+    i=1; i=2; i=fct(100); i=3; i=4;
+    i=10; i=20; i=fct(1000); i=30; i=40;
+  }
+  i=100; i=200; printf("%d\n",i); i=300; i=400;
+  i=1000; i=2000; printf("%d\n",i); i=3000; i=4000;
+  return 0;
+}
+
+$ gcc -o p1 -g f1.c
+$ gdb p1
+GNU gdb 6.3-debian
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "sparc-linux"...Using host libthread_db library "/lib/libthread_db.so.1".
+
+(gdb) l
+2       int fct(int x){
+3         int y;
+4         y=x+1; y=x+2; y=x+3;
+5         y=x+4;
+6         y=x+5;
+7         return y;
+8       }
+9       int main(){
+10        int i;
+11        i=10; printf("%d\n",i);
+(gdb) l
+12        i=20; printf("%d\n",i);
+13        i=30; printf("%d\n",i);
+14        i=40; printf("%d\n",i);
+15        i=50; printf("%d\n",i);
+16        while(1){
+17          i=1; i=2; i=fct(100); i=3; i=4;
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+19        }
+20        i=100; i=200; printf("%d\n",i); i=300; i=400;
+21        i=1000; i=2000; printf("%d\n",i); i=3000; i=4000;
+(gdb) l
+22        return 0;
+23      }
+24
+(gdb) l
+Line number 25 out of range; f1.c has 24 lines.
+(gdb) l 1,24
+1       #include<stdio.h>
+2       int fct(int x){
+3         int y;
+4         y=x+1; y=x+2; y=x+3;
+5         y=x+4;
+6         y=x+5;
+7         return y;
+8       }
+9       int main(){
+10        int i;
+11        i=10; printf("%d\n",i);
+12        i=20; printf("%d\n",i);
+13        i=30; printf("%d\n",i);
+14        i=40; printf("%d\n",i);
+15        i=50; printf("%d\n",i);
+16        while(1){
+17          i=1; i=2; i=fct(100); i=3; i=4;
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+19        }
+20        i=100; i=200; printf("%d\n",i); i=300; i=400;
+21        i=1000; i=2000; printf("%d\n",i); i=3000; i=4000;
+22        return 0;
+23      }
+24
+(gdb) s
+The program is not being run.
+(gdb) r
+Starting program: /export/home/funinf/dra/test/p1
+10
+20
+30
+40
+50
+
+Program received signal SIGINT, Interrupt.   /* am tastat Ctrl-C */
+0x000104b8 in fct (x=100) at f1.c:4
+4         y=x+1; y=x+2; y=x+3;
+(gdb) s
+5         y=x+4;
+(gdb) s
+6         y=x+5;
+(gdb) s
+7         return y;
+(gdb) s
+8       }
+(gdb) s
+main () at f1.c:18
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+(gdb) s
+fct (x=1000) at f1.c:4
+4         y=x+1; y=x+2; y=x+3;
+(gdb) s
+5         y=x+4;
+(gdb) finish
+Run till exit from #0  fct (x=1000) at f1.c:5
+0x000105e0 in main () at f1.c:18
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+Value returned is $1 = 1005
+(gdb) s
+17          i=1; i=2; i=fct(100); i=3; i=4;
+(gdb) n
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+(gdb) n
+17          i=1; i=2; i=fct(100); i=3; i=4;
+(gdb) n
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+(gdb) continue
+Continuing.
+
+Program received signal SIGINT, Interrupt.   /* am tastat Ctrl-C */
+0x000104b8 in fct (x=1000) at f1.c:4
+4         y=x+1; y=x+2; y=x+3;
+(gdb) s
+5         y=x+4;
+(gdb) si     /* obs. ca cu si trebuie mai multi pasi pt. aceeasi instr. C */
+0x000104dc      5         y=x+4;
+(gdb) si
+0x000104e0      5         y=x+4;
+(gdb) si
+6         y=x+5;
+(gdb) si
+0x000104e8      6         y=x+5;
+(gdb) si
+0x000104ec      6         y=x+5;
+(gdb) si
+7         return y;
+(gdb) run
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+Starting program: /export/home/funinf/dra/test/p1
+10
+20
+30
+40
+50
+
+Program received signal SIGINT, Interrupt.
+fct (x=100) at f1.c:8
+8       }
+(gdb) s
+main () at f1.c:18
+18          i=10; i=20; i=fct(1000); i=30; i=40;
+(gdb) kill
+Kill the program being debugged? (y or n) y
+(gdb) s
+The program is not being run.
+(gdb) start
+Breakpoint 5 at 0x10504: file f1.c, line 11.
+Starting program: /export/home/funinf/dra/test/p1
+main () at f1.c:11
+11        i=10; printf("%d\n",i);
+(gdb) s
+10
+12        i=20; printf("%d\n",i);
+(gdb) s
+20
+13        i=30; printf("%d\n",i);
+(gdb) j 15
+Continuing at 0x10574.                       /* obs. ca nu mai afisaza 40 */
+50
+
+Program received signal SIGINT, Interrupt.   /* am tastat Ctrl-C */
+fct (x=100) at f1.c:8
+8       }
+(gdb) start
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+Breakpoint 8 at 0x10504: file f1.c, line 11.
+Starting program: /export/home/funinf/dra/test/p1
+main () at f1.c:11
+11        i=10; printf("%d\n",i);
+(gdb) s
+10
+12        i=20; printf("%d\n",i);
+(gdb) s
+20
+13        i=30; printf("%d\n",i);
+(gdb) p i
+$1 = 20                   /* linia 13 nu s-a executat inca, deci i=20 */
+(gdb) p 2*i+1
+$2 = 41    /* se pot afisa si expr.ce nu apar ca atare in prog.dar au sens*/
+(gdb) p 1000
+$3 = 1000
+(gdb) p $
+$4 = 1000
+(gdb) p $
+$5 = 1000
+(gdb) p $2
+$6 = 41
+(gdb) p $$
+$7 = 1000
+(gdb) p &i
+$8 = (int *) 0xeffffbd4
+(gdb) x/3xw 0xeffffbd4
+0xeffffbd4:     0x00000014      0x00000000      0x00000000
+(gdb) help quit
+Exit gdb.
+(gdb) h quit
+Exit gdb.
+(gdb) help q
+Exit gdb.
+(gdb) h q
+Exit gdb.
+(gdb) q
+The program is running.  Exit anyway? (y or n) y
+$
+
+Obs: in final am afisat (cu comanda "x") 3 word-uri (w) in format hexa (x)
+  incepand de la adresa 0xeffffbd4, adica adresa lui i; cum i este un int,
+  alocat ca word si continand 20, adica 14 hexa, primul word afisat este
+  0x00000014.
+
+
+Exemplul d2:
+===========
+
+$ ls
+f2.c
+$ cat f2.c
+#include<stdio.h>
+#include<ctype.h>
+void test(char *);
+void mare(char *q){
+  char k;
+  k=*q;
+  printf("%c mare\n",k);
+  test(q+1);
+}
+void mica(char *r){
+  char l;
+  l=*r;
+  printf("%c mica\n",l);
+  test(r+1);
+}
+void test(char *p){
+  char c;
+  c=*p;
+  if(!c) return;
+  if(isupper(c)) mare(p);
+  else if(islower(c)) mica(p);
+}
+int main(){
+  char s[]="abAcBCDe";
+  test(s);
+  return 0;
+}
+
+$ gcc -o p2 -g f2.c
+$ gdb p2
+GNU gdb 6.3-debian
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "sparc-linux"...Using host libthread_db library "/lib/libthread_db.so.1".
+
+(gdb) run
+Starting program: /export/home/funinf/dra/test/p2
+a mica
+b mica
+A mare
+c mica
+B mare
+C mare
+D mare
+e mica
+
+Program exited normally.
+(gdb) start
+Breakpoint 1 at 0x1068c: file f2.c, line 24.
+Starting program: /export/home/funinf/dra/test/p2
+main () at f2.c:24
+24        char s[]="abAcBCDe";
+(gdb) s
+25        test(s);
+(gdb) s
+test (p=0xeffffbb8 "abAcBCDe") at f2.c:18
+18        c=*p;
+(gdb) s
+19        if(!c) return;
+(gdb) s
+20        if(isupper(c)) mare(p);
+(gdb) s
+s
+s
+21        else if(islower(c)) mica(p);
+(gdb) s
+mica (r=0xeffffbb8 "abAcBCDe") at f2.c:12
+12        l=*r;
+(gdb) s
+13        printf("%c mica\n",l);
+(gdb) s
+s
+s
+a mica
+14        test(r+1);
+(gdb) s
+test (p=0xeffffbb9 "bAcBCDe") at f2.c:18
+18        c=*p;
+(gdb) s
+19        if(!c) return;
+(gdb) s
+20        if(isupper(c)) mare(p);
+(gdb) s
+21        else if(islower(c)) mica(p);
+(gdb) s
+mica (r=0xeffffbb9 "bAcBCDe") at f2.c:12
+12        l=*r;
+(gdb) s
+13        printf("%c mica\n",l);
+(gdb) s
+b mica
+14        test(r+1);
+(gdb) bt
+#0  mica (r=0xeffffbb9 "bAcBCDe") at f2.c:14
+#1  0x0001067c in test (p=0xeffffbb9 "bAcBCDe") at f2.c:21
+#2  0x00010594 in mica (r=0xeffffbb8 "abAcBCDe") at f2.c:14
+#3  0x0001067c in test (p=0xeffffbb8 "abAcBCDe") at f2.c:21
+#4  0x000106b8 in main () at f2.c:25
+(gdb) bt full
+#0  mica (r=0xeffffbb9 "bAcBCDe") at f2.c:14
+        l = 98 'b'
+#1  0x0001067c in test (p=0xeffffbb9 "bAcBCDe") at f2.c:21
+        c = 98 'b'
+#2  0x00010594 in mica (r=0xeffffbb8 "abAcBCDe") at f2.c:14
+        l = 97 'a'
+#3  0x0001067c in test (p=0xeffffbb8 "abAcBCDe") at f2.c:21
+        c = 97 'a'
+#4  0x000106b8 in main () at f2.c:25
+        s = "abAcBCDe"
+(gdb) bt -2
+#3  0x0001067c in test (p=0xeffffbb8 "abAcBCDe") at f2.c:21
+#4  0x000106b8 in main () at f2.c:25
+(gdb) bt full -2
+#3  0x0001067c in test (p=0xeffffbb8 "abAcBCDe") at f2.c:21
+        c = 97 'a'
+#4  0x000106b8 in main () at f2.c:25
+        s = "abAcBCDe"
+(gdb) bt -2 full
+#3  0x0001067c in test (p=0xeffffbb8 "abAcBCDe") at f2.c:21
+        c = 97 'a'
+#4  0x000106b8 in main () at f2.c:25
+        s = "abAcBCDe"
+(gdb) kill
+Kill the program being debugged? (y or n) y
+(gdb) start
+Breakpoint 4 at 0x1068c: file f2.c, line 24.
+Starting program: /export/home/funinf/dra/test/p2
+main () at f2.c:24
+24        char s[]="abAcBCDe";
+(gdb) s 40
+a mica
+b mica
+A mare
+c mica
+B mare
+C mare
+8         test(q+1);
+(gdb) bt
+#0  mare (q=0xeffffbbd "CDe") at f2.c:8
+#1  0x00010624 in test (p=0xeffffbbd "CDe") at f2.c:20
+#2  0x00010540 in mare (q=0xeffffbbc "BCDe") at f2.c:8
+#3  0x00010624 in test (p=0xeffffbbc "BCDe") at f2.c:20
+#4  0x00010594 in mica (r=0xeffffbbb "cBCDe") at f2.c:14
+#5  0x0001067c in test (p=0xeffffbbb "cBCDe") at f2.c:21
+#6  0x00010540 in mare (q=0xeffffbba "AcBCDe") at f2.c:8
+#7  0x00010624 in test (p=0xeffffbba "AcBCDe") at f2.c:20
+#8  0x00010594 in mica (r=0xeffffbb9 "bAcBCDe") at f2.c:14
+#9  0x0001067c in test (p=0xeffffbb9 "bAcBCDe") at f2.c:21
+#10 0x00010594 in mica (r=0xeffffbb8 "abAcBCDe") at f2.c:14
+#11 0x0001067c in test (p=0xeffffbb8 "abAcBCDe") at f2.c:21
+#12 0x000106b8 in main () at f2.c:25
+(gdb) up
+#1  0x00010624 in test (p=0xeffffbbd "CDe") at f2.c:20
+20        if(isupper(c)) mare(p);
+(gdb) up
+#2  0x00010540 in mare (q=0xeffffbbc "BCDe") at f2.c:8
+8         test(q+1);
+(gdb) up 2
+#4  0x00010594 in mica (r=0xeffffbbb "cBCDe") at f2.c:14
+14        test(r+1);
+(gdb) do
+#3  0x00010624 in test (p=0xeffffbbc "BCDe") at f2.c:20
+20        if(isupper(c)) mare(p);
+(gdb) sel 8
+(gdb) f
+#8  0x00010594 in mica (r=0xeffffbb9 "bAcBCDe") at f2.c:14
+14        test(r+1);
+(gdb) ret
+Make mica return now? (y or n) y
+#0  test (p=0xeffffbb9 "bAcBCDe") at f2.c:22
+22      }
+(gdb) c           /* obs. ca nu s-a mai terminat prelucrarea stringului */
+Continuing.
+
+Program exited normally.
+(gdb) q
+$
+
+Exemplul d3: argumente in linia de comanda si environment - TODO
+===========
+
+Alte comenzi gdb:
+
+wa(tch) expresie
+  ==> seteaza un watchpoint pentru expresia respectiva;
+      executia se intrerupe automat (si comuta in regim pas cu pas) de
+    fiecare data cand valoarea expresiei se schimba (?);
+
+b(reak)
+b(reak) nr
+b(reak) *adresa
+b(reak) functie
+  ==> seteaza un breakpoint respectiv la:
+    - adresa unde s-a ajuns cu executia, in cadrul de apel din stiva aflat
+       in acest moment in executie;
+    - linia cu numarul "nr";
+    - adresa absoluta "adresa";
+    - prima linie a functiei cu numele "functie";
+    executia se intrerupe (si comuta in pasa cu pas) la intalnirea unui
+    breakpoint; unui breakpoint i se poate atasa o conditie si atunci
+    executia nu se intrerupe la intalnirea breakpoint-ului decat daca
+    este indeplinita si conditia;
+
+cl(ear)
+cl(ear) nr
+cl(ear) *adresa
+cl(ear) functie
+  ==> elimina toate breakpoint-urile de la respectiv:
+    - adresa unde s-a ajuns cu executia in cadrul de apel curent selectat;
+    - linia cu numarul "nr";
+    - adresa absoluta "adresa";
+    - inceputul functiei cu numele "functie";
+
+d(elete) b(reakpoints) nr1 ... nrn
+  ==> elimina breakpoint-urile cu numerele "nr1", ..., "nrn";
+   "nr1 ... nrn" poate lipsi si atunci se elimina toate breakpoint-urile
+   (in acest caz comanda se poate abrevia si prin "d(elete)") (?);
+
+comm(ands) nr
+comanda1
+...
+comandan
+end
+  ==> seteaza comenzile gdb ce trebuie executate cand este intalnit
+    breakpoint-ul cu numarul "nr" (daca lipseste, este vorba de ultimul
+    breakpoint setat); fiecare comanda se scrie pe cate o linie,
+    ultima linie fiind "end";
+      daca prima comanda este "silent", la intalnirea breakpoint-ului nu se
+    afisaza nimic in afara de output-ul unor eventuale comenzi "print";
+
+cond(ition) nr conditie
+  ==> seteaza conditia atasata breakpoint-ului cu numarul "nr" sa fie
+   "conditie" - la intalnirea breakpoint-ului executia va fi intrerupta
+   (si comutata in regim pas cu pas) doar daca in acel moment si conditia
+   este adevarata;
+    "conditie" poate lipsi si atunci breakpoint-ul (re)devine neconditionat;
+
+disab(le) b(reakpoints) nr1 ... nrn
+  ==> dezactiveaza breakpoint-urile cu numerele "nr1", ..., "nrn";
+   "nr1 ... nrn" poate lipsi si atunci se dezactiveaza toate
+    breakpoint-urile (in acest caz comanda se poate abrevia si prin
+    "disab(le)") (?);
+      breakpoint-urile nu sunt uitate, dar ele vor functiona doar dupa ce
+    vor fi reactivate cu "enable";
+
+ena(ble) nr1 ... nrn
+  ==> activeaza breakpoint-urile cu numerele "nr1", ..., "nrn";
+   "nr1 ... nrn" poate lipsi si atunci se activeaza toate
+   breakpoint-urile (?);
+
+ig(nore) nr numar
+  ==> seteaza contorul de ignorare al breakpoint-ului cu numarul "nr"
+   la "numar"; breakpoint-ul nu va intrerupe executia (si comuta in regim
+   pas cu pas) decat de la a "numar"-a intalnire incolo;
+
+inf(o) b(reakpoints) nr
+  ==> afisaza informatii despre breakpoint-ul cu numarul "nr"; "nr" poate
+    lipsi si atunci se afisaza informatii despre toate breakpoint-urile
+    existente;
+
+Exemplul d4:
+===========
+
+$ ls
+f4.c  p4
+$ gcc -o p4 -g f4.c
+$ gdb p4
+GNU gdb 6.3-debian
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "sparc-linux"...Using host libthread_db library "/lib/libthread_db.so.1".
+
+(gdb) l 1,1000
+1       #include<stdio.h>
+2       void fct(int x){
+3         printf("fct = %d",x);
+4       }
+5       int main(){
+6         int a,b,c,d;
+7         a=0;
+8         do{
+9           ++a;
+10          printf("a = %d\n",a);
+11        }while(a<10);
+12        b=0; c=0; d=0;
+13        do{
+14          b+=1;   printf("b = %d\n",b);
+15          c+=10;  printf("c = %d\n",c);
+16          d+=100; printf("d = %d\n",d);
+17        }while(b<10);
+18        fct(1);
+19        return 0;
+20      }
+21
+(gdb) b 9
+Breakpoint 1 at 0x104dc: file f4.c, line 9.
+(gdb) cond 1 a%4==0
+(gdb) comm 1
+Type commands for when breakpoint 1 is hit, one per line.
+End with a line saying just "end".
+>silent
+>print a
+>end
+(gdb) b 12
+Breakpoint 2 at 0x1050c: file f4.c, line 12.
+(gdb) b 14
+Breakpoint 3 at 0x10518: file f4.c, line 14.
+(gdb) ig 3 7
+Will ignore next 7 crossings of breakpoint 3.
+(gdb) comm 3
+Type commands for when breakpoint 3 is hit, one per line.
+End with a line saying just "end".
+>print b
+>end
+(gdb) info b
+Num Type           Disp Enb Address    What
+1   breakpoint     keep y   0x000104dc in main at f4.c:9
+        stop only if a % 4 == 0
+        silent
+        print a
+2   breakpoint     keep y   0x0001050c in main at f4.c:12
+3   breakpoint     keep y   0x00010518 in main at f4.c:14
+        ignore next 7 hits
+        print b
+(gdb) run
+Starting program: /export/home/funinf/dra/test/p4
+$1 = 0
+(gdb) c
+Continuing.
+a = 1
+a = 2
+a = 3
+a = 4
+$2 = 4
+(gdb) c
+Continuing.
+a = 5
+a = 6
+a = 7
+a = 8
+$3 = 8
+(gdb) c
+Continuing.
+a = 9
+a = 10
+
+Breakpoint 2, main () at f4.c:12
+12        b=0; c=0; d=0;
+(gdb) c
+Continuing.
+b = 1
+c = 10
+d = 100
+b = 2
+c = 20
+d = 200
+b = 3
+c = 30
+d = 300
+b = 4
+c = 40
+d = 400
+b = 5
+c = 50
+d = 500
+b = 6
+c = 60
+d = 600
+b = 7
+c = 70
+d = 700
+
+Breakpoint 3, main () at f4.c:14
+14          b+=1;   printf("b = %d\n",b);
+$4 = 7
+(gdb) c
+Continuing.
+b = 8
+c = 80
+d = 800
+
+Breakpoint 3, main () at f4.c:14
+14          b+=1;   printf("b = %d\n",b);
+$5 = 8
+(gdb) quit
+The program is running.  Exit anyway? (y or n) y
+$
+
+
+Dragulici Daniel
+6 octombrie 2008
+actualizat 13 octombrie 2008

@@ -1,0 +1,112 @@
+Teme de lucrat la laborator pentru lectia despre intreruperi:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Probleme cu citiri/afisari:
+
+0) (*)
+  Program care afisaza un sir declarat cu initializare (si terminat cu '$'),
+    folosind intreruperea 21h,9h - Hello world;
+
+1) (*)
+ Program care citeste un string si-l afisaza.
+ Se vor folosi intreruperile 21h,9h si 21h,0ah.
+ a) varianta cu citire/afisare in care totul este in programul principal;
+    pentru trecerea la linie noua se declara un sir init. cu  13, 10, '$' si
+    se afisaza inaintea sirului citit;
+ b) varianta in care pt. citire/afisare folosim proceduri;
+    proc. de citire primeste ca par. (prin stiva) adr. sirului in care se
+     citeste si un car. de pus la sfarsit convertit word (la apel vom folosi
+     '$'); ea va aloca o var. automatica in care va citi stringul (folosind
+     intreruperea), apoi il va copia transformat de aici in stringul a carui
+     adresa e data ca par. (transformarea consta in omiterea celor doua nr.
+     de la inceput si copierea car. dat ca par. in loc de CR); variabila 
+     automatica va fi suficient de mare pt. orice string care se poate citi,
+     deci se va cobori sp cu 258 octeti si se va pune primul octet 255;
+    proc de afisare va primi ca par. (prin stiva) adr. sirului afisat (se
+     presupune ca se termina cu '$');
+    programul declara un buffer "buff db 100 dup(?)" si un sir 
+     "newline db 13,10,'$'", apeleaza proc. de citire cu par. "offset buff"
+     si '$' (convertit word), apoi proc. de afisare cu par. "offset newline",
+     apoi proc de afisare cu par. "offset buff";
+    eventual se vor scrie macro-uri companion de apelarea aprocedurilor.
+
+2) (*)
+ Nimerirea caracterului: in program se declara o var. "k" byte initializat cu
+  un car.,apoi intr-un ciclu afisam o invitatie,citim un car."c" direct (fara
+  sa se astepte ENTER, gen "getch") cu intreruperea 16h,0h, se compara cu k 
+  si: daca este </> se afisaza un mesaj si se reia, iar daca este = se 
+  afisaza un mesaj si se termina.
+ Varianta cu functie pt. citirea caracterului (ret. caracterul in al) si 
+  proc. de afisare a mesajelor (terminate cu '$') (parametru: adr. sursa);
+  eventual procedurile se apeleaza cu macro-uri companion.
+
+3)
+ Citim de la tastatura doua stringuri, le comparam lexicografic si afisam pe
+  cel mai mare. Citirea/afisarea/compararea se fac cu proceduri apelate cu
+  macro-uri.
+
+4) Suma a doua numere date ca arg. in linia de comanda. Proceduri pt. copierea
+   arg. nr.i (parametri: i, adr. destinatie, car. de pus la sf. destinatiei),
+   atoi (parametri: adr. sursa si intregul), itoa (parametri: intregul, adr.
+   destinatie si car. de pus la sf. destinatiei), afisare string terminat cu
+   0 (paramteru: adr. sursa).
+
+Probleme cu fisiere:
+
+Indicatii: se folosesc functiile 21h,3ch - 21h,40h;
+  la deschidere: in caz de eroare CF=1, AX=codul err.,
+                 iar in caz de succes CF=0, AX=handler/rezultat;
+  pentru testarea corectitudinii operatiilor trebuie testat CF, dar programul
+   devine lung si nu mai facem;
+ la read: CF=0,AX=0 => EOF iar singurul lucru pe care il vom testa este AX=0
+   dupa citire;
+
+5) (*)
+Simulare "copy f1 f2". 
+Indicatii:
+  - numele fisierelor sunt date prin program (stringuri initializate);
+  - deschidem sursa pt. citire, cream destinatia (se si deschide pt. 
+ scriere), intr-un ciclu citim cate n si scriem cate AX; iesim daca acel 
+ AX=0; la sfarsit inchidem fisierele (la sfarsitul procesului fisierele ne 
+ inchise explicit se inchid automat, dar noi le vom inchide explicit);
+  - e bine ca n sa fie mare si sa avem putine iteratii; din considerente de
+ testare vom citi cate putin (3 caractere), ca sa faca multe iteratii;
+  - daca vrem sa facem si verificari, inchidem fisierele in ordinea inversa
+ deschiderilor - deschidem s,d, inchidem d,s, daca avem err. la deschiderea d
+ sarim la inchiderea s, iar daca avem err. la citire/scriere sarim mai sus,
+ la inchiderea d (si apoi se va inchide automat si s);
+Se va proceda in etape:
+ - deschidem si inchidem fisierele (si vedem daca se compileaza);
+ - adaugam restul;
+ - pentru testare cream sursa cu "notepad", lansam direct de pe prompter
+  si verificam egalitatea sursei si destinatiei cu "fc".
+  
+6) (*)
+Simulare "type fisier".
+Se va proceda in etape:
+ - intai modificam programul "copy f1 f2", eliminand tot ce tine de fisierul
+  destinatie (deschidere/scriere/inchidere) si inlocuind partea de scriere in
+  fisierul destinatie cu ceva ce scrie pe ecran (folosind 21h,9h ca mai
+  inainte sau ceva nou - 21h,6h); pentru scrierea pe ecran vom folosi 21h,6h;
+ - modificam a.i. deschiderea sa se faca cu o procedura (parametru prin stiva
+  pt. stringul cu numele, retur prin AX handlerul), iar afisarea caracterului
+  cu un macro (deoarece trebuie sa fie mai rapida) (parametru caracterul);
+ - modificam a.i. numele fisierului sa fie dat ca argument in linia de 
+  comanda; intai vom copia coada ldc din PSP intr-un string din segmentul
+  de cod, apoi de acolo vom copia numele fisierului intr-un string separat
+  (terminat cu 0).
+
+7) Dintr-un fisier citim intregi zecimali separati prin blankuri si 
+ afisam suma lor (macro pt. deschis/inchis fisier, citit caracret, citit
+ string, atoi, itoa, afisat string). Eventual proiect in echipa.
+
+8) Simulare "fc fs fd".
+
+9) Concatenare fis1 la sf. fis2 (fisierele se dau ca arg. ldc).
+
+10) Simulare "wc -l fis".
+
+11) Simulare "type" cu conversie la majuscule.
+
+Daniel Dragulici
+noiembrie 2007

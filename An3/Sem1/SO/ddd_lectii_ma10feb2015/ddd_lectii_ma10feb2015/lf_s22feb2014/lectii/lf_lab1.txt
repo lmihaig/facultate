@@ -1,0 +1,225 @@
+
+
+                               Automate finite:
+                               ~~~~~~~~~~~~~~~~
+
+A.Definitii:
+------------
+
+In cele ce urmeaza notam cu & pe lambda (cuvantul vid).
+
+
+1.  AFD: A = (Q, V, d, q0, F), unde:
+         Q, V, F multimi finite nevide
+           (stari, alfabet, respectiv stari finale)
+         q0 apartine lui Q (starea initiala)
+         F inclusa in Q
+         d : Q x V --o--> Q functie partiala (functia de tranzitie)
+    Extindem d la d': Q x V* --o--> Q definita prin:
+	d'(q,&) = q
+        d'(q,xa) = d(d'(q,x),a)
+      (q in Q, x in V*, a in V)
+    Limbajul acceptat de A este urmatoarea submultime a lui V*:
+        L(A) = {x in V* | d'(q0,x) in F}
+
+2.  AFN: A = (Q, V, d, q0, F), unde:
+         Q, V, q0, F ca mai sus
+         d : Q x V ----> P(Q) functie (functia de tranzitie)
+    Extindem d la d': Q x V* ----> P(Q) definita prin:
+        d'(q,&) = {q}
+        d'(q,xa) = {p in Q | exista r in d'(q,x) a.i. p in d(r,a))
+                   (adica reuniunea multimilor d(r,a) pentru r in d'(q,x))
+      (q in Q, x in V*, a in V)
+    Limbajul acceptat de A este urmatoarea submultime a lui V*:
+        L(A) = {x in V* | d'(q0,x) intersectat cu F e nevida}
+
+3. AFNL: A = (Q, V, d, q0, F), unde:
+         Q, V, q0, F ca mai sus
+         d : Q x (V U {&}) ----> P(Q) functie (functia de tranzitie)
+    Pentru q in Q definim submultimea lui Q:
+	<q> = {p in Q | exista s0, ..., sk in Q (k>=0) a.i.
+			s0=q, sk=p, s(i+1) in d(si,&) pentru 0 <= i < k}
+    Pentru P inclus in Q definim urmatoarea submultime a lui Q:
+	<P> = {}, daca P vida
+	<P> = reuniunea multimilor <q> pentru q in P, daca P nevida
+    Extindem d la d': Q x V* ----> P(Q) definita prin:
+	d'(q,&) = <q>
+	d'(q,ax) = {p in Q | exista r in <q> si s in  <d(r,a)> a.i.
+			     p in d'(s,x)}
+      (q in Q, x in V*, a in V)
+    Limbajul acceptat de A este urmatoarea submultime a lui V*:
+	L(A) = {x in V* | d'(q0,x) intersectat cu F e nevida}
+
+B.Sugestii de implementare:
+---------------------------
+
+1. AFD in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare:
+
+class AFD{
+ int nrstari;
+  // nr. de stari; starea initiala este 0; -1=stare nedefinita
+ unsigned char *finala;
+  // vector caracteristic al starilor finale;
+  // bitul s%8 din octetul finala[s/8] este 1 sau 0
+  //   dupa cum s este stare finala sau nu;
+ int (*tranzitie)[256];
+  // tranzitiile;
+  // daca din (s,c) se trece in d, atunci t[s][c]=d;
+  // daca tranzitia din (s,c) nu este definita, t[s][c]=-1;
+public:
+ AFD();
+ ~AFD();
+ int getnrstari();
+  // ret. nr. de stari nrstari;
+ int setnrstari(int pns);
+  // seteaza nr. de stari cu pns si aloca memorie pt. automat;
+  // ret. 1=succes, 0=esec;
+ int estefinala(int s);
+  // ret. ceva !=0 daca s este stare finala si 0 daca nu este stare finala;
+ int setfinala(int s);
+  // marcheaza starea s ca fiind finala;
+  // ret. 1=succes, 0=esec;
+ int gettranzitie(int s, unsigned c);
+  // ret. starea in care se trece cu tranzitia din (s,c);
+  // daca tranzitia din (s,c) nu este definita, ret. -1;
+ int settranzitie(int s, unsigned c, int d);
+  // incarca in automat tranzitia (s,c) -> d;
+  // ret. 1=succes, 0=esec;
+ int recunoaste(char const *cuv, int *f);
+  // ret. ceva !=0 daca AFD recunoaste cuvantul cuv
+  //   si 0 daca nu-l recunoaste (inclusiv daca se blocheaza);
+  // in *f furnizeaza starea in care AFD s-a oprit din procesarea lui cuv
+  //   (daca nu l-a procesat pana la capat, e starea in care s-a blocat);
+};
+
+Functii de citire/afisare/recunoastere:
+
+int citeste(AFD &a);  // citire interactiva; ret. 1=succes,0=esec
+
+void afisaza(AFD &a); // afisare;
+
+int recunoaste(AFD &a, char *s); // ret. 1=recunoscut, 0=nerecunoscut/blocat
+
+/**************************************************************************/
+
+2. AFN in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare:
+
+class AFN{
+ int nrstari;
+  // nr. de stari; starea initiala este 0;
+ unsigned char *finala;
+  // vector caracteristic al starilor finale;
+ unsigned char *buftranzitie;
+  // tranzitiile;
+  // daca din (s,c) exista tranzitie in d (nu e neaparat singura tranzitie
+  //   din (s,c)), atunci notand x = s*nrstari*256 + d*256 + c,
+  //   bitul x%8 din buftranzitie[x/8] este 1, altfel este 0;
+public:
+ AFN();
+ ~AFN();
+ int getnrstari();
+ int setnrstari(int pns);
+ int estefinala(int s);
+ int setfinala(int s);
+ int gettranzitie(int s, unsigned c, int d);
+  // ret. 1 daca din (s,c) exista tranzitie in d si 0 daca nu exista;
+ int settranzitie(int s, unsigned c, int d);
+ int recunoaste(char const *cuv);
+ // ret. 1 daca AFN recunoaste cuvantul cuv, 0 daca nu-l recunoaste
+ //   si -1 in caz de eroare;
+};
+
+
+Functii de citire/afisare/recunoastere:
+
+int citeste(AFN &a);  // citire interactiva; ret. 1=succes,0=esec
+
+void afisaza(AFN &a); // afisare;
+
+int recunoaste(AFN &a, char *s); // ret. 1=recunoscut, 0=nerecunoscut/blocat
+
+/**************************************************************************/
+
+3. AFNL in C++ cu metode de setare/consultare/recunoastere a unui cuvant si
+ functii de citire si afisare:
+
+class AFNL{
+ int nrstari;
+  // nr. de stari; starea initiala este 0;
+ unsigned char *finala;
+  // vector caracteristic al starilor finale
+ unsigned char *buftranzitie;
+  // tranzitiile;
+  // daca din (s,c) exista tranzitie in d (nu e neaparat singura tranzitie
+  //   din (s,c)), atunci notand x = s*nrstari*257 + d*257 + c,
+  //   bitul x%8 din buftranzitie[x/8] este 1, altfel este 0;
+  // c=256 tine loc de lambda (pentru lambda-tranzitii);
+public:
+ AFNL();
+ ~AFNL();
+ int getnrstari();
+ int setnrstari(int pns);
+ int estefinala(int s);
+ int setfinala(int s);
+ int gettranzitie(int s, unsigned c, int d);
+  // ret. 1 daca din (s,c) exista tranzitie in d si 0 daca nu exista;
+  // c este litera obisnuita din alfabetul de intrare, 0 <= c <= 255;
+ int gettranzitie(int s, int d);
+  // ret. 1 daca din s exista lambda-tranzitie in d si 0 daca nu exista;
+ int settranzitie(int s, unsigned c, int d);
+  // incarca in automat tranzitia (s,c) -> d, 0 <= c <= 255;
+  // ret. 1=succes, 0=esec;
+ int settranzitie(int s, int d);
+  // incarca in automat lambda-tranzitia din s in d;
+  // ret. 1=succes, 0=esec;
+ int recunoaste(char const *cuv);
+};
+
+Functii de citire/afisare/recunoastere:
+
+int citeste(AFNL &a);  // citire interactiva; ret. 1=succes,0=esec
+
+void afisaza(AFNL &a); // afisare;
+
+int recunoaste(AFNL &a, char *s); // ret. 1=recunoscut, 0=nerecunoscut/blocat
+
+C.TEMA:
+-------
+
+ 1. (12 puncte)
+ Completati definitiile de mai sus pentru AFD, AFN, AFNL si pentru functiile
+  de citire/afisare/recunoastere in fiecare caz.
+ Se va construi cate o pereche fisier header - fisier de implementare pentru
+  fiecare din clasele AFD, AFN, AFNL si pentru fiecare din tripletele de
+  functii de citire/afisare/recunoastere corespunzatoare (in total 6 perechi
+  de fisiere).
+ Scrieti cate un program demonstrativ pentru fiecare tip de automat; in
+  fiecare caz programul va citi un automat, il va afisa, apoi intr-un ciclu
+  va citi cuvinte si va spune daca automatul le recunoaste; din ciclu se va
+  iesi la citirea cuvantului vid (in cazul AFN, AFNL cuvantul vid se va
+  procesa inainte de iesire).
+
+ Varianta (cu injumatatirea punctajului):
+
+ Definiti (oricum) tipurile automat finit determinist (AFD), automat finit
+  nedeterminist (AFN), automat finit nedeterminist cu lambda miscari (AFNL),
+  ca niste tipuri structura (in C) sau clase (in C++); starile vor fi mereu
+  numere naturale 0,...,n, starea initiala va fi 0, alfabetul va fi tot setul
+  ASCII; accesul (setare/consultare) la membrii data ai automatului se va
+  face doar prin functii ce primesc automatul ca parametru de iesire (in C),
+  respectiv metode publice (in C++).
+ Scrieti functii/metode de citire, afisare si testarea recunoasterii unui
+  cuvant pentru fiecare tip de automat; functia/metoda de recunoastere va
+  furniza printr-un parametru de iesire si starea in care s-a terminat/blocat
+  functionarea automatului.
+ Scrieti cate un program demonstrativ pentru fiecare tip de automat; in
+  fiecare caz programul va citi un automat, il va afisa, apoi intr-un ciclu
+  va citi cuvinte si va spune daca automatul le recunoaste; din ciclu se va
+  iesi la citirea cuvantului vid (in cazul AFN, AFNL cuvantul vid se va
+  procesa inainte de iesire).
+
+
+DANIEL DRAGULICI
+februarie, 2007
