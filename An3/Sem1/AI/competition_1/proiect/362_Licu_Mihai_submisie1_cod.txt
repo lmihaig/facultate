@@ -1,0 +1,93 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import KFold
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.feature_extraction.text import CountVectorizer
+import advertools as adv
+from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
+from sklearn.naive_bayes import ComplementNB
+import seaborn as sns
+
+langs = ["nl", "da", "de", "it", "es", ]
+
+model = ComplementNB()
+
+stop_words = []
+for key in ["danish", "german", "dutch", "italian", "spanish"]:
+    stop_words += list(adv.stopwords[key])
+
+cvc = CountVectorizer(stop_words=stop_words)
+
+ans = pd.DataFrame()
+
+
+def simpleModel(X_train, y_train, X_test):
+    print(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
+    X = cvc.fit_transform(list(X_train) + list(X_test))
+    model.fit(X[:len(X_train)], y_train)
+    res = model.predict(X[len(X_train):])
+    return res
+
+
+for language in langs:
+    print("working on:", language)
+    train_data = pd.read_csv(f"../corpus/train/{language}/{language}_plain.csv")
+    test_data = pd.read_csv(f"../corpus/test/{language}/{language}_plain.csv")
+
+    res = simpleModel(train_data.text, train_data.label, test_data.text)
+
+    test_data["label"] = res
+    test_data = test_data.drop("text", axis=1)
+    ans = pd.concat([ans, test_data])
+
+results = ans.copy()
+
+
+ans["index"] += 1
+ans = ans.sort_values(by=["index"])
+ans = ans.rename(columns={"index": "id"})
+print(ans.head())
+ans.to_csv("../submissions/nolang_NB.csv", index=False)
+
+kfold = KFold(n_splits=5, shuffle=True, random_state=21)
+
+results = []
+actual = []
+overall_acc = []
+overall_f1 = []
+for language in langs:
+    print("working on:", language)
+    train = pd.read_csv(f"../corpus/train/{language}/{language}_plain.csv")
+    acc = []
+    f1 = []
+    for train_index, test_index in kfold.split(train):
+        X_train, X_test = train.text[train_index], train.text[test_index]
+        y_train, y_test = list(train.label[train_index]), list(train.label[test_index])
+
+        res = simpleModel(X_train, y_train, X_test)
+
+        acc.append(accuracy_score(res, y_test))
+        f1.append(f1_score(res, y_test, average="weighted"))
+        results.extend(res)
+        actual.extend(y_test)
+
+    overall_acc.extend(acc)
+    overall_f1.extend(f1)
+
+    print(acc)
+    print("Acc:", np.array(acc).mean())
+    print(f1)
+    print("F1:", np.array(f1).mean())
+
+print("\nOverall Acc:", np.array(overall_acc).mean())
+print("Overall F1:", np.array(overall_f1).mean())
+
+
+label_vals = ["England", "Ireland", "Scotland"]
+conf_mat = confusion_matrix(actual, results)
+sns.heatmap(conf_mat, annot=True, fmt='d',
+            xticklabels=label_vals, yticklabels=label_vals)
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
+plt.show()

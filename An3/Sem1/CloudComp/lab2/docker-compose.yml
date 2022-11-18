@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  mongodb-books-db:
+    container_name: database
+    image: mongo:6.0.2-focal
+    environment:
+      MONGO_INITDB_DATABASE: library
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodbdata:/data/db
+    networks:
+      - backend
+
+  flask-books-backend:
+    container_name: backend
+    build: ./backend
+    ports:
+      - 5000:5000
+    depends_on:
+      - mongodb-books-db
+    environment:
+      APP_DEBUG: "True"
+      APP_PORT: 5000
+      MONGODB_DATABASE: library
+      MONGODB_HOSTNAME: mongodb-books-db
+    networks:
+      - backend
+      - frontend
+
+  vue-books-frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - 8000:8080
+    depends_on:
+      - flask-books-backend
+    environment:
+      - PROXY_API=flask-books-backend
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  mongodbdata:
+    driver: local
