@@ -1,0 +1,81 @@
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+import pandas as pd
+from sklearn.svm import LinearSVC
+from sklearn.model_selection import KFold
+from sklearn.metrics import accuracy_score, f1_score
+import advertools as adv
+from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+
+train_data = pd.read_csv("../corpus/nolang_dif/train_data.csv")
+print(train_data.head())
+
+
+test_data = pd.read_csv("../corpus/nolang_dif/test_data.csv")
+print(test_data.head())
+
+
+kfold = KFold(n_splits=5, shuffle=True, random_state=21)
+model = LinearSVC(max_iter=5000, random_state=21, C=1,  penalty="l1", dual=False, class_weight="balanced")
+
+stop_words = []
+for key in ["danish", "german", "dutch", "italian", "spanish"]:
+    stop_words += list(adv.stopwords[key])
+tfidf = TfidfVectorizer(sublinear_tf=True, norm='l2', ngram_range=(1, 2), stop_words=stop_words)
+
+
+def simpleModel(X_train, y_train, X_test):
+    print(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
+    X = tfidf.fit_transform(list(X_train) + list(X_test))
+    model.fit(X[:len(X_train)], y_train)
+    res = model.predict(X[len(X_train):])
+    return res
+
+
+predicted_labels = simpleModel(train_data.text, train_data.label, test_data.text)
+
+
+final_data = {"id": test_data.index+1, "label": predicted_labels}
+
+submission = pd.DataFrame(data=final_data).set_index("id")
+submission.head()
+submission.to_csv("../submissions/nolang_SVM_tf-idf.csv")
+
+
+acc = []
+f1 = []
+predicted = []
+actual = []
+
+features = np.array(train_data.text).reshape(-1, 1)
+labels = np.array(train_data.label)
+
+
+kfold_train = pd.DataFrame({"text": features.flatten(), "label": labels})
+for train_index, test_index in kfold.split(kfold_train):
+    X_train, X_test = kfold_train.text[train_index], kfold_train.text[test_index]
+    y_train, y_test = list(kfold_train.label[train_index]), list(kfold_train.label[test_index])
+
+    res = simpleModel(X_train, y_train, X_test)
+    predicted.extend(res)
+    actual.extend(y_test)
+
+    acc.append(accuracy_score(res, y_test))
+    f1.append(f1_score(res, y_test, average="weighted"))
+
+
+print(acc)
+print("Acc:", np.array(acc).mean())
+print(f1)
+print("F1:", np.array(f1).mean())
+label_vals = ["England", "Ireland", "Scotland"]
+conf_mat = confusion_matrix(actual, predicted)
+sns.heatmap(conf_mat, annot=True, fmt='d',
+            xticklabels=label_vals, yticklabels=label_vals)
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
+plt.show()
