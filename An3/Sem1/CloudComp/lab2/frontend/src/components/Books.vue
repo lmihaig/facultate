@@ -44,6 +44,7 @@ export default {
   data() {
     {
       return {
+        API_URL: "http://localhost:" + process.env.VUE_APP_API_URL,
         books: [],
         addBookForm:
         {
@@ -57,7 +58,7 @@ export default {
   },
   methods: {
     getBooks() {
-      axios.get("/api/books")
+      axios.get(this.API_URL + "/api/books")
         .then((res) => {
           this.books = res.data
         })
@@ -68,7 +69,7 @@ export default {
     addBook(payload) {
 
       console.log(payload)
-      axios.post("/api/books", payload)
+      axios.post(this.API_URL + "/api/books", payload)
         .then(() => {
           this.getBooks()
         })
@@ -78,7 +79,7 @@ export default {
     },
 
     deleteBook(id) {
-      axios.delete(`/api/book/${id}`)
+      axios.delete(this.API_URL + `/api/book/${id}`)
         .then(() => {
           this.getBooks()
         })
@@ -108,6 +109,7 @@ export default {
 
   },
   created() {
+    console.log(this.API_URL)
     this.getBooks();
   }
 
