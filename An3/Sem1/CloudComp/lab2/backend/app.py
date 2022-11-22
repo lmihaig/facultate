@@ -10,6 +10,13 @@ app.config["SECRET_KEY"] = "csrf_token"
 
 api = Api(app)
 
+
+@app.after_request
+def after_request_func(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
 app.config["MONGO_URI"] = 'mongodb://' + os.environ['MONGODB_HOSTNAME'] + ':27017/' + os.environ['MONGODB_DATABASE']
 # app.config["MONGO_URI"] = 'mongodb://localhost:27017/library'
 mongo = PyMongo(app)
