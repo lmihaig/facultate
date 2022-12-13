@@ -1,0 +1,13 @@
+gigel invatat 2/4 (snt: 80, intel: 47, obos: 17, dispoz: 95)
+gigel invatat 3/4 (snt: 80, intel: 54, obos: 24, dispoz: 90)
+gigel invatat 4/4 (snt: 80, intel: 61, obos: 31, dispoz: 85)
+gigel invatat 1/4 (snt: 80, intel: 68, obos: 38, dispoz: 80)
+gigel invatat 2/4 (snt: 80, intel: 75, obos: 45, dispoz: 75)
+gigel invatat 3/4 (snt: 80, intel: 82, obos: 52, dispoz: 70)
+gigel invatat 4/4 (snt: 80, intel: 89, obos: 59, dispoz: 65)
+gigel iesit_cu_prietenii 1/3 (snt: 80, intel: 96, obos: 66, dispoz: 60)
+gigel iesit_cu_prietenii 2/3 (snt: 82, intel: 97, obos: 70, dispoz: 70)
+gigel iesit_cu_prietenii 3/3 (snt: 84, intel: 98, obos: 74, dispoz: 80)
+gigel citit 1/2 (snt: 86, intel: 99, obos: 78, dispoz: 90)
+gigel citit 2/2 (snt: 86, intel: 100, obos: 81, dispoz: 91)
+Elevul gigel a absolvit scoala!

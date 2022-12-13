@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 
     if (argc != 3)
     {
-        fprintf(stderr, "%s <file1> <file2>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <file1> <file2>\n", argv[0]);
         return 1;
     }
 
@@ -25,12 +25,10 @@ int main(int argc, char *argv[])
         fclose(file1);
         return 1;
     }
-
-    char row[255];
-
-    while (fgets(row, sizeof(row), file1) != NULL)
+    char ch;
+    while ((ch = fgetc(file1)) != EOF)
     {
-        fprintf(file2, "%s", row);
+        fputc(ch, file2);
     }
 
     fclose(file1);
