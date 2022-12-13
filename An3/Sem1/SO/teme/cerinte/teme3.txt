@@ -1,0 +1,47 @@
+
+==================== TEME:
+
+D1. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si afisaza arborescenta de directoare si fisiere cu originea
+ in el (similar comenzii tree /f din DOS).
+
+D2. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si calculeaza suma dimensiunilor fisierelor din arborescenta cu
+ originea in el.
+
+D3. (4 puncte) Program care primeste ca argumente in linia de comanda un
+ fisier f si un director d si determina daca fisierul f se afla (ca nume)
+ in arborescenta cu originea in d; in caz afirmativ se va determina numarul
+ de aparitii.
+
+D4. (8 puncte) Program care primeste ca argumente in linia de comanda doua
+ directoare d1 si d2 si determina fisierele care apar (ca nume + cale)
+ intr-o arborescenta si nu apar in cealalta.
+
+D5. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si sterge (recursiv) toata arborescenta cu originea in el.
+
+D6. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director d si sterge toate fisierele terminate in ".out" care apar in
+ arborescenta cu originea in d.
+
+D7. (8 puncte) Program care primeste ca argumente in linia de comanda doua
+ directoare d1 si d2 (d1 exista, d2 nu) si copiaza recursiv toata
+ arborescenta cu originea in d1 intr-o arborescenta cu originea in d2
+ (intre cele doua arborescente difera doar numele directorului origine).
+
+D8. (2 puncte) Program care tipareste pe stderr toate mesajele de eroare ce 
+ se pot obtine cu functia "perror", precedate de valoarea corespunzatoare a
+ variabilei "errno". Cu ajutorul lui sa se obtina un fisier cu aceste mesaje.
+
+D9. (4 puncte) Sa se creeze un fisier "myperror.i", care sa contina
+ definitia unei functii "void myperror(const char *s)", care tipareste
+ pe stderr stringul "s", apoi ":", apoi mesajul de eroare corespunzator
+ valorii curente din variabila "errno" dar tradus in romana. In acest scop
+ se poate folosi fisierul creat la problema D8. Scrieti un program care sa
+ includa "myperror.i" si sa foloseasca functia "myperror" intr-un context
+ similar celui in care se foloseste "perror"; in urma rularii acestui
+ program sa se poata observa modul de functionare al funtiei "myperror".  
+
+							DRAGULICI DANIEL
+                                                   actualizat s22nov2008

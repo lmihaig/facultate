@@ -1,0 +1,2 @@
+marcel invatat 2/4 (snt: 99, intel: 100, obos: 7, dispoz: 95)
+Elevul marcel a absolvit scoala!

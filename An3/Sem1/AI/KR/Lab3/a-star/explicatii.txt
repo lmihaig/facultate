@@ -1,0 +1,18 @@
+a->... ->b f: #######------------------  notat g cu # si h cu -
+a->... ->c f: #####################----
+
+(g=3,f=5), (g=5, f=7), (g=1, f=7) , (g=3, f=10)   
+
+
+Explicatie pentru admisibilitate:
+- euristicile sunt paranteze drepte
+estimez pentru b o euristica inadmisibila (mai mare decat costul real - ceea ce e GRESIT!!!)
+a--10-->b[100]---1-->f[0]
+a--8---->c[20]--21--->f[0]
+Dupa expandarea lui a avem in coada:
+c(g=8, f=28), b(g=10, f=110)
+a* il alege pe c ------ > f(g=29, f=29)
+In coada:
+f(g=29, f=29), b(g=10, f=110)
+Solutia gresita: a->c->f  cu cost 29
+dar drumul de cost minim e a->b->f cu cost 11
