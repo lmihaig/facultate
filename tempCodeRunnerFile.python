@@ -1,2 +1,0 @@
-import networkx, random
-G = networkx.binomial_graph(50, random.random()) # 50 nodes, random probability of an edge
