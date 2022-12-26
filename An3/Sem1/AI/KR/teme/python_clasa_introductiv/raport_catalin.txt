@@ -1,3 +1,9 @@
 catalin baut_cafea 1/1 (snt: 5, intel: 8, obos: 11, dispoz: 100)
 catalin baut_cafea 1/1 (snt: 0, intel: 6, obos: 12, dispoz: 100)
 Elevul catalin este bolnav
+catalin baut_cafea 1/1 (snt: 5, intel: 8, obos: 11, dispoz: 100)
+catalin baut_cafea 1/1 (snt: 0, intel: 6, obos: 12, dispoz: 100)
+Elevul catalin este bolnav
+catalin baut_cafea 1/1 (snt: 5, intel: 8, obos: 11, dispoz: 100)
+catalin baut_cafea 1/1 (snt: 0, intel: 6, obos: 12, dispoz: 100)
+Elevul catalin este bolnav

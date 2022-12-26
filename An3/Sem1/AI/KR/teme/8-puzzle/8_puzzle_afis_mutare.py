@@ -1,8 +1,8 @@
+"""ENUNT: 
+Modificati problema 8-puzzle astfel incat, la afisarea solutiei, intre fiecare 2 configuratii consecutive sa se afiseze si mutarea facuta (exemplu: 7 mutat la stanga, 2 mutat in sus etc.).
 """
-ENUNT:
-Pentru problema 8-puzzle implementați o euristica in care numărați câte plăcuțe nu sunt la locul lor (deoarece pentru fiecare astfel de plăcuță avem măcar o mutare de realizat). Comparați timpul de rulare pentru această euristică cu timpul de rulare pentru euristica din laborator.
 
-"""
+
 """
 Dati enter dupa fiecare solutie afisata.
  
@@ -36,6 +36,10 @@ class NodParcurgere:
     def afisDrum(self, afisCost=False, afisLung=False):  # returneaza si lungimea drumului
         l = self.obtineDrum()
         for i, nod in enumerate(l):
+            if nod.parinte:
+                dif = [[i, j] for i in range(len(nod.info)) for j in range(len(nod.info[0])) if nod.info[i][j] != nod.parinte.info[i][j]]
+                if dif:
+                    print(nod.parinte.info[dif[0][0]][dif[0][1]], "->", nod.info[dif[0][0]][dif[0][1]])
             print(i+1, ")\n", str(nod), sep="")
         if afisCost:
             print("Cost: ", self.g)
@@ -126,27 +130,18 @@ class Graph:  # graful problemei
     def calculeaza_h(self, infoNod, tip_euristica="euristica banala"):
         if infoNod in self.scopuri:
             return 0
-
-        match tip_euristica:
-            case "euristica banala": return 1
-            case "numara placute":
-                m = len(infoNod)
-                n = len(infoNod[0])
-                items = list(range(1, m*n+1))
-                res = [items[i:i+m] for i in range(0, len(items), m)]
-                res[-1][-1] = 0
-                a = sum([1 for i in range(n) for j in range(m) if res[i][j] != infoNod[i][j]])
-                return a
-            case _:
-                h = 0
-                for lPlacutaC in range(len(infoNod)):
-                    for cPlacutaC in range(len(infoNod[0])):
-                        if infoNod[lPlacutaC][cPlacutaC] != 0:
-                            placuta = infoNod[lPlacutaC][cPlacutaC]
-                            lPlacutaF = (placuta-1)//len(infoNod[0])
-                            cPlacutaF = (placuta-1) % len(infoNod[0])
-                            h += abs(lPlacutaF - lPlacutaC)+abs(cPlacutaF - cPlacutaC)
-                return h
+        if tip_euristica == "euristica banala":
+            return 1
+        else:
+            h = 0
+            for lPlacutaC in range(len(infoNod)):
+                for cPlacutaC in range(len(infoNod[0])):
+                    if infoNod[lPlacutaC][cPlacutaC] != 0:
+                        placuta = infoNod[lPlacutaC][cPlacutaC]
+                        lPlacutaF = (placuta-1)//len(infoNod[0])
+                        cPlacutaF = (placuta-1) % len(infoNod[0])
+                        h += abs(lPlacutaF - lPlacutaC)+abs(cPlacutaF - cPlacutaC)
+            return h
 
     def __repr__(self):
         sir = ""
@@ -255,11 +250,6 @@ gr = Graph("input.txt")
 #uniform_cost(gr, nrSolutiiCautate=4)
 
 
-print("\n\n##################\nSolutii obtinute cu A* nebanala:")
+print("\n\n##################\nSolutii obtinute cu A*:")
 t1 = time.time()
 a_star(gr, nrSolutiiCautate=3, tip_euristica="euristica nebanala")
-
-
-print("\n\n##################\nSolutii obtinute cu A* numara placute:")
-t1 = time.time()
-a_star(gr, nrSolutiiCautate=3, tip_euristica="numara placute")

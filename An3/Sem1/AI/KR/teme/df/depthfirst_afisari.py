@@ -1,6 +1,13 @@
-
+"""ENUNT:
+Sa se afiseze la fiecare pas: stiva actuala, conexiunea (muchia/arcul adaugat) formata din nodul extins si nodul care e adaugat, cazul cand se intoarce la o pozitie anterioara din stiva si drumul gasit ca solutie la un moment dat impreuna cu lungimea lui, ca in exemplul de mai jos:
+Rezolvati pentru:
+depth first
+depth first iterative deepening
+"""
 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
+
+
 class NodParcurgere:
     def __init__(self, id, info, parinte):
         self.id = id  # este indicele din vectorul de noduri

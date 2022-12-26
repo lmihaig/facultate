@@ -6,6 +6,10 @@ import string
 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 
+"""ENUNT:
+Implementati BF folosind un obiect de tip Queue din Python si afisati toate solutiile. Scoateti apelurile de tip print al cozii si input din programul dat la laborator. Comparati cu cProfile programul vostru si cel dat la laborator. Ce structura e mai eficienta? Observatie: daca diferentele de timp sunt prea mici, mariti numarul de noduri si de muchii in matricea de adiacenta.
+"""
+
 
 class NodParcurgere:
     def __init__(self, id, info, parinte):
