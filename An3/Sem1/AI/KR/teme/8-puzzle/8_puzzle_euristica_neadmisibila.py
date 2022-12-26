@@ -1,8 +1,9 @@
-"""
-ENUNT:
-Pentru problema 8-puzzle implementați o euristica in care numărați câte plăcuțe nu sunt la locul lor (deoarece pentru fiecare astfel de plăcuță avem măcar o mutare de realizat). Comparați timpul de rulare pentru această euristică cu timpul de rulare pentru euristica din laborator.
+"""ENUNT:
+Implementați o euristică neadmisibilă pentru 8-puzzle, astfel încât rulând A* cu această euristică să obțineți o soluție mai costisitoare decât soluția de cost minim. Se va puncta dacă la prezentare afișați atât drumul de cost minim cât și drumul găsit cu euristica voastră.
 
 """
+
+
 """
 Dati enter dupa fiecare solutie afisata.
  
@@ -15,6 +16,7 @@ Dati enter dupa fiecare solutie afisata.
 
 
 import copy
+import random
 import sys
 import time
 class NodParcurgere:
@@ -35,8 +37,8 @@ class NodParcurgere:
 
     def afisDrum(self, afisCost=False, afisLung=False):  # returneaza si lungimea drumului
         l = self.obtineDrum()
-        for i, nod in enumerate(l):
-            print(i+1, ")\n", str(nod), sep="")
+        # for i, nod in enumerate(l):
+        # print(i+1, ")\n", str(nod), sep="")
         if afisCost:
             print("Cost: ", self.g)
         if afisCost:
@@ -129,14 +131,8 @@ class Graph:  # graful problemei
 
         match tip_euristica:
             case "euristica banala": return 1
-            case "numara placute":
-                m = len(infoNod)
-                n = len(infoNod[0])
-                items = list(range(1, m*n+1))
-                res = [items[i:i+m] for i in range(0, len(items), m)]
-                res[-1][-1] = 0
-                a = sum([1 for i in range(n) for j in range(m) if res[i][j] != infoNod[i][j]])
-                return a
+            case "euristica neadmisibila":
+                return random.randint(0, 42)
             case _:
                 h = 0
                 for lPlacutaC in range(len(infoNod)):
@@ -162,14 +158,14 @@ def breadth_first(gr, nrSolutiiCautate):
 
     while len(c) > 0:
         #print("Coada actuala: " + str(c))
-        # # input()
+        # # # input()
         nodCurent = c.pop(0)
 
         if gr.testeaza_scop(nodCurent):
             print("Solutie:")
             nodCurent.afisDrum(afisCost=True, afisLung=True)
             print("\n----------------\n")
-            # input()
+            # # input()
             nrSolutiiCautate -= 1
             if nrSolutiiCautate == 0:
                 return
@@ -184,7 +180,7 @@ def uniform_cost(gr, nrSolutiiCautate=1):
 
     while len(c) > 0:
         print("Coada actuala: " + str(c))
-        # input()
+        # # input()
         nodCurent = c.pop(0)
 
         if gr.testeaza_scop(nodCurent):
@@ -225,7 +221,7 @@ def a_star(gr, nrSolutiiCautate, tip_euristica):
             nodCurent.afisDrum(afisCost=True, afisLung=True)
             print(time.time()-t1, "secunde")
             print("\n----------------\n")
-            # input()
+            # # input()
             nrSolutiiCautate -= 1
             if nrSolutiiCautate == 0:
                 return
@@ -260,6 +256,7 @@ t1 = time.time()
 a_star(gr, nrSolutiiCautate=3, tip_euristica="euristica nebanala")
 
 
-print("\n\n##################\nSolutii obtinute cu A* numara placute:")
+print("\n\n##################\nSolutii obtinute cu A* euristica neadmisibila:")
+print("(dureaza mult dar da rezultate)")
 t1 = time.time()
-a_star(gr, nrSolutiiCautate=3, tip_euristica="numara placute")
+a_star(gr, nrSolutiiCautate=3, tip_euristica="euristica neadmisibila")

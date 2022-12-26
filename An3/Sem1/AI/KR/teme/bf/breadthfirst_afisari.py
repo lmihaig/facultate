@@ -1,5 +1,10 @@
-
+"""ENUNT:
+Sa se implementeze cautarea in latime pentru labirint.
+Sa se afiseze la fiecare pas coada actuala, drumul extins, drumurile adaugate in coada si solutiile, ca in exemplul de mai jos:
+"""
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
+
+
 class NodParcurgere:
     def __init__(self, id, info, parinte):
         self.id = id  # este indicele din vectorul de noduri

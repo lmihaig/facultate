@@ -4,6 +4,11 @@
 import random
 
 
+"""ENUNT:
+La UCS: schimbati algoritmul astfel incat să avem pentru fiecare nod un cost asociat, pus intr-un vector de costuri, de exemplu, costuri=[10,20,5, ... etc.]. Costul de pe pozitia i corespunde nodului de pe pozitia i din lista de noduri. Nu vom mai avea o matrice de costuri pentru muchii, deoarece costul se aplica cand ieșim dintr-un nod (toate arcele care ies din nodul i au asociat costul lui i, de pe pozitia i, din vectorul de noduri). De exemplu, daca nodul c are costul 8, atunci c->e, c->g au ambele asociate costul 8.
+"""
+
+
 class NodParcurgere:
     def __init__(self, id, info, cost, parinte):
         self.id = id  # este indicele din vectorul de noduri

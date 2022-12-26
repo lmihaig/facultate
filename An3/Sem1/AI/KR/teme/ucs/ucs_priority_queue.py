@@ -4,6 +4,10 @@
 import cProfile
 from queue import PriorityQueue
 
+"""ENUNT:
+Implementare UCS/A* cu o structura de tip PriorityQueue (din modulul queue: https://docs.python.org/3/library/queue.html). Pentru ca această structură să funcționeze, obiectele din coadă au nevoie de o relație de ordine definită pentru ele, deci definiți un minim de operatori. Ordonarea trebuie făcută crescător după f, iar, pentru f-uri egale, descrescător după g. Comparați cu cProfiler performanța funcției voastre față de cea dată în laborator.
+"""
+
 
 class NodParcurgere:
     def __init__(self, id, info, cost, parinte):

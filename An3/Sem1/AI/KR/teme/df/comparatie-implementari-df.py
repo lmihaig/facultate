@@ -1,4 +1,14 @@
+"""ENUNT:
+Generati un graf aleator cu un numar mai mare de noduri (dar nu foarte mare), de exemplu N=20 noduri si un numar mare (dar nu foarte mare) de muchii/arce, de exemplu M=200. Nodul 0 va fi nodul start. Alegeti aleator S noduri scop (de exemplu S=5).
 
+Implementati algorimul DF in mod nerecursiv folosind o stiva. Folositi in implementare:
+
+o lista pe post de stiva
+deque din modulul collections
+LifoQueue din modulul queue
+(opțional) eventual inca un mod propriu de rezolvare
+Folositi cProfiler pentru a analiza performanta pentru cele 3 moduri de implementare, impreuna cu cel de la laborator. Care este cel mai eficient?
+"""
 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 import cProfile

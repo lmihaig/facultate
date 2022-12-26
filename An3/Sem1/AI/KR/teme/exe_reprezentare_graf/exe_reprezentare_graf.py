@@ -3,6 +3,17 @@ import json
 from pprint import pprint
 
 
+"""ENUNT:
+Exercitiu de intelegere a reprezentarii unui graf.
+
+Scrieti un program in care porniti de la matricea de adiacenta (se va citi din fisier), si obtineti lista de noduri si de muchii/arce asociate unui graf oarecare (veti scrie cele doua liste in fisier). In plus, afisati in consola daca matricea de adiacenta poate fi a unui graf neorientat sau nu. Faceti si transformarea inversa (de la lista de noduri si muchii la matricea de adiacenta).
+
+Faceti acelasi lucru si pentru liste de vecini: trecerea de la matrice de adicenta la lista de vecini, trcerea de la lista de vecini la matrice de adiacenta.
+
+Pe langa program(e), se vor uploada si fisierele de input si output (numele lor trebuie sa indice daca sunt de input sau output). In fisierul de input trebuie sa fie descris un graf de macar 7 noduri dintre care unul izolat. Se va uploada si un desen cu graful (de exemplu facut in paint sau desenta si fotografiat).
+"""
+
+
 def adiacenta_to_graf(matrice):
     neorientat = True
 
@@ -90,4 +101,3 @@ if __name__ == "__main__":
 
     new_matrice = vecini_to_adiacenta(graf_vecini)
     print("Matrice din vecini:\t", new_matrice)
-

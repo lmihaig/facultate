@@ -1,3 +1,8 @@
+"""ENUNT:
+Îmbunătățire BF astfel incat sa afișeze un drum-solutie chiar in momentul in care se adauga nodul scop in coada (sa nu mai astepte sa ajungă să fie primul in coada).
+
+"""
+
 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 class NodParcurgere:
