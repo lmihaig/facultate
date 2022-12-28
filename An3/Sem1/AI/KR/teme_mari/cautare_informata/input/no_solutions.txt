@@ -1,0 +1,7 @@
+N1=8
+N2=1
+K=0
+M=1
+Nr=2
+MalInitial=left
+MalFinal=right

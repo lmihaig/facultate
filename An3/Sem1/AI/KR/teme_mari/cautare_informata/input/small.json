@@ -1,0 +1,9 @@
+{
+    "cannibals": 5,
+    "missionaries": 4,
+    "start_food": 5,
+    "boat_seats": 5,
+    "boat_degradation": 4,
+    "init_shore": "left",
+    "final_shore": "right"
+}
