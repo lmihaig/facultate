@@ -44,3 +44,23 @@ Lista cu diverse resurse Unibuc CTI 2020-2024
  - [ed](An2/Sem2/ed): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
  - [mandezcariera](An2/Sem2/mandezcariera): (Curs Josan Iuliana, sem Josan Iuliana)
  - [engleza](An2/Sem2/engleza): (Protopopescu Daria)
+
+
+  ## Anul 3 :
+
+### Semestrul 1 :
+ - [AI](An3/Sem1/AI):  (Curs Alexe Bogdan, lab Ioana Diaconu, Irina Ciocan)
+ - [asc](An3/Sem1/ASC): (Curs Florin Stanculescu, lab Alexandru Chirosca)
+ - [CloudComp](An3/Sem1/CloudComp): (Curs Cristian Kevorchian, lab Bogdan Ghimis)
+ - [so](An3/Sem1/SO): (Curs Dumitru Daniel Dragulici, lab Dumitru Daniel Dragulici)
+ - [pbd](An3/Sem1/pbd): (Curs Florentin Ipate, lab Marius Miculta, sem Radu Bobe)
+ - [comunicare](An3/Sem1/comunicare): (Catalin Raiu)
+
+<!-- ### Semestrul 2 :
+ - [eap](An2/Sem2/eap):  (Curs Dascalescu Cristina, lab Farcas Andreea)
+ - [ps](An2/Sem2/eap): (Curs Patriche Monica, sem Patrhice Monica, lab Cojocea Simona)
+ - [ccna2](An2/Sem2/ccna2): (Curs Silviu Laurentiu Vasile, lab Mihaita Dragan)
+ - [calculatoarenum](An2/Sem2/calculatoarenum): (Curs Nemnes Alexandru, lab Bogdan Bita, Chirosca Alexandru)
+ - [ed](An2/Sem2/ed): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
+ - [mandezcariera](An2/Sem2/mandezcariera): (Curs Josan Iuliana, sem Josan Iuliana)
+ - [engleza](An2/Sem2/engleza): (Protopopescu Daria) -->
