@@ -50,8 +50,9 @@ import cProfile
 from collections import deque
 import errno
 import json
+import multiprocessing
 import os
-from queue import PriorityQueue
+import heapq
 import sys
 from typing import Self
 
@@ -163,12 +164,13 @@ eaten food: {self.eaten_food}
 _\\/_                       _~                                _\\/_
 /o\\\\                   _~ )_)_~                              //o\\
  |                     )_))_))_)                               |
- | {self.left_missionaries:04} {self.left_cannibals:04} {self.left_food:04}       _!__!__!___              {self.right_food:04} {self.right_cannibals:04} {self.right_missionaries:04} |
+ | {self.left_missionaries:04} {self.left_cannibals:04} {self.left_food:04}       _!__!__!___             {self.right_food:04} {self.right_cannibals:04} {self.right_missionaries:04} |
 _|_M____C____F____    \\______t/               _____F____C____M_|__
                 `~^~^~^~^~^~^~^~^~^~^~^~^~^~`"""  # noqa
         else:
             return f"""boat seats: {self.boat_seats}
 boat counter: {self.boat_counter}
+eaten food: {self.eaten_food}
 _\\/_                               ~_                        _\\/_
 /o\\\\                            ~_ (_(~_                     //o\\
  |                              (_((_((_(                      |
@@ -225,10 +227,11 @@ _|_M____C____F____               \\t______/    _____F____C____M_|__
             node = node.parent
         return path
 
-    def print_path(self) -> int:
+    def print_path(self, file) -> int:
         path = self.get_path()
-        for node in path:
-            print(str(node))
+        for i, node in enumerate(path):
+            print(f"Path index: {i}", file=file)
+            print(str(node), file=file)
 
         return len(path)
 
@@ -284,8 +287,8 @@ class Graph:
             node.boat_counter = 0
             node.boat_seats -= 1
 
-        if not (boat_missionaries or boat_cannibals):
-            return False
+        # if not (boat_missionaries or boat_cannibals):
+        #     return False
 
         consumed_left, valid_left = self.util_comparison(node.left_cannibals, node.left_missionaries, node.left_food)
         if not valid_left:
@@ -301,8 +304,8 @@ class Graph:
         # boat_missionaries = self.total_missionaries - (node.left_missionaries + node.right_missionaries)
         # boat_food = self.start_food - node.eaten_food - (node.left_food + node.right_food)
 
-        if boat_cannibals + boat_missionaries + boat_food > node.boat_seats:
-            return False
+        # if boat_cannibals + boat_missionaries + boat_food > node.boat_seats:
+        #     return False
 
         consumed_boat, valid_boat = self.util_comparison(boat_cannibals, boat_missionaries, boat_food)
         if not valid_boat:
@@ -361,8 +364,17 @@ class Graph:
             flag = 1
 
         for boat_missionaries in range(max_missionaries + 1):
-            for boat_cannibals in range(max_cannibals + 1):
-                for boat_food in range(int(max_food) + 1):
+            max_food = min(node.boat_seats - boat_missionaries, max_food)
+            for boat_food in range(int(max_food) + 1):
+
+                max_cannibals = min(node.boat_seats - boat_missionaries - boat_food, max_cannibals)
+                if boat_missionaries:
+                    max_cannibals = min(boat_missionaries + boat_food * 2, max_cannibals)
+
+                for boat_cannibals in range(max_cannibals + 1):
+                    if not (boat_cannibals or boat_missionaries):
+                        continue
+
                     new_node_params = [
                         node.left_cannibals + boat_cannibals * flag,
                         node.left_missionaries + boat_missionaries * flag,
@@ -397,25 +409,29 @@ class Graph:
     def uniform_cost_search(self):
         return 0
 
-    def a_star(self, heuristic: str, number_solutions):
+    def a_star(self, heuristic: str, number_solutions: int, output_file):
         if not self.valid_start(self.start):
             print("Invalid starting parameters")
             return False
 
-        pq = PriorityQueue()
-        pq.put(self.start)
-        while not pq.empty():
-            cur_node = pq.get()
+        pq = []
+        heapq.heappush(pq, self.start)
+        file = open(output_file, "w")
+        while len(pq):
+            cur_node = heapq.heappop(pq)
 
             if self.test_goal(cur_node):
-                cur_node.print_path()
+                path_len = cur_node.print_path(file=file)
+                print(f"Path len: {path_len}", file=file)
+                print("=" * 80, file=file)
+                print("\n\n", file=file)
                 number_solutions -= 1
                 if number_solutions == 0:
                     return
 
             children = self.generate_children(cur_node, heuristic)
             for child in children:
-                pq.put(child)
+                heapq.heappush(pq, child)
 
     def a_star_optimized(self):
         return 0
@@ -438,7 +454,7 @@ if __name__ == "__main__":
         print("Usage:python cautare_informata.py [INPUT_PATH] [OUTPUT_PATH] [NUM_SOL] [TIMEOUT]")
         param_dicts = {"basic": parse("./input/small.json")}
         output_path = "output"
-        number_solutions = 1
+        number_solutions = 2
         timeout = 1000
 
     for key, param_dict in param_dicts.items():
@@ -451,8 +467,11 @@ if __name__ == "__main__":
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
-        cProfile.run("graph.a_star(heuristic='basic', number_solutions=number_solutions)")
-        # print(graph.start)
-        # with open(os.path.join(output_path, key + ".txt"), "w") as f:
-        #     f.write(str(graph.start))
-        #     f.write("\n\n")
+        # python cautare_informata.py input output 2 10
+        output_file = os.path.join(output_path, key + ".txt")
+        p = multiprocessing.Process(target=graph.a_star, args=("basic", number_solutions, output_file))
+        p.start()
+        p.join(timeout)
+        p.terminate()
+
+        # cProfile.run("graph.a_star(heuristic='basic', number_solutions=number_solutions)")
