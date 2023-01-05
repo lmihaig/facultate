@@ -3,6 +3,7 @@ Lista cu diverse resurse Unibuc CTI 2020-2024
 
 Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21@gmail.com
 
+### Majoritatea proiectelor sunt adaugate drept submodule
 # Planul de invatamant (cu profesori)
 
  ## Anul 1 :
