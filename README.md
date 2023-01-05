@@ -1,6 +1,7 @@
 # facultate
 Lista cu diverse resurse Unibuc CTI 2020-2024
 
+Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21@gmail.com
 
 # Planul de invatamant (cu profesori)
 
@@ -57,10 +58,9 @@ Lista cu diverse resurse Unibuc CTI 2020-2024
  - [comunicare](An3/Sem1/comunicare): (Catalin Raiu)
 
 <!-- ### Semestrul 2 :
- - [eap](An2/Sem2/eap):  (Curs Dascalescu Cristina, lab Farcas Andreea)
- - [ps](An2/Sem2/eap): (Curs Patriche Monica, sem Patrhice Monica, lab Cojocea Simona)
- - [ccna2](An2/Sem2/ccna2): (Curs Silviu Laurentiu Vasile, lab Mihaita Dragan)
- - [calculatoarenum](An2/Sem2/calculatoarenum): (Curs Nemnes Alexandru, lab Bogdan Bita, Chirosca Alexandru)
- - [ed](An2/Sem2/ed): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
- - [mandezcariera](An2/Sem2/mandezcariera): (Curs Josan Iuliana, sem Josan Iuliana)
- - [engleza](An2/Sem2/engleza): (Protopopescu Daria) -->
+ - [CriptoSecuritate](An3/Sem2/CriptoSecuritate):  (Curs , lab )
+ - [grafica](An3/Sem2/grafica): (Curs ,sem Patrhice Monica, lab Cojocea Simona)
+ - [mds](An3/Sem2/mds): (Curs Silviu Laurentiu Vasile, lab Mihaita Dragan)
+ - [microprocesoare](An3/Sem2/microprocesoare): (Curs Nemnes Alexandru, lab Bogdan Bita, Chirosca Alexandru)
+ - [asp](An3/Sem2/asp): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
+ - [marketing](An3/Sem2/marketing): () -->
