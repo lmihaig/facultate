@@ -1,67 +1,87 @@
 # facultate
 Lista cu diverse resurse Unibuc CTI 2020-2024
 
-Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21@gmail.com
+Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21 [@] gmail.com
 
 ### Majoritatea proiectelor sunt adaugate drept submodule
 # Planul de invatamant (cu profesori)
 
- ## Anul 1 :
-
-### Semestrul 1 :
- - [analiza](An1/Sem1/analiza): (Curs Mihail Alexandru Iancu, seminar Liliana Mitre)
- - [algebra](An1/Sem1/algebra): (Curs Stacniu Miron, seminar Adrian Dan Halanay)
- - [pc](An1/Sem1/pc): (Curs Andrei Mihai Patrascu, seminar Marius Miculta Campeanu)
- - [fizica](An1/Sem1/fizica): (Curs Catalin Tatuta, Cheche Tiberius, lab Eduard Gatin, Sorina Iftimie)
- - [pl](An1/Sem1/pl): (Curs Cornel Nicolae, seminar Cornel Nicolae)
- - [gcea](An1/Sem1/gcea): (Curs Tomi Paula Pompilia, seminar Remus Breazu)
- - [engleza](An1/Sem1/engleza): (Protopopescu Daria)
-
-### Semestrul 2 :
- - [ms](An1/Sem2/ms): (Curs Mihail Alexandru Iancu, seminar Liliana Mitre)
- - [cn](An1/Sem2/cn): (Curs Sfetcu Razvan Cornel, seminar Andreea-Paula Voinea-Marinescu, lab Alexandru Ghita)
- - [tp](An1/Sem2/tp): (Curs Radu Boriga, lab Marius Miculta Campeanu)
- - [autocad](An1/Sem2/autocad): (Curs Mihaita Dragan, lab Mihaita Dragan)
- - [uso](An1/Sem2/uso): (Curs Paul Irofti, lab Adriana Stancu)
- - [bazele electrotehnicii](An1/Sem2/be): (Curs Cezar Tazloanu, laborator Cezar Tazloanu, Sorina Iftimie)
- - [engleza](An1/Sem2/engleza): (Protopopescu Daria)
+| Anul I - Semestrul I 	|                                                             	|       	|      	|                                   	|           	|                                	|
+|:--------------------:	|:-----------------------------------------------------------:	|:-----:	|:----:	|:---------------------------------:	|:---------:	|:------------------------------:	|
+|          Tip         	| Discipline obligatorii                                      	|   FE  	| Crd. 	|                Curs               	| Laborator 	|             Seminar            	|
+|          DF          	| [Analiza matematica](An1/Sem1/analiza)                      	|   E   	|   5  	|       Mihail Alexandru Iancu      	|           	|          Liliana Mitre         	|
+|          DF          	| [Algebra si geometrie](An1/Sem1/algebra)                    	|   E   	|   5  	|           Stanciu Miron           	|           	|       Adrian Dan Halanay       	|
+|          DF          	| [Programarea calculatoarelor](An1/Sem1/pc)                  	|   V   	|   5  	|       Andrei Mihai Patrascu       	|           	|     Marius Miculta Campeanu    	|
+|          DD          	| [Fizica](An1/Sem1/fizica)                                   	|   E   	|   5  	| Catalin Tatuta<br>Cheche Tiberius 	|           	| Eduard Gatin<br>Sorina Iftimie 	|
+|          DD          	| [Proiectare logica](An1/Sem1/pl)                            	|   E   	|   5  	|           Cornel Nicolae          	|           	|         Cornel Nicolae         	|
+|          DC          	| [Gandire critica si etica academica](An1/Sem1/gcea)         	|   E   	|   4  	|        Tomi Paula Pompilia        	|           	|          Remus Breazu          	|
+|          DC          	| [Competente de baza intr-o limba straina](An1/Sem1/engleza) 	|   V   	|   1  	|         Protopopescu Daria        	|           	|                                	|
+|          DC          	| Educatie fizica                                             	|   V   	|   2  	|          Robert Sakizlian         	|           	|                                	|
+|                      	| Total                                                       	| 5E+3V 	|  32  	|                                   	|           	|                                	|
 
 
-  ## Anul 2 :
-
-### Semestrul 1 :
- - [sda](An2/Sem1/sda):  (Curs Guillaume Jean Dominique Ducoffe, lab Guillaume Jean Dominique Ducoffe)
- - [poo](An2/Sem1/poo): (Curs Anca Madalina Dobrovat, lab Marius Miculta Campeanu)
- - [bd](An2/Sem1/bd): (Curs Silviu Laurentiu Vasile, lab Veronica Suzana Chirut)
- - [ccna1](An2/Sem1/ccna1): (Curs Mihaita Dragan, lab Mihaita Dragan)
- - [eea](An2/Sem1/eea): (Curs Mihai Dinca, lab Bogdan Bita, Adrian Apostu)
- - [ts](An2/Sem1/ts): (Curs Mihai Dinca, lab Alecsandru Vladimir Chirosca, Sandel Simion)
- - [engleza](An2/Sem1/engleza): (Protopopescu Daria)
-
-### Semestrul 2 :
- - [eap](An2/Sem2/eap):  (Curs Dascalescu Cristina, lab Farcas Andreea)
- - [ps](An2/Sem2/eap): (Curs Patriche Monica, sem Patrhice Monica, lab Cojocea Simona)
- - [ccna2](An2/Sem2/ccna2): (Curs Silviu Laurentiu Vasile, lab Mihaita Dragan)
- - [calculatoarenum](An2/Sem2/calculatoarenum): (Curs Nemnes Alexandru, lab Bogdan Bita, Chirosca Alexandru)
- - [ed](An2/Sem2/ed): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
- - [mandezcariera](An2/Sem2/mandezcariera): (Curs Josan Iuliana, sem Josan Iuliana)
- - [engleza](An2/Sem2/engleza): (Protopopescu Daria)
+| Anul I - Semestrul II 	|                                                               	|       	|      	|                        	|                                  	|                 	|
+|:---------------------:	|:-------------------------------------------------------------:	|:-----:	|:----:	|:----------------------:	|:--------------------------------:	|:---------------:	|
+|          Tip          	| Discipline obligatorii                                        	|   FE  	| Crd. 	|          Curs          	|             Laborator            	|     Seminar     	|
+|           DC          	| Educatie fizica                                               	|   V   	|   2  	|    Robert Sakizlian    	|                                  	|                 	|
+|           DF          	| [Matematici speciale](An1/Sem2/ms)                            	|   E   	|   5  	| Mihail Alexandru Iancu 	|                                  	|  Liliana Mitre  	|
+|           DF          	| [Calcul numeric](An1/Sem2/cn)                                 	|   E   	|   5  	|  Sfetcu Razvan Cornel  	|  Andreea-Paula Voinea-Marinescu  	| Alexandru Ghita 	|
+|           DF          	| [Tehnici de programare](An1/Sem2/tp)                          	|   E   	|   5  	|       Radu Boriga      	|      Marius Miculta Campeanu     	|                 	|
+|           DF          	| [Proiectare asistata de calculator](An1/Sem2/autocad)         	|   E   	|   5  	|     Mihaita Dragan     	|          Mihaita Dragan          	|                 	|
+|           DD          	| [Utilizarea sistemelor de operare](An1/Sem2/uso)              	|   V   	|   5  	|       Paul Irofti      	|          Adriana Stancu          	|                 	|
+|           DF          	| [Bazele electrotehnicii](An1/Sem2/be)                         	|   V   	|   4  	|     Cezar Tazloanu     	| Cezar Tazloanu<br>Sorina Iftimie 	|                 	|
+|           DC          	| [Competente specifice intr-o limba straina](An1/Sem2/engleza) 	|   V   	|   1  	|   Protopopescu Daria   	|                                  	|                 	|
+|                       	| Total                                                         	| 4E+4V 	|  32  	|                        	|                                  	|                 	|
 
 
-  ## Anul 3 :
+| Anul II - Semestrul I 	|                                                                	|       	|      	|                                  	|                                               	|         	|
+|:---------------------:	|:--------------------------------------------------------------:	|:-----:	|:----:	|:--------------------------------:	|:---------------------------------------------:	|:-------:	|
+|          Tip          	| Discipline obligatorii                                         	|   FE  	| Crd. 	|               Curs               	|                   Laborator                   	| Seminar 	|
+|           DD          	| [Structuri de date si algoritmi](An2/Sem1/sda)                 	|   E   	|   4  	| Guillaume Jean Dominique Ducoffe 	|        Guillaume Jean Dominique Ducoffe       	|         	|
+|           DD          	| [Programare orientata pe obiecte](An2/Sem1/poo)                	|   E   	|   5  	|      Anca Madalina Dobrovat      	|            Marius Miculta Campeanu            	|         	|
+|           DD          	| [Baze de date](An2/Sem1/bd)                                    	|   E   	|   5  	|      Silviu Laurentiu Vasile     	|             Veronica Suzana Chirut            	|         	|
+|           DD          	| [Fundamente ale retelelor de calculatoare](An2/Sem1/ccna1)     	|   E   	|   5  	|          Mihaita Dragan          	|                 Mihaita Dragan                	|         	|
+|           DD          	| [Elemente de electronica analogica](An2/Sem1/eea)              	|   E   	|   5  	|            Mihai Dinca           	|          Bogdan Bita<br>Adrian Apostu         	|         	|
+|           DF          	| [Teoria sistemelor](An2/Sem1/ts)                               	|   E   	|   5  	|            Mihai Dinca           	| Alecsandru Vladimir Chirosca<br>Sandel Simion 	|         	|
+|           DC          	| [Competente avansate intr-o limba straina I](An2/Sem1/engleza) 	|   V   	|   1  	|        Protopopescu Daria        	|                                               	|         	|
+|                       	| Total                                                          	| 6E+1V 	|  30  	|                                  	|                                               	|         	|
 
-### Semestrul 1 :
- - [AI](An3/Sem1/AI):  (Curs Alexe Bogdan, lab Ioana Diaconu, Irina Ciocan)
- - [asc](An3/Sem1/ASC): (Curs Florin Stanculescu, lab Alexandru Chirosca)
- - [CloudComp](An3/Sem1/CloudComp): (Curs Cristian Kevorchian, lab Bogdan Ghimis)
- - [so](An3/Sem1/SO): (Curs Dumitru Daniel Dragulici, lab Dumitru Daniel Dragulici)
- - [pbd](An3/Sem1/pbd): (Curs Florentin Ipate, lab Marius Miculta, sem Radu Bobe)
- - [comunicare](An3/Sem1/comunicare): (Catalin Raiu)
 
-<!-- ### Semestrul 2 :
- - [CriptoSecuritate](An3/Sem2/CriptoSecuritate):  (Curs , lab )
- - [grafica](An3/Sem2/grafica): (Curs ,sem Patrhice Monica, lab Cojocea Simona)
- - [mds](An3/Sem2/mds): (Curs Silviu Laurentiu Vasile, lab Mihaita Dragan)
- - [microprocesoare](An3/Sem2/microprocesoare): (Curs Nemnes Alexandru, lab Bogdan Bita, Chirosca Alexandru)
- - [asp](An3/Sem2/asp): (Curs Chirosca Alexandru, lab Alecsandru Bogdan Bita, Chirosca Alexandru)
- - [marketing](An3/Sem2/marketing): () -->
+
+| Anul II - Semestrul II 	|                                                                 	|       	|      	|                              	|                              	|                  	|
+|:----------------------:	|:---------------------------------------------------------------:	|:-----:	|:----:	|:----------------------------:	|:----------------------------:	|:----------------:	|
+|           Tip          	| Discipline obligatorii                                          	|   FE  	| Crd. 	|             Curs             	|           Laborator          	|      Seminar     	|
+|           DF           	| [Probabilitati si statistica](An2/Sem2/ps)                     	|   E   	|   5  	|       Monica Patriche        	|        Simona Cojocea        	| Monica Patriche  	|
+|           DS           	| [Elemente avansate de programare](An2/Sem2/eap)                 	|   E   	|   6  	|     Cristina Dascalescu      	|        Andreea Farcas        	|                  	|
+|           DS           	| [Fundamente ale rutarii in retea](An2/Sem2/ccna2)               	|   E   	|   5  	|    Silviu laurentiu Vasile   	|        Mihaita Dragan        	|                  	|
+|           DD           	| [Electronica digitala](An2/Sem2/ed)                             	|   E   	|   5  	| Alecsandru Vladimir Chirosca 	|          Bogdan Bita         	|                  	|
+|           DD           	| [Calculatoare numerice](An2/Sem2/calculatoarenum)               	|   E   	|   5  	|       Alexandru Nemnes       	| Alecsandru Vladimir Chirosca 	|                  	|
+|           DC           	| [Managementul si dezvoltarea carierei](An2/Sem2/mandezcariera)  	|   V   	|   3  	|         Iuliana Josan        	|                              	|   Iuliana Josan  	|
+|           DC           	| Competente avansate intr-o limba straina II	|   V   	|   1  	|      Protopopescu Daria      	|                              	|                  	|
+|                        	| Total                                                           	| 5E+2V 	|  30  	|                              	|                              	|                  	|
+
+
+
+| Anul III - Semestrul I 	|                                                      	|       	|      	|                          	|                               	|              	|
+|:----------------------:	|:----------------------------------------------------:	|:-----:	|:----:	|:------------------------:	|:-----------------------------:	|:------------:	|
+|           Tip          	| Discipline obligatorii                               	|   FE  	| Crd. 	|           Curs           	|           Laborator           	|    Seminar   	|
+|           DD           	| [Proiectarea bazelor de date](An3/Sem1/pbd)          	|   E   	|   6  	|      Florentin Ipate     	|    Marius Miculta Campeanu    	|   Radu Bobe  	|
+|           DD           	| [Sisteme de operare](An3/Sem1/SO)                    	|   E   	|   6  	| Dumitru Daniel Dragulici 	|    Dumitru Daniel Dragulici   	|              	|
+|           DD           	| [Inteligenta artificiala](An3/Sem1/AI)               	|   E   	|   6  	|       Bogdan Alexe       	| Ioana Diaconu<br>Irina Ciocan 	|              	|
+|           DD           	| [Arhitectura sistemelor de calcul](An3/Sem1/ASC)     	|   E   	|   5  	|    Florin Stanculescu    	|  Alecsandru Vladimir Chirosca 	|              	|
+|           DC           	| [Comunicare si relatii publice](An3/Sem1/comunicare) 	|   V   	|   2  	|       Catalin Radu       	|                               	| Catalin Radu 	|
+|           DS           	| [Cloud Computing](An3/Sem1/CloudComp)                	|   E   	|   5  	|    Cristian Kevorchian   	|         Bogdan Ghimis         	|              	|
+|                        	| Total                                                	| 5E+1V 	|  30  	|                          	|                               	|              	|
+
+
+| Anul III - Semestrul II 	|                                                         	|       	|      	|      	|           	|         	|
+|:-----------------------:	|:-------------------------------------------------------:	|:-----:	|:----:	|:----:	|:---------:	|:-------:	|
+|           Tip           	| Discipline obligatorii                                  	|   FE  	| Crd. 	| Curs 	| Laborator 	| Seminar 	|
+|            DS           	| [Criptografie si Securitate](An3/Sem2/CriptoSecuritate) 	|   E   	|   4  	|      	|           	|         	|
+|            DC           	| [Marketing](An3/Sem2/marketing)                         	|   V   	|   2  	|      	|           	|         	|
+|            DS           	| [Grafica pe calculator](An3/Sem2/grafica)               	|   E   	|   4  	|      	|           	|         	|
+|            DS           	| [Metode de dezvoltare software](An3/Sem2/mds)           	|   E   	|   4  	|      	|           	|         	|
+|            DD           	| [Sisteme cu microprocesoare](An3/Sem2/microprocesoare)  	|   E   	|   4  	|      	|           	|         	|
+|            DS           	| [Arhitectura sistemelor paralele](An3/Sem2/asp)         	|   E   	|   4  	|      	|           	|         	|
+|            DD           	| Practica industriala                                    	|   V   	|   8  	|      	|           	|         	|
+|                         	| Total                                                   	| 5E+2V 	|  30  	|      	|           	|         	|
