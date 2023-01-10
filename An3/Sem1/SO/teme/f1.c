@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Scrieti un program care primeste ca argumente in linia de
+//  comanda doi intregi si afisaza cmmdc al lor.
+
 int gcd(int a, int b)
 {
 
