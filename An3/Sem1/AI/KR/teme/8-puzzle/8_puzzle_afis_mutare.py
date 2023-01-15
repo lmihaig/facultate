@@ -12,18 +12,18 @@ Dati enter dupa fiecare solutie afisata.
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 
 
-
-
 import copy
 import sys
 import time
+
+
 class NodParcurgere:
     def __init__(self, info, parinte, cost=0, h=0):
         self.info = info
         self.parinte = parinte  # parintele din arborele de parcurgere
         self.g = cost  # consider cost=1 pentru o mutare
         self.h = h
-        self.f = self.g+self.h
+        self.f = self.g + self.h
 
     def obtineDrum(self):
         l = [self]
@@ -37,10 +37,15 @@ class NodParcurgere:
         l = self.obtineDrum()
         for i, nod in enumerate(l):
             if nod.parinte:
-                dif = [[i, j] for i in range(len(nod.info)) for j in range(len(nod.info[0])) if nod.info[i][j] != nod.parinte.info[i][j]]
+                dif = [
+                    [i, j]
+                    for i in range(len(nod.info))
+                    for j in range(len(nod.info[0]))
+                    if nod.info[i][j] != nod.parinte.info[i][j]
+                ]
                 if dif:
                     print(nod.parinte.info[dif[0][0]][dif[0][1]], "->", nod.info[dif[0][0]][dif[0][1]])
-            print(i+1, ")\n", str(nod), sep="")
+            print(i + 1, ")\n", str(nod), sep="")
         if afisCost:
             print("Cost: ", self.g)
         if afisCost:
@@ -50,7 +55,7 @@ class NodParcurgere:
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -59,14 +64,14 @@ class NodParcurgere:
     def __repr__(self):
         sir = ""
         sir += str(self.info)
-        return (sir)
+        return sir
 
     # euristica banală: daca nu e stare scop, returnez 1, altfel 0
 
     def __str__(self):
         sir = ""
         for linie in self.info:
-            sir += " ".join([str(elem) for elem in linie])+"\n"
+            sir += " ".join([str(elem) for elem in linie]) + "\n"
         sir += "\n"
         return sir
 
@@ -98,7 +103,7 @@ class Graph:  # graful problemei
         nrInversiuni = 0
         for i in range(len(listaMatrice)):
             if listaMatrice[i] != 0:
-                for j in range(i+1, len(listaMatrice)):
+                for j in range(i + 1, len(listaMatrice)):
                     if listaMatrice[j] != 0:
                         if listaMatrice[i] > listaMatrice[j]:
                             nrInversiuni += 1
@@ -112,8 +117,8 @@ class Graph:  # graful problemei
                 break
             except:
                 pass
-        #stanga, dreapta, sus, jos
-        directii = [[lGol, cGol-1], [lGol, cGol+1], [lGol-1, cGol], [lGol+1, cGol]]
+        # stanga, dreapta, sus, jos
+        directii = [[lGol, cGol - 1], [lGol, cGol + 1], [lGol - 1, cGol], [lGol + 1, cGol]]
         for lPlacuta, cPlacuta in directii:
             if 0 <= lPlacuta < 3 and 0 <= cPlacuta < 3:
                 copieMatrice = copy.deepcopy(nodCurent.info)
@@ -121,7 +126,14 @@ class Graph:  # graful problemei
                 copieMatrice[lPlacuta][cPlacuta] = 0
                 if not nodCurent.contineInDrum(copieMatrice):  # and not self.nuAreSolutii(copieMatrice):
                     costArc = 1
-                    listaSuccesori.append(NodParcurgere(copieMatrice, nodCurent,  nodCurent.g+costArc, self.calculeaza_h(copieMatrice, tip_euristica)))
+                    listaSuccesori.append(
+                        NodParcurgere(
+                            copieMatrice,
+                            nodCurent,
+                            nodCurent.g + costArc,
+                            self.calculeaza_h(copieMatrice, tip_euristica),
+                        )
+                    )
 
         return listaSuccesori
 
@@ -138,16 +150,16 @@ class Graph:  # graful problemei
                 for cPlacutaC in range(len(infoNod[0])):
                     if infoNod[lPlacutaC][cPlacutaC] != 0:
                         placuta = infoNod[lPlacutaC][cPlacutaC]
-                        lPlacutaF = (placuta-1)//len(infoNod[0])
-                        cPlacutaF = (placuta-1) % len(infoNod[0])
-                        h += abs(lPlacutaF - lPlacutaC)+abs(cPlacutaF - cPlacutaC)
+                        lPlacutaF = (placuta - 1) // len(infoNod[0])
+                        cPlacutaF = (placuta - 1) % len(infoNod[0])
+                        h += abs(lPlacutaF - lPlacutaC) + abs(cPlacutaF - cPlacutaC)
             return h
 
     def __repr__(self):
         sir = ""
         for (k, v) in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 def breadth_first(gr, nrSolutiiCautate):
@@ -156,7 +168,7 @@ def breadth_first(gr, nrSolutiiCautate):
     c = [NodParcurgere(gr.start, None)]
 
     while len(c) > 0:
-        #print("Coada actuala: " + str(c))
+        # print("Coada actuala: " + str(c))
         # # input()
         nodCurent = c.pop(0)
 
@@ -218,7 +230,7 @@ def a_star(gr, nrSolutiiCautate, tip_euristica):
         if gr.testeaza_scop(nodCurent):
             print("Solutie: ")
             nodCurent.afisDrum(afisCost=True, afisLung=True)
-            print(time.time()-t1, "secunde")
+            print(time.time() - t1, "secunde")
             print("\n----------------\n")
             # input()
             nrSolutiiCautate -= 1
@@ -242,12 +254,12 @@ def a_star(gr, nrSolutiiCautate, tip_euristica):
 gr = Graph("input.txt")
 
 # Rezolvat cu breadth first
-#print("Solutii obtinute cu breadth first:")
-#breadth_first(gr, nrSolutiiCautate=3)
+# print("Solutii obtinute cu breadth first:")
+# breadth_first(gr, nrSolutiiCautate=3)
 
 # print("\n\n##################\nSolutii obtinute cu UCS:")
-#print("\nObservatie: stivele sunt afisate pe orizontala, cu baza la stanga si varful la dreapta.")
-#uniform_cost(gr, nrSolutiiCautate=4)
+# print("\nObservatie: stivele sunt afisate pe orizontala, cu baza la stanga si varful la dreapta.")
+# uniform_cost(gr, nrSolutiiCautate=4)
 
 
 print("\n\n##################\nSolutii obtinute cu A*:")

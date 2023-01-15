@@ -194,16 +194,6 @@ _|_M____C____F____               \\t______/    _____F____C____M_|__
         return False
 
     def check_eql_vals(self, new_node: Self) -> bool:
-        # return self.left_cannibals == new_node.left_cannibals and \
-        # self.left_missionaries == new_node.left_missionaries and \
-        # self.left_food == new_node.left_food and \
-        # self.right_cannibals == new_node.right_cannibals and \
-        # self.right_missionaries == new_node.right_missionaries and \
-        # self.right_food == new_node.right_food and \
-        # self.eaten_food == new_node.eaten_food and \
-        # self.boat_seats == new_node.boat_seats and \
-        # self.boat_counter == new_node.boat_counter and \
-        # self.boat_shore == new_node.boat_shore
         field_name = [
             "left_cannibals",
             "left_missionaries",
@@ -474,4 +464,4 @@ if __name__ == "__main__":
         p.join(timeout)
         p.terminate()
 
-        # cProfile.run("graph.a_star(heuristic='basic', number_solutions=number_solutions)")
+        cProfile.run("graph.a_star(heuristic='basic', number_solutions=number_solutions)")

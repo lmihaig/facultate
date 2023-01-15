@@ -28,7 +28,7 @@ int tree(const char *dir_name, int depth)
     else
     {
         print_file(dir_name, depth);
-        struct dirent *data_current_dir = NULL;
+        struct dirent *data_current_dir;
         while ((data_current_dir = readdir(current_dir)) != NULL)
         {
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         fprintf(stderr, "Usage: %s <dir>\n", argv[0]);
-        return -1;
+        return 1;
     }
     tree(argv[1], 0);
 }

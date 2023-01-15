@@ -35,7 +35,7 @@ int read_to_fd(int read_fd, int write_fd)
         if (len == -1)
         {
             perror("Eroare la citire");
-            return -1;
+            return 1;
         }
         if (len == 0)
             // eof
@@ -48,13 +48,13 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
         read_to_fd(fileno(stdin), fileno(stdout));
-    else
+    else if (argc == 2)
     {
         int read_fd = open(argv[1], O_RDONLY);
         if (read_fd == -1)
         {
             perror(argv[1]);
-            return -1;
+            return 1;
         }
         read_to_fd(read_fd, fileno(stdout));
         close(read_fd);
