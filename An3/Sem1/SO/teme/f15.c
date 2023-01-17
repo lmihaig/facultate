@@ -1,8 +1,9 @@
-// F15. (1.5 puncte) Scrieti un program ce simuleaza comanda "cat", cu tot cu
-//  cazul cand specificatorul fisierului este dat ca argument in linia de
-//  comanda. Programul va putea fi lansat astfel astfel:
-//    cat f   ==>  citeste din f si scrie la stdout
-//    cat     ===> citeste de la stdin si scrie la stdout
+/* F15. (1.5 puncte) Scrieti un program ce simuleaza comanda "cat", cu tot cu
+  cazul cand specificatorul fisierului este dat ca argument in linia de
+  comanda. Programul va putea fi lansat astfel astfel:
+    cat f   ==>  citeste din f si scrie la stdout
+    cat     ===> citeste de la stdin si scrie la stdout*/
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

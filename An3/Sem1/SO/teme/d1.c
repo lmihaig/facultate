@@ -1,3 +1,7 @@
+/*D1. (4 puncte) Program care primeste ca argument in linia de comanda un
+ director si afisaza arborescenta de directoare si fisiere cu originea
+ in el (similar comenzii tree /f din DOS).*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +15,6 @@ void print_file(char const *file_name, int depth)
     for (int i = 1; i <= depth; i++)
         printf("  ");
     printf("└──");
-
 
     printf("%s\n", file_name);
 }

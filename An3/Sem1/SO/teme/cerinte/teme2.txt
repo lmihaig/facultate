@@ -207,11 +207,11 @@ A24. (8 puncte) Scrieti un program "#paralel" care se lanseaza sub forma:
      iesirea standard; la tubul respectiv sunt conectate iesirile standard ale
      proceselor comi.
  Schema de functionare va fi:
-               /---> tubi1 ---> com1 ---\
+              /----> tubi1 ---> com1 ----\
              /                            \
      intrare    ........................    ---> tubo ---> iesire         
              \                            /
-	       \---> tubin ---> comn ---/            
+	          \---> tubin ---> comn -----/            
  Tuburile sunt fara nume si exista doar pe perioada executiei acestor procese.
  Procesul de intrare are SIGPIPE anihilat, pentru a nu se termina daca comi nu
  se termina toate in acelasi timp (si isi inchid tubul de intrare la citire).
