@@ -64,7 +64,7 @@ int divide_and_conquer(long *arr, long left, long right, long num)
 
 int main(int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 2)
     {
         fprintf(stderr, "Utilizare: %s <NUMAR> <VECTOR>\n", argv[0]);
         return 1;
@@ -83,6 +83,12 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Argumentul %s invalid\n", argv[1]);
         return 1;
+    }
+
+    if (argc == 2)
+    {
+        fprintf(stdout, "negasit\n");
+        return 0;
     }
 
     long size = argc - 2;

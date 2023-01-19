@@ -1,0 +1,8 @@
+1. Ce valori se afiseaza la rularea codului C de mai jos ?
+ Cate procese au aparut in total (incluzand si procesul initial) ?
+ Desenati schitat arborescenta acestor procese, notand in dreptul fiecacarul proces valoarea afisata de
+el.
+ Justificati raspunsurile.
+int k = 10;
+if( fork() && !fork()) --k; else ++k;
+printf("%d\n", k);

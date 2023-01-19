@@ -1,7 +1,7 @@
-N1=12
-N2=21
-K=10
-M=8
-Nr=6
+N1=10
+N2=20
+K=7
+M=6
+Nr=10
 MalInitial=left
 MalFinal=right

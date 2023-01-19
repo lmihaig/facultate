@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 const char *print_env(char const *env)
 {
@@ -45,7 +47,11 @@ int main()
             return 1;
         }
     }
-    else if (pid < 0)
+    else if (pid > 0)
+    {
+        wait(NULL);
+    }
+    else
     {
         fprintf(stderr, "Fork a esuat\n");
         return 1;

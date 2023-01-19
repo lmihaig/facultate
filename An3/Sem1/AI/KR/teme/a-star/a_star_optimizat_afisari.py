@@ -9,9 +9,9 @@ Observatie pentru cei absenti la laborator: trebuie sa dati enter după fiecare 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 
 
-
-
 import time
+
+
 class NodParcurgere:
     graf = None  # static
 
@@ -21,7 +21,7 @@ class NodParcurgere:
         self.parinte = parinte  # parintele din arborele de parcurgere
         self.g = cost  # costul de la radacina la nodul curent
         self.h = h
-        self.f = self.g+self.h
+        self.f = self.g + self.h
 
     def obtineDrum(self):
         l = [self.info]
@@ -40,7 +40,7 @@ class NodParcurgere:
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -48,7 +48,7 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
@@ -57,7 +57,7 @@ class NodParcurgere:
         sir += " h:{}".format(self.h)
 
         sir += " f:{})".format(self.f)
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
@@ -81,7 +81,13 @@ class Graph:  # graful problemei
         listaSuccesori = []
         for i in range(self.nrNoduri):
             if self.matriceAdiacenta[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
-                nodNou = NodParcurgere(i, self.noduri[i], nodCurent, nodCurent.g + self.matricePonderi[nodCurent.id][i], self.calculeaza_h(self.noduri[i]))
+                nodNou = NodParcurgere(
+                    i,
+                    self.noduri[i],
+                    nodCurent,
+                    nodCurent.g + self.matricePonderi[nodCurent.id][i],
+                    self.calculeaza_h(self.noduri[i]),
+                )
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
@@ -92,7 +98,7 @@ class Graph:  # graful problemei
         sir = ""
         for (k, v) in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -112,7 +118,7 @@ m = [
     [0, 0, 0, 1, 1, 0, 0, 1, 0, 0],
     [0, 0, 1, 0, 1, 0, 0, 0, 2, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 mp = [
     [0, 3, 9, 7, 0, 0, 0, 0, 0, 0],
@@ -124,7 +130,7 @@ mp = [
     [0, 0, 0, 1, 7, 0, 0, 1, 0, 0],
     [0, 0, 0, 0, 1, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 start = "a"
 scopuri = ["f"]
@@ -199,4 +205,4 @@ def a_star(gr):
 t1 = time.time()
 a_star(gr)
 t2 = time.time()
-print(t2-t1)
+print(t2 - t1)

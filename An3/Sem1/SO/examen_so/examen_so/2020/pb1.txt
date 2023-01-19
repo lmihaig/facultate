@@ -1,0 +1,16 @@
+1. Consideram executarea urmatorului cod C:
+
+        int k = 5;
+        if(fork() != fork()) sleep(++k); else sleep(--k);
+
+   Cate procese apar in total (incluzand si procesul initial) si care sunt
+ duratele lor de asteptare in 'sleep()' ?
+   Descrieti dependentele acestor procese prin perechi de forma p1(x) -> p2(y),
+ insemnand: procesul p1 asteapta x secunde si genereaza procesul p2 care
+ asteapta y secunde.
+   Justificati raspunsurile.
+   Completati codul la un program intreg care sa genereze aceeasi arborescenta de
+ procese si durate dar in care fiecare proces isi afisaza PID-ul parintelui, PID-ul
+ propriu si durata de asteptare (pentru a putea dovedi cele afirmate mai devreme).
+ Este permisa doar adaugarea de cod si schimbarea indentarii, nu si stergerea sau
+ modificarea codului existent.

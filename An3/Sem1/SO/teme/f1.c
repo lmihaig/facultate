@@ -7,22 +7,14 @@
 
 int gcd(int a, int b)
 {
-
-    int result = ((a < b) ? a : b);
-    if (a == 0)
-        return b;
-    if (b == 0)
-        return a;
-
-    while (result > 0)
+    int temp;
+    while (b != 0)
     {
-        if (a % result == 0 && b % result == 0)
-        {
-            break;
-        }
-        result--;
+        temp = a % b;
+        a = b;
+        b = temp;
     }
-    return result;
+    return a;
 }
 
 int main(int argc, char *argv[])

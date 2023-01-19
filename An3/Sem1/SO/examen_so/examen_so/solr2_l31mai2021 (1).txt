@@ -1,0 +1,191 @@
+Sistemul de operare Linux
+
+numele: ....................................................................
+
+grupa: .....................................................................
+
+adresa e-mail: .............................................................
+
+Instructiuni de completare:
+- Completati antetul cu datele personale.
+- Inserati rezolvarea fiecarui subiect in acest fisier, dupa 'Rezolvare'.
+- Rezolvarile care cer generarea de cod vor fi punctate doar daca codul
+    este compilabil si fara warning cu optiunea '-Wall' (chiar daca rezolva
+    incomplet cerinta sau face erori la executie).
+- Redenumiti acest fisier sub forma urmatoare (inlocuind adecvat grupa, nume,
+    prenume, data in format zz/ll/aaaa):
+ 
+      solr2_grupa_nume_prenume_data.txt
+
+- Atasati fisierul unui mesaj e-mail care are ca subiect un text identic cu
+    numele fisierului (fara .txt) si pe care il trimiteti in intervalul orar
+    al probei de la adresa dumneavoastra institutionala (fmi sau unibuc) la
+    ambele adrese urmatoare: dragulicid@yahoo.com si dra@fmi.unibuc.ro
+
+
+1.Consideram executarea urmatorului cod C:
+
+  int n = 0;
+  if(fork()) kill(getpid(), SIGSTOP); else sleep(1);
+  if(! fork()) sleep(1); else kill(getppid(), SIGCONT);
+  printf("%d\n", ++n);
+
+   Ce se afisaza la rularea lui ?
+   Cate procese au aparut in total (incluzand si procesul initial) ?
+   Descrieti dependentele acestor procese prin perechi de forma
+ p1(d1) -> p2(d2), insemnand: procesul p1 se termina dupa d1 secunde si
+ genereaza procesul p2 care se termina dupa d2 secunde (timpii consumati
+ in afara lui 'sleep' se considera neglijabili).
+   Justificati raspunsurile.
+   Completati codul la un program intreg care, in plus, sa afiseze PID-ul
+ parintelui, PID-ul propriu si numarul de secunde dupa care se va termina
+ (pentru a putea dovedi cele afirmate mai devreme). Este permisa doar
+ inserarea de cod si schimbarea indentarii, nu si stergerea sau modificarea
+ codului existent.
+
+Rezolvare:
+==========
+
+
+2. Scrieti un program in limbajul C care primeste ca argument in linia de
+   comanda un fisier ce contine reprezentari externe zecimale de numere
+   intregi separate prin spatii si care efectueaza urmatoarele:
+   - programul creaza un segment de memorie partajata si un proces copil, cu
+    care comunica prin segmentul de memorie partajata si semnale;
+   - copilul citeste pe rand intregi din fisier si, dupa fiecare citire,
+    scrie intregul citit in segmentul de memorie partajata, apoi trimite
+    parintelui un semnal SIGUSR1, apoi asteapta de la acesta drept confirmare
+    tot un semnal SIGUSR1 si trece la citirea urmatoare; la terminarea
+    fisierului, trimite parintelui un semnal SIGUSR2, se detasaza de la
+    segmentul de memorie partajata, inchide fisierul si se termina;
+   - parintele asteapta semnale de la copil si, pentru fiecare SIGUSR1
+    primit, aduna intregul curent din segmentul de memorie partajata la un
+    total si trimite copilului o confirmare SIGUSR1; la primirea lui
+    SIGUSR2, parintele afisaza totalul, se detasaza de la segmentul de
+    memorie partajata si il marcheaza pentru distrugere, apoi asteapta
+    terminarea copilului si se termina.
+   Se va asigura protectia la pierderea de semnale.
+
+Rezolvare:
+==========
+
+
+3. Scrieti un program pentru X Window System care creaza si afisaza o
+  fereastra top-level simpla cu fundal alb si chenar negru, avand selectate
+  evenimentele de schimbare a starii (size, position, etc.) si de apasare a
+  unui buton mouse. La mutarea sau redimensionarea ferestrei cu mouse-ul,
+  se afisaza pe standard output noile sale coordonate si dimensiuni, iar
+  la primirea unui click in fereastra, aceasta revine la coordonatele si
+  dimensiunile initiale (de la crearea ei).
+
+Rezolvare:
+==========
+
+
+4. Scrieti o functie in limbajul C:
+
+     long inv(char const *fis);
+
+ care primeste ca argument specificatorul unui fisier si examineaza perechile
+ succesive de caractere din fisier; daca, intr-o pereche, caracterele
+ sunt cifre si prima este > a doua, interschimba aceste cifre; de exemplu,
+ daca fisierul continea initial 'ab3123a42 bc5', va contine in final
+ 'ab1323a42 bc5'.
+  Functia va opera direct pe fisierul respectiv, fara fisiere auxiliare iar
+ memoria folosita va fi limitata de o constanta (in particular, nu se va
+ incarca tot continutul fisierului in memorie). La sfarsit, functia va lasa
+ fisierul inchis si va returna numarul de intershimbari efectuate sau -1 in
+ caz de eroare; in cazul exemplului de mai sus, va returna 1.
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+long inv(char const *fis) {
+
+  /* corpul functiei */
+
+}
+
+int main(int argc, char *argv[]) {
+  long n;
+  if(argc != 2)
+    {fprintf(stderr, "Utilizare: %s fisier\n", argv[0]); return 1;}
+  if((n = inv(argv[1])) == -1)
+    {perror(argv[1]); return  1;}
+  printf("%ld\n", n);
+  return 0;
+}
+
+Rezolvare:
+==========
+
+
+5. Scrieti o functie in limbajul C:
+
+    int cumul(char *director);
+
+ care creaza in directorul curent un fisier avand numele proprietarului
+ real al procesului apelant si extensia ".txt", apoi concateneaza in el
+ toate fisierele obisnuite (regular) din directorul specificat de "director"
+ care au proprietarul respectiv, au drept de citire si scriere pentru
+ proprietar si grup si ziua din saptamana a ultimei actualizari egala cu ziua
+ din saptamana curenta din sistem.
+  Functia returneaza suma dimensiunilor fisierelor concatenate, sau -1 in
+ caz de eroare.
+  Se vor indica fisierele header necesare.
+
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+int cumul(char *director)
+
+  /* corpul functiei */
+
+}
+
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+  int x;
+  if(argc != 2) {fprintf(stderr, "Utilizare: %s director\n", argv[0]); return 1;}
+  x = cumul(argv[1]);
+  if(x == -1) {perror(""); return 1;}
+  printf("%d\n", x);
+  return 0;
+}
+
+Rezolvare:
+==========
+
+
+6. Scrieti un program 'monitor' in limbajul C, care se poata lansa sub forma:
+
+                        ./monitor fct prog_1 ... prog_n
+                        
+ unde 'fct', 'prog_1', ..., 'prog_n' sunt programe (fisiere executabile) si
+ lanseaza 'prog_1', ..., 'prog_n' in paralel, astfel incat fiecare dintre ele
+ sa poata comunica cu 'fct' in conditii de excludere mutuala (in orice moment,
+ cel mult unul dintre 'prog_1', ..., 'prog_n' poate comunica cu 'fct').
+  Se presupune ca fiecare dintre 'prog_1', ..., 'prog_n', cand intentioneaza
+ sa comunice cu 'fct', va scrie datele de intrare pentru 'fct' la standard
+ output, apoi se va suspenda cu SIGSTOP, apoi (dupa ce va fi trezit) va citi
+ datele de iesire ale lui 'fct' de la standard input.
+  Programul 'monitor' va lucra astfel:
+- aloca n tuburi anonime, apoi creaza n procese copil; copilul i (1<=i<=n)
+ isi redirecteaza standard input si standard output la tubul i, apoi se
+ substituie cu un proces ce executa 'prog_i';
+- dupa crearea copiilor 'prog_1', ..., 'prog_n', cat timp mai exista asemenea
+ copii, asteapta copiii suspendati; de fiecare data cand detecteaza un copil
+ 'prog_i' (1<=i<=n) suspendat, creaza un alt copil, avand standard input si
+ standard output redirectati la tubul i si care se substituie cu 'fct'
+ (acesta va citi datele scrise de 'prog_i' in tubul i, apoi va scrie in tub
+ rezultate pentru acesta), apoi asteapta terminarea copilului 'fct' si
+ trezeste copilul 'prog_i' trimitandu-i SIGCONT;
+ - toate procesele copil create de 'monitor' isi vor inchide descriptorii
+ nefolositi pe tuburi.
+
+Rezolvare:
+==========
+

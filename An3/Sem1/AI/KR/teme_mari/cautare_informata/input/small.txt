@@ -1,0 +1,7 @@
+N1=3
+N2=5
+K=3
+M=4
+Nr=12
+MalInitial=left
+MalFinal=right

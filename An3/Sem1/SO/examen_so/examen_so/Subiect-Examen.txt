@@ -1,0 +1,193 @@
+Sisteme de operare
+
+numele: ....................................................................
+
+grupa: .....................................................................
+
+adresa e-mail: .............................................................
+
+Instructiuni de completare:
+- Completati antetul cu datele personale.
+- Inserati rezolvarea fiecarui subiect in acest fisier, dupa 'Rezolvare'.
+- Rezolvarile care cer generarea de cod vor fi punctate doar daca codul
+    este compilabil si fara warning cu optiunea '-Wall' (chiar daca rezolva
+    incomplet cerinta sau face erori la executie).
+- Redenumiti acest fisier sub forma urmatoare (inlocuind adecvat grupa, nume,
+    prenume, data in format zzllaaaa):
+ 
+      so_grupa_nume_prenume_data.txt
+
+- Atasati fisierul unui mesaj e-mail care are ca subiect un text identic cu
+    numele fisierului (fara .txt) si pe care il trimiteti in intervalul orar
+    al probei de la adresa dumneavoastra institutionala (fmi sau unibuc) la
+    ambele adrese urmatoare: dragulicid@yahoo.com si dra@fmi.unibuc.ro
+
+
+1. Consideram executarea urmatorului cod C:
+
+ int k = 5;
+ if(fork() == fork()) ++k; else --k;
+ printf("%d\n", k);
+
+   Cate procese apar in total (incluzand si procesul initial) ?
+   Descrieti dependentele acestor procese prin perechi de forma
+ p1(n1) -> p2(n2), insemnand: procesul p1 afisaza n1 si genereaza
+ procesul p2 care afisaza n2.
+   Justificati raspunsurile.
+   Completati codul la un program intreg care, in plus, sa afiseze si PID-ul
+ parintelui si PID-ul propriu (pentru a putea dovedi cele afirmate mai
+ devreme). Este permisa doar inserarea de cod si schimbarea indentarii, nu si
+ stergerea sau modificarea codului existent.
+
+ Rezolvare:
+ ==========
+
+
+2. Un sistem de programe in timp real are patru evenimente periodice cu
+ perioadele de 50, 100, 200 si respectiv 250 msec. Presupunem ca cele patru
+ evenimente au nevoie de 35, 20, 10 si respectiv x msec de timp procesor.
+ De asemenea, presupunem ca supraincarcarea cauzata de comutarea intre
+ procese este neglijabila. Care este valoarea maxima a lui x pentru care
+ sistemul este planificabil ?
+  Justificati raspunsul (aratati calculul).
+
+Rezolvare:
+==========
+
+
+3. Consideram algoritmul de imbatranire cu a=1/2 pentru predictia timpilor
+ de executie. In precedentele 4 rulari, de la cea mai veche la cea mai
+ recenta, acestia sunt 60 (coincizand si cu valoarea estimata), 20, 50 si
+ respectiv 15 msec. Care este predictia urmatorului timp ? Justificati
+ raspunsul (aratati calculul).
+
+Rezolvare:
+==========
+
+
+4. Scrieti o functie in limbajul C:
+
+    int inv(char *numefis);
+
+ care interschimba prima si a doua jumatate din fisierul specificat de
+ 'numefis'; daca fisierul are un numar impar de caractere, caracterul din
+ mijloc este lasat pe loc. Functia returneaza numarul de caractere din
+ fisier sau -1 in caz de eroare.
+   Memoria folosita va fi limitata de o constanta (deci, nu se va incarca tot
+ continutul fisierului in memorie) iar la iesirea din functie fisierul va fi
+ inchis.
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+int inv(char *numefis) {
+
+/* corpul functiei */
+
+}
+
+int main(int argc, char *argv[]) {
+  int k;
+  if(argc != 2)
+    {fprintf(stderr, "Utilizare: %s fisier\n", argv[0]); return 1;}
+  if((k = inv(argv[1])) == -1)
+    {perror(argv[1]); return  1;}
+  printf("%d\n", k);
+  return 0;
+}
+
+  Exemple de testare (presupunem ca programul executabil este 'prog'):
+
+$echo -n abc > f
+$./prog f
+3
+$cat f
+cba$
+
+$echo -n abcd > f
+$./prog f
+4
+$cat f
+cdab$
+
+Rezolvare:
+==========
+
+
+5.  Scrieti un program in limbajul C care primeste ca argument in linia
+ de comanda specificatorul unui director si efectueaza urmatoarele:
+ -  cauta in directorul respectiv fisierele obisnuite (regular) al caror
+ proprietar coincide cu proprietarul efectiv al procesului apelant, au
+ drept de citire si scriere pentru proprietar si au fost modificate
+ ultima data in luna curenta din sistem;
+ - pentru fiecare fisier gasit, scrie la sfarsitul lui numele proprietarului
+ (terminat cu cap de linie);
+ - in final, afisaza suma dimensiunilor initiale ale fisierelor semnate.
+ Putem presupune ca toti specificatorii sunt siruri nevide, nu sunt
+ terminate cu "/" si au cel mult PATH_MAX - 1 caractere.
+
+Exemplu de testare (presupunem ca programul este "./prog"):
+
+$ls -l test
+total 20
+-rw-rw-r-- 1 dragulici dragulici    5 Jan  8 16:04 a
+drwxrwxr-x 2 dragulici dragulici 4096 Jan  8 16:04 b
+-rw-rwxrwx 1 dragulici dragulici    2 May  7  2021 c
+-rw-rw-r-- 1 dragulici dragulici    4 Jan  8 18:29 d
+-r--rw-r-- 1 dragulici dragulici   11 Jan  8 18:24 e
+$cat test/a
+abc
+
+$cat test/c
+a
+$cat test/d
+123
+$cat test/e
+1111111111
+$./prog test
+9
+$cat test/a
+abc
+
+dragulici
+$cat test/c
+a
+$cat test/d
+123
+dragulici
+$cat test/e
+1111111111
+
+ Rezolvare:
+ ==========
+
+
+6. Scrieti un program 'prog' in limbajul C, care se poate lansa sub forma
+ './prog comanda1 @ comanda2', unde 'comanda1' si 'comanda2' sunt comenzi
+ externe shell (specificatorii unor fisiere executabile) care pot avea mai
+ multe cuvinte si care lanseaza cele doua comenzi a.i. procesele sa formeze
+ lantul:
+          prog --------> comanda1 --------> comanda2
+
+   Procesul din stanga unei sageti este parintele celui din dreapta si
+ comunica cu el printr-un tub, a.i parintele are stdout la tub iar copilul
+ are stdin la tub. Procesele isi vor inchide descriptorii nefolositi pe
+ tuburi, a.i. tuburile sa aiba un singur cititor si un singur scriitor.
+   Dupa crearea copilului, procesul 'prog' va copia stdin la stdout, apoi va
+ inchide stdout si va astepta terminarea copilului, apoi va afisa codul de
+ retur al acestuia pe stderr si se va termina.
+
+Exemplu de testare:
+
+$echo abc def g > f
+$./prog /bin/cat @ /bin/wc -w < f
+Cod retur 0
+3
+$./prog /bin/cat neexistent @ /bin/wc -w < f
+/bin/cat: neexistent: No such file or directory
+0
+Cod retur 1
+
+Rezolvare:
+==========

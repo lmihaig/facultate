@@ -1,0 +1,212 @@
+Sistemul de operare Linux - examen, marti 12 mai 2020
+
+
+Instructiuni de completare:
+- Completati antetul cu datele personale.
+- Inserati rezolvarea fiecarui subiect in acest fisier, dupa 'Rezolvare'.
+- Rezolvarile care cer generarea de cod vor fi punctate doar daca codul
+    este compilabil si fara warning cu optiunea '-Wall' (chiar daca rezolva
+    incomplet cerinta sau face erori la executie).
+- Redenumiti acest fisier sub forma urmatoare (inlocuind adecvat Nume, Prenume,
+    grupa):
+ 
+      SOL_ma12mai2020_Nume_Prenume_grupa.txt
+
+- Atasati fisierul unui mesaj e-mail care are ca subiect un text identic cu
+    numele fisierului (fara .txt) si pe care il trimiteti in intervalul orar
+    al probei de la adresa dumneavoastra institutionala (fmi sau unibuc) la
+    ambele adrese urmatoare: dragulicid@yahoo.com si dra@fmi.unibuc.ro
+
+Timp total de lucru (incluzand trimiterea tezei): 3 ore.
+
+
+1. Consideram executarea urmatorului cod C:
+
+        int k = 5;
+        if(fork() != fork()) sleep(++k); else sleep(--k);
+
+   Cate procese apar in total (incluzand si procesul initial) si care sunt
+ duratele lor de asteptare in 'sleep()' ?
+   Descrieti dependentele acestor procese prin perechi de forma p1(x) -> p2(y),
+ insemnand: procesul p1 asteapta x secunde si genereaza procesul p2 care
+ asteapta y secunde.
+   Justificati raspunsurile.
+   Completati codul la un program intreg care sa genereze aceeasi arborescenta de
+ procese si durate dar in care fiecare proces isi afisaza PID-ul parintelui, PID-ul
+ propriu si durata de asteptare (pentru a putea dovedi cele afirmate mai devreme).
+ Este permisa doar adaugarea de cod si schimbarea indentarii, nu si stergerea sau
+ modificarea codului existent.
+
+Rezolvare:
+==========
+
+
+2. Consideram executarea urmatorului cod C:
+
+        if(fork()) kill(getpid(), SIGSTOP); else sleep(1);
+        if(! fork()) sleep(1); else kill(getppid(), SIGCONT);
+
+   Presupunem ca timpii consumati in afara lui 'sleep()' sunt neglijabili.
+   Cate procese apar in total (incluzand si procesul initial) ?
+   Cat dureaza cel mai lung dintre aceste procese ?
+   Descrieti dependentele acestor procese prin perechi de forma p1(x) -> p2(y),
+ insemnand: procesul p1 dureaza x secunde si genereaza procesul p2 care
+ dureaza y secunde.
+   Justificati raspunsurile.
+  
+Rezolvare:
+==========
+
+3. Scrieti o functie in limbajul C:
+
+  void fcirc2(char *p1, char *p2);
+
+care primeste ca parametri numele cu cale a doua fisiere executabile
+'p1' si 'p2' si le lanseaza ca procese copii ai procesului curent,
+inlantuiti intr-un filtru circular (intrarea standard a lui 'p1' este
+conectata printr-un tub la iesirea standard a lui 'p2', iar intrarea
+standard a lui 'p2' este conectata printr-un tub la iesirea standard a
+lui 'p1').
+ Atat parintele comun cat si cei doi copii isi vor inchide descriptorii
+nefolositi pe aceste tuburi, a.i. in timpul rularii copiilor tuburile vor
+avea cate un singur scriitor si un singur cititor.
+ Dupa lansarea celor doi copii, functia (executata in parintele comun) va
+astepta terminarea acestora inainte de a face return.
+ Nu se va testa succesul/esecul.
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+void fcirc2(char *p1, char *p2) {
+
+  /* corpul functiei */
+
+}
+
+int main(int argc, char *argv[]){
+  if(argc!=3) return 1;
+  fcirc2(argv[1],argv[2]);
+  return 0;
+}
+
+Rezolvare:
+==========
+
+
+4. Scrieti o functie in limbajul C:
+
+     long duplicare(char const *fis)
+
+ care primeste ca argument specificatorul unui fisier si ii dubleaza
+ continutul; de exemplu, daca fisierul continea 'abc', va contine 'abcabc'.
+ Functia va opera direct pe fisierul respectiv, fara fisiere auxiliare iar
+ memoria folosita va fi limitata de o constanta (in particular, nu se va
+ incarca intregul continut al fisierului in memorie). La sfarsit, functia
+ va lasa fisierul inchis si va returna dimensiunea initiala a fisierului
+ sau -1 in caz de eroare.
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+long duplicare(char const *fis) {
+
+  /* corpul functiei */
+FILE    *f1   =   fopen (fis,      "r+");
+
+    fseek(f1, 0, SEEK_END);
+    int n = ftell(f1);
+    int result = 1;
+    char c;
+
+    if (ftell(f1) == 0){
+      printf("erroare");  fclose(f1);  return -1;
+    }
+    while((fscanf(f1,"%c",&c))== 1){
+
+        fprintf (f1 + n, "%c", c);
+    }
+
+    fclose  (f1);
+
+    return result;
+
+}
+
+int main(int argc, char *argv[]) {
+  long n;
+  if(argc != 2)
+    {fprintf(stderr, "Utilizare: %s fisier\n", argv[0]); return 1;}
+  if((n = duplicare(argv[1])) == -1)
+    {perror(argv[1]); return  1;}
+  printf("%ld\n", n);
+  return 0;
+}
+
+
+Rezolvare:
+==========
+
+
+5. Scrieti o functie in limbajul C:
+
+     int setread(char const *ndir, char const *ngrp)
+
+ care primeste ca argumente specificatorul unui director si numele unui
+ utilizator si care, pentru toate fisierele obisnuite (regular) din
+ directorul 'ndir' care au grupul proprietar 'ngrp' si au fost modificate
+ ultima data in luna curenta din sistem, seteaza dreptul de citire de la
+ proprietar sa fie ca la directorul 'ndir' (lasand celelalte drepturi
+ nemodificate). Functia va returna suma dimensiunilor fisierelor setate
+ sau -1 in caz de eroare. La sfarsit, functia va lasa directorul inchis
+ si memoria dinamica dezalocata.
+
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+int setread(char const *ndir, char const *ngrp)
+
+  /* corpul functiei */
+
+}
+
+int main(int argc, char *argv[]) {
+  int n;
+  if(argc != 3)
+   {fprintf(stderr, "Utilizare: %s director grup\n", argv[0]); return 1;}
+  if((n = setread(argv[1], argv[2])) == -1) {fprintf(stderr, "Eroare\n"); return 1;}
+  printf("Suma dimensiunilor este: %d\n", n);
+  return 0;
+}
+
+
+Rezolvare:
+==========
+
+
+6. Scrieti un program in limbajul C care  efectueaza urmatoarele:
+ - primeste ca argumente in linia de comanda specificatorii a doua programe
+ (fisiere executabile);
+ - aloca doua tuburi anonime si genereaza doua procese copil conectate la tub
+ astfel:        scrie    citeste         scrie    citeste
+         copil1 ---------------- parinte ---------------- copil2
+                     tub1                      tub2
+ citirile/scrierile in tuburi se vor face prin standard input/output;
+ procesele isi vor inchide ceilalti descriptori la tub; copil1, respectiv
+ copil2, se vor substitui cu procese ce executa programele date ca argument
+ in linia de comanda;
+ - in continuare, parintele citeste din tub1 cuvinte (siruri maximale de
+ caractere ne-albe) si scrie in tub2 ultimul caracter din fiecare cuvant;
+ - cand copil1 se termina si inchide tub1, parintele isi inchide tuburile,
+ asteapta terminarea tuturor copiilor si se termina; acelasi lucru se va
+ intampla si atunci cand copil2 se termina mai devreme, cu ajutorul unui
+ handler asociat lui SIGPIPE.
+ 
+Rezolvare:
+==========
