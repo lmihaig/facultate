@@ -1,0 +1,217 @@
+Sisteme de operare
+
+numele: ....................................................................
+
+grupa: .....................................................................
+
+adresa e-mail: .............................................................
+
+Instructiuni de completare:
+- Completati antetul cu datele personale.
+- Inserati rezolvarea fiecarui subiect in acest fisier, dupa 'Rezolvare'.
+- Rezolvarile care cer generarea de cod vor fi punctate doar daca codul
+    este compilabil si fara warning cu optiunea '-Wall' (chiar daca rezolva
+    incomplet cerinta sau face erori la executie).
+- Redenumiti acest fisier sub forma urmatoare (inlocuind adecvat grupa, nume,
+    prenume, data in format zzllaaaa):
+ 
+      so_grupa_nume_prenume_data.txt
+
+- Atasati fisierul unui mesaj e-mail care are ca subiect un text identic cu
+    numele fisierului (fara .txt) si pe care il trimiteti in intervalul orar
+    al probei de la adresa dumneavoastra institutionala (fmi sau unibuc) la
+    ambele adrese urmatoare: dragulicid@yahoo.com si dra@fmi.unibuc.ro
+
+
+1. Consideram executarea urmatorului cod C:
+
+ int d[2]; char c='1';
+ pipe(d);
+ if(fork())close(0);
+ if(!fork())close(1);
+ dup(d[0]); dup(d[1]);
+ write(1,&c,sizeof(char));
+
+   Cate procese apar in total (incluzand si procesul initial) si ce se afisaza
+ pe terminal ?
+   Descrieti dependentele acestor procese prin perechi de forma
+ p1("abc") -> p2("def"), insemnand: procesul p1 afisaza pe terminal "abc" si
+ genereaza procesul p2 care afisaza pe terminal "def" (textele "abc" si "def"
+ putand fi si vide, adica "").
+   Justificati raspunsurile.
+   Completati codul la un program intreg care, in plus, sa afiseze pe standard
+ error (presupus a fi ramas pe terminal) PID-ul parintelui si PID-ul propriu,
+ inainte de a face scrierea pe standard output (pentru a putea dovedi cele
+ afirmate mai devreme). Este permisa doar inserarea de cod si schimbarea
+ indentarii, nu si stergerea sau modificarea codului existent.
+
+Rezolvare:
+==========
+
+
+2. Un sistem de fisiere UNIX are blocuri de 1 KB si adrese de disc de 4
+  octeti. Care este dimensiunea maxima a unui fisier, daca fiecare i-nod
+  contine 10 intrari directe si cate o intrare cu indirectare simpla,
+  dubla, respectiv tripla ? Exprimati dimensiunea in KB si aproximati in GB.
+  Justificati raspunsul (aratati calculul facut).
+
+Rezolvare:
+==========
+
+
+3. Intr-un sistem de calcul planificat round-robin, se pornesc doua procese,
+primul la ora 12:00, al doilea la ora 12:30. Fiecare proces petrece 50%
+din timp in I/O si necesita 60 minute timp procesor (deci, rulat singur
+ar dura 120 min). La ce ora ambele procese sunt terminate ? Justificati.
+ Presupunem neglijabila supraincarcarea legata de sarcinile administrative.
+
+Rezolvare:
+==========
+
+
+4. Scrieti o functie in limbajul C:
+
+    int copiere(char *numefis, int n);
+
+ care copiaza primele n caractere din fisierul specificat de 'numefis'
+ peste ultimele n caractere din acest fisier; functia returneaza numarul de
+ caractere din fisier in caz de succes si -1 in caz de esec (de exemplu,
+ fisierul nu se poate deschide sau n este > numarul de caractere din fisier).
+  De exemplu, daca initial fisierul continea 'abcdef' iar n = 4, in final
+ fisierul va contine 'ababcd' iar functia va returna 6.
+  Memoria folosita va fi limitata de o constanta (deci, nu se va incarca tot
+ continutul fisierului in memorie) iar la iesirea din functie fisierul va fi
+ inchis.
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+    int copiere(char *numefis, int n) {
+
+  /* corpul functiei */
+
+}
+
+int main(int argc, char *argv[]) {
+  int k;
+  if(argc != 3)
+    {fprintf(stderr, "Utilizare: %s fisier numar\n", argv[0]); return 1;}
+  if((k = copiere(argv[1], atoi(argv[2]))) == -1)
+    {perror(argv[1]); return  1;}
+  printf("%d\n", k);
+  return 0;
+}
+ 
+Rezolvare:
+==========
+
+
+5. Scrieti o functie:
+
+   int cauta(char *director);
+   
+ care cauta in directorul 'director' fisierele obisnuite (regular) al caror
+ nume incepe (ca prefix) cu numele proprietarului real al procesului curent,
+ au drept de citire si scriere pentru proprietar si au fost modificate
+ ultima data in anul curent din sistem. Functia dateaza fiecare fisier gasit,
+ scriind la sfarsitul lui data ultimului acces asupra fisierului, in format
+ "Wed Jun 30 21:49:08 1993". Functia returneaza numarul fisierelor datate sau
+ -1 in caz de eroare.
+   La sfarsit, functia va lasa directorul si fisierele inchise.
+   Se vor indica fisierele header necesare.
+   Se poate presupune ca toti specificatorii au maxim 255 caractere.
+   Pentru scrierea functiei, completati programul urmator, inlocuind cele
+ doua comentarii:
+
+/* fisiere header */
+
+int cauta(char *director) {
+
+  /* corpul functiei */
+
+}
+
+int main(int argc, char *argv[]){
+  int a;
+  if(argc != 2){fprintf(stderr, "Utilizare: %s director\n", argv[0]); return 1;}
+  if((a = cauta(argv[1])) == -1) perror ("cauta()");
+  else printf("%d\n", a);
+  return 0;
+}
+
+ Rezolvare:
+ ==========
+
+
+6. Scrieti un program 'rendezvous' in limbajul C, care se poata lansa sub forma:
+
+                        ./rendezvous prog_1 prog_2
+                        
+ unde 'prog_1' si 'prog_2' sunt programe (fisiere executabile) si lanseaza
+ 'prog_1', 'prog_2' in paralel, astfel incat sa le intermedieze o comunicare
+ de tip rendez-vous (in diverse momente, ele sa se astepte unul pe altul,
+ apoi sa-si transmita unul altuia o informatie 'int', apoi sa continue pana
+ la urmatorul punct de intalnire).
+  Se presupune ca fiecare dintre 'prog_1', 'prog_2', cand intentioneaza
+ sa comunice cu celalalt, va scrie un intreg la standard output, apoi se va
+ suspenda cu SIGSTOP, apoi (dupa ce va fi trezit) va citi un intreg (scris de
+ celalalt program) de la standard input.
+  Programul 'rendezvous' va lucra astfel:
+- aloca 2 tuburi anonime, apoi creaza 2 procese copil; copilul i (1<=i<=2)
+ isi redirecteaza standard input si standard output la tubul i, apoi se
+ substituie cu un proces ce executa 'prog_i';
+- dupa crearea copiilor 'prog_2', 'prog_2', cat timp mai exista 2 copii,
+ asteapta ca ambii copii sa fie suspendati, apoi citeste intregii din
+ tuburi si scrie fiecare intreg in celalalt tub decat cel din care a fost
+ citit, apoi trezeste ambii copii trimitandu-le SIGCONT; cand un copil se
+ termina, programul 'rendezvous' va trezi celalalt copil de fiecare data cand
+ se suspenda, fara a citi sau scrie in tuburi;
+ - toate procesele copil create de 'rendezvous' isi vor inchide descriptorii
+ nefolositi pe tuburi.
+
+  De exemplu, daca programul 'prog' contine:
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+int main() {
+  int p, i, n, x, y, s;
+  srand(getpid());
+  n = 3 + rand() % 3;
+  p = getpid();
+  x = rand() % 10; s = 1 + rand() % 3;
+  fprintf(stderr, "Initial (%d pasi): pid = %d  de_scris: %d  de_asteptat: %d\n", n, p, x, s);
+  for(i = 1; i < n; ++i) {
+     sleep(s); write(1, &x, sizeof(int)); raise(SIGSTOP); read(0, &y, sizeof(int));
+     x = rand() % 10; s = 1 + rand() % 3;
+     fprintf(stderr, "Pasul %d: pid = %d  citit: %d  de_scris: %d  de_asteptat: %d\n", i, p, y, x, s);
+  }
+  sleep(s); write(1, &x, sizeof(int)); raise(SIGSTOP); read(0, &y, sizeof(int));
+  fprintf(stderr, "Pasul final %d: pid = %d  citit: %d\n", i, p, y);
+  return 0;
+}
+
+  atunci comanda:
+
+    ./rendezvous prog prog
+
+  va afisa:
+
+Initial (5 pasi): pid = 4304  de_scris: 0  de_asteptat: 3
+Initial (4 pasi): pid = 4303  de_scris: 3  de_asteptat: 3
+Pasul 1: pid = 4304  citit: 3  de_scris: 4  de_asteptat: 2
+Pasul 1: pid = 4303  citit: 0  de_scris: 3  de_asteptat: 3
+Pasul 2: pid = 4303  citit: 4  de_scris: 2  de_asteptat: 2
+Pasul 2: pid = 4304  citit: 3  de_scris: 7  de_asteptat: 2
+Pasul 3: pid = 4304  citit: 2  de_scris: 6  de_asteptat: 2
+Pasul 3: pid = 4303  citit: 7  de_scris: 4  de_asteptat: 3
+Pasul final 4: pid = 4303  citit: 6
+Pasul 4: pid = 4304  citit: 4  de_scris: 0  de_asteptat: 1
+Pasul final 5: pid = 4304  citit: 0
+
+Rezolvare:
+==========
+
