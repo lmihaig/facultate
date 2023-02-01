@@ -183,7 +183,7 @@ _|_M____C____F____               \\t______/    _____F____C____M_|__
                   `~^~^~^~^~^~^~^~^~^~^~^~^~^~`"""  # noqa
 
     def __lt__(self, other: Self) -> bool:
-        return self.g_score < other.g_score if self.f_score == other.f_score else self.f_score < other.f_score
+        return self.g_score > other.g_score if self.f_score == other.f_score else self.f_score < other.f_score
 
     def __eq__(self, other: Self) -> bool:
         return self.g_score == other.g_score if self.f_score == other.f_score else self.f_score == other.f_score

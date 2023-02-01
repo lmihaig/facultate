@@ -175,12 +175,13 @@ class Cell:
 
 
 class Node:
-    def __init__(self, board: list[list[Cell]], to_move: str, depth: int, parent: Self):
+    def __init__(self, board: list[list[Cell]], to_move: str, depth: int, parent: Self, estimation: int = None):
         self.board = board
         self.to_move = to_move
         self.depth = depth
         self.parent = parent
         self.valid_moves = set()
+        self.estimation = estimation
 
     def __repr__(self):
         res = [" |" + " | ".join([str(index) for index in range(BOARD_SIZE)])]
@@ -196,6 +197,11 @@ class Node:
             for elem in row:
                 pygame.draw.rect(screen, BACKGROUND_CLR, elem.rect)
                 elem.draw_symbol()
+
+    def display_to_move(self):
+        text = menu_font.render(f"{self.to_move} to move", True, TEXT_CLR, BOARD_CLR)
+        text_rect = text.get_rect(center=(WIDTH / 2, 50))
+        screen.blit(text, text_rect)
 
     def get_valid_moves(self):
         if self.depth < 2:
@@ -214,6 +220,9 @@ class Node:
 
         return self.valid_moves
 
+    def estimate_score(self):
+        pass
+
 
 class Graph:
     def __init__(self, start: Node, player_one, player_two):
@@ -222,16 +231,35 @@ class Graph:
         self.player_one = player_one
         self.player_two = player_two
 
+    def minimax(self, node: Node, max_depth: int):
+        if node.depth >= max_depth or not node.get_valid_moves():
+            node.estimation = node.estimate_score()
+            return node
+
     def move_player(self, player):
         new_node = copy.deepcopy(self.cur_node)
+        max_depth = 0
         match player:
             case "Human":
                 for row in new_node.board:
                     for cell in row:
                         if cell in new_node.valid_moves:
-                            if cell.check_click() and cell.set_symbol(self.cur_node.to_move):
+                            if cell.check_click() and cell.set_symbol(new_node.to_move):
                                 cell.draw_symbol()
                                 return new_node.board
+            case "AI", algo, diff:
+                match diff:
+                    case "Easy":
+                        max_depth = 2
+                    case "Medium":
+                        max_depth = 5
+                    case "Hard":
+                        max_depth = 10
+                match algo:
+                    case "minimax":
+                        return self.minimax(new_node, new_node.depth + max_depth).board
+                    case "alpha-beta":
+                        return self.alpha_beta(new_node, new_node.depth + max_depth).board
         return None
 
     def next_move(self):
@@ -242,6 +270,7 @@ class Graph:
                 self.cur_node.draw_state()
                 sound_x.play()
                 pygame.display.update()
+                print(self.cur_node)
         else:
             new_board = self.move_player(self.player_two)
             if new_board:
@@ -249,10 +278,11 @@ class Graph:
                 self.cur_node.draw_state()
                 sound_o.play()
                 pygame.display.update()
+                print(self.cur_node)
 
     def draw_line(self, start_cell: Cell, end_cell: Cell):
-        random_start_offset = random.randint(0, 30)
-        random_end_offset = random.randint(0, 30)
+        random_start_offset = random.randint(0, 20)
+        random_end_offset = random.randint(0, 20)
         # # color = tuple(np.random.random(size=3) * 256)
         # if start_cell.symbol == "X":
         #     color = hsv2rgb(80 + random.randint(-5, 5), random.randint(100, 260), random.randint(100, 260))
@@ -388,6 +418,9 @@ def play_game(graph: Graph):
     if valid_moves:
         for cell in valid_moves:
             cell.highlight(HIGHLIGHT_CLR)
+
+        graph.cur_node.display_to_move()
+
         pygame.display.update()
 
         graph.next_move()
