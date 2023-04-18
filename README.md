@@ -76,12 +76,12 @@ Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21 [@] gmail.com
 
 | Anul III - Semestrul II 	|                                                         	|       	|      	|      	|           	|         	|
 |:-----------------------:	|:-------------------------------------------------------:	|:-----:	|:----:	|:----:	|:---------:	|:-------:	|
-|           Tip           	| Discipline obligatorii                                  	|   FE  	| Crd. 	| Curs 	| Laborator 	| Seminar 	|
-|            DS           	| [Criptografie si Securitate](An3/Sem2/CriptoSecuritate) 	|   E   	|   4  	|      	|           	|         	|
-|            DC           	| [Marketing](An3/Sem2/marketing)                         	|   V   	|   2  	|      	|           	|         	|
-|            DS           	| [Grafica pe calculator](An3/Sem2/grafica)               	|   E   	|   4  	|      	|           	|         	|
-|            DS           	| [Metode de dezvoltare software](An3/Sem2/mds)           	|   E   	|   4  	|      	|           	|         	|
-|            DD           	| [Sisteme cu microprocesoare](An3/Sem2/microprocesoare)  	|   E   	|   4  	|      	|           	|         	|
-|            DS           	| [Arhitectura sistemelor paralele](An3/Sem2/asp)         	|   E   	|   4  	|      	|           	|         	|
-|            DD           	| Practica industriala                                    	|   V   	|   8  	|      	|           	|         	|
-|                         	| Total                                                   	| 5E+2V 	|  30  	|      	|           	|         	|
+| Tip | Discipline obligatorii                                  | FE    | Crd. | Curs                         | Laborator                    | Seminar                  |
+| DS  | [Criptografie si Securitate](An3/Sem2/CriptoSecuritate) | E     | 4    | Radu Boriga                  | Paul Adrian Cotan            |                          |
+| DC  | [Marketing](An3/Sem2/marketing)                         | V     | 2    | Stefan Alexandru Catana      |                              | Stefan Alexandru Catana  |
+| DS  | [Grafică pe calculator](An3/Sem2/grafica)               | E     | 4    |  Mihai Sorin Stupariu        | Alexandra Diaconu            | Alexandra Diaconu        |
+| DS  | [Metode de dezvoltare software](An3/Sem2/mds)           | E     | 4    | Cristian Kevorchian          | Marius Iulian Mihailescu     | Marius Iulian Mihailescu |
+| DD  | [Sisteme cu microprocesoare](An3/Sem2/microprocesoare)  | E     | 4    | Alecsandru Vladimir Chirosca | Alecsandru Vladimir Chirosca |                          |
+| DS  | [Arhitectura sistemelor paralele](An3/Sem2/asp)         | E     | 4    | Lucian Ion                   | Geanina Chirosca             |                          |
+| DD  | Practică industrială                                    | V     | 8    | Deutsche Bank                | Deutsche Bank                | Deutsche Bank            |
+|     | Total                                                   | 5E+2V | 30   |

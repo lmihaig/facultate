@@ -1,5 +1,5 @@
-[submodule "An2/Sem1/poo/project/sound-synth"]
-	path = An2/Sem1/poo/project/sound-synth
+[submodule "An2/Sem1/poo/proiect/sound-synth"]
+	path = An2/Sem1/poo/proiect/sound-synth
 	url = https://github.com/lmihaig/sound-synth.git
 [submodule "An2/Sem1/bd/proiect/interfata/CTFlime"]
 	path = An2/Sem1/bd/proiect/interfata/CTFlime
@@ -13,3 +13,9 @@
 [submodule "An3/Sem1/CloudComp/proiect/AzureCloudComputing"]
 	path = An3/Sem1/CloudComp/proiect/AzureCloudComputing
 	url = https://github.com/lmihaig/AzureCloudComputing
+[submodule "An3/Sem2/CritpoSecuritate/proiect/cryptorusticon"]
+	path = An3/Sem2/CritpoSecuritate/proiect/cryptorusticon
+	url = https://github.com/lmihaig/cryptorusticon.git
+[submodule "An3/Sem2/mds/proiect/OxiChat"]
+	path = An3/Sem2/mds/proiect/OxiChat
+	url = https://github.com/lmihaig/OxiChat.git
