@@ -13,8 +13,11 @@
 [submodule "An3/Sem1/CloudComp/proiect/AzureCloudComputing"]
 	path = An3/Sem1/CloudComp/proiect/AzureCloudComputing
 	url = https://github.com/lmihaig/AzureCloudComputing
-[submodule "An3/Sem2/CritpoSecuritate/proiect/cryptorusticon"]
-	path = An3/Sem2/CritpoSecuritate/proiect/cryptorusticon
+[submodule "An3/Sem1/comunicare/proiect/tabletop-blog"]
+	path = An3/Sem1/comunicare/proiect/tabletop-blog
+	url = https://github.com/lmihaig/tabletop-blog.git
+[submodule "An3/Sem2/CriptoSecuritate/proiect/cryptorusticon"]
+	path = An3/Sem2/CriptoSecuritate/proiect/cryptorusticon
 	url = https://github.com/lmihaig/cryptorusticon.git
 [submodule "An3/Sem2/mds/proiect/OxiChat"]
 	path = An3/Sem2/mds/proiect/OxiChat
