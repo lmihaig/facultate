@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!--LINQ To XML Demo-->
+<Customers>
+  <Customer CustID="1001">
+    <Name>Bob</Name>
+    <MobileNo>0123456789</MobileNo>
+    <Location>New York City</Location>
+    <Address>Crosby Street</Address>
+  </Customer>
+  <Customer CustID="1002">
+    <Name>Alice</Name>
+    <MobileNo>2345678910</MobileNo>
+    <Location>London</Location>
+    <Address>Abbey Road</Address>
+  </Customer>
+  <Customer CustID="1003">
+    <Name>Rohan</Name>
+    <MobileNo>2356789410</MobileNo>
+    <Location>London</Location>
+    <Address>Brick Lane</Address>
+  </Customer>
+  <Customer CustID="1004">
+    <Name>Anna</Name>
+    <MobileNo>34567891230</MobileNo>
+    <Location>Berlin</Location>
+    <Address>Warschauer Strasse</Address>
+  </Customer>
+</Customers>

@@ -1,0 +1,10 @@
+Functia MPI_Reduce
+
+MPI_Reduce este mijlocul prin care procesul MPI poate aplica un calcul de reducere.
+Valorile trimise de procesele MPI vor fi combinate folosind operatia de reducere
+data si rezultatul va fi stocat pe procesul MPI specificat ca root.
+MPI_Reduce este o operatie colectiva, trebuie apelat de fiecare proces MPI din comunicatorul dat.
+
+In cadrul operatiei de reducere globala, MPI_Reduce() fiecare procesor pune la dispozitie un bloc de date de acelasi tip si aceeasi 
+marime.
+Datele sunt adunate in nodul root si se efectueaza operatia de reducere.

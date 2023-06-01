@@ -19,6 +19,12 @@
 [submodule "An3/Sem2/CriptoSecuritate/proiect/cryptorusticon"]
 	path = An3/Sem2/CriptoSecuritate/proiect/cryptorusticon
 	url = https://github.com/lmihaig/cryptorusticon.git
-[submodule "An3/Sem2/mds/proiect/OxiChat"]
-	path = An3/Sem2/mds/proiect/OxiChat
-	url = https://github.com/lmihaig/OxiChat.git
+[submodule "An3/Sem2/mds/proiect/Yuri"]
+	path = An3/Sem2/mds/proiect/Yuri
+	url = https://github.com/lmihaig/Yuri.git
+[submodule "An3/Sem2/grafica/lab/Proiect3D/proj"]
+	path = An3/Sem2/grafica/lab/Proiect3D/proj
+	url = https://github.com/r-moraru/cow-invaders3d.git
+[submodule "An3/Sem2/grafica/lab/Proiect2D/proj"]
+	path = An3/Sem2/grafica/lab/Proiect2D/proj
+	url = https://github.com/r-moraru/cow-invaders.git
