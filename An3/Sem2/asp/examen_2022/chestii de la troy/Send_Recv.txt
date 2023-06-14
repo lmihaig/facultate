@@ -1,0 +1,22 @@
+Operatii de comunicare point-to-point
+
+Fct: MPI_Send () si MPI_Recv()
+
+MPI_Send
+
+Prototipul acestei fct este urmatorul:
+
+int MPI_Send(void *smessage, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+
+smessage: specifica un buffer care contine elementele de date urmeaza sa fie transmise;
+count: nr de elem care urmeaza a fi transmise
+datatype: specifica tipul de date din buffer; toate datele au acelasi tip
+dest: specifica rangul procesului care urmeaza sa primeasca datele
+tag: o eticheta care permite destinatarului sa distinga intre diferitele mesaje de la aceeasi sursa
+comm:specifica comunicatorul folosit in comunicare
+
+Prototipul fct Recv
+
+int MPI_Recv(void *rmessage, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status);
+
+status: este o structura care specifica informatii despre mesaj, dupa incheierea operatiei de comunicare (id_procesor send, cod de eroare);

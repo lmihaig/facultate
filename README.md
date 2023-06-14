@@ -11,9 +11,9 @@ Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21 [@] gmail.com
 |          Tip         	| Discipline obligatorii                                      	|   FE  	| Crd. 	|                Curs               	| Laborator 	|             Seminar            	|
 |          DF          	| [Analiza matematica](An1/Sem1/analiza)                      	|   E   	|   5  	|       Mihail Alexandru Iancu      	|           	|          Liliana Mitre         	|
 |          DF          	| [Algebra si geometrie](An1/Sem1/algebra)                    	|   E   	|   5  	|           Stanciu Miron           	|           	|       Adrian Dan Halanay       	|
-|          DF          	| [Programarea calculatoarelor](An1/Sem1/pc)                  	|   V   	|   5  	|       Andrei Mihai Patrascu       	|           	|     Marius Miculta Campeanu    	|
+|          DF          	| [Programarea calculatoarelor](An1/Sem1/pc)                  	|   V   	|   5  	|       Andrei Mihai Patrascu       	|      Marius Miculta Campeanu     	|     Oanea Smit    	|
 |          DD          	| [Fizica](An1/Sem1/fizica)                                   	|   E   	|   5  	| Catalin Tatuta<br>Cheche Tiberius 	|           	| Eduard Gatin<br>Sorina Iftimie 	|
-|          DD          	| [Proiectare logica](An1/Sem1/pl)                            	|   E   	|   5  	|           Cornel Nicolae          	|           	|         Cornel Nicolae         	|
+|          DD          	| [Proiectare logica](An1/Sem1/pl)                            	|   E   	|   5  	|           Cornel Nicolae          	|       Cornel Nicolae    	|                  	|
 |          DC          	| [Gandire critica si etica academica](An1/Sem1/gcea)         	|   E   	|   4  	|        Tomi Paula Pompilia        	|           	|          Remus Breazu          	|
 |          DC          	| [Competente de baza intr-o limba straina](An1/Sem1/engleza) 	|   V   	|   1  	|         Protopopescu Daria        	|           	|                                	|
 |          DC          	| Educatie fizica                                             	|   V   	|   2  	|          Robert Sakizlian         	|           	|                                	|

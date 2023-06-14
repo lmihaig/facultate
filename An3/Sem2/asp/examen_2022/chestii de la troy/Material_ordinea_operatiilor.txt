@@ -1,0 +1,26 @@
+Prototipul operatiei de tip Send este:
+
+int MPI_Isend(void *buffer, int count, MPI_Datatype type, int dest, int tag, MPI_Comm comm, MPI_Request *request)
+
+Observatii:
+- functia returneaza imediat controlul procesului;
+- este demarat procesul de trimitere a datelor;
+- request, poate specifica informatii despre statusul operatiei de comunicare;
+
+Prototipul fct Receive non - blocking:
+
+int MPI_Irecv(void *buffer, int count, MPI_Datatype type, int source, int tag, MPI_Comm comm, MPI_Request *request)
+
+- Inaintea refolosirii buferului de o alta operatie de comunicare, se testeaza finalizarea primei operatii de comunicare prin intermediul variabilei request.
+int MPI_Test(MPI_Rquest *request, int *flag, MPI_Status *status
+
+Observatii:
+- daca flag=1 (true) atunci operatia este finalizata
+- status: similar operatiei MPI_Recv(); este nedifinit daca operatia nu este finalizata;
+- daca request se refera la o opartie de tip Send, status MPI_ERROR este nedefinita
+
+Procesul care apeleaza functia este:
+int MPI_Wait(MPI_Request *request, MPI_Status *status);
+- este blocat pana cand operatia identificata prin request este finalizata.
+- un buffer poate fi reutilizat dupa ce operatia MPI_Wait returneaza.
+- se pot folosi in perechi MPI_Send/MPI_IRecv.

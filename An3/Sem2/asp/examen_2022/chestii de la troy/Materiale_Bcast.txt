@@ -1,0 +1,21 @@
+Materiale Operatii de comunicare colective
+
+- in cadrul operatiilor de comunicare colective sunt implicate toate procesele din cadrul unui comunicator.
+- cand dorim sa efectuam o operatie colectiva pe un subgrup de procese din comunicator atunci este necesara definirea unui nou comunicator.
+
+
+Operatii de tip Broadcast
+MPI_Bcast
+
+- trimite un bloc de date x, de la un proces catre toate procesele din comunicator
+- rangul care trimite blocul de date se numeste proces root
+
+Prototipul :
+int MPI_Bcast ( void *message, int count, MPI_Datatype type, int root, MPI_Comm comm);
+
+root- procesul care trimite datele
+
+!
+
+- fiecare proces cheama operatia MPI_Bcast specificand acelasi root si acelasi comunicator;
+- datele trimise prin MPI_Bcast nu pot fi receptionate folosind MPI_Recv 

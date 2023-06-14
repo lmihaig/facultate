@@ -1,0 +1,34 @@
+MPI Scatter si MPI Gather
+
+1. Scatter e o fct care poate gestiona distributia si colectarea datelor mult mai usor.
+- imparte o matrice mare intr-un nr de parti mai mici egal cu nr de procese si trimite fiecarui proces (inclusiv sursa) o bucata
+din matrice in ordine de rang (datele sunt distribuite de la nodul root catre toate procesele).
+Prototipul fct Scatter:
+int MPI_Scatter (void *sendbuf, int sendcount, MPI_Datattype sendtype, void *recvbuf, int recvcount, MPI_Datattype recvtype, int root, MPI_Comm comm);
+
+sendbuf: bufferul send pus la dispozitie de procesul root, care contine cate un bloc pentru fiecare proces;
+sendcount, sendtype: numarul de elemente; tipul lor;
+recvbuf, recvcount, recvtype: bufferele specificate de catre fiecare proces, numarul de elemente primite si tipul lor
+
+! Fiecare proces trebuie sa specifice acelasi root, numar de elemente si acelasi tip !
+
+- Valoarea sendcount (parametru) este dimensiunea datelor care urmeaza sa fie trimise la fiecare proces si nu dimensiunea toatala a matricei sendbuf;
+- daca tipul datelor de trimitere si primire este acelasi, atunci sendcount si recvcount ar trebui sa aiba aceeasi valoare;
+- sendbuf este utilizat numai de procesul root.
+2. Gather 
+- fiecare procesor pune la dispozitie un bloc, care apoi este colectat la procesorul root;
+- primeste date stocate in matrici mici din toate procesele (inclusiv sursa sau radacina) si le concateneaza in matricea de primire ( in rank order).
+- datele sunt preluate de la toate procesele catre nodul root.
+
+Prototipul fct Gather:
+
+int MPI_Gather (void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm);
+
+- sendbuf: se specifica buferul send de catre fiecare proces;
+- sendcount, sendtype: nr de elemente, tipul lor;
+- recvbuf: bufferul in care se primesc datele, la procesul root;
+- recvcount, recvtype: nr de elemente, tipul lor.
+
+- valoarea recvcountului (parametrului) este dimensiunea datelor primite de radacina din fiecare proces si nu dimensiunea recvbufului matrice total.
+- valoarea acestui parametru este in general egala cu valoarea trimiterii , daca tipul datelor este acelasi;
+- recvbuf matrice este utilizat numai de procesul radacina.
