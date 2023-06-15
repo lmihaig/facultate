@@ -1,0 +1,2 @@
+rezultat = -4
+eroare estimata = 3.30618e-07
