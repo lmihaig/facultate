@@ -3,8 +3,10 @@
 """
 
 # Parametrii algoritmului sunt definiti in clasa Parameters.
-from parameters import *
-from build_mosaic import *
+from parameters import Parameters
+from build_mosaic import build_mosaic
+import cv2 as cv
+
 
 # numele imaginii care va fi transformata in mozaic
 image_path = "./../data/imaginiTest/dragan.jpeg"
