@@ -2,7 +2,8 @@
     PROIECT
     REDIMENSIONEAZA IMAGINI.
     Implementarea a proiectului Redimensionare imagini
-    dupa articolul "Seam Carving for Content-Aware Iamge Resizing", autori S. Avidan si A. Shamir
+    dupa articolul "Seam Carving for Content-Aware Iamge Resizing",
+    autori S. Avidan si A. Shamir
 """
 
 from parameters import Parameters
@@ -11,9 +12,8 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 import numpy as np
 
-image_name = "../data/dragan.jpeg"
+image_name = "../data/aaaa.jpg"
 params = Parameters(image_name)
-
 
 # seteaza optiunea de redimenionare
 # micsoreazaLatime, micsoreazaInaltime, amplificaContinut, eliminaObiect
