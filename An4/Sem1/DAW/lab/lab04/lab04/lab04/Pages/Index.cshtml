@@ -1,0 +1,37 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Titlu</th>
+            <th>Lead</th>
+            <th>Continut</th>
+            <th>Autor</th>
+            <th>Categorie</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var stire in Model.Stiri)
+        {
+            <tr>
+                <td>@stire.Id</td>
+                <td>@stire.Titlu</td>
+                <td>@stire.Lead</td>
+                <td>@stire.Continut</td>
+                <td>@stire.Autor</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+</div>
