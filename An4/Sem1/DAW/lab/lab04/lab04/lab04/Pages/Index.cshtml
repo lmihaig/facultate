@@ -20,16 +20,20 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var stire in Model.Stiri)
-        {
-            <tr>
-                <td>@stire.Id</td>
-                <td>@stire.Titlu</td>
-                <td>@stire.Lead</td>
-                <td>@stire.Continut</td>
-                <td>@stire.Autor</td>
-            </tr>
-        }
+            @foreach (var stire in Model.Stiri)
+            {
+                <tr>
+                    <td>@stire.Id</td>
+                    <td>@stire.Titlu</td>
+                    <td>@stire.Lead</td>
+                    <td>@stire.Continut</td>
+                    <td>@stire.Autor</td>
+                    <td>@stire.Categorie.Nume</td>
+                    <td><a href="/EditStire?id=@stire.Id">Edit</a></td>
+                    <td><a href="/DeleteStire?id=@stire.Id">Delete</a></td>
+                </tr>
+            }
+
     </tbody>
 </table>
 

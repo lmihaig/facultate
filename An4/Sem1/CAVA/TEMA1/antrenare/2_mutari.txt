@@ -1,0 +1,21 @@
+2_01.jpg player1
+2_02.jpg player2
+2_03.jpg player2
+2_04.jpg player1
+2_05.jpg player2
+2_06.jpg player2
+2_07.jpg player2
+2_08.jpg player1
+2_09.jpg player1
+2_10.jpg player2
+2_11.jpg player1
+2_12.jpg player2
+2_13.jpg player1
+2_14.jpg player2
+2_15.jpg player1
+2_16.jpg player1
+2_17.jpg player2
+2_18.jpg player1
+2_19.jpg player2
+2_20.jpg player1
+

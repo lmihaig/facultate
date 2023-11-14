@@ -1,0 +1,94 @@
+// protoc --go_out=. --go-grpc_out=. services.proto
+syntax = "proto3";
+package services;
+option go_package = "./services";
+
+service Services {
+    rpc JumbleLettersFromArray(StringArrayRequest) returns (StringArrayResponse);
+    rpc FindPerfectSquareCounts(StringArrayRequest) returns (UInt32Response);
+    rpc SumOfReversedIntegers(Int32ArrayRequest) returns (Int32Response);
+    rpc CalculateAverageWithinDigitSumRange(AverageWithinRangeRequest) returns (DoubleResponse);
+    rpc ValidateAndConvertBinaryStrings(StringArrayRequest) returns (UInt32ArrayResponse);
+    rpc ApplyCaesarCipher(CaesarCipherRequest) returns (SingleStringResponse);
+    rpc DecodeRunLengthEncodedText(SingleStringRequest) returns (SingleStringResponse);
+    rpc CountPrimeNumberDigits(UInt32ArrayRequest) returns (UInt32Response);
+    rpc CountWordsWithEvenParityVowels(StringArrayRequest) returns (UInt32Response);
+    rpc ComputeGreatestCommonDivisor(StringArrayRequest) returns (UInt32Response);
+    rpc SumNumbersAfterRightShift(RightShiftSumRequest) returns (Int32Response);
+    rpc SumAfterDoublingFirstDigit(Int32ArrayRequest) returns (Int32Response);
+    rpc FilterComplexNumbersOutsideRange(ComplexNumberRangeRequest) returns (Int32ArrayResponse);
+    rpc ValidatePotentialPasswords(StringArrayRequest) returns (StringArrayResponse);
+    rpc GenerateRandomPasswords(CharacterArrayRequest) returns (StringArrayResponse);
+}
+
+
+message StringArrayRequest {
+    repeated string strings = 1;
+}
+
+message StringArrayResponse {
+    repeated string strings = 1;
+}
+
+message SingleStringRequest {
+    string value = 1;
+}
+
+message SingleStringResponse {
+    string value = 1;
+}
+
+message UInt32ArrayRequest {
+    repeated uint32 numbers = 1;
+}
+
+message UInt32ArrayResponse {
+    repeated uint32 numbers = 1;
+}
+
+message UInt32Response {
+    uint32 value = 1;
+}
+
+message Int32ArrayRequest {
+    repeated int32 numbers = 1;
+}
+
+message Int32ArrayResponse {
+    repeated int32 numbers = 1;
+}
+
+message Int32Response {
+    int32 value = 1;
+}
+
+message DoubleResponse {
+    double value = 1;
+}
+
+message CaesarCipherRequest {
+    string text = 1;
+    string direction = 2;
+    int32 shiftAmount = 3;
+}
+
+message AverageWithinRangeRequest {
+    int32 lowerBound = 1;
+    int32 upperBound = 2;
+    repeated int32 numbers = 3;
+}
+
+message RightShiftSumRequest {
+    repeated int32 numbers = 1;
+    int32 shiftAmount = 2;
+}
+
+message ComplexNumberRangeRequest {
+    int32 lowerBound = 1;
+    int32 upperBound = 2;
+    repeated int32 numbers = 3;
+}
+
+message CharacterArrayRequest {
+    repeated string characters = 1;
+}

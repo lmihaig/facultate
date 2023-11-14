@@ -1,0 +1,19 @@
+﻿@page
+@model lab04.Pages.AdaugaStireModel
+@{
+}
+
+
+<form method="post">
+	<label>Titlu</label> <br />
+	<input asp-for="@Model.Stire.Titlu" /> <br />
+	<label>Lead</label> <br />
+	<input asp-for="@Model.Stire.Lead" /> <br />
+	<label>Continut</label> <br />
+	<input asp-for="@Model.Stire.Continut" /> <br />
+	<label>Autor</label> <br />
+	<input asp-for="@Model.Stire.Autor" /> <br />
+	<label>Categorie</label> <br />
+	<select asp-for="@Model.Stire.CategorieId" asp-items="@Model.categorie" ></select> <br />
+	<input type="submit" />
+</form>

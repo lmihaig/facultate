@@ -1,0 +1,7 @@
+go 1.21.3
+
+use (
+    ./lab
+    ./tema1/aplicatie
+    ./tema2/aplicatie
+)
