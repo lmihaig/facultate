@@ -18,11 +18,11 @@ type server struct {
 
 func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayRequest) (*pb.StringArrayResponse, error) {
     handlerFunc := func(input *pb.StringArrayRequest) (interface{}, error) {
-        result, err := util.Jumble(input.GetStrings())
+        result, err := util.JumbleWords(input.GetStrings())
         return &pb.StringArrayResponse{Strings: result}, err
     }
 
-    resp, err := handleRequest(ctx, sugar, "JumbleLettersFromArray", in, handlerFunc)
+    resp, err := handleRequest(ctx,"JumbleLettersFromArray", in, handlerFunc)
     if err != nil {
         return nil, err
     }
@@ -35,7 +35,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.UInt32Response{Value: count}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "FindPerfectSquareCounts", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"FindPerfectSquareCounts", in, handlerFunc)
 //     return resp.(*pb.UInt32Response), err
 // }
 
@@ -45,7 +45,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.Int32Response{Value: sum}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "SumOfReversedIntegers", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"SumOfReversedIntegers", in, handlerFunc)
 //     return resp.(*pb.Int32Response), err
 // }
 
@@ -55,7 +55,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.DoubleResponse{Value: average}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "CalculateAverageWithinDigitSumRange", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"CalculateAverageWithinDigitSumRange", in, handlerFunc)
 //     return resp.(*pb.DoubleResponse), err
 // }
 
@@ -65,7 +65,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.UInt32ArrayResponse{Numbers: converted}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "ValidateAndConvertBinaryStrings", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"ValidateAndConvertBinaryStrings", in, handlerFunc)
 //     return resp.(*pb.UInt32ArrayResponse), err
 // }
 
@@ -75,7 +75,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.SingleStringResponse{Value: cipherText}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "ApplyCaesarCipher", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"ApplyCaesarCipher", in, handlerFunc)
 //     return resp.(*pb.SingleStringResponse), err
 // }
 
@@ -85,7 +85,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.SingleStringResponse{Value: decodedText}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "DecodeRunLengthEncodedText", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"DecodeRunLengthEncodedText", in, handlerFunc)
 //     return resp.(*pb.SingleStringResponse), err
 // }
 
@@ -95,7 +95,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.UInt32Response{Value: count}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "CountPrimeNumberDigits", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"CountPrimeNumberDigits", in, handlerFunc)
 //     return resp.(*pb.UInt32Response), err
 // }
 
@@ -105,7 +105,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.UInt32Response{Value: count}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "CountWordsWithEvenParityVowels", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"CountWordsWithEvenParityVowels", in, handlerFunc)
 //     return resp.(*pb.UInt32Response), err
 // }
 
@@ -115,7 +115,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.UInt32Response{Value: gcd}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "ComputeGreatestCommonDivisor", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"ComputeGreatestCommonDivisor", in, handlerFunc)
 //     return resp.(*pb.UInt32Response), err
 // }
 
@@ -125,7 +125,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.Int32ArrayResponse{Numbers: filtered}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "FilterComplexNumbersOutsideRange", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"FilterComplexNumbersOutsideRange", in, handlerFunc)
 //     return resp.(*pb.Int32ArrayResponse), err
 // }
 
@@ -135,7 +135,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.StringArrayResponse{Strings: validated}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "ValidatePotentialPasswords", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"ValidatePotentialPasswords", in, handlerFunc)
 //     return resp.(*pb.StringArrayResponse), err
 // }
 
@@ -145,7 +145,7 @@ func (s *server) JumbleLettersFromArray(ctx context.Context, in *pb.StringArrayR
 //         return &pb.StringArrayResponse{Strings: passwords}, err
 //     }
 
-//     resp, err := handleRequest(ctx, sugar, "GenerateRandomPasswords", in, handlerFunc)
+//     resp, err := handleRequest(ctx,"GenerateRandomPasswords", in, handlerFunc)
 //     return resp.(*pb.StringArrayResponse), err
 // }
 
@@ -156,7 +156,7 @@ func logRequestResponse(sugar *zap.SugaredLogger, requestType string, stage stri
 }
 
 
-func handleRequest[T any](ctx context.Context, sugar *zap.SugaredLogger, requestType string, input T, handlerFunc func(T) (interface{}, error)) (interface{}, error) {
+func handleRequest[T any](ctx context.Context, requestType string, input T, handlerFunc func(T) (interface{}, error)) (interface{}, error) {
 	sugar.Infof("Server a primit requestul: %s", requestType)
     sugar.Info("Serverul proceseaza datele")
     response, err := handlerFunc(input)

@@ -31,7 +31,7 @@ const (
 	Services_CountPrimeNumberDigits_FullMethodName              = "/services.Services/CountPrimeNumberDigits"
 	Services_CountWordsWithEvenParityVowels_FullMethodName      = "/services.Services/CountWordsWithEvenParityVowels"
 	Services_ComputeGreatestCommonDivisor_FullMethodName        = "/services.Services/ComputeGreatestCommonDivisor"
-	Services_SumNumbersAfterRightShift_FullMethodName           = "/services.Services/SumNumbersAfterRightShift"
+	Services_SumNumbersAfterRightPerm_FullMethodName            = "/services.Services/SumNumbersAfterRightPerm"
 	Services_SumAfterDoublingFirstDigit_FullMethodName          = "/services.Services/SumAfterDoublingFirstDigit"
 	Services_FilterComplexNumbersOutsideRange_FullMethodName    = "/services.Services/FilterComplexNumbersOutsideRange"
 	Services_ValidatePotentialPasswords_FullMethodName          = "/services.Services/ValidatePotentialPasswords"
@@ -52,7 +52,7 @@ type ServicesClient interface {
 	CountPrimeNumberDigits(ctx context.Context, in *UInt32ArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error)
 	CountWordsWithEvenParityVowels(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error)
 	ComputeGreatestCommonDivisor(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error)
-	SumNumbersAfterRightShift(ctx context.Context, in *RightShiftSumRequest, opts ...grpc.CallOption) (*Int32Response, error)
+	SumNumbersAfterRightPerm(ctx context.Context, in *RightShiftSumRequest, opts ...grpc.CallOption) (*Int32Response, error)
 	SumAfterDoublingFirstDigit(ctx context.Context, in *Int32ArrayRequest, opts ...grpc.CallOption) (*Int32Response, error)
 	FilterComplexNumbersOutsideRange(ctx context.Context, in *ComplexNumberRangeRequest, opts ...grpc.CallOption) (*Int32ArrayResponse, error)
 	ValidatePotentialPasswords(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
@@ -157,9 +157,9 @@ func (c *servicesClient) ComputeGreatestCommonDivisor(ctx context.Context, in *S
 	return out, nil
 }
 
-func (c *servicesClient) SumNumbersAfterRightShift(ctx context.Context, in *RightShiftSumRequest, opts ...grpc.CallOption) (*Int32Response, error) {
+func (c *servicesClient) SumNumbersAfterRightPerm(ctx context.Context, in *RightShiftSumRequest, opts ...grpc.CallOption) (*Int32Response, error) {
 	out := new(Int32Response)
-	err := c.cc.Invoke(ctx, Services_SumNumbersAfterRightShift_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Services_SumNumbersAfterRightPerm_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ type ServicesServer interface {
 	CountPrimeNumberDigits(context.Context, *UInt32ArrayRequest) (*UInt32Response, error)
 	CountWordsWithEvenParityVowels(context.Context, *StringArrayRequest) (*UInt32Response, error)
 	ComputeGreatestCommonDivisor(context.Context, *StringArrayRequest) (*UInt32Response, error)
-	SumNumbersAfterRightShift(context.Context, *RightShiftSumRequest) (*Int32Response, error)
+	SumNumbersAfterRightPerm(context.Context, *RightShiftSumRequest) (*Int32Response, error)
 	SumAfterDoublingFirstDigit(context.Context, *Int32ArrayRequest) (*Int32Response, error)
 	FilterComplexNumbersOutsideRange(context.Context, *ComplexNumberRangeRequest) (*Int32ArrayResponse, error)
 	ValidatePotentialPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error)
@@ -258,8 +258,8 @@ func (UnimplementedServicesServer) CountWordsWithEvenParityVowels(context.Contex
 func (UnimplementedServicesServer) ComputeGreatestCommonDivisor(context.Context, *StringArrayRequest) (*UInt32Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ComputeGreatestCommonDivisor not implemented")
 }
-func (UnimplementedServicesServer) SumNumbersAfterRightShift(context.Context, *RightShiftSumRequest) (*Int32Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SumNumbersAfterRightShift not implemented")
+func (UnimplementedServicesServer) SumNumbersAfterRightPerm(context.Context, *RightShiftSumRequest) (*Int32Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SumNumbersAfterRightPerm not implemented")
 }
 func (UnimplementedServicesServer) SumAfterDoublingFirstDigit(context.Context, *Int32ArrayRequest) (*Int32Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SumAfterDoublingFirstDigit not implemented")
@@ -466,20 +466,20 @@ func _Services_ComputeGreatestCommonDivisor_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Services_SumNumbersAfterRightShift_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Services_SumNumbersAfterRightPerm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RightShiftSumRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServicesServer).SumNumbersAfterRightShift(ctx, in)
+		return srv.(ServicesServer).SumNumbersAfterRightPerm(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Services_SumNumbersAfterRightShift_FullMethodName,
+		FullMethod: Services_SumNumbersAfterRightPerm_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServicesServer).SumNumbersAfterRightShift(ctx, req.(*RightShiftSumRequest))
+		return srv.(ServicesServer).SumNumbersAfterRightPerm(ctx, req.(*RightShiftSumRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -604,8 +604,8 @@ var Services_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Services_ComputeGreatestCommonDivisor_Handler,
 		},
 		{
-			MethodName: "SumNumbersAfterRightShift",
-			Handler:    _Services_SumNumbersAfterRightShift_Handler,
+			MethodName: "SumNumbersAfterRightPerm",
+			Handler:    _Services_SumNumbersAfterRightPerm_Handler,
 		},
 		{
 			MethodName: "SumAfterDoublingFirstDigit",

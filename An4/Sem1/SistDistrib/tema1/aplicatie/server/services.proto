@@ -14,11 +14,11 @@ service Services {
     rpc CountPrimeNumberDigits(UInt32ArrayRequest) returns (UInt32Response);
     rpc CountWordsWithEvenParityVowels(StringArrayRequest) returns (UInt32Response);
     rpc ComputeGreatestCommonDivisor(StringArrayRequest) returns (UInt32Response);
-    rpc SumNumbersAfterRightShift(RightShiftSumRequest) returns (Int32Response);
+    rpc SumNumbersAfterRightPerm(RightShiftSumRequest) returns (Int32Response);
     rpc SumAfterDoublingFirstDigit(Int32ArrayRequest) returns (Int32Response);
     rpc FilterComplexNumbersOutsideRange(ComplexNumberRangeRequest) returns (Int32ArrayResponse);
     rpc ValidatePotentialPasswords(StringArrayRequest) returns (StringArrayResponse);
-    rpc GenerateRandomPasswords(CharacterArrayRequest) returns (StringArrayResponse);
+    rpc GenerateRandomPasswords(SingleStringRequest) returns (StringArrayResponse);
 }
 
 
@@ -89,6 +89,3 @@ message ComplexNumberRangeRequest {
     repeated int32 numbers = 3;
 }
 
-message CharacterArrayRequest {
-    repeated string characters = 1;
-}
