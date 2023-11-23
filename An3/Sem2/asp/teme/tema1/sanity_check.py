@@ -9,7 +9,7 @@ with open("y.dat") as infile:
 
 with open("mat.dat") as infile:
     A = [[0 for j in range(N)] for i in range(N)]
-    for i,line in enumerate(infile.readlines()):
+    for i, line in enumerate(infile.readlines()):
         A[i] = [float(j.strip()) for j in line.split()]
 
 numerator = 0.0

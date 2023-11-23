@@ -5,6 +5,7 @@ import pymongo
 from flask import Flask, jsonify
 from flask_restful import Api, Resource, abort, reqparse
 import os
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "csrf_token"
 
@@ -13,11 +14,16 @@ api = Api(app)
 
 @app.after_request
 def after_request_func(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
 
-app.config["MONGO_URI"] = 'mongodb://' + os.environ['MONGODB_HOSTNAME'] + ':27017/' + os.environ['MONGODB_DATABASE']
+app.config["MONGO_URI"] = (
+    "mongodb://"
+    + os.environ["MONGODB_HOSTNAME"]
+    + ":27017/"
+    + os.environ["MONGODB_DATABASE"]
+)
 # app.config["MONGO_URI"] = 'mongodb://localhost:27017/library'
 mongo = PyMongo(app)
 db = mongo.db
@@ -67,8 +73,12 @@ class booksApi(Resource):
 
     def post(self):
         args = parser.parse_args()
-        book = {"name": args["name"], "author": args["author"],
-                "publisher": args["publisher"], "pages": args["pages"]}
+        book = {
+            "name": args["name"],
+            "author": args["author"],
+            "publisher": args["publisher"],
+            "pages": args["pages"],
+        }
         abort_if_book_exists(book)
         id = db.books.insert_one(book)
         return {"_id": str(id.inserted_id)}, 201
@@ -87,8 +97,10 @@ class bookApi(Resource):
         args = dict(parser.parse_args())
         args = {key: val for key, val in args.items() if val}
         response = db.books.find_one_and_update(
-            {"_id": ObjectId(id)}, {"$set": args},
-            return_document=pymongo.ReturnDocument.AFTER)
+            {"_id": ObjectId(id)},
+            {"$set": args},
+            return_document=pymongo.ReturnDocument.AFTER,
+        )
         if not response:
             abort(404, message=f"Book {id} not found")
         return export([response])[0], 201

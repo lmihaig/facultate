@@ -42,7 +42,7 @@ class NodParcurgere:
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -50,13 +50,13 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
         sir += ("->").join(drum)
         sir += ")"
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
@@ -74,16 +74,18 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(
+                self.noduri[i]
+            ):
                 nodNou = NodParcurgere(i, self.noduri[i], nodCurent)
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -117,7 +119,9 @@ gr = Graph(noduri, m, start, scopuri)
 
 def depth_first_callstack(gr, nrSolutiiCautate):
     # vom simula o stiva prin relatia de parinte a nodului curent
-    df_callstack(NodParcurgere(gr.noduri.index(start), start, None), nrSolutiiCautate, True)
+    df_callstack(
+        NodParcurgere(gr.noduri.index(start), start, None), nrSolutiiCautate, True
+    )
 
 
 def df_callstack(nodCurent, nrSolutiiCautate, continua):

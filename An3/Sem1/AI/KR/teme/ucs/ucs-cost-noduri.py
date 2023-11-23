@@ -1,5 +1,3 @@
-
-
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 import random
 
@@ -32,7 +30,7 @@ class NodParcurgere:
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -40,13 +38,13 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
         sir += ("->").join(drum)
         sir += " cost:{})".format(self.cost)
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
@@ -65,16 +63,20 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matriceAdiacenta[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
-                nodNou = NodParcurgere(i, self.noduri[i], nodCurent.cost + self.costuri[i], nodCurent)
+            if self.matriceAdiacenta[nodCurent.id][
+                i
+            ] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+                nodNou = NodParcurgere(
+                    i, self.noduri[i], nodCurent.cost + self.costuri[i], nodCurent
+                )
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -94,7 +96,7 @@ m = [
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 1, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
 ]
 # mp = [
 #     [0, 3, 0, 1, 1, 0, 0, 0, 0, 0],
@@ -125,7 +127,7 @@ def uniform_cost(gr):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.noduri.index(start), start, 0, None)]
     continua = True  # variabila pe care o setez la false cand consider ca s-au afisat suficiente solutii
-    while (len(c) > 0 and continua):
+    while len(c) > 0 and continua:
         print("Coada actuala: " + str(c))
         input()
         nodCurent = c.pop(0)

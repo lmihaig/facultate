@@ -10,10 +10,10 @@ Observatie pentru cei absenti la laborator: trebuie sa dati enter după fiecare 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 
 
-
-
 import cProfile
 from queue import PriorityQueue
+
+
 class NodParcurgere:
     graf = None  # static
 
@@ -23,7 +23,7 @@ class NodParcurgere:
         self.parinte = parinte  # parintele din arborele de parcurgere
         self.g = cost  # costul de la radacina la nodul curent
         self.h = h
-        self.f = self.g+self.h
+        self.f = self.g + self.h
 
     def __lt__(self, other):
         return self.g < other.g if self.f == other.f else self.f < other.f
@@ -48,7 +48,7 @@ class NodParcurgere:
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -56,7 +56,7 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
@@ -65,11 +65,13 @@ class NodParcurgere:
         sir += " h:{}".format(self.h)
 
         sir += " f:{})".format(self.f)
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
-    def __init__(self, noduri, matriceAdiacenta, matricePonderi, start, scopuri, lista_h):
+    def __init__(
+        self, noduri, matriceAdiacenta, matricePonderi, start, scopuri, lista_h
+    ):
         self.noduri = noduri
         self.matriceAdiacenta = matriceAdiacenta
         self.matricePonderi = matricePonderi
@@ -88,8 +90,16 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matriceAdiacenta[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
-                nodNou = NodParcurgere(i, self.noduri[i], nodCurent, nodCurent.g + self.matricePonderi[nodCurent.id][i], self.calculeaza_h(self.noduri[i]))
+            if self.matriceAdiacenta[nodCurent.id][
+                i
+            ] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+                nodNou = NodParcurgere(
+                    i,
+                    self.noduri[i],
+                    nodCurent,
+                    nodCurent.g + self.matricePonderi[nodCurent.id][i],
+                    self.calculeaza_h(self.noduri[i]),
+                )
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
@@ -98,9 +108,9 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -120,7 +130,7 @@ m = [
     [0, 0, 0, 1, 1, 0, 0, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 mp = [
     [0, 3, 9, 7, 0, 0, 0, 0, 0, 0],
@@ -132,7 +142,7 @@ mp = [
     [0, 0, 0, 1, 7, 0, 0, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 start = "a"
 scopuri = ["f"]
@@ -145,7 +155,11 @@ NodParcurgere.graf = gr
 
 def a_star(gr, nrSolutiiCautate):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
-    c = [NodParcurgere(gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start))]
+    c = [
+        NodParcurgere(
+            gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start)
+        )
+    ]
 
     while len(c) > 0:
         # print("Coada actuala: " + str(c))
@@ -173,13 +187,19 @@ def a_star(gr, nrSolutiiCautate):
                 c.insert(i, s)
             else:
                 c.append(s)
+
+
 # 7  2,4,5,8,10
 
 
 def a_star_pq(gr, nrSolutiiCautate):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     pq = PriorityQueue()
-    pq.put(NodParcurgere(gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start)))
+    pq.put(
+        NodParcurgere(
+            gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start)
+        )
+    )
 
     while not pq.empty():
         # print("Coada actuala: " + str(c))
@@ -197,6 +217,7 @@ def a_star_pq(gr, nrSolutiiCautate):
         lSuccesori = gr.genereazaSuccesori(nodCurent)
         for s in lSuccesori:
             pq.put(s)
+
 
 # 7  2,4,5,8,10
 

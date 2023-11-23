@@ -1,5 +1,3 @@
-
-import cProfile
 """
 ncalls: numărul de apeluri
 tottime: timpul total (agregat) în care a fost executată funcția curentă
@@ -22,7 +20,9 @@ De asemenea, apelurile algoritmilor sunt la final. Este doar unul dintre ele dec
 
 class NodParcurgere:
     def __init__(self, id, info, parinte):
-        self.id = id  # este indicele din vectorul de noduri (si din matricea de adiacenta)
+        self.id = (
+            id  # este indicele din vectorul de noduri (si din matricea de adiacenta)
+        )
         self.info = info  # eticheta nodului, de exemplu: a,b, c...
         self.parinte = parinte  # parintele din arborele de parcurgere
 
@@ -43,7 +43,7 @@ class NodParcurgere:
         # return infoNodNou in self.obtineDrum()
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -51,13 +51,13 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
         sir += ("->").join(drum)
         sir += ")"
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
@@ -75,7 +75,9 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(
+                self.noduri[i]
+            ):
                 nodNou = NodParcurgere(i, self.noduri[i], nodCurent)
                 listaSuccesori.append(nodNou)
         return listaSuccesori
@@ -85,9 +87,9 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -107,7 +109,7 @@ m = [
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 1, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
 ]
 
 start = "a"
@@ -119,6 +121,7 @@ gr = Graph(noduri, m, start, scopuri)
 # presupunem ca vrem mai multe solutii (un numar fix) prin urmare vom folosi o variabilă numită nrSolutiiCautate
 # daca vrem doar o solutie, renuntam la variabila nrSolutiiCautate
 # si doar oprim algoritmul la afisarea primei solutii
+
 
 def breadth_first(gr, nrSolutiiCautate=1):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
@@ -148,7 +151,9 @@ def depth_first(gr, nrSolutiiCautate=1):
 
 
 def df(nodCurent, nrSolutiiCautate):
-    if nrSolutiiCautate <= 0:  # testul acesta s-ar valida doar daca in apelul initial avem df(start,if nrSolutiiCautate=0)
+    if (
+        nrSolutiiCautate <= 0
+    ):  # testul acesta s-ar valida doar daca in apelul initial avem df(start,if nrSolutiiCautate=0)
         return nrSolutiiCautate
     print("Stiva actuala: " + "->".join(nodCurent.obtineDrum()))
     input()
@@ -166,6 +171,8 @@ def df(nodCurent, nrSolutiiCautate):
             nrSolutiiCautate = df(sc, nrSolutiiCautate)
 
     return nrSolutiiCautate
+
+
 # df(a)->df(b)->df(c)->df(f)
 #############################################
 
@@ -185,30 +192,34 @@ def dfi(nodCurent, adancime, nrSolutiiCautate):
         lSuccesori = gr.genereazaSuccesori(nodCurent)
         for sc in lSuccesori:
             if nrSolutiiCautate != 0:
-                nrSolutiiCautate = dfi(sc, adancime-1, nrSolutiiCautate)
+                nrSolutiiCautate = dfi(sc, adancime - 1, nrSolutiiCautate)
     return nrSolutiiCautate
 
 
 def depth_first_iterativ(gr, nrSolutiiCautate=1):
-    for i in range(1, gr.nrNoduri+1):
+    for i in range(1, gr.nrNoduri + 1):
         if nrSolutiiCautate == 0:
             return
         print("**************\nAdancime maxima: ", i)
-        nrSolutiiCautate = dfi(NodParcurgere(gr.noduri.index(gr.start), gr.start, None), i, nrSolutiiCautate)
+        nrSolutiiCautate = dfi(
+            NodParcurgere(gr.noduri.index(gr.start), gr.start, None),
+            i,
+            nrSolutiiCautate,
+        )
 
 
 """
 Mai jos puteti comenta si decomenta apelurile catre algoritmi. Pentru moment e apelat doar breadth-first
 """
 
-#breadth_first(gr, nrSolutiiCautate=4)
-#cProfile.run("breadth_first(gr, nrSolutiiCautate=4)")
+# breadth_first(gr, nrSolutiiCautate=4)
+# cProfile.run("breadth_first(gr, nrSolutiiCautate=4)")
 ####################################################
 
 
 depth_first(gr, nrSolutiiCautate=5)
 
-#cProfile.run("depth_first(gr, nrSolutiiCautate=5)")
+# cProfile.run("depth_first(gr, nrSolutiiCautate=5)")
 ##################################################
 
-#depth_first_iterativ(gr, nrSolutiiCautate=4)
+# depth_first_iterativ(gr, nrSolutiiCautate=4)

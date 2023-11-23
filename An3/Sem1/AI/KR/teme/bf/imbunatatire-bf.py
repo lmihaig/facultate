@@ -22,14 +22,14 @@ class NodParcurgere:
     def afisDrum(self):  # returneaza si lungimea drumului
         l = self.obtineDrum()
         print("----> Solutie:" + ("->").join(l))
-        print("Lungime:", len(l)-1)
+        print("Lungime:", len(l) - 1)
         print("\n")
         return len(l)
 
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -37,13 +37,13 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
         sir += ("->").join(drum)
         sir += ")"
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
@@ -61,16 +61,18 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(
+                self.noduri[i]
+            ):
                 nodNou = NodParcurgere(i, self.noduri[i], nodCurent)
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -90,7 +92,7 @@ m = [
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 1, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
 ]
 
 start = "a"
@@ -110,7 +112,7 @@ def breadth_first(gr):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.noduri.index(start), start, None)]
     continua = True  # variabila pe care o setez la false cand consider ca s-au afisat suficiente solutii
-    while (len(c) > 0 and continua):
+    while len(c) > 0 and continua:
         print("Coada actuala: " + str(c))
         input()
         nodCurent = c.pop(0)

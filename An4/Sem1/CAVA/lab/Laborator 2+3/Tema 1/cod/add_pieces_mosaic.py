@@ -1,6 +1,5 @@
 from parameters import *
 import numpy as np
-import pdb
 import timeit
 
 
@@ -40,9 +39,13 @@ def add_pieces_grid(params: Parameters):
         mean_color_pieces = get_mean_color_small_images(params)
         for i in range(params.num_pieces_vertical):
             for j in range(params.num_pieces_horizontal):
-                patch = params.image_resized[i * H : (i + 1) * H, j * W : (j + 1) * W, :]
+                patch = params.image_resized[
+                    i * H : (i + 1) * H, j * W : (j + 1) * W, :
+                ]
                 mean_color_patch = np.mean(patch, axis=(0, 1))
-                sorted_indices = get_sorted_distances(mean_color_patch, mean_color_pieces)
+                sorted_indices = get_sorted_distances(
+                    mean_color_patch, mean_color_pieces
+                )
                 index = sorted_indices[0]
                 img_mosaic[
                     i * H : (i + 1) * H, j * W : (j + 1) * W, :

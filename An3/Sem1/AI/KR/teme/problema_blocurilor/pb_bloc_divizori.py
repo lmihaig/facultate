@@ -8,4 +8,4 @@ Exemplu de stare initiala: [[2,10,55,14],[27, 8, 50],[3]]
 Exemplu de stare finala: [[2,14,50,8],[55,10],[3,27]
 """
 
-efectiv nu inteleg cerinta
+# efectiv nu inteleg cerinta

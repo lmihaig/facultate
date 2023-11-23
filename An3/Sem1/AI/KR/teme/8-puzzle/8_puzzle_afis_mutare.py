@@ -33,7 +33,9 @@ class NodParcurgere:
             nod = nod.parinte
         return l
 
-    def afisDrum(self, afisCost=False, afisLung=False):  # returneaza si lungimea drumului
+    def afisDrum(
+        self, afisCost=False, afisLung=False
+    ):  # returneaza si lungimea drumului
         l = self.obtineDrum()
         for i, nod in enumerate(l):
             if nod.parinte:
@@ -44,7 +46,11 @@ class NodParcurgere:
                     if nod.info[i][j] != nod.parinte.info[i][j]
                 ]
                 if dif:
-                    print(nod.parinte.info[dif[0][0]][dif[0][1]], "->", nod.info[dif[0][0]][dif[0][1]])
+                    print(
+                        nod.parinte.info[dif[0][0]][dif[0][1]],
+                        "->",
+                        nod.info[dif[0][0]][dif[0][1]],
+                    )
             print(i + 1, ")\n", str(nod), sep="")
         if afisCost:
             print("Cost: ", self.g)
@@ -118,13 +124,20 @@ class Graph:  # graful problemei
             except:
                 pass
         # stanga, dreapta, sus, jos
-        directii = [[lGol, cGol - 1], [lGol, cGol + 1], [lGol - 1, cGol], [lGol + 1, cGol]]
+        directii = [
+            [lGol, cGol - 1],
+            [lGol, cGol + 1],
+            [lGol - 1, cGol],
+            [lGol + 1, cGol],
+        ]
         for lPlacuta, cPlacuta in directii:
             if 0 <= lPlacuta < 3 and 0 <= cPlacuta < 3:
                 copieMatrice = copy.deepcopy(nodCurent.info)
                 copieMatrice[lGol][cGol] = copieMatrice[lPlacuta][cPlacuta]
                 copieMatrice[lPlacuta][cPlacuta] = 0
-                if not nodCurent.contineInDrum(copieMatrice):  # and not self.nuAreSolutii(copieMatrice):
+                if not nodCurent.contineInDrum(
+                    copieMatrice
+                ):  # and not self.nuAreSolutii(copieMatrice):
                     costArc = 1
                     listaSuccesori.append(
                         NodParcurgere(
@@ -157,13 +170,12 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
         return sir
 
 
 def breadth_first(gr, nrSolutiiCautate):
-
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.start, None)]
 
@@ -185,7 +197,6 @@ def breadth_first(gr, nrSolutiiCautate):
 
 
 def uniform_cost(gr, nrSolutiiCautate=1):
-
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.start, None, 0, gr.calculeaza_h(gr.start))]
 
@@ -224,7 +235,6 @@ def a_star(gr, nrSolutiiCautate, tip_euristica):
     c = [NodParcurgere(gr.start, None, 0, gr.calculeaza_h(gr.start))]
 
     while len(c) > 0:
-
         nodCurent = c.pop(0)
 
         if gr.testeaza_scop(nodCurent):

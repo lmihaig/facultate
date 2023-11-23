@@ -5,35 +5,35 @@ book1 = {
     "name": "1984",
     "author": "George Orwell",
     "publisher": "Penguin Books",
-    "pages": 324
+    "pages": 324,
 }
 
 book2 = {
     "name": "Animal Farm",
     "author": "George Orwell",
     "publisher": "Penguin Books",
-    "pages": 234
+    "pages": 234,
 }
 
 book3 = {
     "name": "I, Robot",
     "author": "Isaac Asimov",
     "publisher": "Harper Collins",
-    "pages": 133
+    "pages": 133,
 }
 
 book4 = {
     "name": "The Institute",
     "author": "Stephen King",
     "publisher": "Scribner",
-    "pages": 439
+    "pages": 439,
 }
 
 book5 = {
     "name": "Cryptonomicon",
     "author": "Neal Stephenson",
     "publisher": "Avon",
-    "pages": 0
+    "pages": 0,
 }
 
 books = [book1, book2, book3, book4, book5]

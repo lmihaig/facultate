@@ -67,7 +67,7 @@ class Joc:
     def linie_deschisa(self, lista, jucator):
         jo = self.jucator_opus(jucator)
         # verific daca pe linia data nu am simbolul jucatorului opus
-        if not jo in lista:
+        if jo not in lista:
             # return lista.count(jucator)
             return 1
         return 0
@@ -88,14 +88,18 @@ class Joc:
     def estimeaza_scor(self, adancime):
         t_final = self.final()
         # if (adancime==0):
-        if t_final == self.__class__.JMAX:  # self.__class__ referinta catre clasa instantei
+        if (
+            t_final == self.__class__.JMAX
+        ):  # self.__class__ referinta catre clasa instantei
             return 99 + adancime
         elif t_final == self.__class__.JMIN:
             return -99 - adancime
         elif t_final == "remiza":
             return 0
         else:
-            return self.linii_deschise(self.__class__.JMAX) - self.linii_deschise(self.__class__.JMIN)
+            return self.linii_deschise(self.__class__.JMAX) - self.linii_deschise(
+                self.__class__.JMIN
+            )
 
     def sirAfisare(self):
         sir = "  |"
@@ -105,7 +109,14 @@ class Joc:
             sir += (
                 str(i)
                 + " |"
-                + " ".join([str(x) for x in self.matr[self.NR_COLOANE * i : self.NR_COLOANE * (i + 1)]])
+                + " ".join(
+                    [
+                        str(x)
+                        for x in self.matr[
+                            self.NR_COLOANE * i : self.NR_COLOANE * (i + 1)
+                        ]
+                    ]
+                )
                 + "\n"
             )
         # [0,1,2,3,4,5,6,7,8]
@@ -146,11 +157,16 @@ class Stare:
         self.stare_aleasa = None
 
     def mutari(self):
-        l_mutari = self.tabla_joc.mutari(self.j_curent)  # lista de informatii din nodurile succesoare
+        l_mutari = self.tabla_joc.mutari(
+            self.j_curent
+        )  # lista de informatii din nodurile succesoare
         juc_opus = Joc.jucator_opus(self.j_curent)
 
         # mai jos calculam lista de noduri-fii (succesori)
-        l_stari_mutari = [Stare(mutare, juc_opus, self.adancime - 1, parinte=self) for mutare in l_mutari]
+        l_stari_mutari = [
+            Stare(mutare, juc_opus, self.adancime - 1, parinte=self)
+            for mutare in l_mutari
+        ]
 
         return l_stari_mutari
 
@@ -163,7 +179,6 @@ class Stare:
 
 
 def min_max(stare):
-
     # daca sunt la o frunza in arborele minimax sau la o stare finala
     if stare.adancime == 0 or stare.tabla_joc.final():
         stare.estimare = stare.tabla_joc.estimeaza_scor(stare.adancime)
@@ -179,7 +194,9 @@ def min_max(stare):
 
     if stare.j_curent == Joc.JMAX:
         # daca jucatorul e JMAX aleg starea-fiica cu estimarea maxima
-        stare.stare_aleasa = max(mutariCuEstimare, key=lambda x: x.estimare)  # def f(x): return x.estimare -----> key=f
+        stare.stare_aleasa = max(
+            mutariCuEstimare, key=lambda x: x.estimare
+        )  # def f(x): return x.estimare -----> key=f
     else:
         # daca jucatorul e JMIN aleg starea-fiica cu estimarea minima
         stare.stare_aleasa = min(mutariCuEstimare, key=lambda x: x.estimare)
@@ -203,7 +220,9 @@ def alpha_beta(alpha, beta, stare):
 
         for mutare in stare.mutari_posibile:
             # calculeaza estimarea pentru starea noua, realizand subarborele
-            stare_noua = alpha_beta(alpha, beta, mutare)  # aici construim subarborele pentru stare_noua
+            stare_noua = alpha_beta(
+                alpha, beta, mutare
+            )  # aici construim subarborele pentru stare_noua
 
             if estimare_curenta < stare_noua.estimare:
                 stare.stare_aleasa = stare_noua
@@ -218,7 +237,9 @@ def alpha_beta(alpha, beta, stare):
         # completati cu rationament similar pe cazul stare.j_curent==Joc.JMAX
         for mutare in stare.mutari_posibile:
             # calculeaza estimarea
-            stare_noua = alpha_beta(alpha, beta, mutare)  # aici construim subarborele pentru stare_noua
+            stare_noua = alpha_beta(
+                alpha, beta, mutare
+            )  # aici construim subarborele pentru stare_noua
 
             if estimare_curenta > stare_noua.estimare:
                 stare.stare_aleasa = stare_noua
@@ -234,9 +255,7 @@ def alpha_beta(alpha, beta, stare):
 
 
 def afis_daca_final(stare_curenta):
-    final = (
-        stare_curenta.tabla_joc.final()
-    )  # metoda final() returneaza "remiza" sau castigatorul ("x" sau "0") sau False daca nu e stare finala
+    final = stare_curenta.tabla_joc.final()  # metoda final() returneaza "remiza" sau castigatorul ("x" sau "0") sau False daca nu e stare finala
     if final:
         if final == "remiza":
             print("Remiza!")
@@ -254,7 +273,9 @@ def main():
 
     # TO DO 1
     while not raspuns_valid:
-        tip_algoritm = input("Algoritmul folosit? (raspundeti cu 1 sau 2)\n 1.Minimax\n 2.Alpha-beta\n ")
+        tip_algoritm = input(
+            "Algoritmul folosit? (raspundeti cu 1 sau 2)\n 1.Minimax\n 2.Alpha-beta\n "
+        )
         if tip_algoritm in ["1", "2"]:
             raspuns_valid = True
         else:
@@ -291,13 +312,22 @@ def main():
                     linie = int(input("linie="))
                     coloana = int(input("coloana="))
 
-                    if linie in range(Joc.NR_COLOANE) and coloana in range(Joc.NR_COLOANE):
-                        if stare_curenta.tabla_joc.matr[linie * Joc.NR_COLOANE + coloana] == Joc.GOL:
+                    if linie in range(Joc.NR_COLOANE) and coloana in range(
+                        Joc.NR_COLOANE
+                    ):
+                        if (
+                            stare_curenta.tabla_joc.matr[
+                                linie * Joc.NR_COLOANE + coloana
+                            ]
+                            == Joc.GOL
+                        ):
                             raspuns_valid = True
                         else:
                             print("Exista deja un simbol in pozitia ceruta.")
                     else:
-                        print("Linie sau coloana invalida (trebuie sa fie unul dintre numerele 0,1,2).")
+                        print(
+                            "Linie sau coloana invalida (trebuie sa fie unul dintre numerele 0,1,2)."
+                        )
 
                 except ValueError:
                     print("Linia si coloana trebuie sa fie numere intregi")
@@ -331,13 +361,19 @@ def main():
                 stare_actualizata = min_max(stare_curenta)
             else:  # tip_algoritm==2
                 stare_actualizata = alpha_beta(-500, 500, stare_curenta)
-            stare_curenta.tabla_joc = stare_actualizata.stare_aleasa.tabla_joc  # aici se face de fapt mutarea !!!
+            stare_curenta.tabla_joc = (
+                stare_actualizata.stare_aleasa.tabla_joc
+            )  # aici se face de fapt mutarea !!!
             print("Tabla dupa mutarea calculatorului")
             print(str(stare_curenta))
 
             # preiau timpul in milisecunde de dupa mutare
             t_dupa = int(round(time.time() * 1000))
-            print('Calculatorul a "gandit" timp de ' + str(t_dupa - t_inainte) + " milisecunde.")
+            print(
+                'Calculatorul a "gandit" timp de '
+                + str(t_dupa - t_inainte)
+                + " milisecunde."
+            )
             # TO DO 8b
             if afis_daca_final(stare_curenta):
                 break

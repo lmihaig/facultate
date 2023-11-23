@@ -3,7 +3,7 @@ import wave
 import pyaudio
 from struct import unpack
 import numpy as np
-from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+from rgbmatrix import RGBMatrix, RGBMatrixOptions
 import sys
 
 

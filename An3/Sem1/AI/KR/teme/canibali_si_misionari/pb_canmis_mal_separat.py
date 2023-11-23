@@ -14,9 +14,9 @@ Presupunem ca avem costul de plimbare a unui canibal =2 si a unui misionar =1. A
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 
 
-
-
 import math
+
+
 class NodParcurgere:
     gr = None  # trebuie setat sa contina instanta problemei
 
@@ -25,7 +25,7 @@ class NodParcurgere:
         self.parinte = parinte  # parintele din arborele de parcurgere
         self.g = cost  # consider cost=1 pentru o mutare
         self.h = h
-        self.f = self.g+self.h
+        self.f = self.g + self.h
 
     def obtineDrum(self):
         l = [self]
@@ -35,7 +35,9 @@ class NodParcurgere:
             nod = nod.parinte
         return l
 
-    def afisDrum(self, afisCost=False, afisLung=False):  # returneaza si lungimea drumului
+    def afisDrum(
+        self, afisCost=False, afisLung=False
+    ):  # returneaza si lungimea drumului
         l = self.obtineDrum()
         for nod in l:
             if nod.parinte is not None:
@@ -45,7 +47,14 @@ class NodParcurgere:
                 else:
                     mbarca1 = self.__class__.gr.malFinal
                     mbarca2 = self.__class__.gr.malInitial
-                print(">>> Barca s-a deplasat de la malul {} la malul {} cu {} canibali si {} misionari.".format(mbarca1, mbarca2, abs(nod.info[0]-nod.parinte.info[0]), abs(nod.info[1]-nod.parinte.info[1])))
+                print(
+                    ">>> Barca s-a deplasat de la malul {} la malul {} cu {} canibali si {} misionari.".format(
+                        mbarca1,
+                        mbarca2,
+                        abs(nod.info[0] - nod.parinte.info[0]),
+                        abs(nod.info[1] - nod.parinte.info[1]),
+                    )
+                )
             print(str(nod))
         if afisCost:
             print("Cost: ", self.g)
@@ -56,7 +65,7 @@ class NodParcurgere:
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -65,7 +74,7 @@ class NodParcurgere:
     def __repr__(self):
         sir = ""
         sir += str(self.info)
-        return (sir)
+        return sir
 
     # euristica banală: daca nu e stare scop, returnez 1, altfel 0
 
@@ -76,7 +85,21 @@ class NodParcurgere:
         else:
             barcaMalInitial = "       "
             barcaMalFinal = "<barca>"
-        return ("Mal: " + self.gr.malInitial + " Canibali: {} Misionari: {} {}  |||  Mal:"+self.gr.malFinal+" Canibali: {} Misionari: {} {}").format(self.info[0], self.info[1], barcaMalInitial, self.__class__.gr.N-self.info[0], self.__class__.gr.N-self.info[1],  barcaMalFinal)
+        return (
+            "Mal: "
+            + self.gr.malInitial
+            + " Canibali: {} Misionari: {} {}  |||  Mal:"
+            + self.gr.malFinal
+            + " Canibali: {} Misionari: {} {}"
+        ).format(
+            self.info[0],
+            self.info[1],
+            barcaMalInitial,
+            self.__class__.gr.N - self.info[0],
+            self.__class__.gr.N - self.info[1],
+            barcaMalFinal,
+        )
+
     """
 	def __str__(self):
 		return str(self.info)+"\n"
@@ -86,9 +109,10 @@ class NodParcurgere:
 
 class Graph:  # graful problemei
     def __init__(self, nume_fisier):
-
         f = open(nume_fisier, "r")
-        textFisier = f.read()  # citeste tot fisierul si returneaza un string cu continutul lui
+        textFisier = (
+            f.read()
+        )  # citeste tot fisierul si returneaza un string cu continutul lui
         listaInfoFisier = textFisier.split()  # ["3", "2", "stang", "drept"]
         # self.__class__ inseamna clasa curenta
         self.__class__.N = int(listaInfoFisier[0])
@@ -98,12 +122,20 @@ class Graph:  # graful problemei
         # memoram in stare doar canibalii si misionarii de pe malul stang; pe ceilalti ii deducem
         # (nrCanibaliMalInitial, numarMisionariMalInitial, locatieBarca)
         # locatieBarca= 1 daca e pe malul initial si 0 daca e pe malul final
-        self.start = (self.__class__.N, self.__class__.N, 1)  # informatia nodului de start
+        self.start = (
+            self.__class__.N,
+            self.__class__.N,
+            1,
+        )  # informatia nodului de start
         # self.scopuri=[(0,0,0)]
 
     def testeaza_scop(self, nodCurent):
-        return nodCurent.info[0] == Graph.N and nodCurent.info[1] == 0 or \
-            nodCurent.info[0] == 0 and nodCurent.info[1] == Graph.N
+        return (
+            nodCurent.info[0] == Graph.N
+            and nodCurent.info[1] == 0
+            or nodCurent.info[0] == 0
+            and nodCurent.info[1] == Graph.N
+        )
 
     # functia de generare a succesorilor, facuta la laborator
 
@@ -118,39 +150,48 @@ class Graph:  # graful problemei
         if barca == 1:  # malul barcii este cel initial malul curent e cel cu barca
             canMalCurent = nodCurent.info[0]
             misMalCurent = nodCurent.info[1]
-            canMalOpus = Graph.N-canMalCurent
-            misMalOpus = Graph.N-misMalCurent
+            canMalOpus = Graph.N - canMalCurent
+            misMalOpus = Graph.N - misMalCurent
         else:  # barca==0 adica malul final
             canMalOpus = nodCurent.info[0]  # malul opus (barcii) este cel initial
             misMalOpus = nodCurent.info[1]
-            canMalCurent = Graph.N-canMalOpus
-            misMalCurent = Graph.N-misMalOpus
+            canMalCurent = Graph.N - canMalOpus
+            misMalCurent = Graph.N - misMalOpus
         maxMisionariBarca = min(Graph.M, misMalCurent)
-        for misBarca in range(maxMisionariBarca+1):
+        for misBarca in range(maxMisionariBarca + 1):
             if misBarca == 0:
                 maxCanibaliBarca = min(Graph.M, canMalCurent)
                 minCanibaliBarca = 1
             else:
-                maxCanibaliBarca = min(Graph.M-misBarca, canMalCurent, misBarca)
+                maxCanibaliBarca = min(Graph.M - misBarca, canMalCurent, misBarca)
                 minCanibaliBarca = 0
-            for canBarca in range(minCanibaliBarca, maxCanibaliBarca+1):
+            for canBarca in range(minCanibaliBarca, maxCanibaliBarca + 1):
                 # consideram mal curent nou ca fiind acelasi mal de pe care a plecat barca
-                canMalCurentNou = canMalCurent-canBarca
-                misMalCurentNou = misMalCurent-misBarca
-                canMalOpusNou = canMalOpus+canBarca
-                misMalOpusNou = misMalOpus+misBarca
+                canMalCurentNou = canMalCurent - canBarca
+                misMalCurentNou = misMalCurent - misBarca
+                canMalOpusNou = canMalOpus + canBarca
+                misMalOpusNou = misMalOpus + misBarca
                 if not test_conditie(misMalCurentNou, canMalCurentNou):
                     continue
                 if not test_conditie(misMalOpusNou, canMalOpusNou):
                     continue
-                if barca == 1:  # testul este pentru barca nodului curent (parinte) deci inainte de mutare
+                if (
+                    barca == 1
+                ):  # testul este pentru barca nodului curent (parinte) deci inainte de mutare
                     infoNodNou = (canMalCurentNou, misMalCurentNou, 0)
                 else:
                     infoNodNou = (canMalOpusNou, misMalOpusNou, 1)
                 if not nodCurent.contineInDrum(infoNodNou):
                     costSuccesor = 1
                     # costSuccesor=canBarca*2+misBarca
-                    listaSuccesori.append(NodParcurgere(infoNodNou, nodCurent, cost=nodCurent.g+costSuccesor, h=NodParcurgere.gr.calculeaza_h(infoNodNou, tip_euristica)))
+                    listaSuccesori.append(
+                        NodParcurgere(
+                            infoNodNou,
+                            nodCurent,
+                            cost=nodCurent.g + costSuccesor,
+                            h=NodParcurgere.gr.calculeaza_h(infoNodNou, tip_euristica),
+                        )
+                    )
 
         return listaSuccesori
 
@@ -162,14 +203,22 @@ class Graph:  # graful problemei
     def calculeaza_h(self, infoNod, tip_euristica="euristica banala"):
         match tip_euristica:
             case "euristica banala":
-                if not (infoNod[0] == Graph.N and infoNod[1] == 0 or
-                        infoNod[0] == 0 and infoNod[1] == Graph.N):
+                if not (
+                    infoNod[0] == Graph.N
+                    and infoNod[1] == 0
+                    or infoNod[0] == 0
+                    and infoNod[1] == Graph.N
+                ):
                     return 1
                 return 0
             case "euristica nebanala":
                 # calculez cati oameni mai am de mutat si impart la nr de locuri in barca
                 # totalOameniDeMutat=infoNod[0]+infoNod[1]
-                return 2*math.ceil((infoNod[0]+infoNod[1])/(self.M-1))+(1-infoNod[2])-1  # (1-infoNod[2]) vine de la faptul ca daca barca e pe malul final trebuie sa mai faca o trecere spre malul initial ca sa ii ia pe oameni, pe cand daca e deja pe malul initial, nu se mai aduna acel 1
+                return (
+                    2 * math.ceil((infoNod[0] + infoNod[1]) / (self.M - 1))
+                    + (1 - infoNod[2])
+                    - 1
+                )  # (1-infoNod[2]) vine de la faptul ca daca barca e pe malul final trebuie sa mai faca o trecere spre malul initial ca sa ii ia pe oameni, pe cand daca e deja pe malul initial, nu se mai aduna acel 1
             case _:
                 return 0
 
@@ -188,18 +237,17 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 def breadth_first(gr, nrSolutiiCautate):
-
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.start, None)]
 
     while len(c) > 0:
-        #print("Coada actuala: " + str(c))
+        # print("Coada actuala: " + str(c))
         # input()
         nodCurent = c.pop(0)
 
@@ -212,7 +260,7 @@ def breadth_first(gr, nrSolutiiCautate):
             if nrSolutiiCautate == 0:
                 return
         lSuccesori = gr.genereazaSuccesori(nodCurent)
-        #print(nodCurent.info, lSuccesori)
+        # print(nodCurent.info, lSuccesori)
         c.extend(lSuccesori)
 
 
@@ -249,8 +297,8 @@ def a_star(gr, nrSolutiiCautate, tip_euristica):
 gr = Graph("input.txt")
 NodParcurgere.gr = gr
 # Rezolvat cu breadth first
-#print("Solutii obtinute cu breadth first:")
-#breadth_first(gr, nrSolutiiCautate=3)
+# print("Solutii obtinute cu breadth first:")
+# breadth_first(gr, nrSolutiiCautate=3)
 
 print("\n\n##################\nSolutii obtinute cu A*:")
 nrSolutiiCautate = 3

@@ -56,7 +56,9 @@ class NodParcurgere:
 
 
 class Graph:  # graful problemei
-    def __init__(self, noduri, matriceAdiacenta, matricePonderi, start, scopuri, lista_h):
+    def __init__(
+        self, noduri, matriceAdiacenta, matricePonderi, start, scopuri, lista_h
+    ):
         self.noduri = noduri
         self.matriceAdiacenta = matriceAdiacenta
         self.matricePonderi = matricePonderi
@@ -75,7 +77,9 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matriceAdiacenta[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matriceAdiacenta[nodCurent.id][
+                i
+            ] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
                 nodNou = NodParcurgere(
                     i,
                     self.noduri[i],
@@ -91,7 +95,7 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
         return sir
 
@@ -138,7 +142,11 @@ NodParcurgere.graf = gr
 
 def a_star(gr):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
-    l_open = [NodParcurgere(gr.noduri.index(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start))]
+    l_open = [
+        NodParcurgere(
+            gr.noduri.index(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start)
+        )
+    ]
 
     # l_open contine nodurile candidate pentru expandare (este echivalentul lui c din A* varianta neoptimizata)
 
@@ -179,7 +187,9 @@ def a_star(gr):
             for i in range(len(l_open)):
                 # diferenta fata de UCS e ca ordonez crescator dupa f
                 # daca f-urile sunt egale ordonez descrescator dupa g
-                if l_open[i].f > child.f or (l_open[i].f == child.f and l_open[i].g <= child.g):
+                if l_open[i].f > child.f or (
+                    l_open[i].f == child.f and l_open[i].g <= child.g
+                ):
                     gasit_loc = True
                     break
             if gasit_loc:

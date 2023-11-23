@@ -25,13 +25,13 @@ class NodParcurgere:
     def afisDrum(self):  # returneaza si lungimea drumului
         l = self.obtineDrum()
         print(("->").join(l))
-        print("Lungime drum:", len(l)-1)
+        print("Lungime drum:", len(l) - 1)
         return len(l)
 
     def contineInDrum(self, infoNodNou):
         nodDrum = self
         while nodDrum is not None:
-            if (infoNodNou == nodDrum.info):
+            if infoNodNou == nodDrum.info:
                 return True
             nodDrum = nodDrum.parinte
 
@@ -39,13 +39,13 @@ class NodParcurgere:
 
     def __repr__(self):
         sir = ""
-        sir += self.info+"("
+        sir += self.info + "("
         sir += "id = {}, ".format(self.id)
         sir += "drum="
         drum = self.obtineDrum()
         sir += ("->").join(drum)
         sir += ")"
-        return (sir)
+        return sir
 
 
 class Graph:  # graful problemei
@@ -63,16 +63,18 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(
+                self.noduri[i]
+            ):
                 nodNou = NodParcurgere(i, self.noduri[i], nodCurent)
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
-        return (sir)
+        return sir
 
 
 ##############################################################################################
@@ -92,7 +94,7 @@ m = [
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 1, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
 ]
 
 start = "a"
@@ -117,10 +119,13 @@ def depth_first_iterative_deepening(gr, adancimeMax):
 
 # e exact ca functia df din laboratorul anterior doar ca impunem si o lungime maxima a drumului
 
+
 def dfi(adMaxCurenta, nodCurent):
     global nrSolutiiCautate, continua
     # descrestem adMaxCurenta pana la 0
-    if adMaxCurenta <= 0 or not continua:  # ar trebui adMaxCurenta sa nu ajunga niciodata < 0
+    if (
+        adMaxCurenta <= 0 or not continua
+    ):  # ar trebui adMaxCurenta sa nu ajunga niciodata < 0
         return
     adMaxCurenta -= 1
     print("Stiva actuala: " + "->".join(nodCurent.obtineDrum()))

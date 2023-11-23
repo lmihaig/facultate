@@ -1,9 +1,8 @@
 import os
-import cv2 as cv
-import numpy as np
-import matplotlib.pyplot as plt
-import pdb
 
+import cv2 as cv
+import matplotlib.pyplot as plt
+import numpy as np
 from add_pieces_mosaic import *
 from parameters import *
 
@@ -52,7 +51,8 @@ def compute_dimensions(params: Parameters):
     )
     # redimensioneaza imaginea
     params.image_resized = cv.resize(
-        params.image, (ws * params.num_pieces_horizontal, hs * params.num_pieces_vertical)
+        params.image,
+        (ws * params.num_pieces_horizontal, hs * params.num_pieces_vertical),
     )
 
     print(np.shape(params.image_resized))

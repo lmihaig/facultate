@@ -53,7 +53,9 @@ class NodParcurgere:
 
 
 class Graph:  # graful problemei
-    def __init__(self, noduri, matriceAdiacenta, matricePonderi, start, scopuri, lista_h):
+    def __init__(
+        self, noduri, matriceAdiacenta, matricePonderi, start, scopuri, lista_h
+    ):
         self.noduri = noduri
         self.matriceAdiacenta = matriceAdiacenta
         self.matricePonderi = matricePonderi
@@ -72,7 +74,9 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matriceAdiacenta[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matriceAdiacenta[nodCurent.id][
+                i
+            ] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
                 nodNou = NodParcurgere(
                     i,
                     self.noduri[i],
@@ -88,7 +92,7 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
         return sir
 
@@ -135,7 +139,11 @@ NodParcurgere.graf = gr
 
 def a_star(gr, nrSolutiiCautate):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
-    c = [NodParcurgere(gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start))]
+    c = [
+        NodParcurgere(
+            gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start)
+        )
+    ]
 
     while len(c) > 0:
         print("Coada actuala: " + str(c))

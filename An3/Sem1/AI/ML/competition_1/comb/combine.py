@@ -6,7 +6,7 @@ submissions = os.listdir("./submissions")
 
 ans = pd.DataFrame()
 for i, submission in enumerate(submissions):
-    df = pd.read_csv("./submissions/"+submission)
+    df = pd.read_csv("./submissions/" + submission)
     ans[i] = df.label
 
 

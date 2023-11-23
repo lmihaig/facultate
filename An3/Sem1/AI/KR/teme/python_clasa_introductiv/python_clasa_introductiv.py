@@ -1,6 +1,5 @@
 import random
 from itertools import chain, cycle
-import numpy as np
 
 
 def clip(x, l, u):
@@ -11,7 +10,15 @@ class Elev:
     _i = 1
     _activitati_posibile = {}
 
-    def __init__(self, nume=None, sanatate=90, inteligenta=20, oboseala=0, buna_dispozitie=100, lista_activitati=[]):
+    def __init__(
+        self,
+        nume=None,
+        sanatate=90,
+        inteligenta=20,
+        oboseala=0,
+        buna_dispozitie=100,
+        lista_activitati=[],
+    ):
         if nume:
             self.nume = nume
         else:
@@ -52,15 +59,20 @@ class Elev:
         fi = actv.factor_inteligenta
         fd = actv.factor_dispozitie
 
-        if not (ora_curenta >= 6 and ora_curenta <= 22) and self.activitate_curenta != "dormit":
-            self.sanatate = clip(self.sanatate-1, 0, 100)
+        if (
+            not (ora_curenta >= 6 and ora_curenta <= 22)
+            and self.activitate_curenta != "dormit"
+        ):
+            self.sanatate = clip(self.sanatate - 1, 0, 100)
 
         self.oboseala = clip(self.oboseala + fo, 0, 100)
         aport = 0.5 if self.oboseala == 100 else 1
 
-        for stat, modif in zip([self.sanatate, self.inteligenta, self.buna_dispozitie], [fs, fi, fd]):
+        for stat, modif in zip(
+            [self.sanatate, self.inteligenta, self.buna_dispozitie], [fs, fi, fd]
+        ):
             if modif > 0:
-                stat = clip(stat + modif*aport, 0, 100)
+                stat = clip(stat + modif * aport, 0, 100)
             else:
                 stat = clip(stat + modif, 0, 100)
 
@@ -88,14 +100,21 @@ class Elev:
 
 def newstat(stat, modif, aport):
     if modif > 0:
-        stat = int(clip(stat + modif*aport, 0, 100))
+        stat = int(clip(stat + modif * aport, 0, 100))
     else:
         stat = clip(stat + modif, 0, 100)
     return stat
 
 
 class Activitate:
-    def __init__(self, factor_sanatate, factor_inteligenta, factor_oboseala, factor_dispozitie, durata):
+    def __init__(
+        self,
+        factor_sanatate,
+        factor_inteligenta,
+        factor_oboseala,
+        factor_dispozitie,
+        durata,
+    ):
         self.factor_sanatate = factor_sanatate
         self.factor_inteligenta = factor_inteligenta
         self.factor_oboseala = factor_oboseala
@@ -153,11 +172,16 @@ def porneste_simulare(elevi):
             skip -= 1
         else:
             match input("comanda=").split():
-                case ["c", "final_elev"]: dead = 1
-                case ["c", i]: skip = max(0, int(i))
-                case ["c"]: continue
-                case ["b"]: break
-                case x: print(f"{x} nu este o comanda")
+                case ["c", "final_elev"]:
+                    dead = 1
+                case ["c", i]:
+                    skip = max(0, int(i))
+                case ["c"]:
+                    continue
+                case ["b"]:
+                    break
+                case x:
+                    print(f"{x} nu este o comanda")
 
     return True
 
@@ -185,16 +209,25 @@ for line in lines:
     # nu am implementat random(numar) si random(lista activitati) fiindca enervant
     # am modificat inputul in elevi.txt
     match match_activitate:
-        case 'random': lista_act = get_activitati_random(ore_default)
+        case "random":
+            lista_act = get_activitati_random(ore_default)
         # case '':
         # case '':
-        case _: lista_act = list(chain.from_iterable([[act]*int(i) for act, i in zip(activitati[0::2], activitati[1::2])]))
+        case _:
+            lista_act = list(
+                chain.from_iterable(
+                    [
+                        [act] * int(i)
+                        for act, i in zip(activitati[0::2], activitati[1::2])
+                    ]
+                )
+            )
     elevi.append(Elev(line[0], lista_activitati=lista_act, *[int(i) for i in date]))
     i += 1
 
 
-for _ in range(i, nr_elevi+1):
+for _ in range(i, nr_elevi + 1):
     elevi.append(Elev(lista_activitati=get_activitati_random(ore_default)))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     porneste_simulare(elevi)

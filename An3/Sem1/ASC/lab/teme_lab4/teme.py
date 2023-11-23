@@ -1,5 +1,5 @@
-import math
 import cmath
+import math
 from typing import Any, Set
 
 
@@ -40,13 +40,13 @@ def ex_2() -> Set[Any]:
         print("Pentru ecuatie de gradul 2 termenul 'a' trebuie sa fie pozitiv")
         return None
 
-    delta = b**2 - 4*a*c
+    delta = b**2 - 4 * a * c
     if delta >= 0:
-        x_1 = (-b + math.sqrt(delta))/(2*a)
-        x_2 = (-b - math.sqrt(delta))/(2*a)
+        x_1 = (-b + math.sqrt(delta)) / (2 * a)
+        x_2 = (-b - math.sqrt(delta)) / (2 * a)
     else:
-        x_1 = complex(-b/(2*a), cmath.sqrt(-delta)/(2*a))
-        x_2 = complex(-b/(2*a), -cmath.sqrt(-delta)/(2*a))
+        x_1 = complex(-b / (2 * a), cmath.sqrt(-delta) / (2 * a))
+        x_2 = complex(-b / (2 * a), -cmath.sqrt(-delta) / (2 * a))
     return set([x_1, x_2])
 
 
@@ -65,8 +65,8 @@ def ex_5() -> float:
     return a**3
 
 
-if __name__ == '__main__':
-    # print(f"Factorial: {ex_1()}")
+if __name__ == "__main__":
+    print(f"Factorial: {ex_1()}")
     # print(f"Radacini: {ex_2()}")
     # print(f"Valoarea expresiei: {ex_3()}")
     # print(f"Aria cercului: {ex_4()}")

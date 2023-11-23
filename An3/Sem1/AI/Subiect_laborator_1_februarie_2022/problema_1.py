@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.svm import LinearSVC
-import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score
@@ -9,7 +8,9 @@ from sklearn.metrics import accuracy_score, f1_score
 
 dataPath = "data\\"
 
-cifre_exemple = [np.loadtxt(dataPath + f"{i}.txt", "uint8", converters=float) for i in range(0, 10)]
+cifre_exemple = [
+    np.loadtxt(dataPath + f"{i}.txt", "uint8", converters=float) for i in range(0, 10)
+]
 
 
 train_data = [i for exemplu in cifre_exemple for i in exemplu[:75]]
@@ -26,7 +27,9 @@ y_pred = model.predict(test_data)
 
 label_vals = [i for i in range(10)]
 conf_mat = confusion_matrix(test_labels, y_pred)
-sns.heatmap(conf_mat, annot=True, fmt="d", xticklabels=label_vals, yticklabels=label_vals)
+sns.heatmap(
+    conf_mat, annot=True, fmt="d", xticklabels=label_vals, yticklabels=label_vals
+)
 plt.ylabel("Actual")
 plt.xlabel("Predicted")
 plt.show()
@@ -37,7 +40,9 @@ test_labels = [x % 2 for x in test_labels]
 
 label_vals = ["Par", "Impar"]
 conf_mat = confusion_matrix(test_labels, y_pred)
-sns.heatmap(conf_mat, annot=True, fmt="d", xticklabels=label_vals, yticklabels=label_vals)
+sns.heatmap(
+    conf_mat, annot=True, fmt="d", xticklabels=label_vals, yticklabels=label_vals
+)
 plt.ylabel("Actual")
 plt.xlabel("Predicted")
 plt.show()
@@ -62,7 +67,9 @@ y_pred = model.predict(test_data)
 
 label_vals = ["Par", "Impar"]
 conf_mat = confusion_matrix(test_labels, y_pred)
-sns.heatmap(conf_mat, annot=True, fmt="d", xticklabels=label_vals, yticklabels=label_vals)
+sns.heatmap(
+    conf_mat, annot=True, fmt="d", xticklabels=label_vals, yticklabels=label_vals
+)
 plt.ylabel("Actual")
 plt.xlabel("Predicted")
 plt.show()

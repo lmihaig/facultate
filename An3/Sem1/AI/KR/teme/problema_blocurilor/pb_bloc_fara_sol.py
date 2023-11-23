@@ -9,4 +9,4 @@ starea intiala si cele finale au doar 1 stiva si nicio stare finala nu e egala c
 starea initiala are doua stive si nicio stare finala nu are proprietatea ca are doar 2 stive si concatenand in varful stivei 1 stiva 2 inversata obtinem acelasi rezultat pe care l-am obtine si pentru starea initiala facand aceeasi operatie. De exemplu, starea initiala= [["a","b","c"], ["e","d"]], si starea finala [["a"], ["e","d","c","b"]] sunt ok, dar starea finala [["a","c","b"], ["e","d"]] nu este ok.
 """
 
-efectiv nu inteleg cerinta
+# efectiv nu inteleg cerinta

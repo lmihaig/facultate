@@ -183,10 +183,18 @@ _|_M____C____F____               \\t______/    _____F____C____M_|__
                   `~^~^~^~^~^~^~^~^~^~^~^~^~^~`"""  # noqa
 
     def __lt__(self, other: Self) -> bool:
-        return self.g_score > other.g_score if self.f_score == other.f_score else self.f_score < other.f_score
+        return (
+            self.g_score > other.g_score
+            if self.f_score == other.f_score
+            else self.f_score < other.f_score
+        )
 
     def __eq__(self, other: Self) -> bool:
-        return self.g_score == other.g_score if self.f_score == other.f_score else self.f_score == other.f_score
+        return (
+            self.g_score == other.g_score
+            if self.f_score == other.f_score
+            else self.f_score == other.f_score
+        )
 
     def check_repeat(self, new_node: Self) -> bool:
         """Checks if current node also appears in its history
@@ -227,7 +235,12 @@ _|_M____C____F____               \\t______/    _____F____C____M_|__
             "boat_shore",
         ]
 
-        return all([self.__getattribute__(field) == new_node.__getattribute__(field) for field in field_name])
+        return all(
+            [
+                self.__getattribute__(field) == new_node.__getattribute__(field)
+                for field in field_name
+            ]
+        )
 
     def get_path(self) -> deque[Self]:
         """Returns a list representing the path from the start node to the current node
@@ -292,9 +305,37 @@ class Graph:
         self.final_shore = final_shore
 
         if init_shore == "left":
-            self.start = Node(cannibals, missionaries, start_food, 0, 0, 0.0, 0, boat_seats, 0, init_shore, None, 0, 0)
+            self.start = Node(
+                cannibals,
+                missionaries,
+                start_food,
+                0,
+                0,
+                0.0,
+                0,
+                boat_seats,
+                0,
+                init_shore,
+                None,
+                0,
+                0,
+            )
         else:
-            self.start = Node(0, 0, 0, cannibals, missionaries, start_food, 0, boat_seats, 0, init_shore, None, 0, 0)
+            self.start = Node(
+                0,
+                0,
+                0,
+                cannibals,
+                missionaries,
+                start_food,
+                0,
+                boat_seats,
+                0,
+                init_shore,
+                None,
+                0,
+                0,
+            )
 
     def test_goal(self, node: Node) -> bool:
         """Tests wether the current node has all the missionaries and
@@ -307,9 +348,15 @@ class Graph:
             bool: true if node is goal false otherwise
         """
         if self.init_shore == "left":
-            return node.right_cannibals == self.total_cannibals and node.right_missionaries == self.total_missionaries
+            return (
+                node.right_cannibals == self.total_cannibals
+                and node.right_missionaries == self.total_missionaries
+            )
         elif self.init_shore == "right":
-            return node.left_cannibals == self.total_cannibals and node.left_missionaries == self.total_missionaries
+            return (
+                node.left_cannibals == self.total_cannibals
+                and node.left_missionaries == self.total_missionaries
+            )
 
     def util_comparison(self, can: int, mis: int, food: float) -> tuple[float, bool]:
         """A comparison used to determine if the current state is valid,
@@ -341,14 +388,26 @@ class Graph:
         Returns:
             bool: _description_
         """
-        total_people = node.left_cannibals + node.right_cannibals + node.left_missionaries + node.right_missionaries
+        total_people = (
+            node.left_cannibals
+            + node.right_cannibals
+            + node.left_missionaries
+            + node.right_missionaries
+        )
         return (
-            self.util_comparison(node.left_cannibals, node.left_missionaries, node.left_food)[1]
-            and self.util_comparison(node.right_cannibals, node.right_missionaries, node.right_food)[1]
-            and (total_people / self.start_boat_seats) <= (self.start_boat_seats * self.boat_degradation)
+            self.util_comparison(
+                node.left_cannibals, node.left_missionaries, node.left_food
+            )[1]
+            and self.util_comparison(
+                node.right_cannibals, node.right_missionaries, node.right_food
+            )[1]
+            and (total_people / self.start_boat_seats)
+            <= (self.start_boat_seats * self.boat_degradation)
         )
 
-    def valid_state(self, node: Node, boat_cannibals: int, boat_missionaries: int, boat_food: float) -> bool:
+    def valid_state(
+        self, node: Node, boat_cannibals: int, boat_missionaries: int, boat_food: float
+    ) -> bool:
         """Method tests if state respects the validity conditions and also
         updates the counter of the boat to keep track of degradation and the food eaten and transported,
         if at any stage there is less food than the neccesary amount to keep the cannibals from
@@ -373,7 +432,9 @@ class Graph:
         # if not (boat_missionaries or boat_cannibals):
         #     return False
 
-        consumed_left, valid_left = self.util_comparison(node.left_cannibals, node.left_missionaries, node.left_food)
+        consumed_left, valid_left = self.util_comparison(
+            node.left_cannibals, node.left_missionaries, node.left_food
+        )
         if not valid_left:
             return False
 
@@ -390,7 +451,9 @@ class Graph:
         # if boat_cannibals + boat_missionaries + boat_food > node.boat_seats:
         #     return False
 
-        consumed_boat, valid_boat = self.util_comparison(boat_cannibals, boat_missionaries, boat_food)
+        consumed_boat, valid_boat = self.util_comparison(
+            boat_cannibals, boat_missionaries, boat_food
+        )
         if not valid_boat:
             return False
 
@@ -433,9 +496,19 @@ class Graph:
         match heuristic:
             case "trivial":
                 if self.init_shore == "left":
-                    return 1 if left_cannibals == left_missionaries == 0 and boat_shore == "right" else 0
+                    return (
+                        1
+                        if left_cannibals == left_missionaries == 0
+                        and boat_shore == "right"
+                        else 0
+                    )
                 elif self.init_shore == "right":
-                    return 1 if right_cannibals == right_missionaries == 0 and boat_shore == "left" else 0
+                    return (
+                        1
+                        if right_cannibals == right_missionaries == 0
+                        and boat_shore == "left"
+                        else 0
+                    )
             case "num_people":
                 if self.init_shore == "left":
                     return left_cannibals + left_missionaries
@@ -443,13 +516,13 @@ class Graph:
                     return right_cannibals + right_missionaries
             case "people_boat_capacity":
                 if self.init_shore == "left":
-                    return 2 * math.ceil((left_cannibals + left_missionaries) / boat_seats) + (
-                        -1 if boat_shore == "left" else 0
-                    )
+                    return 2 * math.ceil(
+                        (left_cannibals + left_missionaries) / boat_seats
+                    ) + (-1 if boat_shore == "left" else 0)
                 elif self.init_shore == "right":
-                    return 2 * math.ceil((right_cannibals + right_missionaries) / boat_seats) + (
-                        -1 if boat_shore == "right" else 0
-                    )
+                    return 2 * math.ceil(
+                        (right_cannibals + right_missionaries) / boat_seats
+                    ) + (-1 if boat_shore == "right" else 0)
             case "bad":
                 if self.init_shore == "left":
                     return abs(right_cannibals - right_food)
@@ -485,10 +558,13 @@ class Graph:
         for boat_missionaries in range(max_missionaries + 1):
             max_food = min(node.boat_seats - boat_missionaries, max_food)
             for boat_food in range(int(max_food) + 1):
-
-                max_cannibals = min(node.boat_seats - boat_missionaries - boat_food, max_cannibals)
+                max_cannibals = min(
+                    node.boat_seats - boat_missionaries - boat_food, max_cannibals
+                )
                 if boat_missionaries:
-                    max_cannibals = min(boat_missionaries + boat_food * 2, max_cannibals)
+                    max_cannibals = min(
+                        boat_missionaries + boat_food * 2, max_cannibals
+                    )
 
                 for boat_cannibals in range(max_cannibals + 1):
                     if not (boat_cannibals or boat_missionaries):
@@ -509,9 +585,14 @@ class Graph:
                         node.g_score + 1,
                     ]
 
-                    new_node = Node(*new_node_params, self.compute_h(heuristic, *new_node_params[:-2]))
+                    new_node = Node(
+                        *new_node_params,
+                        self.compute_h(heuristic, *new_node_params[:-2]),
+                    )
 
-                    if self.valid_state(new_node, boat_cannibals, boat_missionaries, boat_food):
+                    if self.valid_state(
+                        new_node, boat_cannibals, boat_missionaries, boat_food
+                    ):
                         children.append(new_node)
 
         return children
@@ -528,7 +609,10 @@ class Graph:
             if self.test_goal(cur_node):
                 path_len = cur_node.print_path(file=file)
                 print(f"Path len: {path_len}", file=file)
-                print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                print(
+                    f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                    file=file,
+                )
                 new_time = time.time()
                 print(f"Time: {new_time - start_time}")
                 print(f"Time: {new_time - start_time}", file=file)
@@ -545,7 +629,10 @@ class Graph:
                     if self.test_goal(child):
                         path_len = child.print_path(file=file)
                         print(f"Path len: {path_len}", file=file)
-                        print(f"Path cost: g: {child.g_score}\th: {child.h_score}\tf:{child.f_score}", file=file)
+                        print(
+                            f"Path cost: g: {child.g_score}\th: {child.h_score}\tf:{child.f_score}",
+                            file=file,
+                        )
                         new_time = time.time()
                         print(f"Time: {new_time - start_time}")
                         print(f"Time: {new_time - start_time}", file=file)
@@ -564,7 +651,10 @@ class Graph:
             if self.test_goal(cur_node):
                 path_len = cur_node.print_path(file=file)
                 print(f"Path len: {path_len}", file=file)
-                print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                print(
+                    f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                    file=file,
+                )
                 new_time = time.time()
                 print(f"Time: {new_time - start_time}")
                 print(f"Time: {new_time - start_time}", file=file)
@@ -577,7 +667,9 @@ class Graph:
             children = self.generate_children(cur_node, heuristic="trivial")
             deq.extend(children)
 
-    def depth_first_iterative_deepening(self, heuristic: str, number_solutions: int, output_file):
+    def depth_first_iterative_deepening(
+        self, heuristic: str, number_solutions: int, output_file
+    ):
         max_depth = MAX_ITERATIVE_DEPTH
         start_time = time.time()
         file = open(output_file, "w")
@@ -592,7 +684,10 @@ class Graph:
                 if self.test_goal(cur_node):
                     path_len = cur_node.print_path(file=file)
                     print(f"Path len: {path_len}", file=file)
-                    print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                    print(
+                        f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                        file=file,
+                    )
                     new_time = time.time()
                     print(f"Time: {new_time - start_time}")
                     print(f"Time: {new_time - start_time}", file=file)
@@ -616,7 +711,10 @@ class Graph:
             if self.test_goal(cur_node):
                 path_len = cur_node.print_path(file=file)
                 print(f"Path len: {path_len}", file=file)
-                print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                print(
+                    f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                    file=file,
+                )
                 new_time = time.time()
                 print(f"Time: {new_time - start_time}")
                 print(f"Time: {new_time - start_time}", file=file)
@@ -652,7 +750,10 @@ class Graph:
             if self.test_goal(cur_node):
                 path_len = cur_node.print_path(file=file)
                 print(f"Path len: {path_len}", file=file)
-                print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                print(
+                    f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                    file=file,
+                )
                 new_time = time.time()
                 print(f"Time: {new_time - start_time}")
                 print(f"Time: {new_time - start_time}", file=file)
@@ -688,7 +789,10 @@ class Graph:
             if self.test_goal(cur_node):
                 path_len = cur_node.print_path(file=file)
                 print(f"Path len: {path_len}", file=file)
-                print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                print(
+                    f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                    file=file,
+                )
                 new_time = time.time()
                 print(f"Time: {new_time - start_time}")
                 print(f"Time: {new_time - start_time}", file=file)
@@ -725,7 +829,10 @@ class Graph:
             if self.test_goal(cur_node):
                 path_len = cur_node.print_path(file=file)
                 print(f"Path len: {path_len}", file=file)
-                print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                print(
+                    f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                    file=file,
+                )
                 new_time = time.time()
                 print(f"Time: {new_time - start_time}")
                 print(f"Time: {new_time - start_time}", file=file)
@@ -759,7 +866,9 @@ class Graph:
             for child in children:
                 heapq.heappush(l_open, child)
 
-    def a_star_iterative_deepening(self, heuristic: str, number_solutions: int, output_file):
+    def a_star_iterative_deepening(
+        self, heuristic: str, number_solutions: int, output_file
+    ):
         max_depth = MAX_ITERATIVE_DEPTH
         file = open(output_file, "w")
         start_time = time.time()
@@ -774,7 +883,10 @@ class Graph:
                 if self.test_goal(cur_node):
                     path_len = cur_node.print_path(file=file)
                     print(f"Path len: {path_len}", file=file)
-                    print(f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}", file=file)
+                    print(
+                        f"Path cost: g: {cur_node.g_score}\th: {cur_node.h_score}\tf:{cur_node.f_score}",
+                        file=file,
+                    )
                     new_time = time.time()
                     print(f"Time: {new_time - start_time}")
                     print(f"Time: {new_time - start_time}", file=file)
@@ -800,7 +912,9 @@ if __name__ == "__main__":
         number_solutions = int(sys.argv[3])
         timeout = int(sys.argv[4])
     else:
-        print("Usage:python cautare_informata.py [INPUT_PATH] [OUTPUT_PATH] [NUM_SOL] [TIMEOUT]")
+        print(
+            "Usage:python cautare_informata.py [INPUT_PATH] [OUTPUT_PATH] [NUM_SOL] [TIMEOUT]"
+        )
         param_dicts = {"small": parse("./small.json")}
         output_path = "output"
         number_solutions = 2
@@ -842,7 +956,8 @@ if __name__ == "__main__":
                     os.makedirs(sol_dir)
 
                 p = multiprocessing.Process(
-                    target=getattr(graph, algorithm), args=(heuristic, number_solutions, output_file)
+                    target=getattr(graph, algorithm),
+                    args=(heuristic, number_solutions, output_file),
                 )
                 p.start()
                 p.join(timeout)

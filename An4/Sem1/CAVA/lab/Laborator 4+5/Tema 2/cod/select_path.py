@@ -55,11 +55,13 @@ def select_dynamic_programming_path(E):
             if M[line, col] <= M[line, col + 1] and M[line, col] <= M[line, col - 1]:
                 new_col = col
             elif (
-                M[line, col + 1] <= M[line, col] and M[line, col + 1] <= M[line, col - 1]
+                M[line, col + 1] <= M[line, col]
+                and M[line, col + 1] <= M[line, col - 1]
             ):
                 new_col = col + 1
             elif (
-                M[line, col - 1] <= M[line, col] and M[line, col - 1] <= M[line, col + 1]
+                M[line, col - 1] <= M[line, col]
+                and M[line, col - 1] <= M[line, col + 1]
             ):
                 new_col = col - 1
         path[line] = (line, new_col)

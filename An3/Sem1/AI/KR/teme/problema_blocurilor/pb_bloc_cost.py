@@ -3,4 +3,4 @@ Modificati euristicile admisibile 1 si 2 pentru problema blocurilor, astfel inca
 
 """
 
-efectiv nu inteleg cerinta
+# efectiv nu inteleg cerinta

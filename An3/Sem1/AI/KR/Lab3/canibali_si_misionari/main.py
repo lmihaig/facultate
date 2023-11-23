@@ -28,7 +28,9 @@ class NodParcurgere:
             nod = nod.parinte
         return l
 
-    def afisDrum(self, afisCost=False, afisLung=False):  # returneaza si lungimea drumului
+    def afisDrum(
+        self, afisCost=False, afisLung=False
+    ):  # returneaza si lungimea drumului
         l = self.obtineDrum()
         for nod in l:
             if nod.parinte is not None:
@@ -40,7 +42,10 @@ class NodParcurgere:
                     mbarca2 = self.__class__.gr.malInitial
                 print(
                     ">>> Barca s-a deplasat de la malul {} la malul {} cu {} canibali si {} misionari.".format(
-                        mbarca1, mbarca2, abs(nod.info[0] - nod.parinte.info[0]), abs(nod.info[1] - nod.parinte.info[1])
+                        mbarca1,
+                        mbarca2,
+                        abs(nod.info[0] - nod.parinte.info[0]),
+                        abs(nod.info[1] - nod.parinte.info[1]),
                     )
                 )
             print(str(nod))
@@ -97,9 +102,10 @@ class NodParcurgere:
 
 class Graph:  # graful problemei
     def __init__(self, nume_fisier):
-
         f = open(nume_fisier, "r")
-        textFisier = f.read()  # citeste tot fisierul si returneaza un string cu continutul lui
+        textFisier = (
+            f.read()
+        )  # citeste tot fisierul si returneaza un string cu continutul lui
         listaInfoFisier = textFisier.split()  # ["3", "2", "stang", "drept"]
         # self.__class__ inseamna clasa curenta
         self.__class__.N = int(listaInfoFisier[0])
@@ -109,7 +115,11 @@ class Graph:  # graful problemei
         # memoram in stare doar canibalii si misionarii de pe malul stang; pe ceilalti ii deducem
         # (nrCanibaliMalInitial, numarMisionariMalInitial, locatieBarca)
         # locatieBarca= 1 daca e pe malul initial si 0 daca e pe malul final
-        self.start = (self.__class__.N, self.__class__.N, 1)  # informatia nodului de start
+        self.start = (
+            self.__class__.N,
+            self.__class__.N,
+            1,
+        )  # informatia nodului de start
         # self.scopuri=[(0,0,0)]
 
     def testeaza_scop(self, nodCurent):
@@ -153,7 +163,9 @@ class Graph:  # graful problemei
                     continue
                 if not test_conditie(misMalOpusNou, canMalOpusNou):
                     continue
-                if barca == 1:  # testul este pentru barca nodului curent (parinte) deci inainte de mutare
+                if (
+                    barca == 1
+                ):  # testul este pentru barca nodului curent (parinte) deci inainte de mutare
                     infoNodNou = (canMalCurentNou, misMalCurentNou, 0)
                 else:
                     infoNodNou = (canMalOpusNou, misMalOpusNou, 1)
@@ -252,7 +264,9 @@ class Graph:  # graful problemei
             # calculez cati oameni mai am de mutat si impart la nr de locuri in barca
             # totalOameniDeMutat=infoNod[0]+infoNod[1]
             return (
-                2 * math.ceil((infoNod[0] + infoNod[1]) / (self.M - 1)) + (1 - infoNod[2]) - 1
+                2 * math.ceil((infoNod[0] + infoNod[1]) / (self.M - 1))
+                + (1 - infoNod[2])
+                - 1
             )  # (1-infoNod[2]) vine de la faptul ca daca barca e pe malul final trebuie sa mai faca o trecere spre malul initial ca sa ii ia pe oameni, pe cand daca e deja pe malul initial, nu se mai aduna acel 1
 
         """
@@ -272,13 +286,12 @@ class Graph:  # graful problemei
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
         return sir
 
 
 def breadth_first(gr, nrSolutiiCautate):
-
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.start, None)]
 

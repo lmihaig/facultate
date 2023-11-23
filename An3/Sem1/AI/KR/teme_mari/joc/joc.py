@@ -19,16 +19,14 @@ La afișarea gridului în consolă, se vor afișa în dreptul liniilor și coloa
 (indicii începând de la 0) ca să poată identifica utilizatorul mai ușor coordonatele locului în care vrea să mute.
 
 """
+import colorsys
 import copy
-import itertools
 import random
-import time
-import numpy as np
-import pygame
 import sys
 from itertools import cycle
 from typing import Self
-import colorsys
+
+import pygame
 
 # WINDOW SETINGS
 WIDTH = 800
@@ -79,7 +77,15 @@ sound_final = pygame.mixer.Sound("./final.wav")
 
 
 class Button:
-    def __init__(self, name: str, width: int, height: int, pos: int, elevation: int, options: list[str] = None):
+    def __init__(
+        self,
+        name: str,
+        width: int,
+        height: int,
+        pos: int,
+        elevation: int,
+        options: list[str] = None,
+    ):
         # Core attributes
         self.name = name
         self.pressed = False
@@ -96,7 +102,9 @@ class Button:
         self.bottom_rect = pygame.Rect(pos, (width, height))
         self.bottom_color = BOT_BUTTON_CLR
 
-        self.text = self.name + ": " + next(self.options) if self.name else next(self.options)
+        self.text = (
+            self.name + ": " + next(self.options) if self.name else next(self.options)
+        )
 
     def draw(self):
         # text
@@ -169,13 +177,22 @@ class Cell:
             text_surf = game_font.render(self.symbol, True, sym_col)
 
             # 4, 8 hardcoded to center symbol
-            text_rect = text_surf.get_rect(center=increment_tuple(self.rect.center, [4, 8]))
+            text_rect = text_surf.get_rect(
+                center=increment_tuple(self.rect.center, [4, 8])
+            )
             screen.blit(text_surf, text_rect)
             return True
 
 
 class Node:
-    def __init__(self, board: list[list[Cell]], to_move: str, depth: int, parent: Self, estimation: int = None):
+    def __init__(
+        self,
+        board: list[list[Cell]],
+        to_move: str,
+        depth: int,
+        parent: Self,
+        estimation: int = None,
+    ):
         self.board = board
         self.to_move = to_move
         self.depth = depth
@@ -205,10 +222,17 @@ class Node:
 
     def get_valid_moves(self):
         if self.depth < 2:
-            self.valid_moves = set(cell for row in self.board for cell in row if cell.symbol == " ")
+            self.valid_moves = set(
+                cell for row in self.board for cell in row if cell.symbol == " "
+            )
         else:
             val_moves = set()
-            for cell in set(cell for row in self.board for cell in row if cell.symbol == self.to_move):
+            for cell in set(
+                cell
+                for row in self.board
+                for cell in row
+                if cell.symbol == self.to_move
+            ):
                 for new_x in range(cell.x - COL_DIST, cell.x + COL_DIST + 1):
                     for new_y in range(cell.y - ROW_DIST, cell.y + ROW_DIST + 1):
                         if 0 <= new_x < BOARD_SIZE and 0 <= new_y < BOARD_SIZE:
@@ -259,14 +283,18 @@ class Graph:
                     case "minimax":
                         return self.minimax(new_node, new_node.depth + max_depth).board
                     case "alpha-beta":
-                        return self.alpha_beta(new_node, new_node.depth + max_depth).board
+                        return self.alpha_beta(
+                            new_node, new_node.depth + max_depth
+                        ).board
         return None
 
     def next_move(self):
         if self.cur_node.to_move == "X":
             new_board = self.move_player(self.player_one)
             if new_board:
-                self.cur_node = Node(new_board, "0", self.cur_node.depth + 1, self.cur_node)
+                self.cur_node = Node(
+                    new_board, "0", self.cur_node.depth + 1, self.cur_node
+                )
                 self.cur_node.draw_state()
                 sound_x.play()
                 pygame.display.update()
@@ -274,7 +302,9 @@ class Graph:
         else:
             new_board = self.move_player(self.player_two)
             if new_board:
-                self.cur_node = Node(new_board, "X", self.cur_node.depth + 1, self.cur_node)
+                self.cur_node = Node(
+                    new_board, "X", self.cur_node.depth + 1, self.cur_node
+                )
                 self.cur_node.draw_state()
                 sound_o.play()
                 pygame.display.update()
@@ -288,12 +318,20 @@ class Graph:
         #     color = hsv2rgb(80 + random.randint(-5, 5), random.randint(100, 260), random.randint(100, 260))
         # else:
         #     color = hsv2rgb(5 + random.randint(-5, 5), random.randint(100, 260), random.randint(100, 260))
-        color = hsv2rgb(60 + random.randint(-5, 5), random.randint(180, 360), random.randint(300, 360))
+        color = hsv2rgb(
+            60 + random.randint(-5, 5),
+            random.randint(180, 360),
+            random.randint(300, 360),
+        )
         pygame.draw.line(
             screen,
             color,
-            increment_tuple(start_cell.rect.center, [random_start_offset, random_start_offset]),
-            increment_tuple(end_cell.rect.center, [random_end_offset, random_end_offset]),
+            increment_tuple(
+                start_cell.rect.center, [random_start_offset, random_start_offset]
+            ),
+            increment_tuple(
+                end_cell.rect.center, [random_end_offset, random_end_offset]
+            ),
             width=8,
         )
 
@@ -314,7 +352,10 @@ class Graph:
                         continue
                     if not check_valid(cell, cell.x + dir[0] * 2, cell.y + dir[1] * 2):
                         continue
-                    self.draw_line(cell, self.cur_node.board[cell.x + dir[0] * 2][cell.y + dir[1] * 2])
+                    self.draw_line(
+                        cell,
+                        self.cur_node.board[cell.x + dir[0] * 2][cell.y + dir[1] * 2],
+                    )
                     if cell.symbol == "X":
                         scor_x += 1
                     else:
@@ -344,23 +385,59 @@ def hsv2rgb(h, s, v):
 # BUTTONS FOR MENU
 play_btn = Button("", 200, 40, (550, 700), 5, options=["Play"])
 
-board_size_btn = Button("Board size", 200, 40, (25, 50), 5, options=[str(i) for i in range(4, 11)])
-col_dist_btn = Button("Column distance", 300, 40, (50, 100), 5, options=[str(i) for i in range(BOARD_SIZE + 1)])
-row_dist_btn = Button("Row distance", 300, 40, (375, 100), 5, options=[str(i) for i in range(BOARD_SIZE + 1)])
+board_size_btn = Button(
+    "Board size", 200, 40, (25, 50), 5, options=[str(i) for i in range(4, 11)]
+)
+col_dist_btn = Button(
+    "Column distance",
+    300,
+    40,
+    (50, 100),
+    5,
+    options=[str(i) for i in range(BOARD_SIZE + 1)],
+)
+row_dist_btn = Button(
+    "Row distance",
+    300,
+    40,
+    (375, 100),
+    5,
+    options=[str(i) for i in range(BOARD_SIZE + 1)],
+)
 
-game_mode_btn = Button("Game Mode", 300, 40, (25, 200), 5, options=["PvP", "AIvP", "AIvAI"])
-algo_ai_one_btn = Button("AI_1 Algorithm", 350, 40, (50, 250), 5, options=["minimax", "alpha-beta"])
-diff_ai_one_btn = Button("AI_1 Difficulty", 350, 40, (50, 300), 5, options=["Easy", "Medium", "Hard"])
+game_mode_btn = Button(
+    "Game Mode", 300, 40, (25, 200), 5, options=["PvP", "AIvP", "AIvAI"]
+)
+algo_ai_one_btn = Button(
+    "AI_1 Algorithm", 350, 40, (50, 250), 5, options=["minimax", "alpha-beta"]
+)
+diff_ai_one_btn = Button(
+    "AI_1 Difficulty", 350, 40, (50, 300), 5, options=["Easy", "Medium", "Hard"]
+)
 
-algo_ai_two_btn = Button("AI_2 Algorithm", 350, 40, (425, 250), 5, options=["minimax", "alpha-beta"])
-diff_ai_two_btn = Button("AI_2 Difficulty", 350, 40, (425, 300), 5, options=["Easy", "Medium", "Hard"])
+algo_ai_two_btn = Button(
+    "AI_2 Algorithm", 350, 40, (425, 250), 5, options=["minimax", "alpha-beta"]
+)
+diff_ai_two_btn = Button(
+    "AI_2 Difficulty", 350, 40, (425, 300), 5, options=["Easy", "Medium", "Hard"]
+)
 
 player_symbol_Btn = Button("Player Symbol", 250, 40, (425, 250), 5, options=["X", "0"])
 
 
 def draw_menu():
     screen.fill(BACKGROUND_CLR)
-    global MENU, BOARD_SIZE, ROW_DIST, COL_DIST, MODE, PLAYER_SYM, AI_ONE_DIFF, AI_TWO_DIFF, AI_ONE_ALGO, AI_TWO_ALGO
+    global \
+        MENU, \
+        BOARD_SIZE, \
+        ROW_DIST, \
+        COL_DIST, \
+        MODE, \
+        PLAYER_SYM, \
+        AI_ONE_DIFF, \
+        AI_TWO_DIFF, \
+        AI_ONE_ALGO, \
+        AI_TWO_ALGO
     play = play_btn.draw()
     board_size = board_size_btn.draw()
 
@@ -435,10 +512,18 @@ def play_game(graph: Graph):
 def init_game():
     screen.fill(BOARD_CLR)
     block_size = (HEIGHT - (3 * (BOARD_SIZE - 1))) // BOARD_SIZE
-    cells: list[list[Cell]] = [[" " for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)]
+    cells: list[list[Cell]] = [
+        [" " for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)
+    ]
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
-            cells[x][y] = Cell(pygame.Rect(x * (block_size + 3), y * (block_size + 3), block_size, block_size), x, y)
+            cells[x][y] = Cell(
+                pygame.Rect(
+                    x * (block_size + 3), y * (block_size + 3), block_size, block_size
+                ),
+                x,
+                y,
+            )
             pygame.draw.rect(screen, BACKGROUND_CLR, cells[x][y].rect)
     start_node = Node(cells, "X", 0, None)
     match MODE, PLAYER_SYM, AI_ONE_ALGO, AI_ONE_DIFF, AI_TWO_ALGO, AI_TWO_DIFF:
@@ -449,7 +534,10 @@ def init_game():
         case "AIvP", "0", algo, diff, _, _:
             player_one, player_two = ("AI", algo, diff), "Human"
         case "AIvAI", _, algo_one, diff_one, algo_two, diff_two:
-            player_one, player_two = ("AI", algo_one, diff_one), ("AI", algo_two, diff_two)
+            player_one, player_two = (
+                ("AI", algo_one, diff_one),
+                ("AI", algo_two, diff_two),
+            )
     return Graph(start_node, player_one, player_two)
 
 

@@ -1,8 +1,3 @@
-import collections
-import json
-from pprint import pprint
-
-
 """ENUNT:
 Exercitiu de intelegere a reprezentarii unui graf.
 
@@ -33,10 +28,7 @@ def adiacenta_to_graf(matrice):
                 else:
                     muchii.append((i, j))
 
-    graf = {
-        "noduri": [i for i in range(len(matrice))],
-        "muchii": muchii
-    }
+    graf = {"noduri": [i for i in range(len(matrice))], "muchii": muchii}
 
     if neorientat:
         print("Graful este neorientat")
@@ -46,10 +38,10 @@ def adiacenta_to_graf(matrice):
 
 
 def graf_to_adiacenta(graf, neorientat=True):
-    nr_noduri = len(graf['noduri'])
+    nr_noduri = len(graf["noduri"])
     matrice = [[0 for i in range(nr_noduri)] for j in range(nr_noduri)]
 
-    for i, j in graf['muchii']:
+    for i, j in graf["muchii"]:
         matrice[i][j] = 1
         if neorientat:
             matrice[j][i] = 1

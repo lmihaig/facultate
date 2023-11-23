@@ -61,14 +61,16 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
-            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
+            if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(
+                self.noduri[i]
+            ):
                 nodNou = NodParcurgere(i, self.noduri[i], nodCurent)
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
     def __repr__(self):
         sir = ""
-        for (k, v) in self.__dict__.items():
+        for k, v in self.__dict__.items():
             sir += "{} = {}\n".format(k, v)
         return sir
 
