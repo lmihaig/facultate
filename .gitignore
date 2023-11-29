@@ -227,3 +227,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+tomfoolery/logo.png
+tomfoolery/tomfoolery.py
+tomfoolery/mesaj.txt

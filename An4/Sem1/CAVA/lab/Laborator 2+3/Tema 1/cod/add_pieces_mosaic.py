@@ -1,6 +1,7 @@
-from parameters import *
-import numpy as np
 import timeit
+
+import numpy as np
+from parameters import *
 
 
 def get_mean_color_small_images(params: Parameters):
