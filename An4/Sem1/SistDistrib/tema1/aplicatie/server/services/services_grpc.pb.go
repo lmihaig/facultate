@@ -56,7 +56,7 @@ type ServicesClient interface {
 	SumAfterDoublingFirstDigit(ctx context.Context, in *Int32ArrayRequest, opts ...grpc.CallOption) (*Int32Response, error)
 	FilterComplexNumbersOutsideRange(ctx context.Context, in *ComplexNumberRangeRequest, opts ...grpc.CallOption) (*Int32ArrayResponse, error)
 	ValidatePotentialPasswords(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
-	GenerateRandomPasswords(ctx context.Context, in *CharacterArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
+	GenerateRandomPasswords(ctx context.Context, in *SingleStringRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
 }
 
 type servicesClient struct {
@@ -193,7 +193,7 @@ func (c *servicesClient) ValidatePotentialPasswords(ctx context.Context, in *Str
 	return out, nil
 }
 
-func (c *servicesClient) GenerateRandomPasswords(ctx context.Context, in *CharacterArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error) {
+func (c *servicesClient) GenerateRandomPasswords(ctx context.Context, in *SingleStringRequest, opts ...grpc.CallOption) (*StringArrayResponse, error) {
 	out := new(StringArrayResponse)
 	err := c.cc.Invoke(ctx, Services_GenerateRandomPasswords_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -220,7 +220,7 @@ type ServicesServer interface {
 	SumAfterDoublingFirstDigit(context.Context, *Int32ArrayRequest) (*Int32Response, error)
 	FilterComplexNumbersOutsideRange(context.Context, *ComplexNumberRangeRequest) (*Int32ArrayResponse, error)
 	ValidatePotentialPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error)
-	GenerateRandomPasswords(context.Context, *CharacterArrayRequest) (*StringArrayResponse, error)
+	GenerateRandomPasswords(context.Context, *SingleStringRequest) (*StringArrayResponse, error)
 	mustEmbedUnimplementedServicesServer()
 }
 
@@ -270,7 +270,7 @@ func (UnimplementedServicesServer) FilterComplexNumbersOutsideRange(context.Cont
 func (UnimplementedServicesServer) ValidatePotentialPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatePotentialPasswords not implemented")
 }
-func (UnimplementedServicesServer) GenerateRandomPasswords(context.Context, *CharacterArrayRequest) (*StringArrayResponse, error) {
+func (UnimplementedServicesServer) GenerateRandomPasswords(context.Context, *SingleStringRequest) (*StringArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateRandomPasswords not implemented")
 }
 func (UnimplementedServicesServer) mustEmbedUnimplementedServicesServer() {}
@@ -539,7 +539,7 @@ func _Services_ValidatePotentialPasswords_Handler(srv interface{}, ctx context.C
 }
 
 func _Services_GenerateRandomPasswords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CharacterArrayRequest)
+	in := new(SingleStringRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -551,7 +551,7 @@ func _Services_GenerateRandomPasswords_Handler(srv interface{}, ctx context.Cont
 		FullMethod: Services_GenerateRandomPasswords_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServicesServer).GenerateRandomPasswords(ctx, req.(*CharacterArrayRequest))
+		return srv.(ServicesServer).GenerateRandomPasswords(ctx, req.(*SingleStringRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
