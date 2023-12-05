@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Services_JumbleLettersFromArray_FullMethodName              = "/services.Services/JumbleLettersFromArray"
-	Services_FindPerfectSquareCounts_FullMethodName             = "/services.Services/FindPerfectSquareCounts"
+	Services_FindPerfectSquareCount_FullMethodName              = "/services.Services/FindPerfectSquareCount"
 	Services_SumOfReversedIntegers_FullMethodName               = "/services.Services/SumOfReversedIntegers"
 	Services_CalculateAverageWithinDigitSumRange_FullMethodName = "/services.Services/CalculateAverageWithinDigitSumRange"
 	Services_ValidateAndConvertBinaryStrings_FullMethodName     = "/services.Services/ValidateAndConvertBinaryStrings"
@@ -43,7 +43,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServicesClient interface {
 	JumbleLettersFromArray(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
-	FindPerfectSquareCounts(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error)
+	FindPerfectSquareCount(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error)
 	SumOfReversedIntegers(ctx context.Context, in *Int32ArrayRequest, opts ...grpc.CallOption) (*Int32Response, error)
 	CalculateAverageWithinDigitSumRange(ctx context.Context, in *AverageWithinRangeRequest, opts ...grpc.CallOption) (*DoubleResponse, error)
 	ValidateAndConvertBinaryStrings(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32ArrayResponse, error)
@@ -56,7 +56,7 @@ type ServicesClient interface {
 	SumAfterDoublingFirstDigit(ctx context.Context, in *Int32ArrayRequest, opts ...grpc.CallOption) (*Int32Response, error)
 	FilterComplexNumbersOutsideRange(ctx context.Context, in *ComplexNumberRangeRequest, opts ...grpc.CallOption) (*Int32ArrayResponse, error)
 	ValidatePotentialPasswords(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
-	GenerateRandomPasswords(ctx context.Context, in *SingleStringRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
+	GenerateRandomPasswords(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error)
 }
 
 type servicesClient struct {
@@ -76,9 +76,9 @@ func (c *servicesClient) JumbleLettersFromArray(ctx context.Context, in *StringA
 	return out, nil
 }
 
-func (c *servicesClient) FindPerfectSquareCounts(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error) {
+func (c *servicesClient) FindPerfectSquareCount(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*UInt32Response, error) {
 	out := new(UInt32Response)
-	err := c.cc.Invoke(ctx, Services_FindPerfectSquareCounts_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Services_FindPerfectSquareCount_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (c *servicesClient) ValidatePotentialPasswords(ctx context.Context, in *Str
 	return out, nil
 }
 
-func (c *servicesClient) GenerateRandomPasswords(ctx context.Context, in *SingleStringRequest, opts ...grpc.CallOption) (*StringArrayResponse, error) {
+func (c *servicesClient) GenerateRandomPasswords(ctx context.Context, in *StringArrayRequest, opts ...grpc.CallOption) (*StringArrayResponse, error) {
 	out := new(StringArrayResponse)
 	err := c.cc.Invoke(ctx, Services_GenerateRandomPasswords_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -207,7 +207,7 @@ func (c *servicesClient) GenerateRandomPasswords(ctx context.Context, in *Single
 // for forward compatibility
 type ServicesServer interface {
 	JumbleLettersFromArray(context.Context, *StringArrayRequest) (*StringArrayResponse, error)
-	FindPerfectSquareCounts(context.Context, *StringArrayRequest) (*UInt32Response, error)
+	FindPerfectSquareCount(context.Context, *StringArrayRequest) (*UInt32Response, error)
 	SumOfReversedIntegers(context.Context, *Int32ArrayRequest) (*Int32Response, error)
 	CalculateAverageWithinDigitSumRange(context.Context, *AverageWithinRangeRequest) (*DoubleResponse, error)
 	ValidateAndConvertBinaryStrings(context.Context, *StringArrayRequest) (*UInt32ArrayResponse, error)
@@ -220,7 +220,7 @@ type ServicesServer interface {
 	SumAfterDoublingFirstDigit(context.Context, *Int32ArrayRequest) (*Int32Response, error)
 	FilterComplexNumbersOutsideRange(context.Context, *ComplexNumberRangeRequest) (*Int32ArrayResponse, error)
 	ValidatePotentialPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error)
-	GenerateRandomPasswords(context.Context, *SingleStringRequest) (*StringArrayResponse, error)
+	GenerateRandomPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error)
 	mustEmbedUnimplementedServicesServer()
 }
 
@@ -231,8 +231,8 @@ type UnimplementedServicesServer struct {
 func (UnimplementedServicesServer) JumbleLettersFromArray(context.Context, *StringArrayRequest) (*StringArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JumbleLettersFromArray not implemented")
 }
-func (UnimplementedServicesServer) FindPerfectSquareCounts(context.Context, *StringArrayRequest) (*UInt32Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FindPerfectSquareCounts not implemented")
+func (UnimplementedServicesServer) FindPerfectSquareCount(context.Context, *StringArrayRequest) (*UInt32Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindPerfectSquareCount not implemented")
 }
 func (UnimplementedServicesServer) SumOfReversedIntegers(context.Context, *Int32ArrayRequest) (*Int32Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SumOfReversedIntegers not implemented")
@@ -270,7 +270,7 @@ func (UnimplementedServicesServer) FilterComplexNumbersOutsideRange(context.Cont
 func (UnimplementedServicesServer) ValidatePotentialPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatePotentialPasswords not implemented")
 }
-func (UnimplementedServicesServer) GenerateRandomPasswords(context.Context, *SingleStringRequest) (*StringArrayResponse, error) {
+func (UnimplementedServicesServer) GenerateRandomPasswords(context.Context, *StringArrayRequest) (*StringArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateRandomPasswords not implemented")
 }
 func (UnimplementedServicesServer) mustEmbedUnimplementedServicesServer() {}
@@ -304,20 +304,20 @@ func _Services_JumbleLettersFromArray_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Services_FindPerfectSquareCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Services_FindPerfectSquareCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StringArrayRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServicesServer).FindPerfectSquareCounts(ctx, in)
+		return srv.(ServicesServer).FindPerfectSquareCount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Services_FindPerfectSquareCounts_FullMethodName,
+		FullMethod: Services_FindPerfectSquareCount_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServicesServer).FindPerfectSquareCounts(ctx, req.(*StringArrayRequest))
+		return srv.(ServicesServer).FindPerfectSquareCount(ctx, req.(*StringArrayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -539,7 +539,7 @@ func _Services_ValidatePotentialPasswords_Handler(srv interface{}, ctx context.C
 }
 
 func _Services_GenerateRandomPasswords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SingleStringRequest)
+	in := new(StringArrayRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -551,7 +551,7 @@ func _Services_GenerateRandomPasswords_Handler(srv interface{}, ctx context.Cont
 		FullMethod: Services_GenerateRandomPasswords_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServicesServer).GenerateRandomPasswords(ctx, req.(*SingleStringRequest))
+		return srv.(ServicesServer).GenerateRandomPasswords(ctx, req.(*StringArrayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -568,8 +568,8 @@ var Services_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Services_JumbleLettersFromArray_Handler,
 		},
 		{
-			MethodName: "FindPerfectSquareCounts",
-			Handler:    _Services_FindPerfectSquareCounts_Handler,
+			MethodName: "FindPerfectSquareCount",
+			Handler:    _Services_FindPerfectSquareCount_Handler,
 		},
 		{
 			MethodName: "SumOfReversedIntegers",

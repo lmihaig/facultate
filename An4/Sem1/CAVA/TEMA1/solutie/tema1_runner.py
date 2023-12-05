@@ -18,6 +18,8 @@ def run_games(input_dir: str, output_dir: str, task: str):
     board = np.array(config["board"], dtype=int)
 
     for game_id in range(1, int(num_games) + 1):
+        if num_games == 1:
+            game_id = files[0].split("_")[0]
         with open(input_dir + f"{game_id}_mutari.txt") as mutari_file:
             mutari = mutari_file.read().split("\n")
             mutari_file.close()

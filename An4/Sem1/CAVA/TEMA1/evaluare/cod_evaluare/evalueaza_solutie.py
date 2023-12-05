@@ -68,21 +68,22 @@ def compare_annotations(filename_predicted, filename_gt, verbose=0):
 
 # change this on your machine pointing to your results (txt files)
 # predictions_path_root = "/Users/bogdan/Desktop/CAVA_2024_Tema1_evaluare/fisiere_solutie/331_Alexe_Bogdan/"
-predictions_path_root = "D:/facultate/An4/Sem1/CAVA/TEMA1/solutie/rezultate/task3/"
+# predictions_path_root = "D:/facultate/An4/Sem1/CAVA/TEMA1/solutie/rezultate/task3/"
+predictions_path_root = "D:/facultate/An4/Sem1/CAVA/TEMA1/my_antrenare/pred/"
 
 
 # change this on your machine to point to the ground-truth test
 # gt_path_root = "/Users/bogdan/Desktop/CAVA_2024_Tema1_evaluare/ground-truth/"
-gt_path_root = (
-    "D:/facultate/An4/Sem1/CAVA/TEMA1/evaluare/fisiere_solutie/331_Alexe_Bogdan/"
-)
-
+# gt_path_root = (
+#     "D:/facultate/An4/Sem1/CAVA/TEMA1/evaluare/fisiere_solutie/331_Alexe_Bogdan/"
+# )
+gt_path_root = "D:/facultate/An4/Sem1/CAVA/TEMA1/my_antrenare/GT/"
 
 # change this to 1 if you want to print results at each turn
 verbose = 1
 total_points = 0
 for game in range(
-    1, 2
+    1, 6
 ):  # for one game change this to range(1,2), otherwise put range(1,6)
     for turn in range(1, 21):
         name_turn = str(turn)

@@ -1,5 +1,5 @@
 {
-  "base_image_path": "../imagini_auxiliare/01.jpg",
+  "base_image_path": "./template_tabla.jpg",
   "score_tracker": [
     1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0, 3, 5, 4, 1, 6, 2, 4, 5, 5, 0,
     6, 3, 4, 2, 0, 1, 5, 1, 3, 4, 4, 4, 5, 0, 6, 3, 5, 4, 1, 3, 2, 0, 0, 1, 1,

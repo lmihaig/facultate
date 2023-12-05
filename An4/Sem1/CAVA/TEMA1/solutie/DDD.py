@@ -12,7 +12,6 @@ from util import (
 )
 
 from colorama import Fore, Style
-import copy
 
 
 class Square:
@@ -87,16 +86,16 @@ class Game:
         return piece
 
     def place(self, piece: Piece, player: str, move_num: int) -> int:
-        print(f"{Fore.YELLOW}Move number: {move_num}{Style.RESET_ALL}")
-        print(f"{Fore.GREEN}Player: {player}{Style.RESET_ALL}")
-        print(f"Score is: {self.players_score}")
-        print(f"Piece Orientation: {piece.orientation}")
-        print(f"Piece Values: {piece.first_square.value}, {piece.second_square.value}")
-        print(
-            "Piece Positions: ",
-            index_to_board_notation(piece.first_square.position),
-            index_to_board_notation(piece.second_square.position),
-        )
+        # print(f"{Fore.YELLOW}Move number: {move_num}{Style.RESET_ALL}")
+        # print(f"{Fore.GREEN}Player: {player}{Style.RESET_ALL}")
+        # print(f"Score is: {self.players_score}")
+        # print(f"Piece Orientation: {piece.orientation}")
+        # print(f"Piece Values: {piece.first_square.value}, {piece.second_square.value}")
+        # print(
+        #     "Piece Positions: ",
+        #     index_to_board_notation(piece.first_square.position),
+        #     index_to_board_notation(piece.second_square.position),
+        # )
 
         x1, y1, x2, y2 = (
             piece.first_square.position[0],
@@ -111,16 +110,16 @@ class Game:
         if move_num in (1, 2):
             return points
 
-        try:
-            print(
-                "Player1 tile: ", self.score_tracker[self.players_score["player1"] - 1]
-            )
-            print(
-                "Player2 tile: ", self.score_tracker[self.players_score["player2"] - 1]
-            )
+        # try:
+        #     print(
+        #         "Player1 tile: ", self.score_tracker[self.players_score["player1"] - 1]
+        #     )
+        #     print(
+        #         "Player2 tile: ", self.score_tracker[self.players_score["player2"] - 1]
+        #     )
 
-        except Exception:
-            pass
+        # except Exception:
+        #     pass
 
         bonus1, bonus2 = (
             self.board[1][x1][y1],
@@ -137,12 +136,12 @@ class Game:
                 piece.first_square.value,
                 piece.second_square.value,
             ):
-                print(
-                    self.players_score,
-                    self.score_tracker[self.players_score["player1"] - 1],
-                    piece.first_square.value,
-                    piece.second_square.value,
-                )
+                # print(
+                #     self.players_score,
+                #     self.score_tracker[self.players_score["player1"] - 1],
+                #     piece.first_square.value,
+                #     piece.second_square.value,
+                # )
                 self.players_score["player1"] += 3
                 if player == "player1":
                     extrapoints = 3
@@ -152,11 +151,11 @@ class Game:
                 piece.first_square.value,
                 piece.second_square.value,
             ):
-                print(
-                    self.score_tracker[self.players_score["player2"] - 1],
-                    piece.first_square.value,
-                    piece.second_square.value,
-                )
+                # print(
+                #     self.score_tracker[self.players_score["player2"] - 1],
+                #     piece.first_square.value,
+                #     piece.second_square.value,
+                # )
                 self.players_score["player2"] += 3
                 if player == "player2":
                     extrapoints = 3

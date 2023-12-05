@@ -1,12 +1,12 @@
 import cv2 as cv
 from matplotlib import pyplot as plt
-import json
 import numpy as np
-import os
 from typing import List, Tuple, Dict
-import numpy as np
-
 import time
+
+
+# e oribil de urat codul, voiam sa ii fac refactor dar de fiecare data cand schimbam prea mult
+# apareau mici probleme si nu am mai avut timp
 
 
 def show_image(image):
@@ -48,16 +48,31 @@ def print_image(image, gray=True, fft=True, title=None, output_dir=None):
         plt.show()
 
 
-def color_filter(image, color_rgb, sensitivity):
+def color_filter(
+    image, color_rgb=None, sensitivity=None, h_range=None, s_range=None, v_range=None
+):
     hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
-    color_hsv = cv.cvtColor(color_rgb, cv.COLOR_RGB2HSV)
-    h, s, v = color_hsv[0][0]
-    lower_bound = np.array(
-        [h - sensitivity, max(s - sensitivity, 0), max(v - sensitivity, 0)]
-    )
-    upper_bound = np.array(
-        [h + sensitivity, min(s + sensitivity, 255), min(v + sensitivity, 255)]
-    )
+
+    if color_rgb is not None and sensitivity is not None:
+        color_hsv = cv.cvtColor(np.uint8([[color_rgb]]), cv.COLOR_RGB2HSV)
+        h, s, v = color_hsv[0][0]
+        lower_bound = np.array(
+            [max(h - sensitivity, 0), max(s - sensitivity, 0), max(v - sensitivity, 0)]
+        )
+        upper_bound = np.array(
+            [
+                min(h + sensitivity, 179),
+                min(s + sensitivity, 255),
+                min(v + sensitivity, 255),
+            ]
+        )
+    elif h_range is not None and s_range is not None and v_range is not None:
+        lower_bound = np.array([h_range[0], s_range[0], v_range[0]])
+        upper_bound = np.array([h_range[1], s_range[1], v_range[1]])
+    else:
+        raise ValueError(
+            "Either color_rgb with sensitivity or h_range, s_range, and v_range must be provided"
+        )
 
     mask = cv.inRange(hsv, lower_bound, upper_bound)
     filtered_image = cv.bitwise_and(image, image, mask=mask)
@@ -77,10 +92,16 @@ def find_largest_contour(mask):
 
 
 def crop_board(image):
-    mask = color_filter(image, color_rgb=np.uint8([[[11, 143, 171]]]), sensitivity=60)
+    hMin, sMin, vMin = 95, 130, 135
+    hMax, sMax, vMax = 140, 255, 255
+    mask = color_filter(
+        image, h_range=(hMin, hMax), s_range=(sMin, sMax), v_range=(vMin, vMax)
+    )
     largest_contour = find_largest_contour(mask)
     if largest_contour is None:
         return None
+
+    # print_image(mask, gray=False, fft=False, title="Mask")
 
     x, y, w, h = cv.boundingRect(largest_contour)
     tightness = 20
@@ -95,7 +116,14 @@ def crop_board(image):
     )
     dest = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype="float32")
     m = cv.getPerspectiveTransform(orig, dest)
-    return cv.warpPerspective(image, m, (w, h))
+    image = cv.warpPerspective(image, m, (w, h))
+    # print_image(
+    #     image,
+    #     gray=False,
+    #     fft=False,
+    #     output_dir=f"./test/{int(time.time())}.jpg",
+    # )
+    return image
 
 
 def index_to_board_notation(pos):
@@ -276,7 +304,7 @@ def denoise(image):
 
 def get_piece(prev_image, cur_image, grid, mask=None):
     def pipeline(image):
-        image = color_filter(image, np.uint8([[[200, 240, 250]]]), 60)
+        image = color_filter(image, [200, 240, 250], 60)
         image = cv.cvtColor(image, cv.COLOR_HSV2BGR)
         return image
 
@@ -295,13 +323,12 @@ def get_piece(prev_image, cur_image, grid, mask=None):
 
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     _, thresh = cv.threshold(gray, 160, 255, cv.THRESH_BINARY_INV)
+    # thresh = cv.morphologyEx(thresh, cv.MORPH_OPEN, np.ones((3, 3), np.uint8), iterations=1)
+    thresh = cv.erode(thresh, np.ones((3, 3), np.uint8), iterations=3)
     thresh = cv.morphologyEx(
-        thresh, cv.MORPH_OPEN, np.ones((3, 3), np.uint8), iterations=1
+        thresh, cv.MORPH_CLOSE, np.ones((3, 3), np.uint8), iterations=12
     )
-    thresh = cv.morphologyEx(
-        thresh, cv.MORPH_CLOSE, np.ones((3, 3), np.uint8), iterations=3
-    )
-    thresh = cv.erode(thresh, np.ones((3, 3), np.uint8), iterations=2)
+    # thresh = cv.morphologyEx(thresh, cv.MORPH_GRADIENT, np.ones((3, 3), np.uint8))
 
     cnts, _ = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
@@ -361,7 +388,7 @@ def get_piece(prev_image, cur_image, grid, mask=None):
             minDist=25,
             param1=400,
             param2=0.2,
-            minRadius=12,
+            minRadius=8,
             maxRadius=16,
         )
 
