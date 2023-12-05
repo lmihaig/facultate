@@ -68,7 +68,7 @@ def compare_annotations(filename_predicted, filename_gt, verbose=0):
 
 # change this on your machine pointing to your results (txt files)
 # predictions_path_root = "/Users/bogdan/Desktop/CAVA_2024_Tema1_evaluare/fisiere_solutie/331_Alexe_Bogdan/"
-predictions_path_root = "D:/facultate/An4/Sem1/CAVA/TEMA1/solutie/rezultate/fake_test/"
+predictions_path_root = "D:/facultate/An4/Sem1/CAVA/TEMA1/solutie/rezultate/task3/"
 
 
 # change this on your machine to point to the ground-truth test
