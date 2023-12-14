@@ -66,16 +66,16 @@ Programa s-a schimbat mult dar asta e planul de invatamant pe care l-am urmat. D
 
 ---
 
-| Anul III - Semestrul I |                                                      |       |      |                          |                               |              |
-| :--------------------: | :--------------------------------------------------: | :---: | :--: | :----------------------: | :---------------------------: | :----------: |
-|          Tip           |                Discipline obligatorii                |  FE   | Crd. |           Curs           |           Laborator           |   Seminar    |
-|           DD           |     [Proiectarea bazelor de date](An3/Sem1/pbd)      |   E   |  6   |     Florentin Ipate      |    Marius Miculta Campeanu    |  Radu Bobe   |
-|           DD           |          [Sisteme de operare](An3/Sem1/SO)           |   E   |  6   | Dumitru Daniel Dragulici |   Dumitru Daniel Dragulici    |              |
-|           DD           |        [Inteligenta artificiala](An3/Sem1/AI)        |   E   |  6   |       Bogdan Alexe       | Ioana Diaconu<br>Irina Ciocan |              |
-|           DD           |   [Arhitectura sistemelor de calcul](An3/Sem1/ASC)   |   E   |  5   |    Florin Stanculescu    | Alecsandru Vladimir Chirosca  |              |
-|           DC           | [Comunicare si relatii publice](An3/Sem1/comunicare) |   V   |  2   |       Catalin Radu       |                               | Catalin Radu |
-|           DS           |        [Cloud Computing](An3/Sem1/CloudComp)         |   E   |  5   |   Cristian Kevorchian    |         Bogdan Ghimis         |              |
-|                        |                        Total                         | 5E+1V |  30  |                          |                               |              |
+| Anul III - Semestrul I |                                                      |       |      |                          |                                   |              |
+| :--------------------: | :--------------------------------------------------: | :---: | :--: | :----------------------: | :-------------------------------: | :----------: |
+|          Tip           |                Discipline obligatorii                |  FE   | Crd. |           Curs           |             Laborator             |   Seminar    |
+|           DD           |     [Proiectarea bazelor de date](An3/Sem1/pbd)      |   E   |  6   |     Florentin Ipate      |      Marius Miculta Campeanu      |  Radu Bobe   |
+|           DD           |          [Sisteme de operare](An3/Sem1/SO)           |   E   |  6   | Dumitru Daniel Dragulici |     Dumitru Daniel Dragulici      |              |
+|           DD           |        [Inteligenta artificiala](An3/Sem1/AI)        |   E   |  6   |       Bogdan Alexe       | Alexandra Diaconu<br>Irina Ciocan |              |
+|           DD           |   [Arhitectura sistemelor de calcul](An3/Sem1/ASC)   |   E   |  5   |    Florin Stanculescu    |   Alecsandru Vladimir Chirosca    |              |
+|           DC           | [Comunicare si relatii publice](An3/Sem1/comunicare) |   V   |  2   |       Catalin Radu       |                                   | Catalin Radu |
+|           DS           |        [Cloud Computing](An3/Sem1/CloudComp)         |   E   |  5   |   Cristian Kevorchian    |           Bogdan Ghimis           |              |
+|                        |                        Total                         | 5E+1V |  30  |                          |                                   |              |
 
 | Anul III - Semestrul II |                                                         |       |      |                              |                              |                          |
 | :---------------------: | :-----------------------------------------------------: | :---: | :--: | :--------------------------: | :--------------------------: | :----------------------: |
@@ -99,7 +99,7 @@ Programa s-a schimbat mult dar asta e planul de invatamant pe care l-am urmat. D
 |          DS           |         [Dezvoltarea Aplicatiilor Web](An4/Sem1/DAW/)         |   E   |  4   |        Petru Soviany         |      Petru Soviany       |                  |
 |          DS           |              [Comert Electronic](An4/Sem1/ECom/)              |   E   |  4   |        Mihail Cherciu        |      Mihail Cherciu      |                  |
 |          DC           |              [Management](An4/Sem1/management/)               |   V   |  2   |       Cristina Anghel        |                          | Cristina Anghel  |
-|          DS           | [Concepte si Aplicatii in Vederea Artificiala](An4/Sem1/CAVA) |   E   |  4   | Bogdan Alexe<br>Radu Ionescu |      Ioana Diaconu       |                  |
+|          DS           | [Concepte si Aplicatii in Vederea Artificiala](An4/Sem1/CAVA) |   E   |  4   | Bogdan Alexe<br>Radu Ionescu |    Alexandra Diaconu     |                  |
 |          DD           |          [Procesarea Semnalelor](An4/Sem1/ProcSemn/)          |   E   |  4   |        Cristian Rusu         |                          |  Cristian Rusu   |
 |                       |                             Total                             | 6E+1V |  30  |
 

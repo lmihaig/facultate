@@ -84,7 +84,6 @@ class Game:
         second_square = Square(second_square_value, second_square_position)
         piece = Piece(orientation, first_square, second_square)
         return piece
-
     def place(self, piece: Piece, player: str, move_num: int) -> int:
         # print(f"{Fore.YELLOW}Move number: {move_num}{Style.RESET_ALL}")
         # print(f"{Fore.GREEN}Player: {player}{Style.RESET_ALL}")
