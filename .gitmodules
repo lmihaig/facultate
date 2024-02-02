@@ -28,3 +28,6 @@
 [submodule "An3/Sem2/grafica/lab/Proiect2D/proj"]
 	path = An3/Sem2/grafica/lab/Proiect2D/proj
 	url = https://github.com/r-moraru/cow-invaders.git
+[submodule "An4/Sem1/ProcSemn/lab/proiect/rockzip"]
+	path = An4/Sem1/ProcSemn/lab/proiect/rockzip
+	url = git@github.com:lmihaig/rockzip.git

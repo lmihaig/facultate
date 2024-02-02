@@ -1,0 +1,41 @@
+﻿@page
+@model EditStudentModel
+@{
+}
+
+
+<form method="post">
+	<input hidden asp-for="Student.StudentId" />
+	<div class="border p-3 mt-4">
+		<div class="row pb-2">
+			<h2>Editare Student</h2>
+			<hr/>
+		</div>
+
+
+		<div class="mb-3">
+			<label asp-for="Student.Nume"></label>
+			<input type="text" asp-for="Student.Nume" class="form-control required" />
+			<span asp-validation-for="Student.Nume" class="text-danger"></span>
+		</div>
+		<div class="mb-3">
+			<label asp-for="Student.DataNasterii"></label>
+			<input type="date" asp-for="Student.DataNasterii" class="form-control" required />
+			<span asp-validation-for="Student.DataNasterii" class="text-danger"></span>
+		</div>
+		<div class="mb-3">
+			<label asp-for="Student.AdresaDomiciuliu"></label>
+			<input type="text" asp-for="Student.AdresaDomiciuliu" class="form-control" required />
+			<span asp-validation-for="Student.AdresaDomiciuliu" class="text-danger"></span>
+		</div>
+		<div class="mb-3">
+			<label asp-for="Student.GrupaId"></label>
+			<input type="number" asp-for="Student.GrupaId" class="form-control" required />
+			<span asp-validation-for="Student.GrupaId" class="text-danger"></span>
+		</div>
+
+
+		<button type="submit" class="btn btn-primary">Editare</button>
+
+	</div>
+</form>

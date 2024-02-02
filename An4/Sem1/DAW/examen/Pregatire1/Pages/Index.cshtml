@@ -1,0 +1,51 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class ="container">
+    <h2>Listare Studentilor</h2>
+    <table class="table table-bordered table-striped" style="width:100%">
+        <thead>
+            <tr>
+                <th>Nume</th>
+                <th>Data Nasterii</th>
+                <th>Adresa Domiciliu</th>
+                <th>Grupa</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var obj in Model.Studenti)
+            {
+               <tr>
+                    <td width="20%">@obj.Nume</td>
+                    <td width="20%">@obj.DataNasterii</td>
+                    <td width="20%">@obj.AdresaDomiciuliu</td>
+                    <td width="20%">@obj.Grupa.Numar</td>
+                    <td>
+                        <div class="w-75 btn-group" role="group">
+                            <a asp-page="EditStudent" asp-route-id="@obj.StudentId" class="btn btn-primary mx-2">
+                                Edit
+                            </a>
+                            <a asp-page="Delete" asp-route-id="@obj.StudentId" class="btn btn-danger mx-2" onclick="return confirm('Sigur stergi ba?');">
+                                Delete
+                            </a>
+                        </div>
+                    </td>
+               </tr>
+            }
+        </tbody>
+    </table> 
+    <div>
+        <h2>Numarul studentilor din fiecare grupa</h2>
+        <ul>
+            @foreach(var grupa in Model.Grupa)
+            {
+                <li>
+                    @grupa.Numar: @grupa.Studenti.Count
+                </li>
+            }
+        </ul>
+    </div>
+</div>

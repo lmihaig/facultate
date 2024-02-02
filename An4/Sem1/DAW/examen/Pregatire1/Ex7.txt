@@ -1,0 +1,8 @@
+Care sunt diferețele între Asp.net Core Razor Pages și Asp.net Core MVC, la crearea unei aplicații web? (1p)
+
+
+- Razor pages - server site rendering cu templating in C#
+- MVC ofera separation of concerns: 
+	Controllers contine controllerele ce gestioneaza requesturile .cs files
+	Model contine logica de business si gestioneaza datele in sine .cs files
+	View contine interfata prezentata in front-end .cshtml files

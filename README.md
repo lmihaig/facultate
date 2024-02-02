@@ -98,7 +98,7 @@ Programa s-a schimbat mult dar asta e planul de invatamant pe care l-am urmat. D
 |          DD           |          [Ingineria Programarii](An4/Sem1/IngProg/)           |   E   |  6   |       Radu Gramatovici       |                          | Radu Gramatovici |
 |          DS           |         [Dezvoltarea Aplicatiilor Web](An4/Sem1/DAW/)         |   E   |  4   |        Petru Soviany         |      Petru Soviany       |                  |
 |          DS           |              [Comert Electronic](An4/Sem1/ECom/)              |   E   |  4   |        Mihail Cherciu        |      Mihail Cherciu      |                  |
-|          DC           |              [Management](An4/Sem1/management/)               |   V   |  2   |       Cristina Anghel        |                          | Cristina Anghel  |
+|          DC           |              [Management](An4/Sem1/management/)               |   V   |  2   |       Cristian Anghel        |                          | Cristian Anghel  |
 |          DS           | [Concepte si Aplicatii in Vederea Artificiala](An4/Sem1/CAVA) |   E   |  4   | Bogdan Alexe<br>Radu Ionescu |    Alexandra Diaconu     |                  |
 |          DD           |          [Procesarea Semnalelor](An4/Sem1/ProcSemn/)          |   E   |  4   |        Cristian Rusu         |                          |  Cristian Rusu   |
 |                       |                             Total                             | 6E+1V |  30  |
