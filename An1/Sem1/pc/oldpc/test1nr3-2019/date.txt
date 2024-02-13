@@ -1,0 +1,5 @@
+jse       C    22
+zsc D 32.32
+asd        A 12.34
+qsq   B31.3
+- E -6

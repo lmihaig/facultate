@@ -1,0 +1,2 @@
+NvidiaGTX, 320, Placi_video, 42, 10, Electronice, 11, 24
+Mouse, 15, Accesorii, 1, 22, Piese, 44, 62, Accesorii, 24, 66
