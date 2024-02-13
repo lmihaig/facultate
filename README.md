@@ -103,16 +103,16 @@ Programa s-a schimbat mult dar asta e planul de invatamant pe care l-am urmat. D
 |          DD           |          [Procesarea Semnalelor](An4/Sem1/ProcSemn/)          |   E   |  4   |        Cristian Rusu         |                          |  Cristian Rusu   |
 |                       |                             Total                             | 6E+1V |  30  |
 
-| Anul IV - Semestrul II |                                                                   |       |      |      |           |         |
-| :--------------------: | :---------------------------------------------------------------: | :---: | :--: | :--: | :-------: | :-----: |
-|          Tip           |                      Discipline obligatorii                       |  FE   | Crd. | Curs | Laborator | Seminar |
-|           DS           | [Elemente de securitate si logica aplicata](An4/Sem2/Securitate/) |   E   |  6   |      |           |         |
-|           DC           |       [Managementul operatiunilor](An4/Sem2/managementOP/)        |   V   |  2   |      |           |         |
-|           DD           |                              indecis                              |   E   |  4   |      |           |         |
-|           DD           |      [Compilatoare si Translatoare](An4/Sem2/compilatoare/)       |   E   |  4   |      |           |         |
-|           DD           |   [Testarea Sistemelor Software](An4/Sem2/TestareaSistemelor/)    |   E   |  4   |      |           |         |
-|           DS           |             [Pregatirea proiectului de diploma](aici)             |   E   |  4   |      |           |         |
-|                        |                               Total                               | 4E+2V |  30  |
-|           E            |                     [Examen de diploma](aici)                     |   E   |  10  |      |           |         |
+| Anul IV - Semestrul II |                                                              |       |      |      |           |         |
+| :--------------------: | :----------------------------------------------------------: | :---: | :--: | :--: | :-------: | :-----: |
+|          Tip           |                    Discipline obligatorii                    |  FE   | Crd. | Curs | Laborator | Seminar |
+|           DS           |                           indecis                            |   E   |  6   |      |           |         |
+|           DC           |     [Managementul operatiunilor](An4/Sem2/managementOP/)     |   V   |  2   |      |           |         |
+|           DD           |                           indecis                            |   E   |  4   |      |           |         |
+|           DD           |    [Compilatoare si Translatoare](An4/Sem2/compilatoare/)    |   E   |  4   |      |           |         |
+|           DD           | [Testarea Sistemelor Software](An4/Sem2/TestareaSistemelor/) |   E   |  4   |      |           |         |
+|           DS           |          [Pregatirea proiectului de diploma](aici)           |   E   |  4   |      |           |         |
+|                        |                            Total                             | 4E+2V |  30  |
+|           E            |                  [Examen de diploma](aici)                   |   E   |  10  |      |           |         |
 
 ![Visualization of the codebase](./codebase.svg)
