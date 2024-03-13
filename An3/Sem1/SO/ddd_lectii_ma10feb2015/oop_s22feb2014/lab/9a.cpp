@@ -1,6 +1,6 @@
 #include<iostream.h>
 #include<string.h>
-////////////////////////////////////////////////////
+///////////////////////////////////
 template<class t>
 t max(t x, t y){return x<y?y:x;}
 
@@ -9,7 +9,7 @@ void swap(t &x, t &y){
  t z;
  z=x; x=y; y=z;
 }
-////////////////////////////////////////////////////
+///////////////////////////////////
 class sir{
  char *s;
 public:
@@ -30,7 +30,7 @@ public:
  friend ostream& operator<<(ostream &str, sir &x)
   {if(x.s)str<<x.s; return str;}
 };
-////////////////////////////////////////////////////
+///////////////////////////////////
 void main(){
  int x=10, y=20, z;
  double a=10.1, b=20.1, c;

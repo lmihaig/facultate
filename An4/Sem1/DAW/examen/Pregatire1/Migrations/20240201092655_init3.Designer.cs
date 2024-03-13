@@ -15,7 +15,7 @@ namespace Pregatire1.Migrations
     [Migration("20240201092655_init3")]
     partial class init3
     {
-        /// <inheritdoc />
+        // <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

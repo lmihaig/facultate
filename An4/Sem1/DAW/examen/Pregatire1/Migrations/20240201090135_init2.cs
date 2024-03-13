@@ -4,10 +4,10 @@
 
 namespace Pregatire1.Migrations
 {
-    /// <inheritdoc />
+    // <inheritdoc />
     public partial class init2 : Migration
     {
-        /// <inheritdoc />
+        // <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
@@ -20,7 +20,7 @@ namespace Pregatire1.Migrations
                 oldType: "nvarchar(max)");
         }
 
-        /// <inheritdoc />
+        // <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(

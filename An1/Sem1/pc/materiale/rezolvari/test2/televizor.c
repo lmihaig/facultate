@@ -10,7 +10,7 @@ struct nod{
     char **cod;
     struct nod *urm;
 };
-///fucntia de alocare a memoriei si de citire
+//fucntia de alocare a memoriei si de citire
 void citire(struct produs** p, int *n){
     int i, j;
     scanf("%d",&(*n));
@@ -24,19 +24,19 @@ void citire(struct produs** p, int *n){
         }
     }
 }
-///functia pentru completare a matricii dupa regula data
+//functia pentru completare a matricii dupa regula data
 void completare(struct produs** p, int n){
     int i, j, k;
     char a[4][4];
     for(i=0;i<n;i++){
         for(j=0;j<4;j++)
             for(k=0;k<4;k++){
-                if(strlen((*p)[i].nume)<(j*4)+k+1)///verificam daca am depasit lungimea cuvantului si trebuie sa completam restul matricii cu 0
+                if(strlen((*p)[i].nume)<(j*4)+k+1)//verificam daca am depasit lungimea cuvantului si trebuie sa completam restul matricii cu 0
                     a[j][k]='0';
                 else
                     a[j][k]=(*p)[i].nume[(j*4)+k];
             }
-    ///in matricea a avem matricea formata din fiecare cuvant care acum trebuie rotita si pusa in cod
+    //in matricea a avem matricea formata din fiecare cuvant care acum trebuie rotita si pusa in cod
     for(j=0;j<4;j++)
         for(k=0;k<4;k++){
             (*p)[i].cod[3-k][j]=a[j][k];
@@ -44,13 +44,13 @@ void completare(struct produs** p, int n){
     }
 }
 /*
-///comparatorul; comparatorul va sorta crescator dupa pret, iar in cazul in care au acelasi pret, descrescator dupa numarul de zerouri
+//comparatorul; comparatorul va sorta crescator dupa pret, iar in cazul in care au acelasi pret, descrescator dupa numarul de zerouri
 int cmp(const void *a, const void *b){
     struct produs *produs1=(struct produs*)a;
     struct produs *produs2=(struct produs*)b;
     if(produs1->pret==produs2->pret)
-///in caz de egalitate vrem sa sortam descrescator dupa numarul de zerouri. numarul de zerouri este dat de formula 16-strlen(produs->nume), deci pentru
-///a sorta descrescator dupa numarul de zerouri, vom sorta crescator dupa numarul de caractere
+//in caz de egalitate vrem sa sortam descrescator dupa numarul de zerouri. numarul de zerouri este dat de formula 16-strlen(produs->nume), deci pentru
+//a sorta descrescator dupa numarul de zerouri, vom sorta crescator dupa numarul de caractere
         return strlen(produs1->nume)-strlen(produs2->nume);
     else
         return produs1->pret-produs2->pret;
@@ -65,7 +65,7 @@ int cmp(struct produs * a, struct produs * b) {
     return 1;
 }
 
-///functia care adauga elemente in lista
+//functia care adauga elemente in lista
 void creare(struct nod **L, struct produs *p, int n)
 {
     int i, j, k;
@@ -109,7 +109,7 @@ void creare(struct nod **L, struct produs *p, int n)
         }
     }
 }
-///functia de decodificare
+//functia de decodificare
 int decodificare(struct nod *L, char* produs){
     int i, j, c = 0, nr = 0;
     char produsx[16];
@@ -123,7 +123,7 @@ int decodificare(struct nod *L, char* produs){
             }
         }
     }
-    ///printf("Cuvant dupa decodificare: %s",produsx);
+    //printf("Cuvant dupa decodificare: %s",produsx);
     if(nr != strlen(produs))
         return 0;
     for(i = 0; i < nr; i++)
@@ -135,7 +135,7 @@ int decodificare(struct nod *L, char* produs){
         return 0;
 }
 
-///fuctia care verifica daca un element trebuie eliminat sau nu
+//fuctia care verifica daca un element trebuie eliminat sau nu
 void eliminare(struct nod **L, char* produs)
 {
     struct nod *q=(struct nod*)malloc(sizeof(struct nod));
@@ -184,20 +184,20 @@ void afisare_smechera(struct produs* v, int n)
 
 int main()
 {
-    ///1)citire
+    //1)citire
     int i , j, k;
     printf("dati nr de produse care trebuie inregistrate: ");
     int n;
     struct nod *L;
     struct produs *p;
     citire(&p,&n);
-    ///2)completarea matricii
+    //2)completarea matricii
     completare(&p,n);
     afisare_smechera(p,n);
-    ///3)sortarea cu qsort
+    //3)sortarea cu qsort
     qsort(p,n,sizeof(struct produs),cmp);
     afisare(p,n);
-    ///4)crearea si stergerea din lista
+    //4)crearea si stergerea din lista
     creare(&L,p,n);
     char produsx[]="mere";
     for(i = 0; i < 4; i++)

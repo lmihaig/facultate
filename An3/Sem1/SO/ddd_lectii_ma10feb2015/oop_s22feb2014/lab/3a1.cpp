@@ -34,8 +34,8 @@ void main(){
   if(a<b)cout<<"a<b\n";    // se aplica "<" pt. "rat"
 //  if(a<5)cout<<"a<b\n";
 //      nu merge:
-////    eroare de ambiguitate intre a aplica "rat(int)" si "<" pt. "rat"
-////    si a aplica "double()" si "<" pt. "double"
+///    eroare de ambiguitate intre a aplica "rat(int)" si "<" pt. "rat"
+///    si a aplica "double()" si "<" pt. "double"
   if(a<=5)cout<<"a<=b\n";  // se aplica "double()" si "<=" pt. "double"
   if(5<a)cout<<"5<a\n";    // se aplica "double()" si "<" pt. "double"
   if(5<=a)cout<<"5<=a\n";  // se aplica "double()" si "<=" pt. "double"

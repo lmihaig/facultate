@@ -1,5 +1,5 @@
 #include<iostream.h>
-////////////////////////////////////////////////////
+///////////////////////////////////
 template <class t>
 class lista{
  t *v;
@@ -16,7 +16,7 @@ template <class t>
 lista<t>::lista(int pn){
   v=new t[pn]; n=pn;
 }
-////////////////////////////////////////////////////
+///////////////////////////////////
 class punct{
  int x,y;
 public:
@@ -28,7 +28,7 @@ public:
  friend ostream& operator<<(ostream &str, punct &p)
   {cout<<'('<<p.x<<','<<p.y<<')'; return str;}
 };
-////////////////////////////////////////////////////
+///////////////////////////////////
 void main(){
  lista<double> l1(4);
  lista<punct> l2(3);

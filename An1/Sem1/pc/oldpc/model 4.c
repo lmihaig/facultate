@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-/// Precizare: ultimul subpunct este luat de la modelul 3, daca e cineva interesat de cum s-ar face cel de la modelul 4 va rog sa imi spuneti si o sa modific subpunctul d
-/// Acesta este modelul 4 cu precizarea ca ultimul subpunct este luat din modelul 3. Modelul acesta a fost rezolvat la tutoriat deci puteti vedea inregistrarea
-/// Daca nu intelegeti ceva la aceasta sursa sau oricare alta astept orice fel de intrebari.
+// Precizare: ultimul subpunct este luat de la modelul 3, daca e cineva interesat de cum s-ar face cel de la modelul 4 va rog sa imi spuneti si o sa modific subpunctul d
+// Acesta este modelul 4 cu precizarea ca ultimul subpunct este luat din modelul 3. Modelul acesta a fost rezolvat la tutoriat deci puteti vedea inregistrarea
+// Daca nu intelegeti ceva la aceasta sursa sau oricare alta astept orice fel de intrebari.
 struct tarom
 {
     char nume[31];

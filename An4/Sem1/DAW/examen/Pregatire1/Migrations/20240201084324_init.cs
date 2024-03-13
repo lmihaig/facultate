@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Pregatire1.Migrations
 {
-    /// <inheritdoc />
+    // <inheritdoc />
     public partial class init : Migration
     {
-        /// <inheritdoc />
+        // <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -53,7 +53,7 @@ namespace Pregatire1.Migrations
                 column: "GrupaId");
         }
 
-        /// <inheritdoc />
+        // <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

@@ -13,12 +13,12 @@
 
 struct client {
     char nume[42];  /* 40 de caractere + '\0', inca unul pt \n daca citim cu fgets */
-    /// clientii indatorati au credit, nu debit :/
+    // clientii indatorati au credit, nu debit :/
     float debit_cont;  /* nu double pt ca trebuie dimensiune minima */
     /* valoarea maxima pt debit va fi SUMA_MAX */
     int codificat;
     bool stare_indatorare;  // false: neindatorat
-    /// sau unsigned stare_indatorare : 1;
+    // sau unsigned stare_indatorare : 1;
 };
 
 union bin_float {

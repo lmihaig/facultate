@@ -18,7 +18,7 @@ care va avea nr. 50
 #include <stdlib.h>
 #include <string.h>
 
-/// structura pentru lista dublu legata
+// structura pentru lista dublu legata
 struct nnode
 {
   int value;
@@ -28,8 +28,8 @@ struct nnode
 
 typedef struct nnode node;
 
-void rem(node *item);             /// functia de eliminare a unui element
-void create(node *item, int val); /// functia de creare a unui element
+void rem(node *item);             // functia de eliminare a unui element
+void create(node *item, int val); // functia de creare a unui element
 
 int main(int argc, char **argv)
 {
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
   interm = NULL;
 
-  /// alocarea memoriei si initializarea listei
+  // alocarea memoriei si initializarea listei
   for (i = 0; i < n; i++)
   {
     if ((item = malloc(sizeof(node))) == NULL)
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     interm = item;
   }
 
-  /// afisarea listei
+  // afisarea listei
   printf("this is the list:\n");
   item = start;
   i = 0;
@@ -66,15 +66,15 @@ int main(int argc, char **argv)
   } while (item != NULL);
   printf("\n\n");
 
-  /// eliminarea elementului selectat
+  // eliminarea elementului selectat
   item = start;
   for (i = 0; i < atoi(argv[2]); i++)
   {
     item = item->next;
   }
-  rem(item); /// aici are loc eliminare
+  rem(item); // aici are loc eliminare
 
-  /// afisarea listei
+  // afisarea listei
   printf("this is the list after eliminating an element\n");
   item = start;
   i = 0;
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
   } while (item != NULL);
   printf("\n\n");
 
-  /// adaugarea unui element nou
+  // adaugarea unui element nou
   item = start;
   for (i = 0; i < atoi(argv[3]) - 1; i++)
   {
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
   }
   create(item, atoi(argv[4]));
 
-  /// afisara listei
+  // afisara listei
   printf("this is the list after adding an element\n");
   item = start;
   i = 0;
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   } while (item != NULL);
   printf("\n\n");
 
-  /// eliberarea memoriei
+  // eliberarea memoriei
   item = start;
   do
   {
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-/// elimina elementul "item"
+// elimina elementul "item"
 void rem(node *item)
 {
   node *previous, *next;
@@ -129,14 +129,14 @@ void rem(node *item)
   previous->next = next;
 }
 
-/// primeste elementul dupa care sa adauge elementul nou
+// primeste elementul dupa care sa adauge elementul nou
 void create(node *item, int val)
 {
   node *new = malloc(sizeof(node));
   new->value = val;
   new->previous = item;
   if (item->next == NULL)
-    new->next = NULL; /// if item is last element
+    new->next = NULL; // if item is last element
   else
     new->next = item->next;
   item->next = new;

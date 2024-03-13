@@ -1,17 +1,17 @@
-/// NICOI ALEXANDRU - CALCULATOARE SI TEHNOLOGIA INFORMATIEI - GRUPA 253
-/// TUTORIAT PROGRAMAREA CALCULATOARELOR 2020-2021, SERIA 16
-/// REZOLVARE TEST LABORATOR 1 2019 , NR. 2
+// NICOI ALEXANDRU - CALCULATOARE SI TEHNOLOGIA INFORMATIEI - GRUPA 253
+// TUTORIAT PROGRAMAREA CALCULATOARELOR 2020-2021, SERIA 16
+// REZOLVARE TEST LABORATOR 1 2019 , NR. 2
 
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef union { /// folosim aceeasi zona de memorie pt numarul in virgula mobila, dar si pt char byte
-                /// deoarece un char are 1 byte, si putem accesa f ez cu vector de bytes cei 4 bytes ai lui float debit
-                /// so yeah, cand facem &, se face byte-ul in binary si putem indeplini cerinta
-                /// virgula mobila ~ ceva gen binary64, dar fara sa ne ducem cu mantisa pana la 64 cu 0
+typedef union { // folosim aceeasi zona de memorie pt numarul in virgula mobila, dar si pt char byte
+                // deoarece un char are 1 byte, si putem accesa f ez cu vector de bytes cei 4 bytes ai lui float debit
+                // so yeah, cand facem &, se face byte-ul in binary si putem indeplini cerinta
+                // virgula mobila ~ ceva gen binary64, dar fara sa ne ducem cu mantisa pana la 64 cu 0
     float debit;
-    unsigned char byte[4]; /// byte[4] -> accesam cei 4 byte ai debitului (manevra eficienta si singura de folos
-                           ///                                                              pentru union)
+    unsigned char byte[4]; // byte[4] -> accesam cei 4 byte ai debitului (manevra eficienta si singura de folos
+                           //                                                              pentru union)
 }typedebit;
 
 struct client
@@ -22,7 +22,7 @@ struct client
     unsigned int stare_indatorare : 1;
 };
 
-/// 1
+// 1
 void citire(struct client v[101], int n)
 {
     for(int i = 0 ; i < n ; i++)
@@ -39,7 +39,7 @@ void citire(struct client v[101], int n)
         else v[i].stare_indatorare = 0;}
 }
 
-/// 2
+// 2
 void codif(struct client v[101], int n) {
     for(int i = 0 ; i < n ; i++) {
         v[i].codificat = 0;
@@ -60,7 +60,7 @@ void codif(struct client v[101], int n) {
 
 }
 
-/// 3
+// 3
 int cmp(struct client a, struct client b)
 {
     if(a.stare_indatorare == 1 && b.stare_indatorare == 0)
@@ -75,7 +75,7 @@ int cmp(struct client a, struct client b)
             return -1;
         else if(a.debit_cont.debit <= 1000 && b.debit_cont.debit > 1000)
             return 1;
-        else return 0; /// inseamna ca ori sunt ambele > 1000 , ori <= 1000
+        else return 0; // inseamna ca ori sunt ambele > 1000 , ori <= 1000
     }
 }
 
@@ -85,8 +85,8 @@ void sortare(struct client v[101], int n)
     qsort(v,n,sizeof(struct client),cmp);
 }
 
-/// 4
-/// scriere fisier
+// 4
+// scriere fisier
 void scrierefisier(struct client a)
 {
     FILE *f = fopen("fisier.cti","w");
@@ -110,7 +110,7 @@ void scrierefisier(struct client a)
 void citirefisier()
 {
     char nume[40];
-    char debit[6]; /// < 100000 , vom citi ca string pt ca putem avea '-' :(
+    char debit[6]; // < 100000 , vom citi ca string pt ca putem avea '-' :(
     char stare_indatorare;
     FILE *f = fopen("fisier.cti","r");
     while(!feof(f))
@@ -132,8 +132,8 @@ void citirefisier()
             printf("Stare indatorare invalida!\n");
             OK = 0;
         }
-        /// se poate folosi si instructiunea "continue" in loc sa ne folosim de OK, gen la fiecare if
-        /// punand "continue", va da skip la celelalte verificari pt ca-s inutile
+        // se poate folosi si instructiunea "continue" in loc sa ne folosim de OK, gen la fiecare if
+        // punand "continue", va da skip la celelalte verificari pt ca-s inutile
         if(OK == 1)
         {
             if(stare_indatorare == '0') {
@@ -150,13 +150,13 @@ int main()
     int n;
     scanf("%d",&n);
     struct client v[101];
-    /// 1
+    // 1
     citire(v,n);
-    /// 2
+    // 2
     codif(v,n);
-    /// 3
+    // 3
     sortare(v,n);
-    /// 4
+    // 4
     scrierefisier(v[0]);
     citirefisier();
     return 0;

@@ -9,17 +9,17 @@ typedef struct
     float greutate_bagaj;
     unsigned cod : 3;  // se poate si cu 3, dar trebuie sa fim atenti
     unsigned clasa : 2;// 00: 0, 01: 1, 10: 2, 11: 3
-    ///char clasa : 2;  // 00: 0, 01: 1, 10: -0, 11: -1
+    //char clasa : 2;  // 00: 0, 01: 1, 10: -0, 11: -1
 
-    /// explicatii pt cod
-    /// 0...127 -> 2^7 - 1
-    /// acesti 7 biti pot fi toti 0 sau toti 1
-    /// asta inseamna ca avem de la 0000000 la 1111111
-    /// adica nr de biti de zero va fi
-    /// intre 0 si 7, deci avem nevoie de 2^3
-    /// totusi, putem observa ca 0 nu va fi niciodata
-    /// pt ca 0 este caracterul nul (\0), deci sunt
-    /// suficienti 2^3 - 1 biti
+    // explicatii pt cod
+    // 0...127 -> 2^7 - 1
+    // acesti 7 biti pot fi toti 0 sau toti 1
+    // asta inseamna ca avem de la 0000000 la 1111111
+    // adica nr de biti de zero va fi
+    // intre 0 si 7, deci avem nevoie de 2^3
+    // totusi, putem observa ca 0 nu va fi niciodata
+    // pt ca 0 este caracterul nul (\0), deci sunt
+    // suficienti 2^3 - 1 biti
 
     /*
     0000001
@@ -27,8 +27,8 @@ typedef struct
     0001000
     0100000
     */
-    /// campurile trebuie ordonate (des)crescator
-    /// dupa sizeof
+    // campurile trebuie ordonate (des)crescator
+    // dupa sizeof
 } pasager;
 
 void citeste(pasager pasageri[], int *nr_pasageri)
@@ -37,7 +37,7 @@ void citeste(pasager pasageri[], int *nr_pasageri)
     char cat;
 
     printf("nr pasageri: ");
-    fscanf(stdin, "%d", nr_pasageri); /// fara & ca e deja pointer
+    fscanf(stdin, "%d", nr_pasageri); // fara & ca e deja pointer
     for(i = 0; i < *nr_pasageri; i++)
     {
         printf("nume: ");
