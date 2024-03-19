@@ -9,6 +9,7 @@ pub struct Cursor<'a> {
     // len_remaining: usize,
     stream: Chars<'a>,
     line_number: u32,
+    had_error: bool,
 }
 
 impl<'a> Cursor<'a> {
@@ -17,6 +18,7 @@ impl<'a> Cursor<'a> {
             // len_remaining: input.len(),
             stream: input.chars(),
             line_number: 1,
+            had_error: false,
         }
     }
 
@@ -53,14 +55,23 @@ impl<'a> Cursor<'a> {
                 }
                 // Block comment
                 '*' => {
+                    lexeme.push(self.stream.next().unwrap());
+                    let mut unclosed_comment = false;
                     while !(self.first() == '*' && self.second() == '/') {
+                        if self.is_eof() {
+                            unclosed_comment = true;
+                            self.report_error("Unclosed block comment");
+                            break;
+                        }
                         if self.first() == '\n' {
                             self.line_number += 1;
                         }
                         lexeme.push(self.stream.next().unwrap());
                     }
-                    lexeme.push(self.stream.next().unwrap());
-                    lexeme.push(self.stream.next().unwrap());
+                    if !unclosed_comment {
+                        lexeme.push(self.stream.next().unwrap());
+                        lexeme.push(self.stream.next().unwrap());
+                    }
                     TokenKind::Comment
                 }
                 // Division operator
@@ -68,17 +79,33 @@ impl<'a> Cursor<'a> {
             },
 
             '"' => {
+                let mut unclosed_string = false;
                 while self.first() != '"' {
+                    if self.is_eof() {
+                        unclosed_string = true;
+                        self.report_error("Unclosed string literal");
+                        break;
+                    }
                     lexeme.push(self.stream.next().unwrap())
                 }
-                lexeme.push(self.stream.next().unwrap());
+                if !unclosed_string {
+                    lexeme.push(self.stream.next().unwrap());
+                }
                 TokenKind::Literal
             }
             '\'' => {
+                let mut unclosed_char = false;
                 while self.first() != '\'' {
+                    if self.is_eof() {
+                        unclosed_char = true;
+                        self.report_error("Unclosed character literal");
+                        break;
+                    }
                     lexeme.push(self.stream.next().unwrap())
                 }
-                lexeme.push(self.stream.next().unwrap());
+                if !unclosed_char {
+                    lexeme.push(self.stream.next().unwrap());
+                }
                 TokenKind::Literal
             }
 
@@ -153,6 +180,11 @@ impl<'a> Cursor<'a> {
             };
         }
         tokens.into_iter()
+    }
+
+    fn report_error(&mut self, message: &str) {
+        println!("[line {}] Error: {}", self.line_number, message);
+        self.had_error = true;
     }
 }
 
