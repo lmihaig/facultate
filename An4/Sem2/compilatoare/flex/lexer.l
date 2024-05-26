@@ -6,6 +6,11 @@ void print_token(const char* token_type, const char* token, int line_number) {
     printf("%s:\t%s\tLINE:%d\n", token_type, token, line_number);
 }
 
+void report_error(const char* message, int line_number) {
+    fprintf(stderr, "Error: %s at line %d\n", message, line_number);
+    exit(1);
+}
+
 %}
 
 %option noyywrap
@@ -21,21 +26,22 @@ RAW_LITERAL        r#"[^"]*"#|r#"'[^']*'#
 BYTE_LITERAL       b?'[^']*'|b?\"[^\"]*\"
 C_LITERAL          c?\"[^"]*\"|c?\'[^\']*\'
 STRING_LITERAL     \"(\\.|[^"\\])*\"|'(\\.|[^'\\])*'
-NUMERIC_LITERAL    [0-9]+(\.[0-9]*)?|\.[0-9]+|[0-9]+[eE][+\-]?[0-9]+|0[xX][0-9a-fA-F]+
-LIFETIME_LITERAL   '[a-zA-Z_][a-zA-Z0-9_]*
-LITERALS      {RAW_LITERAL}|{BYTE_LITERAL}|{C_LITERAL}|{STRING_LITERAL}|{NUMERIC_LITERAL}|{LIFETIME_LITERAL}
+NUMERIC_LITERAL    0[bB][01_]+|0[oO][0-7_]+|0[xX][0-9a-fA-F_]+|[0-9_]+(\.[0-9_]*)?([eE][+\-]?[0-9_]+)?
+LIFETIME_LITERAL   '[a-zA-Z_][a-zA-Z0-9_]*'
 
 %%
 
-{COMMENTS}    { print_token("COMMENT", yytext, yylineno); }
-[ \t]         {/*ignore whitespace*/}
-{KEYWORDS}    { print_token("KEYWORD", yytext, yylineno); }
-{IDENTIFIER}  { print_token("IDENTIFIER", yytext, yylineno); }
-{LITERALS}    { print_token("LITERAL", yytext, yylineno); }
-{OPERATORS}   { print_token("OPERATOR", yytext, yylineno); }
-{DELIMITERS}  { print_token("DELIMITER", yytext, yylineno); }
-{NEWLINES}    { /* increment yylineno */ }
-.             { fprintf(stderr, "Invalid lexical character: %s at line %d\n", yytext, yylineno); }
+{COMMENTS}         { print_token("COMMENT", yytext, yylineno); }
+[ \t]              {/*ignore whitespace*/}
+{KEYWORDS}         { print_token("KEYWORD", yytext, yylineno); }
+{IDENTIFIER}       { print_token("IDENTIFIER", yytext, yylineno); }
+{LIFETIME_LITERAL} { print_token("LIFETIME", yytext, yylineno); }
+{NUMERIC_LITERAL}  { print_token("NUMERIC", yytext, yylineno); }
+{OPERATORS}        { print_token("OPERATOR", yytext, yylineno); }
+{DELIMITERS}       { print_token("DELIMITER", yytext, yylineno); }
+{STRING_LITERAL}   { print_token("STRING", yytext, yylineno); }
+{NEWLINES}         { /*increment yylineno*/ }
+.                  { report_error("Invalid lexical character", yylineno); }
 %%
 
 int main() {

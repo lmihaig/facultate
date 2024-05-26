@@ -31,3 +31,9 @@
 [submodule "An4/Sem1/ProcSemn/lab/proiect/rockzip"]
 	path = An4/Sem1/ProcSemn/lab/proiect/rockzip
 	url = git@github.com:lmihaig/rockzip.git
+[submodule "An4/Sem2/AlgoritmiParaleli/paralel-ray-tracer"]
+	path = An4/Sem2/AlgoritmiParaleli/paralel-ray-tracer
+	url = git@github.com:r-moraru/ap-ray-tracing.git
+[submodule "An4/Sem2/TestareaSistemelor/project"]
+	path = An4/Sem2/TestareaSistemelor/project
+	url = git@github.com:GVolter/Testarea-Sistemelor-Software.git

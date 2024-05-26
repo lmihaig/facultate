@@ -2,7 +2,7 @@
 
 Lista cu diverse resurse Unibuc CTI 2020-2024
 
-Pentru orice fel de intrebare puteti sa ma contactati licu.mihai21@gmail.com
+Pentru orice fel de intrebare puteti sa ma contactati <licu.mihai21@gmail.com>
 
 ### Majoritatea proiectelor sunt adaugate drept submodule
 
@@ -87,7 +87,7 @@ Programa s-a schimbat mult dar asta e planul de invatamant pe care l-am urmat. D
 |           DD            | [Sisteme cu microprocesoare](An3/Sem2/microprocesoare)  |   E   |  4   | Alecsandru Vladimir Chirosca | Alecsandru Vladimir Chirosca |                          |
 |           DS            |     [Arhitectura sistemelor paralele](An3/Sem2/asp)     |   E   |  4   |          Lucian Ion          |       Geanina Chirosca       |                          |
 |           DD            |                  Practică industrială                   |   V   |  8   |        Deutsche Bank         |        Deutsche Bank         |      Deutsche Bank       |
-|                         |                          Total                          | 5E+2V |  30  |
+|                         |                          Total                          | 5E+2V |  30  | | | |
 
 ---
 
@@ -101,18 +101,18 @@ Programa s-a schimbat mult dar asta e planul de invatamant pe care l-am urmat. D
 |          DC           |              [Management](An4/Sem1/management/)               |   V   |  2   |       Cristian Anghel        |                          | Cristian Anghel  |
 |          DS           | [Concepte si Aplicatii in Vederea Artificiala](An4/Sem1/CAVA) |   E   |  4   | Bogdan Alexe<br>Radu Ionescu |    Alexandra Diaconu     |                  |
 |          DD           |          [Procesarea Semnalelor](An4/Sem1/ProcSemn/)          |   E   |  4   |        Cristian Rusu         |                          |  Cristian Rusu   |
-|                       |                             Total                             | 6E+1V |  30  |
+|                       |                             Total                             | 6E+1V |  30  | | | |
 
 | Anul IV - Semestrul II |                                                              |       |      |      |           |         |
 | :--------------------: | :----------------------------------------------------------: | :---: | :--: | :--: | :-------: | :-----: |
 |          Tip           |                    Discipline obligatorii                    |  FE   | Crd. | Curs | Laborator | Seminar |
-|           DS           |                           indecis                            |   E   |  6   |      |           |         |
-|           DC           |     [Managementul operatiunilor](An4/Sem2/managementOP/)     |   V   |  2   |      |           |         |
-|           DD           |                           indecis                            |   E   |  4   |      |           |         |
-|           DD           |    [Compilatoare si Translatoare](An4/Sem2/compilatoare/)    |   E   |  4   |      |           |         |
-|           DD           | [Testarea Sistemelor Software](An4/Sem2/TestareaSistemelor/) |   E   |  4   |      |           |         |
-|           DS           |          [Pregatirea proiectului de diploma](aici)           |   E   |  4   |      |           |         |
-|                        |                            Total                             | 4E+2V |  30  |
-|           E            |                  [Examen de diploma](aici)                   |   E   |  10  |      |           |         |
+|           DS           |                           [Programarea aplicatiilor in NodeJs industrie](An4/sem2/node)   |   E   |  6   |  Dorneanu Eduard-Gabriel    |  Vlad Stavarache         |         |
+|           DC           |     [Managementul operatiunilor](An4/Sem2/managementOP/)     |   V   |  2   | Veith Cristina  |         | Veith Cristina        |
+|           DD           |                           [Alargoritmi Paraleli](An4/Sem2/AlgoritmiParaleli)             |   E   |  6   | Olaru Vlad     |  Olaru Vlad          |         |
+|           DD           |    [Compilatoare si Translatoare](An4/Sem2/compilatoare/)    |   E   |  6   | Gianina Georgescu     |  Gianina Georgescu              |   Gianina Georgescu           |
+|           DD           | [Testarea Sistemelor Software](An4/Sem2/TestareaSistemelor/) |   E   |  6   | Sorina Nicoleta Predut     |      Sorina Nicoleta Predut          |         |
+|           DS           |          [Pregatirea proiectului de diploma](aici)           |   E   |  4   |  Cristian Rusu    |           |         |
+|                        |                            Total                             | 4E+2V |  30  | | | |
+|           E            |                  Examen de diploma                   |   E   |  10  |      |           |         |
 
 ![Visualization of the codebase](./codebase.svg)
